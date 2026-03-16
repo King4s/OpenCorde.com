@@ -11,3 +11,4 @@ pub mod message_repo;
 pub mod role_repo;
 pub mod server_repo;
 pub mod user_repo;
+pub mod voice_state_repo;

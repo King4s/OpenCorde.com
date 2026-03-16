@@ -23,6 +23,7 @@ pub mod messages;
 pub mod roles;
 pub mod servers;
 pub mod users;
+pub mod voice;
 
 use axum::Router;
 
@@ -40,6 +41,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(members::router())
         .merge(roles::router())
         .merge(messages::router())
+        .merge(voice::router())
         .merge(crate::ws::handler::router())
 }
 
