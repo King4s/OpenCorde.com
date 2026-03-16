@@ -7,7 +7,7 @@
 	 */
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { isAuthenticated, logout } from '$lib/stores/auth';
+	import { isAuthenticated, restoreSession, logout } from '$lib/stores/auth';
 	import { servers, fetchServers, selectServer, currentServerId } from '$lib/stores/servers';
 	import ServerIcon from '$lib/components/layout/ServerIcon.svelte';
 
@@ -15,16 +15,16 @@
 	let authReady = $state(false);
 
 	onMount(() => {
-		const unsub = isAuthenticated.subscribe((v) => {
-			if (!v) {
-				goto('/login');
-			} else {
-				authReady = true;
-				fetchServers();
-			}
+		restoreSession().then(() => {
+			isAuthenticated.subscribe((v) => {
+				if (!v) {
+					goto('/login');
+				} else {
+					authReady = true;
+					fetchServers();
+				}
+			});
 		});
-
-		return unsub;
 	});
 
 	function handleLogout() {
