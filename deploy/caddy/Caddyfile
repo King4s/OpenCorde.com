@@ -11,13 +11,13 @@ opencorde.com {
 
     # API server
     handle /api/* {
-        reverse_proxy localhost:8080
+        reverse_proxy localhost:8090
     }
 
     # WebSocket gateway
     handle /ws {
         # WebSocket headers for persistent connections
-        reverse_proxy localhost:8080 {
+        reverse_proxy localhost:8090 {
             header_uri Host {host}
             header_uri X-Forwarded-Proto https
             header_uri X-Forwarded-For {remote_host}
