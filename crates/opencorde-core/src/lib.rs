@@ -31,6 +31,7 @@
 pub mod events;
 pub mod gateway;
 pub mod keypair;
+pub mod mesh;
 pub mod models;
 pub mod password;
 pub mod permission_compute;

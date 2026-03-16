@@ -44,6 +44,8 @@ pub struct Config {
     pub livekit_api_secret: String,
     /// Deployment environment
     pub environment: Environment,
+    /// Mesh federation hostname (e.g., "mesh.example.com")
+    pub mesh_hostname: String,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -108,6 +110,8 @@ impl Config {
         let livekit_api_key = env::var("LIVEKIT_API_KEY").unwrap_or_else(|_| "".to_string());
         let livekit_api_secret = env::var("LIVEKIT_API_SECRET").unwrap_or_else(|_| "".to_string());
 
+        let mesh_hostname = env::var("MESH_HOSTNAME").unwrap_or_else(|_| "localhost".to_string());
+
         let config = Config {
             database_url,
             redis_url,
@@ -124,6 +128,7 @@ impl Config {
             livekit_api_key,
             livekit_api_secret,
             environment,
+            mesh_hostname,
         };
 
         // Log configuration (with secrets masked)
@@ -137,6 +142,7 @@ impl Config {
             minio_endpoint = %config.minio_endpoint,
             minio_bucket = %config.minio_bucket,
             livekit_url = %config.livekit_url,
+            mesh_hostname = %config.mesh_hostname,
             environment = ?config.environment,
             "configuration loaded"
         );

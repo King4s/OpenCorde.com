@@ -7,6 +7,7 @@
 pub mod channel_repo;
 pub mod invite_repo;
 pub mod member_repo;
+pub mod mesh_peer_repo;
 pub mod message_repo;
 pub mod role_repo;
 pub mod server_repo;

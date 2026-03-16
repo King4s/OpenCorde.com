@@ -47,7 +47,7 @@ use std::sync::Arc;
 
 /// Shared application state.
 ///
-/// Contains the database pool and configuration.
+/// Contains the database pool, configuration, and optional search engine.
 /// Passed to all route handlers via Axum's State extractor.
 #[derive(Clone)]
 pub struct AppState {
@@ -55,6 +55,8 @@ pub struct AppState {
     pub db: PgPool,
     /// Application configuration (wrapped in Arc for shared ownership)
     pub config: Arc<config::Config>,
+    /// Optional search engine (None if search is disabled)
+    pub search: Option<Arc<opencorde_search::SearchEngine>>,
 }
 
 /// Allow extracting Arc<Config> from AppState.

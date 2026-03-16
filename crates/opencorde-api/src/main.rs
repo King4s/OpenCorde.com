@@ -56,10 +56,15 @@ async fn main() -> anyhow::Result<()> {
     opencorde_db::run_migrations(&pool).await?;
     tracing::info!("database migrations completed");
 
+    // Initialize search engine (optional)
+    let search = None; // TODO: Initialize search engine from config
+    tracing::debug!("search engine initialized: {:?}", search.is_some());
+
     // Build application state
     let state = AppState {
         db: pool,
         config: Arc::new(config.clone()),
+        search,
     };
 
     // Build router with middleware

@@ -57,7 +57,15 @@ pub enum ApiError {
     #[error("rate limited")]
     RateLimited { retry_after: u64 },
 
-    /// Unrecoverable server error (500).
+    /// Service unavailable (503).
+    #[error("service unavailable: {0}")]
+    ServiceUnavailable(String),
+
+    /// Unrecoverable server error (500) with custom message.
+    #[error("internal server error: {0}")]
+    InternalServerError(String),
+
+    /// Unrecoverable server error from anyhow (500).
     #[error("internal error")]
     Internal(#[from] anyhow::Error),
 
@@ -90,6 +98,21 @@ impl IntoResponse for ApiError {
                     StatusCode::TOO_MANY_REQUESTS,
                     "RATE_LIMITED",
                     format!("retry after {} seconds", retry_after),
+                )
+            }
+
+            ApiError::ServiceUnavailable(msg) => (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "SERVICE_UNAVAILABLE",
+                msg.clone(),
+            ),
+
+            ApiError::InternalServerError(msg) => {
+                tracing::error!(error = %msg, "internal server error");
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "INTERNAL_ERROR",
+                    msg.clone(),
                 )
             }
 

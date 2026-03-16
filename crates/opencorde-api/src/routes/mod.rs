@@ -19,8 +19,10 @@ pub mod health;
 pub mod helpers;
 pub mod invites;
 pub mod members;
+pub mod mesh;
 pub mod messages;
 pub mod roles;
+pub mod search;
 pub mod servers;
 pub mod users;
 pub mod voice;
@@ -39,8 +41,10 @@ pub fn api_router() -> Router<AppState> {
         .merge(channels::router())
         .merge(invites::router())
         .merge(members::router())
+        .merge(mesh::router())
         .merge(roles::router())
         .merge(messages::router())
+        .merge(search::router())
         .merge(voice::router())
         .merge(crate::ws::handler::router())
 }

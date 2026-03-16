@@ -8,6 +8,14 @@ license.workspace = true
 
 [dependencies]
 opencorde-core = { path = "../opencorde-core" }
-thiserror = { workspace = true }
-anyhow = { workspace = true }
-tracing = { workspace = true }
+tantivy = { workspace = true }      # Rust-native full-text search engine
+thiserror = { workspace = true }    # Typed error handling for libraries
+anyhow = { workspace = true }       # Flexible error handling
+tracing = { workspace = true }      # Structured logging
+serde = { workspace = true }        # Serialization framework
+serde_json = { workspace = true }   # JSON serialization
+chrono = { workspace = true }       # Time/date handling
+tokio = { workspace = true }        # Async runtime
+
+[dev-dependencies]
+tempfile = "3.10"                   # Temporary directories for tests
