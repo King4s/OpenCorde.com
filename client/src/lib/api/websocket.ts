@@ -15,12 +15,16 @@ export class GatewayClient {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
 
-  constructor(url: string = 'ws://localhost:8080/api/v1/gateway') {
-    this.url = url;
+  constructor(url?: string) {
+    this.url = url ?? '';
   }
 
   connect(token: string): void {
     this.token = token;
+    if (!this.url) {
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      this.url = `${proto}//${location.host}/api/v1/gateway`;
+    }
     this.ws = new WebSocket(this.url);
 
     this.ws.onopen = () => {
