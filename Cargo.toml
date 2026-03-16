@@ -51,3 +51,4 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.0", features = ["v4", "serde"] }
 bitflags = "2.8"                 # Permission bitfield system
 rand = "0.9"                     # Random number generation
+futures = "0.3"                  # async/await utilities, futures abstractions

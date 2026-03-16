@@ -39,6 +39,7 @@ pub mod error;
 pub mod jwt;
 pub mod middleware;
 pub mod routes;
+pub mod ws;
 
 use axum::extract::FromRef;
 use sqlx::PgPool;

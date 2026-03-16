@@ -7,6 +7,7 @@
 //! - `users` — User profile management
 //! - `servers` — Server CRUD operations
 //! - `channels` — Channel CRUD operations
+//! - `messages` — Message CRUD and typing indicator
 //!
 //! ## Depends On
 //! - axum (web framework)
@@ -15,6 +16,11 @@
 pub mod auth;
 pub mod channels;
 pub mod health;
+pub mod helpers;
+pub mod invites;
+pub mod members;
+pub mod messages;
+pub mod roles;
 pub mod servers;
 pub mod users;
 
@@ -23,9 +29,6 @@ use axum::Router;
 use crate::AppState;
 
 /// Build the complete API router with all routes.
-///
-/// Composes all route modules into a single router.
-/// This router is then wrapped with middleware in main.rs.
 pub fn api_router() -> Router<AppState> {
     Router::new()
         .merge(health::router())
@@ -33,6 +36,11 @@ pub fn api_router() -> Router<AppState> {
         .merge(users::router())
         .merge(servers::router())
         .merge(channels::router())
+        .merge(invites::router())
+        .merge(members::router())
+        .merge(roles::router())
+        .merge(messages::router())
+        .merge(crate::ws::handler::router())
 }
 
 #[cfg(test)]

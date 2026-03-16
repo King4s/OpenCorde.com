@@ -1,7 +1,7 @@
 //! # Route Helpers - Shared utilities for route handlers
 
-use opencorde_core::Snowflake;
 use crate::error::ApiError;
+use opencorde_core::Snowflake;
 
 /// Parse a Snowflake ID from a path parameter string.
 pub fn parse_snowflake(s: &str) -> Result<Snowflake, ApiError> {
@@ -13,7 +13,11 @@ pub fn parse_snowflake(s: &str) -> Result<Snowflake, ApiError> {
 /// Check if a user is the server owner.
 pub fn check_server_owner(user_id: Snowflake, owner_id: i64) -> Result<(), ApiError> {
     if user_id.as_i64() != owner_id {
-        tracing::warn!(user_id = user_id.as_i64(), owner_id = owner_id, "user is not server owner");
+        tracing::warn!(
+            user_id = user_id.as_i64(),
+            owner_id = owner_id,
+            "user is not server owner"
+        );
         return Err(ApiError::Forbidden);
     }
     Ok(())
