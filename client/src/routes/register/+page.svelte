@@ -31,7 +31,7 @@
 
 		loading = true;
 		try {
-			await register(email, username, password);
+			await register(username, email, password);
 			goto('/servers');
 		} catch (e: any) {
 			error = e.message || 'Registration failed';
