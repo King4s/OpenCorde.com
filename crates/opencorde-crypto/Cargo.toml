@@ -1,0 +1,11 @@
+[package]
+name = "opencorde-crypto"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# E2EE layer using OpenMLS (Phase 2 — placeholder)
+
+[dependencies]
+opencorde-core = { path = "../opencorde-core" }
+thiserror = { workspace = true }

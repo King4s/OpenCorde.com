@@ -1,0 +1,20 @@
+[package]
+name = "opencorde-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# Shared domain types, models, and permission system
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+bitflags = { workspace = true }
+thiserror = { workspace = true }
+rand = { workspace = true }
+tracing = { workspace = true }
+argon2 = { workspace = true }           # Password hashing (OWASP recommended)
+rand_core = { version = "0.6", features = ["getrandom"] }  # For OsRng in password hashing
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }  # Ed25519 keypair generation and signing
+hex = "0.4"                             # Hex encoding for Ed25519 public key serialization

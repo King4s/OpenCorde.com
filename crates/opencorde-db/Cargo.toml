@@ -1,0 +1,17 @@
+[package]
+name = "opencorde-db"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# PostgreSQL database layer via sqlx
+
+[dependencies]
+opencorde-core = { path = "../opencorde-core" }
+sqlx = { workspace = true }          # Database driver with type-safe queries
+tokio = { workspace = true }         # Async runtime
+tracing = { workspace = true }       # Structured logging
+thiserror = { workspace = true }     # Error handling
+anyhow = { workspace = true }        # Flexible error handling
+chrono = { workspace = true }        # DateTime handling with timezone
+serde_json = "1.0"                   # JSON serialization for attachments

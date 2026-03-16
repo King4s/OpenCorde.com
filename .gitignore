@@ -1,0 +1,42 @@
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# Node / SvelteKit
+node_modules/
+client/node_modules/
+client/.svelte-kit/
+client/build/
+.pnpm-store/
+
+# Tauri
+client/src-tauri/target/
+client/src-tauri/gen/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker volumes (local)
+data/
+
+# SQLx offline query data
+.sqlx/
+
+# Test artifacts
+/tests/e2e/test-results/
+/tests/e2e/playwright-report/

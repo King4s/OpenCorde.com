@@ -1,0 +1,40 @@
+# OpenCorde reverse proxy configuration
+# Domain: opencorde.com
+# Public IP: 2.108.189.148 -> internal 192.168.140.140
+# Caddy handles SSL termination via Let's Encrypt
+
+opencorde.com {
+    # File upload size limit (100MB)
+    request_body {
+        max_size 100MB
+    }
+
+    # API server
+    handle /api/* {
+        reverse_proxy localhost:8080
+    }
+
+    # WebSocket gateway
+    handle /ws {
+        # WebSocket headers for persistent connections
+        reverse_proxy localhost:8080 {
+            header_uri Host {host}
+            header_uri X-Forwarded-Proto https
+            header_uri X-Forwarded-For {remote_host}
+        }
+    }
+
+    # MinIO file storage
+    handle /files/* {
+        reverse_proxy localhost:9010
+    }
+
+    # Default route to SvelteKit client
+    # In production, serve static files instead of proxying to dev server
+    handle {
+        reverse_proxy localhost:5173
+    }
+
+    # Note: LiveKit uses its own port (7880) and handles WebSockets directly
+    # No Caddy routing needed for LiveKit
+}

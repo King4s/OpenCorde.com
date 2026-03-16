@@ -1,0 +1,53 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/opencorde-api",
+    "crates/opencorde-core",
+    "crates/opencorde-db",
+    "crates/opencorde-crypto",
+    "crates/opencorde-bridge",
+    "crates/opencorde-search",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/commune-chat/opencorde"
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1.44", features = ["full"] }
+
+# Web framework
+axum = { version = "0.8.4", features = ["ws", "macros"] }
+tower = "0.5"                    # Middleware framework, used by Axum
+tower-http = { version = "0.6", features = ["cors", "trace", "request-id", "util"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Database
+sqlx = { version = "0.8.3", features = ["runtime-tokio", "tls-rustls", "postgres", "chrono", "uuid"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Error handling
+thiserror = "2.0"                # Typed errors for libraries
+anyhow = "1.0"                   # Flexible errors for applications
+
+# Auth
+jsonwebtoken = "9.3"             # JWT encoding/decoding
+argon2 = "0.5"                   # Password hashing (OWASP recommended)
+
+# Redis
+redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
+
+# Utils
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+bitflags = "2.8"                 # Permission bitfield system
+rand = "0.9"                     # Random number generation

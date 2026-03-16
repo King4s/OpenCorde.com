@@ -1,0 +1,75 @@
+services:
+  # PostgreSQL database - the primary data store for users, servers, channels, messages
+  postgres:
+    image: postgres:16-alpine
+    container_name: opencorde-postgres
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: opencorde
+      POSTGRES_PASSWORD: opencorde
+      POSTGRES_DB: opencorde
+    volumes:
+      - opencorde_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opencorde"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis cache - for session management, rate limiting, real-time presence
+  redis:
+    image: redis:7-alpine
+    container_name: opencorde-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - opencorde_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # MinIO object storage - file uploads, media storage, attachments
+  minio:
+    image: minio/minio:latest
+    container_name: opencorde-minio
+    ports:
+      - "9010:9000"      # MinIO API
+      - "9011:9001"      # MinIO Console
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: opencorde
+      MINIO_ROOT_PASSWORD: opencorde-secret-change-me
+    volumes:
+      - opencorde_minio:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # LiveKit media server - video/audio conferencing, voice channels
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: opencorde-livekit
+    ports:
+      - "7880:7880"           # WebSocket
+      - "7881:7881"           # TCP RTC
+      - "50000-50100:50000-50100/udp"  # UDP RTC media
+    command: --config /etc/livekit.yaml --dev
+    volumes:
+      - ./deploy/livekit/livekit.yaml:/etc/livekit.yaml
+    restart: unless-stopped
+
+volumes:
+  opencorde_pgdata:
+    driver: local
+  opencorde_redis:
+    driver: local
+  opencorde_minio:
+    driver: local

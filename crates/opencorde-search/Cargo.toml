@@ -1,0 +1,13 @@
+[package]
+name = "opencorde-search"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# Full-text search using Tantivy
+
+[dependencies]
+opencorde-core = { path = "../opencorde-core" }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }

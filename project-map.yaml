@@ -1,0 +1,120 @@
+project: opencorde
+version: 0.1.0
+status: phase-1-scaffolding
+date: 2026-03-16
+description: Self-hosted Discord alternative with Rust backend, SvelteKit desktop client
+
+crates:
+  opencorde-core:
+    purpose: "Shared domain types, models, permissions, snowflake IDs"
+    binary: false
+    entry: crates/opencorde-core/src/lib.rs
+    depends_on: []
+    modules:
+      - models (user, server, channel, message, member, role, invite, voice_state)
+      - snowflake (64-bit time-ordered ID generator)
+      - permissions (bitfield permission system)
+      - events (shared event types for WebSocket gateway)
+
+  opencorde-db:
+    purpose: "PostgreSQL database layer via sqlx"
+    binary: false
+    entry: crates/opencorde-db/src/lib.rs
+    depends_on: [opencorde-core]
+    modules:
+      - repos (user, server, channel, message, member repositories)
+      - migrations (SQL files, one per concern)
+
+  opencorde-api:
+    purpose: "HTTP REST API + WebSocket gateway"
+    binary: true
+    entry: crates/opencorde-api/src/main.rs
+    depends_on: [opencorde-core, opencorde-db]
+    modules:
+      - routes (auth, servers, channels, messages, voice, files, admin)
+      - ws (handler, events, dispatch)
+      - middleware (auth, rate_limit, cors)
+
+  opencorde-crypto:
+    purpose: "E2EE layer using OpenMLS (Phase 2)"
+    binary: false
+    entry: crates/opencorde-crypto/src/lib.rs
+    depends_on: [opencorde-core]
+
+  opencorde-bridge:
+    purpose: "Bridge service for external platforms (Discord, Steam)"
+    binary: true
+    entry: crates/opencorde-bridge/src/main.rs
+    depends_on: [opencorde-core, opencorde-db]
+    modules:
+      - discord (gateway, api, mapper, puppet)
+      - steam (oauth, friends)
+
+  opencorde-search:
+    purpose: "Full-text search using Tantivy"
+    binary: false
+    entry: crates/opencorde-search/src/lib.rs
+    depends_on: [opencorde-core]
+
+client:
+  framework: sveltekit
+  desktop: tauri-2.0
+  entry: client/src/routes/+layout.svelte
+  state: client/src/lib/stores/
+  modules:
+    api: client/src/lib/api/ (client.ts, websocket.ts, types.ts)
+    stores: client/src/lib/stores/ (auth, servers, channels, messages, voice, presence)
+    livekit: client/src/lib/livekit/ (room, tracks, controls)
+    components: client/src/lib/components/ (layout, chat, voice, modals, settings)
+  routes:
+    - /login
+    - /register
+    - /servers/[serverId]/channels/[channelId]
+
+conventions:
+  rust_file_max_lines: 300
+  one_struct_per_file: preferred
+  error_handling: "thiserror for library errors, anyhow for application errors"
+  async_runtime: tokio
+  logging: "tracing crate with structured fields"
+  test_pattern: "#[cfg(test)] mod tests in same file for unit, tests/ dir for integration"
+  rust_naming: snake_case.rs
+  svelte_naming: PascalCase.svelte
+  store_naming: camelCase.ts
+  route_naming: kebab-case directories
+  migration_naming: NNN_descriptive_name.sql
+  git_commits: "type(scope): description (Conventional Commits)"
+
+database:
+  type: PostgreSQL 16
+  driver: sqlx 0.8.3 (compile-time query checking)
+  tables:
+    - users
+    - servers
+    - channels
+    - messages
+    - server_members
+    - roles
+    - member_roles
+    - invites
+    - voice_states
+    - files
+    - bridge_mappings (Phase 2)
+    - mls_key_packages (Phase 2)
+
+infrastructure:
+  cache: Redis 7
+  file_storage: MinIO (S3-compatible)
+  voice_video: LiveKit (self-hosted SFU)
+  search: Tantivy (embedded, Phase 2)
+  encryption: OpenMLS (RFC 9420, Phase 2)
+
+ports:
+  api: 8080
+  postgres: 5434
+  redis: 6379
+  minio_api: 9010
+  minio_console: 9011
+  livekit: 7880
+  livekit_rtc: 7881
+  livekit_media: "50000-50100/udp"

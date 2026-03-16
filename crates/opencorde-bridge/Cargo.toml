@@ -1,0 +1,22 @@
+[package]
+name = "opencorde-bridge"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# Bridge service for connecting to external platforms (Discord, Steam)
+
+[[bin]]
+name = "opencorde-bridge"
+path = "src/main.rs"
+
+[dependencies]
+opencorde-core = { path = "../opencorde-core" }
+opencorde-db = { path = "../opencorde-db" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
