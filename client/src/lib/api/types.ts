@@ -47,6 +47,7 @@ export interface Message {
   id: string;
   channel_id: string;
   author_id: string;
+  author_username: string;
   content: string;
   attachments: unknown[];
   edited_at: string | null;

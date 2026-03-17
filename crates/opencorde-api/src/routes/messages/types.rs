@@ -43,6 +43,8 @@ pub struct MessageResponse {
     pub channel_id: String,
     /// Snowflake author user ID
     pub author_id: String,
+    /// Author's username
+    pub author_username: String,
     /// Message content text
     pub content: String,
     /// Array of attachments (JSON array)
@@ -96,6 +98,7 @@ mod tests {
             id: "999888777".to_string(),
             channel_id: "555666".to_string(),
             author_id: "111222".to_string(),
+            author_username: "testuser".to_string(),
             content: "Test message".to_string(),
             attachments: serde_json::json!([]),
             edited_at: None,
@@ -105,6 +108,7 @@ mod tests {
         let json = serde_json::to_string(&response).unwrap();
         assert!(json.contains("999888777"));
         assert!(json.contains("Test message"));
+        assert!(json.contains("testuser"));
     }
 
     #[test]
@@ -115,6 +119,7 @@ mod tests {
             id: "999888777".to_string(),
             channel_id: "555666".to_string(),
             author_id: "111222".to_string(),
+            author_username: "testuser".to_string(),
             content: "Edited message".to_string(),
             attachments: serde_json::json!([]),
             edited_at: Some(edited),
@@ -124,5 +129,6 @@ mod tests {
         let json = serde_json::to_string(&response).unwrap();
         assert!(json.contains("Edited message"));
         assert!(json.contains("edited_at"));
+        assert!(json.contains("testuser"));
     }
 }

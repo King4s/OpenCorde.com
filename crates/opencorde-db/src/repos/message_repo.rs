@@ -21,6 +21,7 @@ pub struct MessageRow {
     pub attachments: JsonValue,
     pub edited_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
+    pub author_username: String,
 }
 
 /// Create a new message in a channel.
@@ -118,9 +119,11 @@ pub async fn list_by_channel(
     let messages = match (before, after) {
         (Some(before_sf), None) => {
             sqlx::query_as::<_, MessageRow>(
-                "SELECT * FROM messages \
-                 WHERE channel_id = $1 AND id < $2 \
-                 ORDER BY id DESC LIMIT $3",
+                "SELECT m.id, m.channel_id, m.author_id, m.content, m.attachments, m.edited_at, m.created_at, u.username as author_username \
+                 FROM messages m \
+                 JOIN users u ON m.author_id = u.id \
+                 WHERE m.channel_id = $1 AND m.id < $2 \
+                 ORDER BY m.id DESC LIMIT $3",
             )
             .bind(channel_id.as_i64())
             .bind(before_sf.as_i64())
@@ -130,9 +133,11 @@ pub async fn list_by_channel(
         }
         (None, Some(after_sf)) => {
             sqlx::query_as::<_, MessageRow>(
-                "SELECT * FROM messages \
-                 WHERE channel_id = $1 AND id > $2 \
-                 ORDER BY id ASC LIMIT $3",
+                "SELECT m.id, m.channel_id, m.author_id, m.content, m.attachments, m.edited_at, m.created_at, u.username as author_username \
+                 FROM messages m \
+                 JOIN users u ON m.author_id = u.id \
+                 WHERE m.channel_id = $1 AND m.id > $2 \
+                 ORDER BY m.id ASC LIMIT $3",
             )
             .bind(channel_id.as_i64())
             .bind(after_sf.as_i64())
@@ -142,9 +147,11 @@ pub async fn list_by_channel(
         }
         (None, None) => {
             sqlx::query_as::<_, MessageRow>(
-                "SELECT * FROM messages \
-                 WHERE channel_id = $1 \
-                 ORDER BY id DESC LIMIT $2",
+                "SELECT m.id, m.channel_id, m.author_id, m.content, m.attachments, m.edited_at, m.created_at, u.username as author_username \
+                 FROM messages m \
+                 JOIN users u ON m.author_id = u.id \
+                 WHERE m.channel_id = $1 \
+                 ORDER BY m.id DESC LIMIT $2",
             )
             .bind(channel_id.as_i64())
             .bind(limit)
@@ -209,10 +216,12 @@ mod tests {
             attachments: JsonValue::Array(Vec::new()),
             edited_at: None,
             created_at: now,
+            author_username: "testuser".to_string(),
         };
 
         assert_eq!(row.id, 777888999);
         assert_eq!(row.content, "Hello, world!");
+        assert_eq!(row.author_username, "testuser");
         assert!(row.edited_at.is_none());
     }
 

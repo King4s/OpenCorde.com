@@ -32,6 +32,7 @@ pub fn message_row_to_response(row: message_repo::MessageRow) -> MessageResponse
         id: row.id.to_string(),
         channel_id: row.channel_id.to_string(),
         author_id: row.author_id.to_string(),
+        author_username: row.author_username,
         content: row.content,
         attachments: row.attachments,
         edited_at: row.edited_at,
@@ -153,12 +154,14 @@ mod tests {
             attachments: json!([]),
             edited_at: None,
             created_at: now,
+            author_username: "testuser".to_string(),
         };
 
         let response = message_row_to_response(row);
         assert_eq!(response.id, "777888999");
         assert_eq!(response.channel_id, "555666777");
         assert_eq!(response.author_id, "111222333");
+        assert_eq!(response.author_username, "testuser");
         assert_eq!(response.content, "Test message");
         assert!(response.edited_at.is_none());
     }

@@ -22,7 +22,7 @@ use axum::{
     routing::{get, post},
 };
 use opencorde_core::Snowflake;
-use opencorde_db::repos::{member_repo, server_repo};
+use opencorde_db::repos::{channel_repo, member_repo, server_repo};
 use tracing::instrument;
 
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
@@ -100,6 +100,27 @@ async fn create_server(
         })?;
 
     tracing::debug!(server_id = server_row.id, "owner added as server member");
+
+    // Create default #general text channel
+    let mut channel_generator = opencorde_core::snowflake::SnowflakeGenerator::new(2, 0);
+    let general_channel_id = channel_generator.next_id();
+    channel_repo::create_channel(&state.db, general_channel_id, server_id, "general", 0)
+        .await
+        .map_err(|e| {
+            tracing::error!(
+                server_id = server_id.as_i64(),
+                channel_id = general_channel_id.as_i64(),
+                error = %e,
+                "failed to create default #general channel"
+            );
+            ApiError::Database(e)
+        })?;
+
+    tracing::info!(
+        server_id = server_row.id,
+        channel_id = general_channel_id.as_i64(),
+        "default #general channel created"
+    );
 
     let response = server_row_to_response(server_row);
     Ok((StatusCode::CREATED, Json(response)))
