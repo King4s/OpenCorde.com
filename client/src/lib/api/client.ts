@@ -1,7 +1,6 @@
 /**
  * @file REST API client for OpenCorde backend
  * @purpose Typed HTTP client with auth token management
- * @depends stores/auth
  */
 
 const API_BASE = '/api/v1';
@@ -13,14 +12,26 @@ export interface ApiError {
 
 class ApiClient {
   private baseUrl: string;
-  private accessToken: string | null = null;
 
   constructor(baseUrl: string = API_BASE) {
     this.baseUrl = baseUrl;
   }
 
   setToken(token: string | null) {
-    this.accessToken = token;
+    if (typeof localStorage !== 'undefined') {
+      if (token) {
+        localStorage.setItem('opencorde_token', token);
+      } else {
+        localStorage.removeItem('opencorde_token');
+      }
+    }
+  }
+
+  private getToken(): string | null {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem('opencorde_token');
+    }
+    return null;
   }
 
   private async request<T>(
@@ -32,15 +43,16 @@ class ApiClient {
       'Content-Type': 'application/json',
     };
 
-    if (this.accessToken) {
-      headers['Authorization'] = `Bearer ${this.accessToken}`;
+    const token = this.getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
     const response = await fetch(`${this.baseUrl}${path}`, {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
-      credentials: 'include', // for refresh token cookie
+      credentials: 'include',
     });
 
     if (!response.ok) {
