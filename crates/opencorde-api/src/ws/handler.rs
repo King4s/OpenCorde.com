@@ -6,8 +6,8 @@
 //! 2. Server sends HELLO with heartbeat_interval
 //! 3. Client sends IDENTIFY with JWT token
 //! 4. Server validates token, sends READY with user info
-//! 5. Server sends periodic HEARTBEAT, client responds HEARTBEAT_ACK
-//! 6. Server pushes events (MESSAGE_CREATE, etc.) to connected clients
+//! 5. Server subscribes to event broadcast for channels the user can access
+//! 6. Main loop: heartbeats + event fan-out to this client
 //!
 //! ## Depends On
 //! - axum::extract::ws (WebSocket primitives)
@@ -15,6 +15,7 @@
 //! - crate::jwt (token validation)
 //! - crate::AppState (shared state)
 //! - serde_json (event serialization)
+//! - opencorde_db::repos::channel_repo (user's accessible channels)
 
 use axum::{
     Router,
@@ -26,6 +27,9 @@ use axum::{
     routing::get,
 };
 use futures::{SinkExt, StreamExt};
+use opencorde_core::Snowflake;
+use opencorde_db::repos::channel_repo;
+use std::collections::HashSet;
 use std::time::Duration;
 use tokio::time::interval;
 use tracing::instrument;
@@ -53,7 +57,8 @@ async fn ws_upgrade(ws: WebSocketUpgrade, State(state): State<AppState>) -> impl
 /// 2. Wait for IDENTIFY (with timeout)
 /// 3. Validate JWT token
 /// 4. Send READY with user info
-/// 5. Main loop: heartbeats + message handling
+/// 5. Subscribe to broadcast channel, load accessible channel IDs
+/// 6. Main loop: heartbeats + event dispatch + client messages
 #[instrument(skip(socket, state))]
 async fn handle_connection(socket: WebSocket, state: AppState) {
     let (mut sender, mut receiver) = socket.split();
@@ -124,19 +129,19 @@ async fn handle_connection(socket: WebSocket, state: AppState) {
         }
     };
 
-    let user_id = claims.sub.clone();
+    let user_id_str = claims.sub.clone();
     let username = claims.username.clone();
-    tracing::info!(user_id = %user_id, username = %username, "user authenticated");
+    tracing::info!(user_id = %user_id_str, username = %username, "user authenticated");
 
     // 4. Send READY with user info
     let ready = serde_json::json!({
         "type": "Ready",
         "data": {
             "user": {
-                "id": user_id,
+                "id": user_id_str,
                 "username": username
             },
-            "servers": []  // TODO: fetch user's servers
+            "servers": []
         }
     });
 
@@ -144,9 +149,33 @@ async fn handle_connection(socket: WebSocket, state: AppState) {
         tracing::warn!("failed to send READY: {}", e);
         return;
     }
-    tracing::debug!(user_id = %user_id, "sent READY");
+    tracing::debug!(user_id = %user_id_str, "sent READY");
 
-    // 5. Main event loop: heartbeats + message handling
+    // 5. Subscribe to event broadcast and load accessible channel IDs
+    let mut event_rx = state.event_tx.subscribe();
+
+    let user_id_i64: i64 = match user_id_str.parse() {
+        Ok(v) => v,
+        Err(_) => {
+            tracing::error!(user_id = %user_id_str, "failed to parse user ID as i64");
+            return;
+        }
+    };
+    let user_snowflake = Snowflake::new(user_id_i64);
+
+    let accessible_channels: HashSet<i64> = channel_repo::list_ids_by_user(&state.db, user_snowflake)
+        .await
+        .unwrap_or_default()
+        .into_iter()
+        .collect();
+
+    tracing::debug!(
+        user_id = %user_id_str,
+        channel_count = accessible_channels.len(),
+        "loaded accessible channels for WebSocket session"
+    );
+
+    // 6. Main event loop: heartbeats + event fan-out + client messages
     let mut heartbeat_timer = interval(Duration::from_secs(HEARTBEAT_INTERVAL_SECS));
 
     loop {
@@ -154,10 +183,32 @@ async fn handle_connection(socket: WebSocket, state: AppState) {
             _ = heartbeat_timer.tick() => {
                 let heartbeat = serde_json::json!({"type": "Heartbeat"});
                 if let Err(e) = sender.send(Message::Text(heartbeat.to_string().into())).await {
-                    tracing::info!(user_id = %user_id, "connection lost during heartbeat: {}", e);
+                    tracing::info!(user_id = %user_id_str, "connection lost during heartbeat: {}", e);
                     break;
                 }
-                tracing::trace!(user_id = %user_id, "heartbeat sent");
+                tracing::trace!(user_id = %user_id_str, "heartbeat sent");
+            }
+
+            result = event_rx.recv() => {
+                match result {
+                    Ok(event) => {
+                        // Only forward events for channels this user can access
+                        if should_dispatch(&event, &accessible_channels)
+                            && let Err(e) = sender.send(Message::Text(event.to_string().into())).await
+                        {
+                            tracing::info!(user_id = %user_id_str, "connection lost sending event: {}", e);
+                            break;
+                        }
+                    }
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
+                        tracing::warn!(user_id = %user_id_str, skipped = n, "broadcast receiver lagged");
+                        // Continue — we just missed some events, not fatal
+                    }
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                        tracing::info!(user_id = %user_id_str, "broadcast channel closed");
+                        break;
+                    }
+                }
             }
 
             msg = receiver.next() => {
@@ -168,26 +219,26 @@ async fn handle_connection(socket: WebSocket, state: AppState) {
                         {
                             match event_type {
                                 "HeartbeatAck" => {
-                                    tracing::trace!(user_id = %user_id, "heartbeat ack received");
+                                    tracing::trace!(user_id = %user_id_str, "heartbeat ack received");
                                 }
                                 _ => {
-                                    tracing::debug!(user_id = %user_id, event_type, "received event");
+                                    tracing::debug!(user_id = %user_id_str, event_type, "received client event");
                                 }
                             }
                         }
                     }
                     Some(Ok(Message::Close(_))) | None => {
-                        tracing::info!(user_id = %user_id, "WebSocket closed");
+                        tracing::info!(user_id = %user_id_str, "WebSocket closed");
                         break;
                     }
                     Some(Ok(Message::Binary(_))) => {
-                        tracing::debug!(user_id = %user_id, "ignoring binary message");
+                        tracing::debug!(user_id = %user_id_str, "ignoring binary message");
                     }
                     Some(Ok(Message::Ping(_))) | Some(Ok(Message::Pong(_))) => {
                         // handled automatically by axum
                     }
                     Some(Err(e)) => {
-                        tracing::warn!(user_id = %user_id, "WebSocket error: {}", e);
+                        tracing::warn!(user_id = %user_id_str, "WebSocket error: {}", e);
                         break;
                     }
                 }
@@ -195,22 +246,70 @@ async fn handle_connection(socket: WebSocket, state: AppState) {
         }
     }
 
-    tracing::info!(user_id = %user_id, "connection closed");
+    tracing::info!(user_id = %user_id_str, "connection closed");
+}
+
+/// Check if an event should be dispatched to this WebSocket session.
+///
+/// For MessageCreate events, checks that the message's channel_id is in the
+/// user's accessible channels set.
+fn should_dispatch(event: &serde_json::Value, accessible_channels: &HashSet<i64>) -> bool {
+    let event_type = event.get("type").and_then(|v| v.as_str()).unwrap_or("");
+
+    match event_type {
+        "MessageCreate" => {
+            let channel_id = event
+                .get("data")
+                .and_then(|d| d.get("message"))
+                .and_then(|m| m.get("channel_id"))
+                .and_then(|c| c.as_str())
+                .and_then(|c| c.parse::<i64>().ok());
+
+            channel_id.map(|id| accessible_channels.contains(&id)).unwrap_or(false)
+        }
+        // Future event types can be added here
+        _ => false,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashSet;
 
     #[test]
     fn test_router_creation() {
         let _r = router();
-        // Verify router can be created without panic
     }
 
     #[test]
     fn test_constants() {
         assert_eq!(IDENTIFY_TIMEOUT_SECS, 10);
         assert_eq!(HEARTBEAT_INTERVAL_SECS, 30);
+    }
+
+    #[test]
+    fn test_should_dispatch_message_create() {
+        let mut channels = HashSet::new();
+        channels.insert(12345_i64);
+
+        let event = serde_json::json!({
+            "type": "MessageCreate",
+            "data": { "message": { "channel_id": "12345", "content": "hello" } }
+        });
+        assert!(should_dispatch(&event, &channels));
+
+        let event_other = serde_json::json!({
+            "type": "MessageCreate",
+            "data": { "message": { "channel_id": "99999", "content": "hello" } }
+        });
+        assert!(!should_dispatch(&event_other, &channels));
+    }
+
+    #[test]
+    fn test_should_dispatch_unknown_type() {
+        let channels = HashSet::new();
+        let event = serde_json::json!({"type": "Unknown", "data": {}});
+        assert!(!should_dispatch(&event, &channels));
     }
 }

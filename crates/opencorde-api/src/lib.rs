@@ -44,10 +44,12 @@ pub mod ws;
 use axum::extract::FromRef;
 use sqlx::PgPool;
 use std::sync::Arc;
+use tokio::sync::broadcast;
 
 /// Shared application state.
 ///
-/// Contains the database pool, configuration, and optional search engine.
+/// Contains the database pool, configuration, optional search engine,
+/// and an event broadcast channel for real-time WebSocket fan-out.
 /// Passed to all route handlers via Axum's State extractor.
 #[derive(Clone)]
 pub struct AppState {
@@ -57,6 +59,9 @@ pub struct AppState {
     pub config: Arc<config::Config>,
     /// Optional search engine (None if search is disabled)
     pub search: Option<Arc<opencorde_search::SearchEngine>>,
+    /// Broadcast channel for pushing real-time events to WebSocket clients.
+    /// REST handlers publish here; WS handler subscribes.
+    pub event_tx: Arc<broadcast::Sender<serde_json::Value>>,
 }
 
 /// Allow extracting Arc<Config> from AppState.

@@ -88,7 +88,20 @@ pub async fn send_message(
         "message created successfully"
     );
 
-    Ok((StatusCode::CREATED, Json(message_row_to_response(row))))
+    let response = message_row_to_response(row);
+
+    // Broadcast MessageCreate event to all connected WebSocket clients.
+    // Clients filter on their accessible channel IDs; errors here are non-fatal
+    // (no subscribers = SendError, lagged subscriber = RecvError on their side).
+    let event = serde_json::json!({
+        "type": "MessageCreate",
+        "data": { "message": response }
+    });
+    if state.event_tx.send(event).is_err() {
+        tracing::debug!("no WebSocket subscribers for MessageCreate event");
+    }
+
+    Ok((StatusCode::CREATED, Json(response)))
 }
 
 /// GET /api/v1/channels/{channel_id}/messages — List messages in a channel.

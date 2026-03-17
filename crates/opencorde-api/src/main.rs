@@ -30,6 +30,7 @@
 use opencorde_api::{AppState, config::Config, middleware, routes};
 use std::sync::Arc;
 use tokio::net::TcpListener;
+use tokio::sync::broadcast;
 use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -60,11 +61,18 @@ async fn main() -> anyhow::Result<()> {
     let search = None; // TODO: Initialize search engine from config
     tracing::debug!("search engine initialized: {:?}", search.is_some());
 
+    // Create event broadcast channel (capacity 1024 events)
+    // REST handlers publish events here; WebSocket connections subscribe.
+    let (event_tx, _) = broadcast::channel::<serde_json::Value>(1024);
+    let event_tx = Arc::new(event_tx);
+    tracing::debug!("event broadcast channel created");
+
     // Build application state
     let state = AppState {
         db: pool,
         config: Arc::new(config.clone()),
         search,
+        event_tx,
     };
 
     // Build router with middleware

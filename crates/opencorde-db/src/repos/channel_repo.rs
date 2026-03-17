@@ -151,6 +151,28 @@ pub async fn update_position(
     Ok(())
 }
 
+/// List all channel IDs accessible to a user (via server membership).
+///
+/// Returns all channel IDs for every server the user belongs to.
+/// Used by the WebSocket gateway to filter events to only channels the user can see.
+///
+/// # Errors
+/// Returns sqlx::Error if the query fails.
+#[tracing::instrument(skip(pool))]
+pub async fn list_ids_by_user(
+    pool: &PgPool,
+    user_id: Snowflake,
+) -> Result<Vec<i64>, sqlx::Error> {
+    sqlx::query_scalar::<_, i64>(
+        "SELECT c.id FROM channels c \
+         INNER JOIN server_members m ON c.server_id = m.server_id \
+         WHERE m.user_id = $1",
+    )
+    .bind(user_id.as_i64())
+    .fetch_all(pool)
+    .await
+}
+
 /// Delete a channel by its ID.
 ///
 /// Cascades to messages within the channel.
