@@ -7,24 +7,23 @@
 	 */
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { isAuthenticated, restoreSession, logout } from '$lib/stores/auth';
+	import { logout } from '$lib/stores/auth';
 	import { servers, fetchServers, selectServer, currentServerId } from '$lib/stores/servers';
+	import { browser } from '$app/environment';
 	import ServerIcon from '$lib/components/layout/ServerIcon.svelte';
 
 	let { children } = $props();
 	let authReady = $state(false);
 
 	onMount(() => {
-		restoreSession().then(() => {
-			isAuthenticated.subscribe((v) => {
-				if (!v) {
-					goto('/login');
-				} else {
-					authReady = true;
-					fetchServers();
-				}
-			});
-		});
+		if (!browser) return;
+		const token = localStorage.getItem('opencorde_token');
+		if (!token) {
+			window.location.href = '/login';
+			return;
+		}
+		authReady = true;
+		fetchServers();
 	});
 
 	function handleLogout() {
