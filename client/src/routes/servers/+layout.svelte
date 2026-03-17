@@ -3,7 +3,6 @@
 	 * @file App layout — server list sidebar + content area
 	 * @purpose Main navigation structure for authenticated users
 	 */
-	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { servers, fetchServers, selectServer, currentServerId } from '$lib/stores/servers';
 	import ServerIcon from '$lib/components/layout/ServerIcon.svelte';
@@ -11,19 +10,14 @@
 
 	let { children } = $props();
 
-	onMount(() => {
-		if (!browser) return;
+	if (browser) {
 		const token = localStorage.getItem('opencorde_token');
-		console.log('[layout] token:', token ? 'exists' : 'missing');
 		if (!token) {
 			window.location.href = '/login';
-			return;
+		} else {
+			fetchServers().catch(() => {});
 		}
-		console.log('[layout] calling fetchServers');
-		fetchServers()
-			.then(() => console.log('[layout] fetchServers done'))
-			.catch((e) => console.error('[layout] fetchServers error:', e));
-	});
+	}
 
 	function handleLogout() {
 		localStorage.removeItem('opencorde_token');
