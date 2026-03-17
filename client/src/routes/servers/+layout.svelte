@@ -14,11 +14,15 @@
 	onMount(() => {
 		if (!browser) return;
 		const token = localStorage.getItem('opencorde_token');
+		console.log('[layout] token:', token ? 'exists' : 'missing');
 		if (!token) {
 			window.location.href = '/login';
 			return;
 		}
-		fetchServers();
+		console.log('[layout] calling fetchServers');
+		fetchServers()
+			.then(() => console.log('[layout] fetchServers done'))
+			.catch((e) => console.error('[layout] fetchServers error:', e));
 	});
 
 	function handleLogout() {
