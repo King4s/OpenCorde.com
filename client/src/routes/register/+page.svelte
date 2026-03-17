@@ -32,7 +32,7 @@
 		loading = true;
 		try {
 			await register(username, email, password);
-			goto('/servers');
+			window.location.href = '/servers';
 		} catch (e: any) {
 			error = e.message || 'Registration failed';
 		} finally {

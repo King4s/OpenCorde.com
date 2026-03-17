@@ -19,7 +19,7 @@
 		loading = true;
 		try {
 			await login(email, password);
-			goto('/servers');
+			window.location.href = '/servers';
 		} catch (e: any) {
 			error = e.message || 'Login failed';
 		} finally {
