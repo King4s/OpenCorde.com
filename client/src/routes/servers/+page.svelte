@@ -25,8 +25,7 @@
 			showCreateModal = false;
 			serverName = '';
 			serverDesc = '';
-			selectServer(server.id);
-			goto(`/servers/${server.id}/channels/0`);
+			window.location.href = '/servers';
 		} catch (e: any) {
 			error = e.message || 'Failed to create server';
 		} finally {
@@ -42,9 +41,7 @@
 			await api.post(`/invites/${inviteCode.trim()}/join`);
 			showJoinModal = false;
 			inviteCode = '';
-			// Refresh server list
-			const list = await api.get<any[]>('/servers');
-			servers.set(list);
+			window.location.href = '/servers';
 		} catch (e: any) {
 			error = e.message || 'Invalid invite code';
 		} finally {
@@ -54,7 +51,7 @@
 
 	function handleServerClick(id: string) {
 		selectServer(id);
-		goto(`/servers/${id}/channels/0`);
+		window.location.href = `/servers/${id}/channels/0`;
 	}
 </script>
 
