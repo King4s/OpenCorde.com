@@ -8,9 +8,13 @@
   import { restoreSession } from '$lib/stores/auth';
 
   onMount(() => {
-    restoreSession().then((loggedIn) => {
-      goto(loggedIn ? '/servers' : '/login');
-    });
+    restoreSession()
+      .then((loggedIn) => {
+        goto(loggedIn ? '/servers' : '/login');
+      })
+      .catch(() => {
+        goto('/login');
+      });
   });
 </script>
 
