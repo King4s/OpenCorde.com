@@ -5,18 +5,11 @@
    */
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
-  import { restoreSession, isAuthenticated } from '$lib/stores/auth';
+  import { restoreSession } from '$lib/stores/auth';
 
   onMount(() => {
-    restoreSession().then(() => {
-      const unsub = isAuthenticated.subscribe((v) => {
-        if (v) {
-          goto('/servers');
-        } else {
-          goto('/login');
-        }
-      });
-      return unsub;
+    restoreSession().then((loggedIn) => {
+      goto(loggedIn ? '/servers' : '/login');
     });
   });
 </script>
