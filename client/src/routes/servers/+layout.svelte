@@ -16,6 +16,11 @@
 			window.location.href = '/login';
 		} else {
 			fetchServers().catch(() => {});
+			// Sync currentServerId from URL
+			const match = window.location.pathname.match(/\/servers\/([^/]+)/);
+			if (match) {
+				currentServerId.set(match[1]);
+			}
 		}
 	}
 
@@ -40,7 +45,10 @@
 			<ServerIcon
 				name={server.name}
 				active={$currentServerId === server.id}
-				onclick={() => selectServer(server.id)}
+				onclick={() => {
+					selectServer(server.id);
+					window.location.href = `/servers/${server.id}`;
+				}}
 			/>
 		{/each}
 

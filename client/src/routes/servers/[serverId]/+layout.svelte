@@ -5,8 +5,7 @@
 	 * @depends stores/channels, stores/servers, stores/voice
 	 * @version 1.0.0
 	 */
-	import { page } from '$app/state';
-	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 	import {
 		fetchChannels,
 		textChannels,
@@ -19,13 +18,15 @@
 	import VoicePanel from '$lib/components/voice/VoicePanel.svelte';
 
 	let { children } = $props();
-	let serverId = $derived(page.params.serverId);
+	let serverId = '';
 
-	$effect(() => {
+	if (browser) {
+		const match = window.location.pathname.match(/\/servers\/([^/]+)/);
+		serverId = match?.[1] ?? '';
 		if (serverId) {
-			fetchChannels(serverId);
+			fetchChannels(serverId).catch(() => {});
 		}
-	});
+	}
 
 	function handleVoiceJoin(channelId: string) {
 		joinVoice(channelId);
@@ -55,6 +56,7 @@
 								: 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'}"
 							onclick={() => {
 								selectChannel(channel.id);
+								window.location.href = `/servers/${serverId}/channels/${channel.id}`;
 							}}
 						>
 							<span class="text-gray-500 mr-1">#</span>{channel.name}

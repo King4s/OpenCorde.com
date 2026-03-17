@@ -51,7 +51,7 @@
 
 	function handleServerClick(id: string) {
 		selectServer(id);
-		window.location.href = `/servers/${id}/channels/0`;
+		window.location.href = `/servers/${id}`;
 	}
 </script>
 

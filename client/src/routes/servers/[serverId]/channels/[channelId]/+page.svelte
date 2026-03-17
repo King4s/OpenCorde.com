@@ -5,7 +5,7 @@
 	 * @depends stores/messages, stores/channels
 	 * @version 1.0.0
 	 */
-	import { page } from '$app/state';
+	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import {
 		messages,
@@ -19,14 +19,16 @@
 	import MessageList from '$lib/components/chat/MessageList.svelte';
 	import MessageInput from '$lib/components/chat/MessageInput.svelte';
 
-	let channelId = $derived(page.params.channelId);
+	let channelId = '';
 
-	$effect(() => {
+	if (browser) {
+		const match = window.location.pathname.match(/\/channels\/([^/]+)/);
+		channelId = match?.[1] ?? '';
 		if (channelId) {
 			selectChannel(channelId);
-			fetchMessages(channelId);
+			fetchMessages(channelId).catch(() => {});
 		}
-	});
+	}
 
 	onMount(() => {
 		initMessageListener();
