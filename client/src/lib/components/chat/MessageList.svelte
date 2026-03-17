@@ -19,8 +19,8 @@
 		return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 	}
 
-	function getInitials(authorId: string): string {
-		return authorId.slice(-2).toUpperCase();
+	function getInitials(name: string): string {
+		return name.slice(0, 2).toUpperCase();
 	}
 
 	function getAvatarColor(authorId: string): string {
@@ -60,7 +60,7 @@
 			<div
 				class="w-10 h-10 rounded-full {getAvatarColor(msg.author_id)} flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 mt-0.5"
 			>
-				{getInitials(msg.author_id)}
+				{getInitials(msg.author_username)}
 			</div>
 
 			<div class="flex-1 min-w-0">
