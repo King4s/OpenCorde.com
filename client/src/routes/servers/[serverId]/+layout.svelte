@@ -16,6 +16,8 @@
 	import { joinVoice, currentVoiceChannelId } from '$lib/stores/voice';
 	import api from '$lib/api/client';
 	import VoicePanel from '$lib/components/voice/VoicePanel.svelte';
+	import MemberList from '$lib/components/layout/MemberList.svelte';
+	import { members, membersLoading, fetchMembers } from '$lib/stores/members';
 
 	let { children } = $props();
 	let serverId = '';
@@ -34,6 +36,7 @@
 		serverId = match?.[1] ?? '';
 		if (serverId) {
 			fetchChannels(serverId).catch(() => {});
+			fetchMembers(serverId).catch(() => {});
 		}
 	}
 
@@ -161,4 +164,6 @@
 	<div class="flex-1 flex flex-col">
 		{@render children()}
 	</div>
+
+	<MemberList members={$members} loading={$membersLoading} />
 </div>

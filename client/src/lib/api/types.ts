@@ -57,6 +57,7 @@ export interface Message {
 export interface Member {
   user_id: string;
   server_id: string;
+  username: string;
   nickname: string | null;
   joined_at: string;
 }

@@ -27,6 +27,38 @@ pub struct MemberRoleRow {
     pub role_id: i64,
 }
 
+/// Row type for reading server member data with username joined from users.
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct MemberWithUsernameRow {
+    pub user_id: i64,
+    pub server_id: i64,
+    pub username: String,
+    pub nickname: Option<String>,
+    pub joined_at: DateTime<Utc>,
+}
+
+/// List all members in a server with their usernames, ordered by join date.
+///
+/// # Errors
+/// Returns sqlx::Error if the query fails.
+#[tracing::instrument(skip(pool))]
+pub async fn list_with_usernames_by_server(
+    pool: &PgPool,
+    server_id: Snowflake,
+) -> Result<Vec<MemberWithUsernameRow>, sqlx::Error> {
+    tracing::info!(server_id = server_id.as_i64(), "listing server members with usernames");
+
+    sqlx::query_as::<_, MemberWithUsernameRow>(
+        "SELECT m.user_id, m.server_id, u.username, m.nickname, m.joined_at \
+         FROM server_members m \
+         JOIN users u ON m.user_id = u.id \
+         WHERE m.server_id = $1 ORDER BY m.joined_at ASC",
+    )
+    .bind(server_id.as_i64())
+    .fetch_all(pool)
+    .await
+}
+
 /// Add a user to a server as a member.
 ///
 /// # Arguments

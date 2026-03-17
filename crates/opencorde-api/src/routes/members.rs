@@ -8,7 +8,7 @@ use axum::{
     routing::{delete, get},
 };
 use chrono::{DateTime, Utc};
-use opencorde_db::repos::{member_repo, server_repo};
+use opencorde_db::repos::{member_repo, server_repo, user_repo};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
@@ -16,6 +16,7 @@ use tracing::instrument;
 pub struct MemberResponse {
     pub user_id: String,
     pub server_id: String,
+    pub username: String,
     pub nickname: Option<String>,
     pub joined_at: DateTime<Utc>,
 }
@@ -57,7 +58,7 @@ async fn list_members(
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
-    let members = member_repo::list_by_server(&state.db, server_id)
+    let members = member_repo::list_with_usernames_by_server(&state.db, server_id)
         .await
         .map_err(ApiError::Database)?;
     tracing::info!(count = members.len(), "members fetched");
@@ -67,6 +68,7 @@ async fn list_members(
             .map(|m| MemberResponse {
                 user_id: m.user_id.to_string(),
                 server_id: m.server_id.to_string(),
+                username: m.username,
                 nickname: m.nickname,
                 joined_at: m.joined_at,
             })
@@ -123,6 +125,10 @@ async fn update_member(
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("member not found".into()))?;
+    let user = user_repo::get_by_id(&state.db, target_user_id)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("user not found".into()))?;
     member_repo::update_nickname(
         &state.db,
         target_user_id,
@@ -135,6 +141,7 @@ async fn update_member(
     Ok(Json(MemberResponse {
         user_id: member.user_id.to_string(),
         server_id: member.server_id.to_string(),
+        username: user.username,
         nickname: req.nickname,
         joined_at: member.joined_at,
     }))

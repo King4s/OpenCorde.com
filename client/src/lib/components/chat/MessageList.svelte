@@ -1,9 +1,10 @@
 <script lang="ts">
 	/**
 	 * @file Message list component
-	 * @purpose Displays messages with author, timestamp, content
-	 * @version 1.0.0
+	 * @purpose Displays messages with author, timestamp, content, auto-scroll
+	 * @version 1.1.0
 	 */
+	import { tick } from 'svelte';
 	import type { Message } from '$lib/api/types';
 
 	interface Props {
@@ -14,6 +15,21 @@
 	}
 
 	let { messages, loading, hasMore, onLoadMore }: Props = $props();
+	let scrollContainer: HTMLDivElement;
+
+	// Auto-scroll to bottom when new messages arrive (but not when loading older ones)
+	let prevCount = 0;
+	$effect(() => {
+		const count = messages.length;
+		if (count > prevCount && !loading) {
+			tick().then(() => {
+				if (scrollContainer) {
+					scrollContainer.scrollTop = scrollContainer.scrollHeight;
+				}
+			});
+		}
+		prevCount = count;
+	});
 
 	function formatTime(iso: string): string {
 		return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -41,7 +57,7 @@
 	}
 </script>
 
-<div class="flex-1 overflow-y-auto p-4 space-y-1 flex flex-col justify-end">
+<div bind:this={scrollContainer} class="flex-1 overflow-y-auto p-4 space-y-1 flex flex-col justify-end">
 	{#if hasMore && !loading}
 		<button
 			class="text-indigo-400 text-sm hover:underline py-2 self-center transition-colors"
