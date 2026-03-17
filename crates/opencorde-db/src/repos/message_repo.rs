@@ -49,9 +49,16 @@ pub async fn create_message(
         "creating message"
     );
 
+    // Use CTE to insert and join with users in one query to get author_username
     let row = sqlx::query_as::<_, MessageRow>(
-        "INSERT INTO messages (id, channel_id, author_id, content) \
-         VALUES ($1, $2, $3, $4) RETURNING *",
+        "WITH inserted AS ( \
+             INSERT INTO messages (id, channel_id, author_id, content) \
+             VALUES ($1, $2, $3, $4) RETURNING * \
+         ) \
+         SELECT i.id, i.channel_id, i.author_id, i.content, i.attachments, i.edited_at, i.created_at, \
+                u.username as author_username \
+         FROM inserted i \
+         JOIN users u ON i.author_id = u.id",
     )
     .bind(id.as_i64())
     .bind(channel_id.as_i64())
