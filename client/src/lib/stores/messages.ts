@@ -32,7 +32,8 @@ export async function fetchMessages(channelId: string, before?: string): Promise
 }
 
 export async function sendMessage(channelId: string, content: string): Promise<void> {
-  await api.post(`/channels/${channelId}/messages`, { content });
+  const msg = await api.post<Message>(`/channels/${channelId}/messages`, { content });
+  messages.update(list => [...list, msg]);
 }
 
 export function initMessageListener(): void {
