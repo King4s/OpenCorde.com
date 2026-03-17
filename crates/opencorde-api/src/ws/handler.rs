@@ -176,7 +176,14 @@ async fn handle_connection(socket: WebSocket, state: AppState) {
     );
 
     // 6. Main event loop: heartbeats + event fan-out + client messages
-    let mut heartbeat_timer = interval(Duration::from_secs(HEARTBEAT_INTERVAL_SECS));
+    // MissedTickBehavior::Skip avoids burst on resume; Delay skips the immediate first tick.
+    let mut heartbeat_timer = {
+        let mut t = interval(Duration::from_secs(HEARTBEAT_INTERVAL_SECS));
+        t.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+        // Consume the immediately-firing first tick so clients don't get a Heartbeat on connect.
+        t.tick().await;
+        t
+    };
 
     loop {
         tokio::select! {
