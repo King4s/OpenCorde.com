@@ -58,6 +58,29 @@ pub fn validate_limit(limit: Option<i64>) -> i64 {
     }
 }
 
+/// Parse `<@USER_ID>` mention tokens from message content.
+///
+/// Returns a deduplicated list of user Snowflake IDs (as i64) found in the text.
+/// Unknown or unparseable IDs are silently skipped.
+/// Used by the message send handler to dispatch push notifications to mentioned users.
+pub fn extract_mention_ids(content: &str) -> Vec<i64> {
+    let mut ids = Vec::new();
+    let mut remaining = content;
+    while let Some(start) = remaining.find("<@") {
+        let after = &remaining[start + 2..];
+        if let Some(end) = after.find('>') {
+            let id_str = &after[..end];
+            if let Ok(id) = id_str.trim().parse::<i64>() {
+                if !ids.contains(&id) {
+                    ids.push(id);
+                }
+            }
+        }
+        remaining = &remaining[start + 2..];
+    }
+    ids
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -110,5 +133,17 @@ mod tests {
         assert_eq!(validate_limit(Some(0)), 50);
         assert_eq!(validate_limit(Some(101)), 50);
         assert_eq!(validate_limit(Some(1000)), 50);
+    }
+
+    #[test]
+    fn test_extract_mention_ids() {
+        assert_eq!(extract_mention_ids("hello <@123> world"), vec![123_i64]);
+        assert_eq!(extract_mention_ids("no mentions here"), vec![]);
+        // Deduplication
+        let ids = extract_mention_ids("<@100> and <@100> again");
+        assert_eq!(ids, vec![100_i64]);
+        // Multiple distinct mentions
+        let ids = extract_mention_ids("<@1> hey <@2>");
+        assert_eq!(ids, vec![1_i64, 2_i64]);
     }
 }

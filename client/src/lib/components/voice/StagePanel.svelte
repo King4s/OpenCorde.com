@@ -19,14 +19,33 @@
 		promoteSpeaker,
 		demoteSpeaker,
 	} from '$lib/stores/stage';
+	import api from '$lib/api/client';
 
 	interface Props {
 		channelId: string;
 		serverId: string;
 		isOwner: boolean;
+		/** When true the record button is shown (server owner / manage_channels). */
+		canRecord?: boolean;
 	}
 
-	let { channelId, serverId, isOwner }: Props = $props();
+	let { channelId, serverId, isOwner, canRecord = false }: Props = $props();
+
+	let recording = $state(false);
+
+	async function toggleRecording() {
+		try {
+			if (recording) {
+				await api.post(`/channels/${channelId}/recording/stop`);
+				recording = false;
+			} else {
+				await api.post(`/channels/${channelId}/recording/start`);
+				recording = true;
+			}
+		} catch (e) {
+			console.error('[Recording] toggle failed:', e);
+		}
+	}
 	let showStartForm = $state(false);
 	let topicInput = $state('');
 
@@ -103,17 +122,34 @@
 	{#if $stageSession}
 		<div class="mb-3">
 			<div class="flex items-center justify-between mb-2">
-				<h3 class="text-sm font-semibold text-white">
+				<h3 class="text-sm font-semibold text-white flex items-center gap-1.5">
 					🎙️ Stage {$stageSession.topic ? `: ${$stageSession.topic}` : ''}
+					{#if recording}
+						<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block" title="Recording active"></span>
+					{/if}
 				</h3>
-				{#if $stageSession.started_by === $currentUser?.id}
-					<button
-						onclick={handleEndStage}
-						class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded"
-					>
-						End Stage
-					</button>
-				{/if}
+				<div class="flex gap-1">
+					{#if canRecord}
+						<button
+							onclick={toggleRecording}
+							class="px-2 py-1 text-xs rounded transition-colors {recording
+								? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
+								: 'bg-gray-700 hover:bg-gray-600 text-white'}"
+							title={recording ? 'Stop recording' : 'Start recording'}
+							aria-label={recording ? 'Stop recording' : 'Start recording'}
+						>
+							⏺ {recording ? 'Stop Rec' : 'Record'}
+						</button>
+					{/if}
+					{#if $stageSession.started_by === $currentUser?.id}
+						<button
+							onclick={handleEndStage}
+							class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded"
+						>
+							End Stage
+						</button>
+					{/if}
+				</div>
 			</div>
 
 			<!-- Speakers Section -->

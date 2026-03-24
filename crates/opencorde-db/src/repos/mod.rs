@@ -7,6 +7,7 @@
 pub mod audit_repo;
 pub mod automod_repo;
 pub mod ban_repo;
+pub mod channel_override_repo;
 pub mod channel_repo;
 pub mod dm_repo;
 pub mod emoji_repo;

@@ -35,7 +35,14 @@ fn server_row_to_response(row: server_repo::ServerRow) -> ServerResponse {
         name: row.name,
         owner_id: row.owner_id.to_string(),
         icon_url: row.icon_url,
+        banner_url: row.banner_url,
         description: row.description,
+        vanity_url: row.vanity_url,
+        verification_level: row.verification_level,
+        explicit_content_filter: row.explicit_content_filter,
+        default_notifications: row.default_notifications,
+        system_channel_id: row.system_channel_id.map(|id| id.to_string()),
+        rules_channel_id: row.rules_channel_id.map(|id| id.to_string()),
         created_at: row.created_at,
     }
 }
@@ -217,19 +224,43 @@ async fn update_server(
 
     tracing::debug!(server_id = server.id, "ownership verified");
 
-    // Determine which fields to update
+    // Determine which fields to update (fall back to current values if not provided)
     let update_name = req.name.as_deref().unwrap_or(&server.name);
     let update_description = req.description.as_deref().or(server.description.as_deref());
+    let update_verification  = req.verification_level.unwrap_or(server.verification_level);
+    let update_content_filter = req.explicit_content_filter.unwrap_or(server.explicit_content_filter);
+    let update_notifications = req.default_notifications.unwrap_or(server.default_notifications);
+    let update_vanity = req.vanity_url.as_deref().or(server.vanity_url.as_deref());
+    let update_system_ch = req.system_channel_id
+        .as_deref()
+        .map(|s| s.parse::<i64>().ok())
+        .unwrap_or(server.system_channel_id);
+    let update_rules_ch = req.rules_channel_id
+        .as_deref()
+        .map(|s| s.parse::<i64>().ok())
+        .unwrap_or(server.rules_channel_id);
 
     // Validate name if provided
     if let Some(name) = &req.name {
         validate_server_name(name)?;
     }
 
+    // Validate moderation ranges
+    if !(0..=4).contains(&update_verification) {
+        return Err(ApiError::BadRequest("verification_level must be 0–4".into()));
+    }
+    if !(0..=2).contains(&update_content_filter) {
+        return Err(ApiError::BadRequest("explicit_content_filter must be 0–2".into()));
+    }
+
     // Update server
-    server_repo::update_server(&state.db, server_id, update_name, update_description)
-        .await
-        .map_err(ApiError::Database)?;
+    server_repo::update_server(
+        &state.db, server_id, update_name, update_description,
+        update_verification, update_content_filter, update_notifications,
+        update_vanity, update_system_ch, update_rules_ch,
+    )
+    .await
+    .map_err(ApiError::Database)?;
 
     tracing::info!(
         server_id = server.id,

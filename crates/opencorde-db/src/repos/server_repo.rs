@@ -17,7 +17,14 @@ pub struct ServerRow {
     pub name: String,
     pub owner_id: i64,
     pub icon_url: Option<String>,
+    pub banner_url: Option<String>,
     pub description: Option<String>,
+    pub vanity_url: Option<String>,
+    pub verification_level: i16,
+    pub explicit_content_filter: i16,
+    pub default_notifications: i16,
+    pub system_channel_id: Option<i64>,
+    pub rules_channel_id: Option<i64>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -90,25 +97,42 @@ pub async fn list_by_user(
     .await
 }
 
-/// Update a server's name and description.
+/// Update a server's settings.
 ///
 /// # Errors
 /// Returns sqlx::Error if the update fails.
 #[tracing::instrument(skip(pool))]
+#[allow(clippy::too_many_arguments)]
 pub async fn update_server(
     pool: &PgPool,
     id: Snowflake,
     name: &str,
     description: Option<&str>,
+    verification_level: i16,
+    explicit_content_filter: i16,
+    default_notifications: i16,
+    vanity_url: Option<&str>,
+    system_channel_id: Option<i64>,
+    rules_channel_id: Option<i64>,
 ) -> Result<(), sqlx::Error> {
     tracing::info!(server_id = id.as_i64(), name = %name, "updating server");
 
-    sqlx::query("UPDATE servers SET name = $1, description = $2, updated_at = NOW() WHERE id = $3")
-        .bind(name)
-        .bind(description)
-        .bind(id.as_i64())
-        .execute(pool)
-        .await?;
+    sqlx::query(
+        "UPDATE servers SET name = $1, description = $2, verification_level = $3, \
+         explicit_content_filter = $4, default_notifications = $5, vanity_url = $6, \
+         system_channel_id = $7, rules_channel_id = $8, updated_at = NOW() WHERE id = $9",
+    )
+    .bind(name)
+    .bind(description)
+    .bind(verification_level)
+    .bind(explicit_content_filter)
+    .bind(default_notifications)
+    .bind(vanity_url)
+    .bind(system_channel_id)
+    .bind(rules_channel_id)
+    .bind(id.as_i64())
+    .execute(pool)
+    .await?;
 
     Ok(())
 }
@@ -160,7 +184,14 @@ mod tests {
             name: "My Server".to_string(),
             owner_id: 999888777,
             icon_url: None,
+            banner_url: None,
             description: Some("A test server".to_string()),
+            vanity_url: None,
+            verification_level: 0,
+            explicit_content_filter: 0,
+            default_notifications: 0,
+            system_channel_id: None,
+            rules_channel_id: None,
             created_at: now,
             updated_at: now,
         };

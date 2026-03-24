@@ -11,18 +11,39 @@ use serde::{Deserialize, Serialize};
 /// Server response body.
 #[derive(Debug, Serialize, Clone)]
 pub struct ServerResponse {
+    pub id: String,
+    pub name: String,
+    pub owner_id: String,
+    pub icon_url: Option<String>,
+    pub banner_url: Option<String>,
+    pub description: Option<String>,
+    pub vanity_url: Option<String>,
+    /// 0=NONE 1=LOW 2=MEDIUM 3=HIGH 4=VERY_HIGH
+    pub verification_level: i16,
+    /// 0=DISABLED 1=MEMBERS_WITHOUT_ROLES 2=ALL_MEMBERS
+    pub explicit_content_filter: i16,
+    /// 0=ALL_MESSAGES 1=ONLY_MENTIONS
+    pub default_notifications: i16,
+    pub system_channel_id: Option<String>,
+    pub rules_channel_id: Option<String>,
+    pub created_at: DateTime<Utc>,
+}
+
+/// Server discovery response body (for public listing).
+#[derive(Debug, Serialize, Clone)]
+pub struct DiscoveryServer {
     /// Snowflake server ID
     pub id: String,
     /// Server name (1-100 chars)
     pub name: String,
-    /// Snowflake user ID of server owner
-    pub owner_id: String,
-    /// Server icon URL (optional)
-    pub icon_url: Option<String>,
     /// Server description (optional)
     pub description: Option<String>,
-    /// Server creation timestamp
-    pub created_at: DateTime<Utc>,
+    /// Server icon URL (optional)
+    pub icon_url: Option<String>,
+    /// Number of members in the server
+    pub member_count: i32,
+    /// Tags for categorization (comma-separated, optional)
+    pub tags: Option<String>,
 }
 
 /// Request body for creating a server.
@@ -38,10 +59,25 @@ pub struct CreateServerRequest {
 /// Request body for updating a server.
 #[derive(Debug, Deserialize)]
 pub struct UpdateServerRequest {
-    /// Optional new server name
     pub name: Option<String>,
-    /// Optional new server description
     pub description: Option<String>,
+    pub verification_level: Option<i16>,
+    pub explicit_content_filter: Option<i16>,
+    pub default_notifications: Option<i16>,
+    pub vanity_url: Option<String>,
+    pub system_channel_id: Option<String>,
+    pub rules_channel_id: Option<String>,
+}
+
+/// Request body for updating discovery settings.
+#[derive(Debug, Deserialize)]
+pub struct DiscoveryUpdateRequest {
+    /// Whether server is publicly listed
+    pub public: bool,
+    /// Server description for discovery listing
+    pub description: Option<String>,
+    /// Tags for categorization (comma-separated)
+    pub tags: Option<String>,
 }
 
 #[cfg(test)]
@@ -80,7 +116,14 @@ mod tests {
             name: "Test Server".to_string(),
             owner_id: "999".to_string(),
             icon_url: None,
+            banner_url: None,
             description: Some("A test server".to_string()),
+            vanity_url: None,
+            verification_level: 0,
+            explicit_content_filter: 0,
+            default_notifications: 0,
+            system_channel_id: None,
+            rules_channel_id: None,
             created_at: now,
         };
 

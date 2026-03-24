@@ -7,12 +7,14 @@
 //! - `users` — User profile management
 //! - `servers` — Server CRUD operations
 //! - `channels` — Channel CRUD operations
+//! - `channel_overrides` — Per-channel permission overrides (role/member)
 //! - `messages` — Message CRUD and typing indicator
 //! - `reactions` — Emoji reactions to messages
 //! - `read_state` — Unread tracking and mark-as-read
 //! - `moderation` — Ban, kick, timeout management
 //! - `dms` — Direct message channels
 //! - `e2ee` — End-to-end encryption key exchange (key packages, MLS groups)
+//! - `push` — Push notification token registration/unregistration
 //!
 //! ## Depends On
 //! - axum (web framework)
@@ -24,6 +26,7 @@ pub mod data_export;
 pub mod auth;
 pub mod e2ee;
 pub mod automod;
+pub mod channel_overrides;
 pub mod channels;
 pub mod discovery;
 pub mod dms;
@@ -41,6 +44,7 @@ pub mod moderation;
 pub mod pins;
 pub mod reactions;
 pub mod read_state;
+pub mod recordings;
 pub mod roles;
 pub mod search;
 pub mod servers;
@@ -49,6 +53,7 @@ pub mod stage;
 pub mod threads;
 pub mod uploads;
 pub mod users;
+pub mod push;
 pub mod voice;
 pub mod webhooks;
 
@@ -65,6 +70,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(users::router())
         .merge(servers::router())
         .merge(channels::router())
+        .merge(channel_overrides::router())
         .merge(discovery::router())
         .merge(events::router())
         .merge(emojis::router())
@@ -87,10 +93,12 @@ pub fn api_router() -> Router<AppState> {
         .merge(search::router())
         .merge(uploads::router())
         .merge(voice::router())
+        .merge(recordings::router())
         .merge(webhooks::router())
         .merge(audit_log::router())
         .merge(data_export::router())
         .merge(e2ee::router())
+        .merge(push::router())
         .merge(crate::ws::handler::router())
 }
 

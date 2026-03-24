@@ -2,8 +2,8 @@
 	/**
 	 * @file Voice controls panel
 	 * @purpose Mute/deafen/leave controls and participant list when in voice
-	 * @depends stores/voice
-	 * @version 2.0.0
+	 * @depends stores/voice, api/client
+	 * @version 2.1.0
 	 */
 	import {
 		inVoice,
@@ -14,8 +14,35 @@
 		toggleMute,
 		toggleDeaf,
 		toggleScreenShare,
-		livekitParticipants
+		livekitParticipants,
+		currentVoiceChannelId
 	} from '$lib/stores/voice';
+	import api from '$lib/api/client';
+
+	interface Props {
+		/** When true the record button is shown (server owner / manage_channels). */
+		canRecord?: boolean;
+	}
+
+	let { canRecord = false }: Props = $props();
+
+	let recording = $state(false);
+
+	async function toggleRecording() {
+		const channelId = $currentVoiceChannelId;
+		if (!channelId) return;
+		try {
+			if (recording) {
+				await api.post(`/channels/${channelId}/recording/stop`);
+				recording = false;
+			} else {
+				await api.post(`/channels/${channelId}/recording/start`);
+				recording = true;
+			}
+		} catch (e) {
+			console.error('[Recording] toggle failed:', e);
+		}
+	}
 </script>
 
 {#if $inVoice}
@@ -57,6 +84,18 @@
 				>
 					🖥
 				</button>
+				{#if canRecord}
+					<button
+						onclick={toggleRecording}
+						class="p-1.5 rounded transition-colors {recording
+							? 'bg-red-600 hover:bg-red-700 animate-pulse'
+							: 'bg-gray-700 hover:bg-gray-600'} text-white text-xs"
+						title={recording ? 'Stop recording' : 'Start recording'}
+						aria-label={recording ? 'Stop recording' : 'Start recording'}
+					>
+						⏺
+					</button>
+				{/if}
 				<button
 					onclick={leaveVoice}
 					class="p-1.5 rounded bg-red-700 hover:bg-red-600 text-white text-xs transition-colors"

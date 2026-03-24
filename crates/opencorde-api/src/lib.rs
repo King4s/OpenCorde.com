@@ -15,6 +15,7 @@
 //! - `routes` — HTTP route handlers (auth, servers, channels, etc.)
 //! - `middleware` — Request processing layers (CORS, request ID, etc.)
 //! - `ws` — WebSocket gateway (Phase 1, Weeks 7-8)
+//! - `push_sender` — Push notification dispatch (Web Push, FCM, APNS stub)
 //!
 //! ## Depends On
 //! - opencorde_core — Model types and domain logic
@@ -41,6 +42,7 @@ pub mod emoji_helpers;
 pub mod error;
 pub mod jwt;
 pub mod middleware;
+pub mod push_sender;
 pub mod routes;
 pub mod ws;
 

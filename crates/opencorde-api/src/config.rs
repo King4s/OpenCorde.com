@@ -72,6 +72,10 @@ pub struct Config {
     pub rate_limit_burst: u32,
     /// Steam Web API key (optional, for fetching player summaries)
     pub steam_api_key: Option<String>,
+    /// Firebase Cloud Messaging server key (optional, for Android push notifications)
+    pub fcm_server_key: Option<String>,
+    /// VAPID private key in URL-safe base64 (optional, for Web Push notifications)
+    pub vapid_private_key: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -190,6 +194,8 @@ impl Config {
         };
 
         let steam_api_key = env::var("STEAM_API_KEY").ok();
+        let fcm_server_key = env::var("FCM_SERVER_KEY").ok();
+        let vapid_private_key = env::var("VAPID_PRIVATE_KEY").ok();
 
         let config = Config {
             database_url,
@@ -221,6 +227,8 @@ impl Config {
             rate_limit_rps,
             rate_limit_burst,
             steam_api_key,
+            fcm_server_key,
+            vapid_private_key,
         };
 
         // Log configuration (with secrets masked)

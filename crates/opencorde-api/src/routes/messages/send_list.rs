@@ -24,7 +24,7 @@ use tracing::instrument;
 use crate::{AppState, automod, error::ApiError, middleware::auth::AuthUser};
 
 use super::types::{MessageQuery, MessageResponse, ReplyContextResponse, SendMessageRequest};
-use super::validation::{parse_snowflake_id, validate_content, validate_limit};
+use super::validation::{extract_mention_ids, parse_snowflake_id, validate_content, validate_limit};
 
 /// Convert MessageRow to MessageResponse.
 pub fn message_row_to_response(row: message_repo::MessageRow) -> MessageResponse {
@@ -144,6 +144,29 @@ pub async fn send_message(
     });
     if state.event_tx.send(event).is_err() {
         tracing::debug!("no WebSocket subscribers for MessageCreate event");
+    }
+
+    // Fire push notifications for any users @mentioned in this message.
+    // Mentions use the format <@USER_ID> (Snowflake ID). We parse them here
+    // and dispatch non-blocking so the HTTP response is not delayed.
+    let mention_ids = extract_mention_ids(&req.content);
+    if !mention_ids.is_empty() {
+        let db = state.db.clone();
+        let config = state.config.clone();
+        let sender_username = response.author_username.clone();
+        let content_preview: String = req.content.chars().take(80).collect();
+        tokio::spawn(async move {
+            for uid in mention_ids {
+                crate::push_sender::send_push(
+                    &db,
+                    &config,
+                    uid,
+                    &format!("Mention from {}", sender_username),
+                    &content_preview,
+                )
+                .await;
+            }
+        });
     }
 
     Ok((StatusCode::CREATED, Json(response)))

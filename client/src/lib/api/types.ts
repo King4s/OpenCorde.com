@@ -92,6 +92,7 @@ export interface Member {
   server_id: string;
   username: string;
   nickname: string | null;
+  role_ids: string[];
   joined_at: string;
 }
 
@@ -154,6 +155,15 @@ export interface InstanceStats {
   total_messages: number;
   total_channels: number;
   active_voice_sessions: number;
+  db_size_bytes: number;
+  attachment_storage_bytes: number;
+  attachment_count: number;
+}
+
+export interface RateLimitConfig {
+  requests_per_second: number;
+  burst_size: number;
+  enabled: boolean;
 }
 
 export interface AdminUserRow {
