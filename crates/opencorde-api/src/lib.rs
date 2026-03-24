@@ -34,7 +34,10 @@
 //! - Error centralizes error handling and HTTP response mapping
 //! - Main.rs orchestrates startup and server initialization
 
+pub mod automod;
 pub mod config;
+pub mod email;
+pub mod emoji_helpers;
 pub mod error;
 pub mod jwt;
 pub mod middleware;
@@ -49,6 +52,7 @@ use tokio::sync::broadcast;
 /// Shared application state.
 ///
 /// Contains the database pool, configuration, optional search engine,
+/// an S3 client for file uploads, an email service for transactional emails,
 /// and an event broadcast channel for real-time WebSocket fan-out.
 /// Passed to all route handlers via Axum's State extractor.
 #[derive(Clone)]
@@ -59,6 +63,10 @@ pub struct AppState {
     pub config: Arc<config::Config>,
     /// Optional search engine (None if search is disabled)
     pub search: Option<Arc<opencorde_search::SearchEngine>>,
+    /// S3/MinIO client for object storage operations
+    pub s3: Arc<aws_sdk_s3::Client>,
+    /// Email service for transactional emails (password resets, etc.)
+    pub email_service: email::EmailService,
     /// Broadcast channel for pushing real-time events to WebSocket clients.
     /// REST handlers publish here; WS handler subscribes.
     pub event_tx: Arc<broadcast::Sender<serde_json::Value>>,

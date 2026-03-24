@@ -34,7 +34,7 @@ pub struct CreateInviteRequest {
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/api/v1/servers/{server_id}/invites", post(create_invite))
+        .route("/api/v1/servers/{server_id}/invites", post(create_invite).get(list_invites))
         .route("/api/v1/invites/{code}", get(get_invite))
         .route("/api/v1/invites/{code}/join", post(join_invite))
         .route(
@@ -93,6 +93,40 @@ async fn create_invite(
             created_at: invite.created_at,
         }),
     ))
+}
+
+#[instrument(skip(state, auth), fields(user_id = %auth.user_id))]
+async fn list_invites(
+    State(state): State<AppState>,
+    auth: AuthUser,
+    Path(server_id): Path<String>,
+) -> Result<Json<Vec<InviteResponse>>, ApiError> {
+    tracing::info!("listing server invites");
+    let server_id_sf = helpers::parse_snowflake(&server_id)?;
+
+    let server = server_repo::get_by_id(&state.db, server_id_sf)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
+
+    helpers::check_server_owner(auth.user_id, server.owner_id)?;
+
+    let invites = invite_repo::list_by_server(&state.db, server_id_sf)
+        .await
+        .map_err(ApiError::Database)?;
+
+    tracing::info!(count = invites.len(), "invites listed");
+
+    Ok(Json(invites.into_iter().map(|inv| InviteResponse {
+        code: inv.code,
+        server_id: server.id.to_string(),
+        server_name: server.name.clone(),
+        creator_id: inv.creator_id.to_string(),
+        uses: inv.uses,
+        max_uses: inv.max_uses,
+        expires_at: inv.expires_at,
+        created_at: inv.created_at,
+    }).collect()))
 }
 
 #[instrument(skip(state))]

@@ -56,7 +56,44 @@ class ApiClient {
     });
 
     if (!response.ok) {
-      const error: ApiError = await response.json();
+      const text = await response.text();
+      const error: ApiError = text
+        ? (JSON.parse(text) as ApiError)
+        : { code: 'HTTP_ERROR', message: `HTTP ${response.status}` };
+      throw error;
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
+    return response.json();
+  }
+
+  private async requestFormData<T>(
+    method: string,
+    path: string,
+    body: FormData
+  ): Promise<T> {
+    const headers: Record<string, string> = {};
+
+    const token = this.getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method,
+      headers,
+      body,
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      const error: ApiError = text
+        ? (JSON.parse(text) as ApiError)
+        : { code: 'HTTP_ERROR', message: `HTTP ${response.status}` };
       throw error;
     }
 
@@ -69,8 +106,9 @@ class ApiClient {
 
   get<T>(path: string) { return this.request<T>('GET', path); }
   post<T>(path: string, body?: unknown) { return this.request<T>('POST', path, body); }
+  postFormData<T>(path: string, body: FormData) { return this.requestFormData<T>('POST', path, body); }
   patch<T>(path: string, body?: unknown) { return this.request<T>('PATCH', path, body); }
-  delete<T>(path: string) { return this.request<T>('DELETE', path); }
+  delete<T>(path: string, body?: unknown) { return this.request<T>('DELETE', path, body); }
   put<T>(path: string, body?: unknown) { return this.request<T>('PUT', path, body); }
 }
 

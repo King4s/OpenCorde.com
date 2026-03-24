@@ -104,6 +104,7 @@ pub async fn join_voice(
             joined_at: voice_state.joined_at,
         },
         livekit_token,
+        livekit_url: state.config.livekit_public_url.clone(),
     }))
 }
 

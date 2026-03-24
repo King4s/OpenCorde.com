@@ -32,3 +32,12 @@ chrono = { workspace = true }
 uuid = { workspace = true }
 rand = { workspace = true }
 futures = { workspace = true }
+aws-sdk-s3 = { workspace = true }  # S3/MinIO uploads
+aws-config = { workspace = true }  # S3 config builder
+reqwest = { workspace = true }  # HTTP client for slash command webhooks
+hex = "0.4"  # Hex encoding for password reset tokens
+base64 = "0.22"  # Base64 encoding/decoding for E2EE key package blobs
+password-hash = "0.5"  # Password hash traits and implementations (for SaltString generation)
+lettre = { version = "0.11", features = ["tokio1-native-tls", "builder"] }  # Async SMTP email sending
+governor = { version = "0.6", features = ["dashmap"] }  # Token-bucket per-IP rate limiting (dashmap = thread-safe keyed limiter)
+urlencoding = "2.1"  # URL encoding for Steam OpenID 2.0 parameters

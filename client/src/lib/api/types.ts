@@ -12,9 +12,12 @@ export interface UserInfo {
 export interface UserProfile {
   id: string;
   username: string;
-  email: string;
+  email: string | null;
   avatar_url: string | null;
+  public_key: string;
   status: number;
+  bio: string | null;
+  status_message: string | null;
 }
 
 export interface AuthResponse {
@@ -40,7 +43,20 @@ export interface Channel {
   topic: string | null;
   position: number;
   parent_id: string | null;
+  nsfw: boolean;
   created_at: string;
+}
+
+export interface ReactionCount {
+  emoji: string;
+  count: number;
+  reacted: boolean;
+}
+
+export interface ReplyContext {
+  id: string;
+  author_username: string;
+  content: string;
 }
 
 export interface Message {
@@ -49,9 +65,26 @@ export interface Message {
   author_id: string;
   author_username: string;
   content: string;
-  attachments: unknown[];
+  attachments: Attachment[];
   edited_at: string | null;
   created_at: string;
+  reply_to_id?: string | null;
+  reply_to?: ReplyContext | null;
+  reactions?: ReactionCount[];
+}
+
+export interface Attachment {
+  id: string;
+  filename: string;
+  content_type: string;
+  size: number;
+  url: string;
+}
+
+export interface DmChannel {
+  id: string;
+  other_user_id: string;
+  other_username: string;
 }
 
 export interface Member {
@@ -79,5 +112,61 @@ export interface Role {
   color: number | null;
   position: number;
   mentionable: boolean;
+  created_at: string;
+}
+
+export interface DmMessage {
+  id: string;
+  dm_id: string;
+  author_id: string;
+  author_username: string;
+  content: string;
+  attachments: unknown[];
+  edited_at: string | null;
+  created_at: string;
+}
+
+export interface StageSession {
+  id: string;
+  channel_id: string;
+  topic: string | null;
+  started_by: string;
+  started_at: string;
+}
+
+export interface StageParticipant {
+  id: string;
+  user_id: string;
+  username: string;
+  role: 'speaker' | 'audience';
+  hand_raised: boolean;
+  joined_at: string;
+}
+
+export interface StageDetail {
+  session: StageSession;
+  participants: StageParticipant[];
+}
+
+export interface InstanceStats {
+  total_users: number;
+  total_servers: number;
+  total_messages: number;
+  total_channels: number;
+  active_voice_sessions: number;
+}
+
+export interface AdminUserRow {
+  id: string;
+  username: string;
+  email: string;
+  created_at: string;
+}
+
+export interface AdminServerRow {
+  id: string;
+  name: string;
+  owner_id: number;
+  member_count: number;
   created_at: string;
 }

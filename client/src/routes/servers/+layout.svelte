@@ -5,6 +5,7 @@
 	 */
 	import { browser } from '$app/environment';
 	import { servers, fetchServers, selectServer, currentServerId } from '$lib/stores/servers';
+	import { initDmListener } from '$lib/stores/dms';
 	import ServerIcon from '$lib/components/layout/ServerIcon.svelte';
 	import api from '$lib/api/client';
 
@@ -16,6 +17,7 @@
 			window.location.href = '/login';
 		} else {
 			fetchServers().catch(() => {});
+			initDmListener();
 			// Sync currentServerId from URL
 			const match = window.location.pathname.match(/\/servers\/([^/]+)/);
 			if (match) {
@@ -37,6 +39,14 @@
 			title="Home"
 		>
 			OC
+		</button>
+
+		<button
+			onclick={() => (window.location.href = '/@me')}
+			class="w-12 h-12 rounded-2xl bg-gray-700 hover:bg-indigo-600 hover:rounded-xl transition-all flex items-center justify-center text-gray-300 hover:text-white text-xl"
+			title="Direct Messages"
+		>
+			💬
 		</button>
 
 		<div class="w-8 h-0.5 bg-gray-700 rounded my-1"></div>

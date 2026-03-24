@@ -104,9 +104,22 @@ OpenCorde is a **self-hosted Discord alternative** built with Rust (Axum backend
 
 ## Current Project State
 
-**Weeks 1-2: Foundation COMPLETE. 99 tests passing.**
+**Phase 1, 2, and 3: COMPLETE. 26/26 browser tests passing. 30 migrations applied.**
 
-All core types, database schema (9 migrations), repositories (5), and API skeleton implemented. Ready for Weeks 3-4: Authentication.
+All features implemented and deployed at opencorde.com:
+- Auth (register/login/JWT/refresh/password-reset UI), user profiles, settings, avatar upload
+- Servers, channels (text/voice/stage/forum), messages, reactions, replies, threads, pins
+- File attachments (MinIO), WebSocket gateway (real-time messages, typing, presence, unread)
+- LiveKit voice/video (VoicePanel, StagePanel), screen share
+- DMs, friends system, moderation (kick/ban/timeout)
+- Search (Tantivy + SearchModal), webhooks, slash commands, automod
+- Events with RSVP, server discovery, forum channels, stage channels
+- Role management UI, channel settings, server settings, audit log
+- Emoji picker, custom server emojis, markdown rendering, message grouping
+- Light/dark theme, cozy/compact display, admin dashboard, data export
+- SMTP email integration (lettre) for password reset
+
+Next sprint: Tauri desktop packaging, E2EE (OpenMLS), Discord bridge.
 
 ## Tech Stack (Exact Versions)
 
@@ -232,6 +245,6 @@ See [`decisions.md`](./decisions.md) for rationales behind:
 
 ---
 
-**Status:** Weeks 1-2 Foundation complete. 99 tests passing. Next: Weeks 3-4 Authentication.
+**Status:** Phase 1-3 complete. 26/26 browser tests passing. 30 migrations applied. Next: Tauri desktop, E2EE, Discord bridge.
 
-Last updated: 2026-03-16
+Last updated: 2026-03-22

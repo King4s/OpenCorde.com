@@ -4,8 +4,26 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
-# E2EE layer using OpenMLS (Phase 2 — placeholder)
+# E2EE layer using OpenMLS (RFC 9420)
 
 [dependencies]
 opencorde-core = { path = "../opencorde-core" }
 thiserror = { workspace = true }
+# RFC 9420 Messaging Layer Security protocol
+# v0.5 is the correct pairing with openmls_rust_crypto 0.2 (both use openmls_traits 0.2)
+openmls = { version = "0.5", features = ["crypto-subtle"] }
+# RustCrypto backend for OpenMLS (implements OpenMlsCryptoProvider from openmls_traits 0.2)
+openmls_rust_crypto = "0.2"
+# Basic credential type for OpenMLS (user identity)
+openmls_basic_credential = "0.2"
+# Serialization for key material
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Structured logging
+tracing = "0.1"
+# Base64 encoding/decoding for key serialization
+base64 = "0.22"
+# Random number generation for key material
+rand = "0.8"
+# SHA-256 hashing
+sha2 = "0.10"

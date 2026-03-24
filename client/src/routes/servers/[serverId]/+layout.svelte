@@ -1,35 +1,39 @@
 <script lang="ts">
 	/**
 	 * @file Server layout — channel sidebar + content
-	 * @purpose Shows channels, create channel, invite link
+	 * @purpose Shows channels, create channel, invite link, channel context menu
 	 */
 	import { browser } from '$app/environment';
 	import {
 		fetchChannels,
-		textChannels,
-		voiceChannels,
-		selectChannel,
 		currentChannelId,
-		createChannel
+		currentChannel
 	} from '$lib/stores/channels';
 	import { currentServer } from '$lib/stores/servers';
-	import { joinVoice, currentVoiceChannelId } from '$lib/stores/voice';
+	import { currentUser } from '$lib/stores/auth';
+	import { currentVoiceChannelId } from '$lib/stores/voice';
+	import { initUnreadListener, loadReadStates } from '$lib/stores/unread';
+	import { presenceMap, initPresenceListener } from '$lib/stores/presence';
 	import api from '$lib/api/client';
 	import VoicePanel from '$lib/components/voice/VoicePanel.svelte';
+	import StagePanel from '$lib/components/voice/StagePanel.svelte';
 	import MemberList from '$lib/components/layout/MemberList.svelte';
+	import ChannelSidebar from '$lib/components/layout/ChannelSidebar.svelte';
+	import WebhookManager from '$lib/components/modals/WebhookManager.svelte';
 	import { members, membersLoading, fetchMembers } from '$lib/stores/members';
 
 	let { children } = $props();
-	let serverId = '';
+	let serverId = $state('');
 
 	// Modals
 	let showCreateChannel = $state(false);
 	let showInvite = $state(false);
-	let channelName = $state('');
-	let channelType = $state(0);
 	let inviteCode = $state('');
 	let inviteLoading = $state(false);
 	let error = $state('');
+
+	// Webhook manager
+	let webhookChannelId = $state<string | null>(null);
 
 	if (browser) {
 		const match = window.location.pathname.match(/\/servers\/([^/]+)/);
@@ -37,21 +41,12 @@
 		if (serverId) {
 			fetchChannels(serverId).catch(() => {});
 			fetchMembers(serverId).catch(() => {});
+			initUnreadListener();
+			initPresenceListener();
+			loadReadStates().catch(() => {});
 		}
 	}
 
-	async function handleCreateChannel() {
-		if (!channelName.trim() || !serverId) return;
-		error = '';
-		try {
-			await createChannel(serverId, channelName.trim(), channelType);
-			showCreateChannel = false;
-			channelName = '';
-			channelType = 0;
-		} catch (e: any) {
-			error = e.message || 'Failed to create channel';
-		}
-	}
 
 	async function handleCreateInvite() {
 		if (!serverId) return;
@@ -69,6 +64,7 @@
 	function copyInvite() {
 		navigator.clipboard.writeText(inviteCode);
 	}
+
 </script>
 
 <div class="flex flex-1">
@@ -89,25 +85,15 @@
 					class="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 text-xs"
 					title="Create Channel"
 				>+#</button>
+				{#if $currentUser?.id === $currentServer?.owner_id}
+					<button
+						onclick={() => { window.location.href = `/servers/${serverId}/settings`; }}
+						class="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 text-xs"
+						title="Server Settings"
+					>⚙</button>
+				{/if}
 			</div>
 		</div>
-
-		<!-- Create channel form -->
-		{#if showCreateChannel}
-			<div class="p-2 bg-gray-750 border-b border-gray-900">
-				{#if error}<p class="text-red-400 text-xs mb-1">{error}</p>{/if}
-				<input type="text" bind:value={channelName} placeholder="channel-name"
-					class="w-full px-2 py-1 bg-gray-900 border border-gray-700 rounded text-white text-xs placeholder-gray-500 focus:outline-none focus:border-indigo-500 mb-1" />
-				<div class="flex gap-1 mb-1">
-					<button onclick={() => channelType = 0}
-						class="flex-1 text-xs py-1 rounded {channelType === 0 ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-400'}">Text</button>
-					<button onclick={() => channelType = 1}
-						class="flex-1 text-xs py-1 rounded {channelType === 1 ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-400'}">Voice</button>
-				</div>
-				<button onclick={handleCreateChannel} disabled={!channelName.trim()}
-					class="w-full text-xs py-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded">Create</button>
-			</div>
-		{/if}
 
 		<!-- Invite form -->
 		{#if showInvite}
@@ -128,42 +114,38 @@
 			</div>
 		{/if}
 
-		<div class="flex-1 overflow-y-auto p-2 space-y-4">
-			{#if $textChannels.length > 0}
-				<div>
-					<h3 class="text-xs font-semibold text-gray-400 uppercase px-2 mb-1">Text Channels</h3>
-					{#each $textChannels as channel (channel.id)}
-						<button
-							class="w-full px-2 py-1.5 rounded text-left text-sm transition-colors {$currentChannelId === channel.id ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'}"
-							onclick={() => { selectChannel(channel.id); window.location.href = `/servers/${serverId}/channels/${channel.id}`; }}
-						>
-							<span class="text-gray-500 mr-1">#</span>{channel.name}
-						</button>
-					{/each}
-				</div>
-			{/if}
-
-			{#if $voiceChannels.length > 0}
-				<div>
-					<h3 class="text-xs font-semibold text-gray-400 uppercase px-2 mb-1">Voice Channels</h3>
-					{#each $voiceChannels as channel (channel.id)}
-						<button
-							class="w-full px-2 py-1.5 rounded text-left text-sm transition-colors {$currentVoiceChannelId === channel.id ? 'bg-green-700 text-white' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'}"
-							onclick={() => joinVoice(channel.id)}
-						>
-							<span class="text-gray-500 mr-1">&#x1F50A;</span>{channel.name}
-						</button>
-					{/each}
-				</div>
-			{/if}
-		</div>
+		<!-- Channel sidebar -->
+		<ChannelSidebar
+			{serverId}
+			{showCreateChannel}
+			onCreateChannelToggle={() => showCreateChannel = false}
+			onWebhookOpen={(channelId) => webhookChannelId = channelId}
+		/>
 
 		<VoicePanel />
+	{#if $currentChannel?.channel_type === 3}
+		<StagePanel
+			channelId={$currentChannelId || ''}
+			{serverId}
+			isOwner={$currentUser?.id === $currentServer?.owner_id}
+		/>
+	{/if}
 	</div>
 
 	<div class="flex-1 flex flex-col">
 		{@render children()}
 	</div>
 
-	<MemberList members={$members} loading={$membersLoading} />
+	<MemberList
+		members={$members}
+		loading={$membersLoading}
+		serverId={serverId}
+		isOwner={$currentUser?.id === $currentServer?.owner_id}
+		onlineUserIds={new Set($presenceMap.keys())}
+	/>
 </div>
+
+
+{#if webhookChannelId}
+	<WebhookManager channelId={webhookChannelId} onClose={() => webhookChannelId = null} />
+{/if}

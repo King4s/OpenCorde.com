@@ -1,11 +1,32 @@
 @import "tailwindcss";
 
-/* OpenCorde dark theme base */
-:root {
-  --bg-primary: #1a1a2e;
-  --bg-secondary: #16213e;
-  --bg-tertiary: #0f3460;
-  --accent: #e94560;
-  --text-primary: #eaeaea;
-  --text-secondary: #a0a0a0;
+/* Dark theme (default) */
+:root,
+[data-theme="dark"] {
+  --bg-primary: #313338;
+  --bg-secondary: #2b2d31;
+  --bg-tertiary: #1e1f22;
+  --bg-hover: #35373c;
+  --text-primary: #f2f3f5;
+  --text-secondary: #dbdee1;
+  --text-muted: #b5bac1;
+  --border-color: #35373c;
+  --channel-bg: #2b2d31;
+  --input-bg: #383a40;
+  --accent: #5865f2;
+}
+
+/* Light theme */
+[data-theme="light"] {
+  --bg-primary: #f2f3f5;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e3e5e8;
+  --bg-hover: #d7d9dc;
+  --text-primary: #060607;
+  --text-secondary: #2e3338;
+  --text-muted: #4f5660;
+  --border-color: #d7d9dc;
+  --channel-bg: #ffffff;
+  --input-bg: #e3e5e8;
+  --accent: #5865f2;
 }

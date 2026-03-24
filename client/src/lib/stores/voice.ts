@@ -1,58 +1,133 @@
 /**
- * @file Voice store — manages voice channel state
- * @purpose Join/leave voice, mute/deafen, track participants
- * @depends api/client, api/types
+ * @file Voice store — manages voice channel state with LiveKit WebRTC
+ * @purpose Join/leave voice channels, mute/deafen, track participants via LiveKit room
+ * @depends api/client, livekit-client
  */
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 import api from '$lib/api/client';
 import type { VoiceState } from '$lib/api/types';
+import { Room, RoomEvent, type RemoteParticipant, type LocalParticipant, Track, type Participant } from 'livekit-client';
 
 export const inVoice = writable(false);
 export const currentVoiceChannelId = writable<string | null>(null);
 export const selfMute = writable(false);
 export const selfDeaf = writable(false);
 export const participants = writable<VoiceState[]>([]);
-export const livekitToken = writable<string | null>(null);
 
-interface JoinResponse { voice_state: VoiceState; livekit_token: string; }
+/** LiveKit participants (includes remote speakers) */
+export const livekitParticipants = writable<Map<string, { identity: string; speaking: boolean; muted: boolean }>>(new Map());
+
+let activeRoom: Room | null = null;
+
+interface JoinResponse { voice_state: VoiceState; livekit_token: string; livekit_url: string; }
+
+function updateParticipantMap(room: Room) {
+  const map = new Map<string, { identity: string; speaking: boolean; muted: boolean }>();
+  // Add local participant
+  if (room.localParticipant) {
+    const lp = room.localParticipant;
+    map.set(lp.identity, {
+      identity: lp.identity,
+      speaking: lp.isSpeaking,
+      muted: lp.isMicrophoneEnabled === false,
+    });
+  }
+  // Add remote participants
+  room.remoteParticipants.forEach((rp: RemoteParticipant) => {
+    map.set(rp.identity, {
+      identity: rp.identity,
+      speaking: rp.isSpeaking,
+      muted: rp.isMicrophoneEnabled === false,
+    });
+  });
+  livekitParticipants.set(map);
+}
 
 export async function joinVoice(channelId: string): Promise<void> {
+  // Leave current room if in one
+  if (activeRoom) {
+    await activeRoom.disconnect();
+    activeRoom = null;
+  }
+
   const res = await api.post<JoinResponse>('/voice/join', { channel_id: channelId });
   inVoice.set(true);
   currentVoiceChannelId.set(channelId);
-  livekitToken.set(res.livekit_token);
   selfMute.set(res.voice_state.self_mute);
   selfDeaf.set(res.voice_state.self_deaf);
-  await fetchParticipants(channelId);
+
+  // Connect to LiveKit room
+  const room = new Room({
+    audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    adaptiveStream: true,
+    dynacast: true,
+  });
+  activeRoom = room;
+
+  room
+    .on(RoomEvent.ParticipantConnected, () => updateParticipantMap(room))
+    .on(RoomEvent.ParticipantDisconnected, () => updateParticipantMap(room))
+    .on(RoomEvent.ActiveSpeakersChanged, () => updateParticipantMap(room))
+    .on(RoomEvent.TrackMuted, () => updateParticipantMap(room))
+    .on(RoomEvent.TrackUnmuted, () => updateParticipantMap(room))
+    .on(RoomEvent.Disconnected, () => {
+      inVoice.set(false);
+      currentVoiceChannelId.set(null);
+      activeRoom = null;
+      livekitParticipants.set(new Map());
+    });
+
+  await room.connect(res.livekit_url, res.livekit_token);
+  // Enable microphone by default (respecting self_mute)
+  await room.localParticipant.setMicrophoneEnabled(!res.voice_state.self_mute);
+  updateParticipantMap(room);
 }
 
 export async function leaveVoice(): Promise<void> {
+  if (activeRoom) {
+    await activeRoom.disconnect();
+    activeRoom = null;
+  }
   await api.post('/voice/leave');
   inVoice.set(false);
   currentVoiceChannelId.set(null);
-  livekitToken.set(null);
   participants.set([]);
+  livekitParticipants.set(new Map());
 }
 
 export async function toggleMute(): Promise<void> {
-  selfMute.update(m => !m);
-  let mute = false;
-  selfMute.subscribe(v => mute = v)();
-  let deaf = false;
-  selfDeaf.subscribe(v => deaf = v)();
-  await api.patch('/voice/state', { self_mute: mute, self_deaf: deaf });
+  const muted = !get(selfMute);
+  selfMute.set(muted);
+  if (activeRoom) {
+    await activeRoom.localParticipant.setMicrophoneEnabled(!muted);
+  }
+  await api.patch('/voice/state', { self_mute: muted, self_deaf: get(selfDeaf) });
 }
 
 export async function toggleDeaf(): Promise<void> {
-  selfDeaf.update(d => !d);
-  let mute = false;
-  selfMute.subscribe(v => mute = v)();
-  let deaf = false;
-  selfDeaf.subscribe(v => deaf = v)();
-  await api.patch('/voice/state', { self_mute: mute, self_deaf: deaf });
+  const deafened = !get(selfDeaf);
+  selfDeaf.set(deafened);
+  // Deafen: disable all remote audio tracks
+  if (activeRoom) {
+    activeRoom.remoteParticipants.forEach((rp: RemoteParticipant) => {
+      rp.audioTrackPublications.forEach((pub) => {
+        if (pub.track) pub.track.mediaStreamTrack.enabled = !deafened;
+      });
+    });
+  }
+  await api.patch('/voice/state', { self_mute: get(selfMute), self_deaf: deafened });
 }
 
 export async function fetchParticipants(channelId: string): Promise<void> {
   const list = await api.get<VoiceState[]>(`/voice/participants/${channelId}`);
   participants.set(list);
+}
+
+export const screenSharing = writable(false);
+
+export async function toggleScreenShare(): Promise<void> {
+  if (!activeRoom) return;
+  const sharing = !get(screenSharing);
+  await activeRoom.localParticipant.setScreenShareEnabled(sharing);
+  screenSharing.set(sharing);
 }

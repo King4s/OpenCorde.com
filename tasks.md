@@ -4,9 +4,9 @@ Organized by phase and week. Check items off as they complete.
 
 **Split files** (to stay under 300 lines per file):
 - **This file**: Week 0 (done) + Weeks 1-2 (done)
-- [tasks-weeks-3-8.md](./tasks-weeks-3-8.md): Auth, Servers, Messaging
-- [tasks-weeks-9-12.md](./tasks-weeks-9-12.md): Voice, Desktop Client
-- [tasks-future.md](./tasks-future.md): Phase 2-3
+- [tasks-weeks-3-8.md](./tasks-weeks-3-8.md): Auth, Servers, Messaging — COMPLETE
+- [tasks-weeks-9-12.md](./tasks-weeks-9-12.md): Voice, Desktop Client — COMPLETE
+- [tasks-future.md](./tasks-future.md): Phase 4+ (Tauri, E2EE, Bridge)
 
 ---
 
@@ -94,18 +94,31 @@ Organized by phase and week. Check items off as they complete.
 - [x] All files have structured doc headers
 - [x] INDEX.md files updated
 
-#### Infrastructure (remaining)
+#### Infrastructure
 
-- [ ] Verify docker-compose services start on dev server
-- [ ] Install Rust toolchain on dev server (192.168.140.140)
-- [ ] Install pnpm on dev server
+- [x] Verify docker-compose services start on dev server
+- [x] Install Rust toolchain on dev server (192.168.140.140)
+- [x] Install pnpm on dev server
+
+---
+
+## Phase 1-3 Summary (Complete as of 2026-03-22)
+
+All 26/26 browser tests passing. 30 migrations applied. Full feature set deployed at opencorde.com.
+See ReadMeFirst.md for complete feature list.
+
+### Sprint 2026-03-22: SMTP + Docs
+- [x] Fix validation test bug (validate_channel_type type 3 = Stage is valid; test type 4)
+- [x] Implement lettre SMTP in email.rs (replaces logging stub)
+- [x] Add SMTP vars to .env.example
+- [x] Update ReadMeFirst.md, tasks.md, tasks-future.md
 
 ---
 
 ## Tracking Notes
 
 - Each task must pass quality-gate.md before completion
-- Update ReadMeFirst.md weekly with progress
+- Update ReadMeFirst.md with progress
 - Blockers noted inline with `BLOCKED: reason`
 
-**Last updated:** 2026-03-16
+**Last updated:** 2026-03-22

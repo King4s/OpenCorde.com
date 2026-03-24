@@ -4,6 +4,7 @@
 //! ## Modules
 //! - `handler` — Connection lifecycle and event streaming
 //! - `events` — Event serialization helpers
+//! - `dispatch` — Event dispatch filtering (which events reach which clients)
 //!
 //! ## Architecture
 //! WebSocket connections follow a simple state machine:
@@ -13,5 +14,6 @@
 //! 4. Periodic heartbeats keep connection alive
 //! 5. Events are pushed to connected clients
 
+pub mod dispatch;
 pub mod events;
 pub mod handler;

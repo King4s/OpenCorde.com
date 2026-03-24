@@ -16,6 +16,7 @@ export const currentChannel = derived(
 
 export const textChannels = derived(channels, ($ch) => $ch.filter(c => c.channel_type === 0));
 export const voiceChannels = derived(channels, ($ch) => $ch.filter(c => c.channel_type === 1));
+export const stageChannels = derived(channels, ($ch) => $ch.filter(c => c.channel_type === 3));
 
 export async function fetchChannels(serverId: string): Promise<void> {
   const list = await api.get<Channel[]>(`/servers/${serverId}/channels`);

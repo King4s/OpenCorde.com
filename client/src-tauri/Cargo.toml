@@ -1,0 +1,45 @@
+[package]
+name = "opencorde-app"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "opencorde_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "opencorde-app"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Core Tauri 2.0 runtime and system integration
+tauri = { version = "2", features = ["tray-icon"] }
+
+# Tauri plugins for desktop features
+tauri-plugin-shell = "2"          # Execute system commands
+tauri-plugin-notification = "2"   # Native desktop notifications
+tauri-plugin-autostart = "2"      # Auto-launch on system startup
+tauri-plugin-deep-link = "2"      # Handle opencorde:// protocol
+
+# System utilities
+tauri-plugin-os = "2"             # Platform detection
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Secure credential storage via OS keychain/credential store
+keyring = { version = "3", features = ["sync-secret-service"] }
+
+# Structured logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# E2EE: OpenMLS client-side encryption (same versions as opencorde-crypto)
+opencorde-crypto = { path = "../../crates/opencorde-crypto" }
+openmls = { version = "0.5", features = ["crypto-subtle"] }    # MLS protocol types
+openmls_basic_credential = "0.2"                               # SignatureKeyPair
+openmls_rust_crypto = "0.2"                                    # In-process crypto provider

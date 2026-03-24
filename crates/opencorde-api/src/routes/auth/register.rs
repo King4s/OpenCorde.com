@@ -21,6 +21,7 @@ use axum::{
 };
 use opencorde_core::{SnowflakeGenerator, generate_keypair, password};
 use opencorde_db::repos::user_repo;
+use rand::RngCore;
 
 use super::types::{AuthResponse, RegisterRequest, UserInfo};
 use super::validation::{make_refresh_cookie, validate_register};
@@ -35,6 +36,21 @@ pub async fn register(
     Json(req): Json<RegisterRequest>,
 ) -> Result<Response, ApiError> {
     tracing::info!(username = %req.username, "registration attempt");
+
+    // Check registration mode
+    use crate::config::RegistrationMode;
+    match state.config.registration_mode {
+        RegistrationMode::Closed => {
+            tracing::warn!("registration attempt blocked: registration is closed");
+            return Err(ApiError::Forbidden);
+        }
+        RegistrationMode::InviteOnly => {
+            // TODO: validate invite code once invite system supports this mode
+            tracing::warn!("invite-only mode: open registration blocked");
+            return Err(ApiError::BadRequest("registration requires an invite code".into()));
+        }
+        RegistrationMode::Open => {}
+    }
 
     // Validate input
     validate_register(&req)?;
@@ -92,6 +108,23 @@ pub async fn register(
 
     tracing::info!(user_id = user_row.id, "user created successfully");
 
+    // Generate email verification token and store it
+    let verification_token = generate_verification_token();
+    let verification_expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
+    let _ = sqlx::query(
+        "UPDATE users SET email_verification_token = $1, email_verification_expires_at = $2 WHERE id = $3"
+    )
+    .bind(&verification_token)
+    .bind(verification_expires_at)
+    .bind(user_row.id)
+    .execute(&state.db)
+    .await;
+
+    // Send verification email (log failures; don't block registration)
+    if let Err(e) = state.email_service.send_verification_email(&req.email, &verification_token).await {
+        tracing::warn!(user_id = user_row.id, error = ?e, "failed to send verification email");
+    }
+
     // Generate tokens
     let access_token = jwt::create_access_token(
         user_id,
@@ -133,4 +166,11 @@ pub async fn register(
     response_obj.headers_mut().insert(SET_COOKIE, cookie_header);
 
     Ok(response_obj)
+}
+
+/// Generate a random 32-byte (64 hex char) verification token.
+fn generate_verification_token() -> String {
+    let mut bytes = [0u8; 32];
+    rand::rng().fill_bytes(&mut bytes);
+    hex::encode(bytes)
 }

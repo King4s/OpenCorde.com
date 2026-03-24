@@ -20,3 +20,11 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 thiserror = { workspace = true }
 anyhow = { workspace = true }
+rand = { workspace = true }              # Ghost user public key generation
+sqlx = { workspace = true }              # Direct DB queries in bridge code
+chrono = { workspace = true }            # Timestamps
+
+# Discord gateway and REST API
+twilight-gateway = "0.15"               # Discord WebSocket gateway (receive events)
+twilight-http = "0.15"                  # Discord REST API (send messages via webhook)
+twilight-model = "0.15"                 # Discord data types (Message, User, Event, etc.)

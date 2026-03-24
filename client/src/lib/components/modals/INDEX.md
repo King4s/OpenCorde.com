@@ -10,3 +10,4 @@ Pattern: Reusable modal containers with forms or content.
 | InviteUserModal.svelte | Dialog to invite users |
 | ConfirmDeleteModal.svelte | Confirmation before destructive action |
 | UserProfileModal.svelte | User details, mutual servers, friend actions |
+| MemberContextMenu.svelte | Right-click context menu for member moderation (kick, ban, timeout) |

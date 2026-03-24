@@ -99,7 +99,18 @@ pub async fn edit_message(
             ApiError::Internal(anyhow::anyhow!("message vanished after update"))
         })?;
 
-    Ok(Json(message_row_to_response(updated)))
+    let response = message_row_to_response(updated);
+
+    // Broadcast MessageUpdate to WebSocket clients
+    let event = serde_json::json!({
+        "type": "MessageUpdate",
+        "data": { "message": response }
+    });
+    if state.event_tx.send(event).is_err() {
+        tracing::debug!("no WebSocket subscribers for MessageUpdate event");
+    }
+
+    Ok(Json(response))
 }
 
 /// DELETE /api/v1/messages/{id} — Delete a message.
@@ -154,31 +165,55 @@ pub async fn delete_message(
         "message deleted successfully"
     );
 
+    // Broadcast MessageDelete to WebSocket clients
+    let event = serde_json::json!({
+        "type": "MessageDelete",
+        "data": {
+            "channel_id": message.channel_id.to_string(),
+            "message_id": message_id.to_string()
+        }
+    });
+    if state.event_tx.send(event).is_err() {
+        tracing::debug!("no WebSocket subscribers for MessageDelete event");
+    }
+
     Ok(StatusCode::NO_CONTENT)
 }
 
 /// POST /api/v1/channels/{channel_id}/typing — Send typing indicator.
 ///
-/// Requires authentication. Currently logs the typing event; actual broadcast
-/// via WebSocket will be implemented in the gateway layer.
+/// Requires authentication. Broadcasts TypingStart event via WebSocket to
+/// all clients watching this channel.
 ///
 /// Returns 204 No Content.
-#[instrument(skip(auth), fields(user_id = %auth.user_id))]
+#[instrument(skip(state, auth), fields(user_id = %auth.user_id))]
 pub async fn typing_indicator(
+    State(state): State<AppState>,
     auth: AuthUser,
     Path(channel_id): Path<String>,
 ) -> Result<StatusCode, ApiError> {
     tracing::info!(channel_id = %channel_id, "typing indicator received");
 
     // Validate channel ID format
-    let _channel_id_sf = parse_snowflake_id(&channel_id)?;
+    let channel_id_sf = parse_snowflake_id(&channel_id)?;
 
-    // Log the typing event (WebSocket broadcast will be handled in gateway)
     tracing::debug!(
         user_id = auth.user_id.as_i64(),
-        channel_id = _channel_id_sf.as_i64(),
-        "user typing in channel"
+        channel_id = channel_id_sf.as_i64(),
+        "broadcasting TypingStart event"
     );
+
+    // Broadcast TypingStart event to WebSocket clients in this channel
+    let event = serde_json::json!({
+        "type": "TypingStart",
+        "data": {
+            "channel_id": channel_id_sf.to_string(),
+            "user_id": auth.user_id.to_string()
+        }
+    });
+    if state.event_tx.send(event).is_err() {
+        tracing::debug!("no WebSocket subscribers for TypingStart event");
+    }
 
     Ok(StatusCode::NO_CONTENT)
 }

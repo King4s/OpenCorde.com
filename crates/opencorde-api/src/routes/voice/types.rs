@@ -54,6 +54,8 @@ pub struct JoinVoiceResponse {
     pub voice_state: VoiceStateResponse,
     /// LiveKit WebRTC access token
     pub livekit_token: String,
+    /// Public WebSocket URL for the LiveKit room (for browser connection)
+    pub livekit_url: String,
 }
 
 /// LiveKit token response (token + URL).

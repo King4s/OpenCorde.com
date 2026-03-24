@@ -1,52 +1,49 @@
-# OpenCorde — Future Phase Tasks
+# OpenCorde — Phase 4+ Tasks
 
-## Phase 2: Security & Bridging (Weeks 13-24)
+Phases 1, 2, and 3 are complete as of 2026-03-22 (26/26 browser tests, 30 migrations).
 
-### Weeks 13-14: End-to-End Encryption (OpenMLS)
+## Phase 4: Differentiators
 
-- [ ] Integrate OpenMLS library into opencorde-crypto
-- [ ] E2EE key management endpoints
-- [ ] Client-side encryption/decryption (WebAssembly)
-- [ ] Message encryption pipeline
-- [ ] LiveKit E2EE for voice/video
-- [ ] AES-256-GCM file encryption
+### Tauri Desktop Packaging
+- [x] Wrap SvelteKit in Tauri 2.0 for distributable .exe/.dmg/.AppImage
+- [x] System tray icon + OS-level desktop notifications
+- [x] Auto-launch on startup
+- [x] Deep links (opencorde:// protocol)
 
-### Weeks 15-16: Full-Text Search (Tantivy)
+### End-to-End Encryption (OpenMLS)
+- [x] Integrate OpenMLS library into opencorde-crypto (openmls 0.5, RFC 9420)
+- [x] E2EE key management endpoints (key_packages + groups routes, migrations 031-032)
+- [x] opencorde-crypto: key_package, group, encrypt modules (5/5 tests passing)
+- [x] Client-side encryption/decryption (Tauri commands: crypto_init/create_group/add_member/process_welcome/encrypt/decrypt)
+- [x] LiveKit E2EE for voice/video (ExternalE2EEKeyProvider + MLS epoch export key, auto key rotation)
+- [x] AES-256-GCM file encryption (encrypt on upload, decrypt on click; key from MLS epoch exporter)
 
-- [ ] Integrate Tantivy into opencorde-search
-- [ ] Message indexing on creation/update
-- [ ] Search endpoint with faceting
-- [ ] Web UI search component
+### Discord Bridge
+- [x] opencorde-bridge: gateway connection to Discord (twilight-gateway 0.15, single shard)
+- [x] Discord REST API client (twilight-http, webhook execute with username/avatar override)
+- [x] Message/user/channel mapping (bridge_channel_mappings, migrations 034-035)
+- [x] Ghost user management (bridge_ghost_users, auto-create on first message)
 
-### Weeks 17-20: Bridge Services (Discord, Steam)
-
-- [ ] Discord bridge: gateway connection
-- [ ] Discord bridge: REST API client
-- [ ] Discord bridge: message/user/channel mapping
-- [ ] Discord bridge: ghost user management
-- [ ] Steam integration: OAuth login
-- [ ] Steam integration: friend list import
-
-### Weeks 21-24: Extended Features
-
-- [ ] Threads, replies, emoji reactions
-- [ ] Message pinning, unread tracking
-- [ ] Admin panel + audit log
-- [ ] Production deployment guide
+### SMTP: Account Verification
+- [x] Extend email.rs: send verification email on register
+- [x] Email verified flag on users table (migration 033)
+- [x] Resend verification endpoint (POST /api/v1/auth/resend-verification)
+- [x] Verify email endpoint (GET /api/v1/auth/verify-email?token=...)
 
 ---
 
-## Phase 3: Ecosystem (Weeks 25-40)
+## Phase 5: Mobile & Admin
 
-- [ ] Voice sub-channels (text-in-voice)
-- [ ] Recording (LiveKit Egress)
 - [ ] Mobile apps (Tauri 2.0 iOS/Android)
-- [ ] Bot/plugin framework (webhooks, slash commands)
-- [ ] Server discovery
-- [ ] Forums, polls, scheduled events
+- [ ] Push notifications (mobile)
+- [x] Instance admin: storage usage monitor, rate limiting config
+- [x] GDPR data export improvements (unlimited messages, file attachments, account deletion)
+- [x] Accessibility audit (WCAG 2.1 AA) — dialog tabindex, backdrop Escape, keyboard nav (AutomodManager, EmojiManager, SlashCommandManager, WebhookManager)
+- [ ] Recording (LiveKit Egress)
+- [x] Steam OAuth login (OpenID 2.0 flow, migration 036, ghost user creation)
 
 ---
 
 **Note:** Federation via Matrix protocol is explicitly excluded per user decision.
 
-**Last updated:** 2026-03-16
+**Last updated:** 2026-03-24

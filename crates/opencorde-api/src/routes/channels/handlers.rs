@@ -53,6 +53,7 @@ fn channel_row_to_response(row: channel_repo::ChannelRow) -> ChannelResponse {
         topic: row.topic,
         position: row.position,
         parent_id: row.parent_id.map(|id| id.to_string()),
+        nsfw: row.nsfw,
         created_at: row.created_at,
     }
 }
@@ -92,6 +93,7 @@ async fn create_channel(
     tracing::debug!(
         channel_type = channel_type,
         parent_id = ?parent_id,
+        nsfw = req.nsfw.unwrap_or(false),
         "validated channel parameters"
     );
 
@@ -104,9 +106,12 @@ async fn create_channel(
         "generated channel snowflake"
     );
 
+    // Get nsfw flag, default to false
+    let nsfw = req.nsfw.unwrap_or(false);
+
     // Create channel in database
     let channel_row =
-        channel_repo::create_channel(&state.db, channel_id, server_id_sf, &req.name, channel_type)
+        channel_repo::create_channel(&state.db, channel_id, server_id_sf, &req.name, channel_type, nsfw)
             .await
             .map_err(ApiError::Database)?;
 
@@ -187,11 +192,12 @@ async fn update_channel(
     tracing::debug!(
         channel_id = channel_id.as_i64(),
         name = %update_name,
+        nsfw = ?req.nsfw,
         "validated channel updates"
     );
 
     // Update channel
-    channel_repo::update_channel(&state.db, channel_id, update_name, update_topic, None)
+    channel_repo::update_channel(&state.db, channel_id, update_name, update_topic, None, req.nsfw)
         .await
         .map_err(ApiError::Database)?;
 

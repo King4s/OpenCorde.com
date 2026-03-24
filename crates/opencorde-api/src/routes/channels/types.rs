@@ -25,6 +25,8 @@ pub struct ChannelResponse {
     pub position: i32,
     /// Parent category ID (optional, for nested channels)
     pub parent_id: Option<String>,
+    /// Whether channel is marked NSFW
+    pub nsfw: bool,
     /// Channel creation timestamp
     pub created_at: DateTime<Utc>,
 }
@@ -41,6 +43,8 @@ pub struct CreateChannelRequest {
     pub topic: Option<String>,
     /// Parent category ID (optional, for nested channels)
     pub parent_id: Option<String>,
+    /// Whether channel is NSFW (optional, defaults to false)
+    pub nsfw: Option<bool>,
 }
 
 /// Request body for updating a channel.
@@ -52,6 +56,8 @@ pub struct UpdateChannelRequest {
     pub topic: Option<String>,
     /// Optional new position
     pub position: Option<i32>,
+    /// Optional NSFW flag update
+    pub nsfw: Option<bool>,
 }
 
 #[cfg(test)]
@@ -96,6 +102,7 @@ mod tests {
             topic: Some("Main discussion".to_string()),
             position: 0,
             parent_id: None,
+            nsfw: false,
             created_at: now,
         };
 
@@ -103,6 +110,7 @@ mod tests {
         assert!(json.contains("general"));
         assert!(json.contains("555666"));
         assert!(json.contains("111222"));
+        assert!(json.contains("false"));
     }
 
     #[test]
@@ -116,10 +124,12 @@ mod tests {
             topic: None,
             position: 1,
             parent_id: Some("666777".to_string()),
+            nsfw: true,
             created_at: now,
         };
 
         let json = serde_json::to_string(&response).unwrap();
         assert!(json.contains("666777"));
+        assert!(json.contains("true"));
     }
 }

@@ -20,6 +20,7 @@ pub struct ChannelRow {
     pub topic: Option<String>,
     pub position: i32,
     pub parent_id: Option<i64>,
+    pub nsfw: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -32,6 +33,7 @@ pub struct ChannelRow {
 /// * `server_id` - Snowflake ID of the parent server
 /// * `name` - Channel name (max 100 chars)
 /// * `channel_type` - 0=Text, 1=Voice, 2=Category
+/// * `nsfw` - Whether channel is marked NSFW
 ///
 /// # Errors
 /// Returns sqlx::Error if the insert fails.
@@ -42,22 +44,25 @@ pub async fn create_channel(
     server_id: Snowflake,
     name: &str,
     channel_type: i16,
+    nsfw: bool,
 ) -> Result<ChannelRow, sqlx::Error> {
     tracing::info!(
         name = %name,
         server_id = server_id.as_i64(),
         channel_type = channel_type,
+        nsfw = nsfw,
         "creating channel"
     );
 
     let row = sqlx::query_as::<_, ChannelRow>(
-        "INSERT INTO channels (id, server_id, name, channel_type) \
-         VALUES ($1, $2, $3, $4) RETURNING *",
+        "INSERT INTO channels (id, server_id, name, channel_type, nsfw) \
+         VALUES ($1, $2, $3, $4, $5) RETURNING *",
     )
     .bind(id.as_i64())
     .bind(server_id.as_i64())
     .bind(name)
     .bind(channel_type)
+    .bind(nsfw)
     .fetch_one(pool)
     .await?;
 
@@ -96,7 +101,7 @@ pub async fn list_by_server(
     .await
 }
 
-/// Update a channel's name, topic, and parent category.
+/// Update a channel's name, topic, parent category, and nsfw flag.
 ///
 /// # Errors
 /// Returns sqlx::Error if the update fails.
@@ -107,21 +112,36 @@ pub async fn update_channel(
     name: &str,
     topic: Option<&str>,
     parent_id: Option<Snowflake>,
+    nsfw: Option<bool>,
 ) -> Result<(), sqlx::Error> {
     tracing::info!(channel_id = id.as_i64(), name = %name, "updating channel");
 
     let parent_id_i64 = parent_id.map(|sf| sf.as_i64());
 
-    sqlx::query(
-        "UPDATE channels SET name = $1, topic = $2, parent_id = $3, updated_at = NOW() \
-         WHERE id = $4",
-    )
-    .bind(name)
-    .bind(topic)
-    .bind(parent_id_i64)
-    .bind(id.as_i64())
-    .execute(pool)
-    .await?;
+    if let Some(nsfw_val) = nsfw {
+        sqlx::query(
+            "UPDATE channels SET name = $1, topic = $2, parent_id = $3, nsfw = $4, updated_at = NOW() \
+             WHERE id = $5",
+        )
+        .bind(name)
+        .bind(topic)
+        .bind(parent_id_i64)
+        .bind(nsfw_val)
+        .bind(id.as_i64())
+        .execute(pool)
+        .await?;
+    } else {
+        sqlx::query(
+            "UPDATE channels SET name = $1, topic = $2, parent_id = $3, updated_at = NOW() \
+             WHERE id = $4",
+        )
+        .bind(name)
+        .bind(topic)
+        .bind(parent_id_i64)
+        .bind(id.as_i64())
+        .execute(pool)
+        .await?;
+    }
 
     Ok(())
 }
@@ -206,6 +226,7 @@ mod tests {
             topic: Some("Main discussion".to_string()),
             position: 0,
             parent_id: None,
+            nsfw: false,
             created_at: now,
             updated_at: now,
         };
@@ -213,5 +234,6 @@ mod tests {
         assert_eq!(row.id, 555666777);
         assert_eq!(row.name, "general");
         assert_eq!(row.channel_type, 0);
+        assert!(!row.nsfw);
     }
 }

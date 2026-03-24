@@ -10,5 +10,7 @@ Pattern: One store per domain. camelCase naming. Each exports get(), subscribe()
 | servers.ts | User's servers list | servers, currentServer |
 | channels.ts | Channels in current server | channels, currentChannel |
 | messages.ts | Messages in current channel | messages, loading, error |
+| dms.ts | DM channels and messages | dmChannels, activeDmMessages, dmLoading |
 | voice.ts | Voice session state | activeVoiceChannel, participants, audioDevices |
 | presence.ts | User online status, presence | onlineUsers, afkUsers |
+| moderation.ts | Server moderation (ban, kick, timeout) | banList, fetchBans, banUser, unbanUser, kickUser, timeoutUser |

@@ -13,6 +13,6 @@
 
 mod handlers;
 mod types;
-mod validation;
+pub mod validation;
 
 pub use handlers::router;

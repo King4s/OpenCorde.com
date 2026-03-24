@@ -1,16 +1,35 @@
 <script lang="ts">
 	/**
 	 * @file Member list sidebar component
-	 * @purpose Shows all members in the current server
+	 * @purpose Shows all members in the current server with online status and right-click context menu
 	 */
 	import type { Member } from '$lib/api/types';
+	import MemberContextMenu from '$lib/components/modals/MemberContextMenu.svelte';
 
 	interface Props {
 		members: Member[];
 		loading: boolean;
+		serverId: string;
+		isOwner: boolean;
+		onlineUserIds?: Set<string>;
 	}
 
-	let { members, loading }: Props = $props();
+	interface ContextMenuState {
+		visible: boolean;
+		x: number;
+		y: number;
+		userId: string;
+		username: string;
+	}
+
+	let { members, loading, serverId, isOwner, onlineUserIds = new Set() }: Props = $props();
+	let contextMenu = $state<ContextMenuState>({
+		visible: false,
+		x: 0,
+		y: 0,
+		userId: '',
+		username: ''
+	});
 
 	function getInitials(name: string): string {
 		return name.slice(0, 2).toUpperCase();
@@ -24,6 +43,23 @@
 		const hash = userId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
 		return colors[hash % colors.length];
 	}
+
+	function handleMemberContextMenu(e: MouseEvent, member: Member) {
+		e.preventDefault();
+		contextMenu.visible = true;
+		contextMenu.x = e.clientX;
+		contextMenu.y = e.clientY;
+		contextMenu.userId = member.user_id;
+		contextMenu.username = member.nickname ?? member.username;
+	}
+
+	function closeContextMenu() {
+		contextMenu.visible = false;
+	}
+
+	// Partition members: online first, then offline
+	let onlineMembers = $derived(members.filter(m => onlineUserIds.has(m.user_id)));
+	let offlineMembers = $derived(members.filter(m => !onlineUserIds.has(m.user_id)));
 </script>
 
 <div class="w-48 bg-gray-800 flex flex-col border-l border-gray-900">
@@ -37,16 +73,61 @@
 		{:else if members.length === 0}
 			<p class="text-gray-500 text-xs px-2">No members</p>
 		{:else}
-			{#each members as member (member.user_id)}
-				<div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-700/50 group">
-					<div class="w-7 h-7 rounded-full {getAvatarColor(member.user_id)} flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
-						{getInitials(member.nickname ?? member.username)}
+			{#if onlineMembers.length > 0}
+				<p class="text-xs font-semibold text-gray-500 uppercase px-2 pt-1 pb-0.5">Online — {onlineMembers.length}</p>
+				{#each onlineMembers as member (member.user_id)}
+					<div
+						role="button"
+						tabindex="0"
+						class="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-700/50 group cursor-context-menu"
+						oncontextmenu={(e) => handleMemberContextMenu(e, member)}
+					>
+						<div class="relative flex-shrink-0">
+							<div class="w-7 h-7 rounded-full {getAvatarColor(member.user_id)} flex items-center justify-center text-white text-xs font-semibold">
+								{getInitials(member.nickname ?? member.username)}
+							</div>
+							<!-- Online indicator dot -->
+							<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-gray-800"></span>
+						</div>
+						<span class="text-gray-200 text-sm truncate group-hover:text-white transition-colors">
+							{member.nickname ?? member.username}
+						</span>
 					</div>
-					<span class="text-gray-300 text-sm truncate group-hover:text-white transition-colors">
-						{member.nickname ?? member.username}
-					</span>
-				</div>
-			{/each}
+				{/each}
+			{/if}
+
+			{#if offlineMembers.length > 0}
+				<p class="text-xs font-semibold text-gray-500 uppercase px-2 pt-2 pb-0.5">Offline — {offlineMembers.length}</p>
+				{#each offlineMembers as member (member.user_id)}
+					<div
+						role="button"
+						tabindex="0"
+						class="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-700/50 group cursor-context-menu opacity-60"
+						oncontextmenu={(e) => handleMemberContextMenu(e, member)}
+					>
+						<div class="relative flex-shrink-0">
+							<div class="w-7 h-7 rounded-full {getAvatarColor(member.user_id)} flex items-center justify-center text-white text-xs font-semibold">
+								{getInitials(member.nickname ?? member.username)}
+							</div>
+						</div>
+						<span class="text-gray-400 text-sm truncate group-hover:text-gray-200 transition-colors">
+							{member.nickname ?? member.username}
+						</span>
+					</div>
+				{/each}
+			{/if}
 		{/if}
 	</div>
 </div>
+
+{#if contextMenu.visible}
+	<MemberContextMenu
+		userId={contextMenu.userId}
+		username={contextMenu.username}
+		serverId={serverId}
+		isOwner={isOwner}
+		x={contextMenu.x}
+		y={contextMenu.y}
+		onClose={closeContextMenu}
+	/>
+{/if}

@@ -14,6 +14,12 @@ use serde::{Deserialize, Serialize};
 pub struct SendMessageRequest {
     /// Message content (1-4000 characters)
     pub content: String,
+    /// Optional Snowflake ID of the message being replied to
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reply_to_id: Option<String>,
+    /// Optional array of attachment objects to attach to this message
+    #[serde(default)]
+    pub attachments: Option<serde_json::Value>,
 }
 
 /// Request body for editing a message.
@@ -32,6 +38,17 @@ pub struct MessageQuery {
     pub after: Option<String>,
     /// Message limit (1-100, defaults to 50)
     pub limit: Option<i64>,
+}
+
+/// Context of a message being replied to (minimal data for display).
+#[derive(Debug, Serialize, Clone)]
+pub struct ReplyContextResponse {
+    /// Snowflake message ID of the replied-to message
+    pub id: String,
+    /// Username of the author of the replied-to message
+    pub author_username: String,
+    /// Content preview of the replied-to message (first 100 chars)
+    pub content: String,
 }
 
 /// Message response body.
@@ -53,6 +70,12 @@ pub struct MessageResponse {
     pub edited_at: Option<DateTime<Utc>>,
     /// Timestamp when message was created
     pub created_at: DateTime<Utc>,
+    /// Snowflake ID of the message this is replying to (if any)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reply_to_id: Option<String>,
+    /// Inline reply context (author + content preview) for the replied-to message
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reply_to: Option<ReplyContextResponse>,
 }
 
 #[cfg(test)]
@@ -64,6 +87,15 @@ mod tests {
         let json = r#"{"content":"Hello, world!"}"#;
         let req: SendMessageRequest = serde_json::from_str(json).unwrap();
         assert_eq!(req.content, "Hello, world!");
+        assert!(req.reply_to_id.is_none());
+    }
+
+    #[test]
+    fn test_send_message_request_with_reply() {
+        let json = r#"{"content":"Reply text","reply_to_id":"123456789"}"#;
+        let req: SendMessageRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(req.content, "Reply text");
+        assert_eq!(req.reply_to_id, Some("123456789".to_string()));
     }
 
     #[test]
@@ -103,12 +135,15 @@ mod tests {
             attachments: serde_json::json!([]),
             edited_at: None,
             created_at: now,
+            reply_to_id: None,
+            reply_to: None,
         };
 
         let json = serde_json::to_string(&response).unwrap();
         assert!(json.contains("999888777"));
         assert!(json.contains("Test message"));
         assert!(json.contains("testuser"));
+        assert!(!json.contains("reply_to_id"));
     }
 
     #[test]
@@ -124,11 +159,40 @@ mod tests {
             attachments: serde_json::json!([]),
             edited_at: Some(edited),
             created_at: now,
+            reply_to_id: None,
+            reply_to: None,
         };
 
         let json = serde_json::to_string(&response).unwrap();
         assert!(json.contains("Edited message"));
         assert!(json.contains("edited_at"));
         assert!(json.contains("testuser"));
+    }
+
+    #[test]
+    fn test_message_response_with_reply() {
+        let now = Utc::now();
+        let response = MessageResponse {
+            id: "999888777".to_string(),
+            channel_id: "555666".to_string(),
+            author_id: "111222".to_string(),
+            author_username: "testuser".to_string(),
+            content: "Reply message".to_string(),
+            attachments: serde_json::json!([]),
+            edited_at: None,
+            created_at: now,
+            reply_to_id: Some("123456".to_string()),
+            reply_to: Some(ReplyContextResponse {
+                id: "123456".to_string(),
+                author_username: "origauthor".to_string(),
+                content: "Original content".to_string(),
+            }),
+        };
+
+        let json = serde_json::to_string(&response).unwrap();
+        assert!(json.contains("reply_to_id"));
+        assert!(json.contains("123456"));
+        assert!(json.contains("reply_to"));
+        assert!(json.contains("origauthor"));
     }
 }

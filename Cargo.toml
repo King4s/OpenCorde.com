@@ -20,9 +20,9 @@ repository = "https://github.com/commune-chat/opencorde"
 tokio = { version = "1.44", features = ["full"] }
 
 # Web framework
-axum = { version = "0.8.4", features = ["ws", "macros"] }
+axum = { version = "0.8.4", features = ["ws", "macros", "multipart"] }
 tower = "0.5"                    # Middleware framework, used by Axum
-tower-http = { version = "0.6", features = ["cors", "trace", "request-id", "util"] }
+tower-http = { version = "0.6", features = ["cors", "trace", "request-id", "util", "timeout", "limit"] }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -55,3 +55,10 @@ futures = "0.3"                  # async/await utilities, futures abstractions
 
 # Search
 tantivy = "0.22"                 # Rust-native full-text search engine (Lucene alternative)
+
+# S3-compatible object storage client (MinIO/AWS S3)
+aws-sdk-s3 = "1"
+aws-config = { version = "1", features = ["behavior-version-latest"] }
+
+# HTTP client for outgoing requests (webhook interactions)
+reqwest = { version = "0.12", features = ["json"] }

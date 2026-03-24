@@ -44,7 +44,7 @@ pub struct UpdateRoleRequest {
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/api/v1/servers/{server_id}/roles", post(create_role))
+        .route("/api/v1/servers/{server_id}/roles", post(create_role).get(list_roles))
         .route(
             "/api/v1/servers/{server_id}/roles/{role_id}",
             patch(update_role).delete(delete_role),
@@ -75,6 +75,20 @@ fn role_row_to_response(row: role_repo::RoleRow) -> RoleResponse {
         mentionable: row.mentionable,
         created_at: row.created_at,
     }
+}
+
+#[instrument(skip(state, auth), fields(user_id = %auth.user_id))]
+async fn list_roles(
+    State(state): State<AppState>,
+    auth: AuthUser,
+    Path(server_id): Path<String>,
+) -> Result<Json<Vec<RoleResponse>>, ApiError> {
+    tracing::info!("listing roles for server");
+    let server_id_sf = helpers::parse_snowflake(&server_id)?;
+    let roles = role_repo::list_by_server(&state.db, server_id_sf)
+        .await
+        .map_err(ApiError::Database)?;
+    Ok(Json(roles.into_iter().map(role_row_to_response).collect()))
 }
 
 #[instrument(skip(state, auth), fields(user_id = %auth.user_id))]

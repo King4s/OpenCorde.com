@@ -24,12 +24,13 @@
 
 mod edit_delete;
 mod handlers;
-mod send_list;
-mod types;
+pub mod send_list;
+pub mod types;
 mod validation;
 
 pub use handlers::router;
 pub use types::{EditMessageRequest, MessageQuery, MessageResponse, SendMessageRequest};
+pub use send_list::message_row_to_response;
 
 #[cfg(test)]
 mod tests {

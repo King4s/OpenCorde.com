@@ -20,6 +20,9 @@ pub struct UserRow {
     pub password_hash: Option<String>, // Optional: for email+password login
     pub avatar_url: Option<String>,
     pub status: i16,
+    pub bio: Option<String>,
+    pub status_message: Option<String>,
+    pub steam_id: Option<String>, // Optional: Steam64 ID for OpenID login
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -102,6 +105,21 @@ pub async fn get_by_username(
         .await
 }
 
+/// Get a user by their Steam64 ID.
+///
+/// # Errors
+/// Returns sqlx::Error if the query fails.
+#[tracing::instrument(skip(pool))]
+pub async fn get_by_steam_id(
+    pool: &PgPool,
+    steam_id: &str,
+) -> Result<Option<UserRow>, sqlx::Error> {
+    sqlx::query_as::<_, UserRow>("SELECT * FROM users WHERE steam_id = $1")
+        .bind(steam_id)
+        .fetch_optional(pool)
+        .await
+}
+
 /// Update a user's avatar URL.
 ///
 /// # Errors
@@ -144,6 +162,27 @@ pub async fn update_status(pool: &PgPool, id: Snowflake, status: i16) -> Result<
     Ok(())
 }
 
+/// Update a user's Steam ID.
+///
+/// # Errors
+/// Returns sqlx::Error if the update fails.
+#[tracing::instrument(skip(pool))]
+pub async fn update_steam_id(
+    pool: &PgPool,
+    id: Snowflake,
+    steam_id: &str,
+) -> Result<(), sqlx::Error> {
+    tracing::info!(user_id = id.as_i64(), steam_id = %steam_id, "updating user steam_id");
+
+    sqlx::query("UPDATE users SET steam_id = $1, updated_at = NOW() WHERE id = $2")
+        .bind(steam_id)
+        .bind(id.as_i64())
+        .execute(pool)
+        .await?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -160,6 +199,9 @@ mod tests {
             password_hash: Some("hash".to_string()),
             avatar_url: None,
             status: 3,
+            bio: None,
+            status_message: None,
+            steam_id: None,
             created_at: now,
             updated_at: now,
         };
