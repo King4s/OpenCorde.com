@@ -20,7 +20,7 @@ use axum::{
     Json, Router,
     extract::{Path, State},
     http::StatusCode,
-    routing::{delete, get, patch, post},
+    routing::{get, patch, post},
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -74,7 +74,7 @@ pub fn router() -> Router<AppState> {
         )
         .route(
             "/api/v1/servers/{server_id}/bridge/mappings/{mapping_id}",
-            patch(update_mapping).delete(delete_mapping),
+            patch(update_mapping).delete(axum::routing::delete(delete_mapping)),
         )
 }
 
@@ -86,10 +86,10 @@ async fn list_mappings(
     Path(server_id): Path<String>,
 ) -> Result<Json<Vec<BridgeMappingResponse>>, ApiError> {
     let sid = parse_snowflake(&server_id)?;
-    let server = server_repo::get_server(&state.db, sid)
+    let server = server_repo::get_by_id(&state.db, sid)
         .await
         .map_err(ApiError::Database)?
-        .ok_or(ApiError::NotFound)?;
+        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
     check_server_owner(auth.user_id, server.owner_id)?;
 
     let rows = sqlx::query(
@@ -134,10 +134,10 @@ async fn create_mapping(
     Json(req): Json<CreateBridgeMappingRequest>,
 ) -> Result<(StatusCode, Json<BridgeMappingResponse>), ApiError> {
     let sid = parse_snowflake(&server_id)?;
-    let server = server_repo::get_server(&state.db, sid)
+    let server = server_repo::get_by_id(&state.db, sid)
         .await
         .map_err(ApiError::Database)?
-        .ok_or(ApiError::NotFound)?;
+        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
     check_server_owner(auth.user_id, server.owner_id)?;
 
     // Parse Discord IDs from strings
@@ -214,10 +214,10 @@ async fn update_mapping(
     Json(req): Json<UpdateBridgeMappingRequest>,
 ) -> Result<Json<BridgeMappingResponse>, ApiError> {
     let sid = parse_snowflake(&server_id)?;
-    let server = server_repo::get_server(&state.db, sid)
+    let server = server_repo::get_by_id(&state.db, sid)
         .await
         .map_err(ApiError::Database)?
-        .ok_or(ApiError::NotFound)?;
+        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
     check_server_owner(auth.user_id, server.owner_id)?;
 
     let row = sqlx::query(
@@ -234,7 +234,7 @@ async fn update_mapping(
     .fetch_optional(&state.db)
     .await
     .map_err(|e| ApiError::Internal(e.into()))?
-    .ok_or(ApiError::NotFound)?;
+    .ok_or_else(|| ApiError::NotFound("mapping not found".into()))?;
 
     Ok(Json(BridgeMappingResponse {
         id: row.get::<i64, _>("id"),
@@ -259,10 +259,10 @@ async fn delete_mapping(
     Path((server_id, mapping_id)): Path<(String, i64)>,
 ) -> Result<StatusCode, ApiError> {
     let sid = parse_snowflake(&server_id)?;
-    let server = server_repo::get_server(&state.db, sid)
+    let server = server_repo::get_by_id(&state.db, sid)
         .await
         .map_err(ApiError::Database)?
-        .ok_or(ApiError::NotFound)?;
+        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
     check_server_owner(auth.user_id, server.owner_id)?;
 
     let result = sqlx::query(
@@ -275,7 +275,7 @@ async fn delete_mapping(
     .map_err(|e| ApiError::Internal(e.into()))?;
 
     if result.rows_affected() == 0 {
-        return Err(ApiError::NotFound);
+        return Err(ApiError::NotFound("mapping not found".into()));
     }
 
     tracing::info!(mapping_id, server_id = sid.as_i64(), "bridge mapping deleted");
