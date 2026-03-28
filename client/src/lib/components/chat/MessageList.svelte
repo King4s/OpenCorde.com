@@ -427,7 +427,7 @@
 {#if popoverUserId && popoverAnchorRect}
 	<UserProfilePopover
 		userId={popoverUserId}
-		{serverId}
+		serverId={serverId ?? null}
 		anchorRect={popoverAnchorRect}
 		onClose={() => { popoverUserId = null; popoverAnchorRect = null; }}
 	/>

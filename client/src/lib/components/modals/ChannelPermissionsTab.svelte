@@ -125,7 +125,7 @@
 		} else {
 			edits = {
 				...edits,
-				[ovId]: { [field]: cur[field] | bit, [other]: cur[other] & ~bit }
+				[ovId]: { [field]: cur[field] | bit, [other]: cur[other] & ~bit } as { allow: number; deny: number }
 			};
 		}
 	}

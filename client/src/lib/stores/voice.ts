@@ -11,6 +11,7 @@ import {
 	Room,
 	RoomEvent,
 	type RemoteParticipant,
+	type Track,
 	ExternalE2EEKeyProvider,
 	isE2EESupported,
 	type RoomOptions
@@ -28,6 +29,28 @@ export const voiceE2EEActive = writable(false);
 
 /** LiveKit participants (includes remote speakers) */
 export const livekitParticipants = writable<Map<string, { identity: string; speaking: boolean; muted: boolean }>>(new Map());
+
+/** Video tracks: participant identity → Track (updated on TrackSubscribed/Unsubscribed). */
+export const videoTracks = writable<Map<string, Track>>(new Map());
+
+/** Reactive reference to the current LiveKit Room (null when not in voice). */
+export const activeRoomStore = writable<Room | null>(null);
+
+/** Selected microphone device ID (persisted to localStorage). */
+export const selectedMicId = writable<string | null>(
+  typeof localStorage !== 'undefined' ? localStorage.getItem('oc_mic') : null
+);
+
+/** Selected camera device ID (persisted to localStorage). */
+export const selectedCamId = writable<string | null>(
+  typeof localStorage !== 'undefined' ? localStorage.getItem('oc_cam') : null
+);
+
+// Persist device selections to localStorage
+if (typeof localStorage !== 'undefined') {
+  selectedMicId.subscribe(v => v ? localStorage.setItem('oc_mic', v) : localStorage.removeItem('oc_mic'));
+  selectedCamId.subscribe(v => v ? localStorage.setItem('oc_cam', v) : localStorage.removeItem('oc_cam'));
+}
 
 let activeRoom: Room | null = null;
 
@@ -105,6 +128,7 @@ export async function joinVoice(channelId: string): Promise<void> {
   // Connect to LiveKit room
   const room = new Room(roomOptions);
   activeRoom = room;
+  activeRoomStore.set(room);
 
   room
     .on(RoomEvent.ParticipantConnected, () => updateParticipantMap(room))
@@ -112,10 +136,22 @@ export async function joinVoice(channelId: string): Promise<void> {
     .on(RoomEvent.ActiveSpeakersChanged, () => updateParticipantMap(room))
     .on(RoomEvent.TrackMuted, () => updateParticipantMap(room))
     .on(RoomEvent.TrackUnmuted, () => updateParticipantMap(room))
+    .on(RoomEvent.TrackSubscribed, (track: Track, _pub: unknown, participant: RemoteParticipant) => {
+      if (track.kind === 'video') {
+        videoTracks.update(m => { const n = new Map(m); n.set(participant.identity, track); return n; });
+      }
+    })
+    .on(RoomEvent.TrackUnsubscribed, (track: Track, _pub: unknown, participant: RemoteParticipant) => {
+      if (track.kind === 'video') {
+        videoTracks.update(m => { const n = new Map(m); n.delete(participant.identity); return n; });
+      }
+    })
     .on(RoomEvent.Disconnected, () => {
       inVoice.set(false);
       currentVoiceChannelId.set(null);
       activeRoom = null;
+      activeRoomStore.set(null);
+      videoTracks.set(new Map());
       livekitParticipants.set(new Map());
     });
 
@@ -135,6 +171,8 @@ export async function leaveVoice(): Promise<void> {
   currentVoiceChannelId.set(null);
   voiceE2EEActive.set(false);
   participants.set([]);
+  videoTracks.set(new Map());
+  activeRoomStore.set(null);
   livekitParticipants.set(new Map());
 }
 

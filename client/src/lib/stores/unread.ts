@@ -4,6 +4,7 @@
  * @depends api/client, api/websocket, stores/messages
  */
 import { writable, derived } from 'svelte/store';
+import { channelServerIndex } from './channels';
 import api from '$lib/api/client';
 import { gateway } from '$lib/api/websocket';
 
@@ -115,5 +116,20 @@ export const lastReadIds = derived(
       if (s.last_read_id) map.set(id, s.last_read_id);
     }
     return map;
+  }
+);
+
+/** Set of server IDs that have at least one channel with unread messages. */
+export const serverHasUnread = derived(
+  [unreadCounts, channelServerIndex],
+  ([$counts, $index]) => {
+    const set = new Set<string>();
+    for (const [channelId, count] of $counts) {
+      if (count > 0) {
+        const serverId = $index.get(channelId);
+        if (serverId) set.add(serverId);
+      }
+    }
+    return set;
   }
 );

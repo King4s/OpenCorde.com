@@ -5,6 +5,7 @@
 	 */
 	import { browser } from '$app/environment';
 	import { servers, fetchServers, selectServer, currentServerId } from '$lib/stores/servers';
+	import { serverHasUnread } from '$lib/stores/unread';
 	import { initDmListener } from '$lib/stores/dms';
 	import ServerIcon from '$lib/components/layout/ServerIcon.svelte';
 	import api from '$lib/api/client';
@@ -55,6 +56,7 @@
 			<ServerIcon
 				name={server.name}
 				active={$currentServerId === server.id}
+				hasUnread={$serverHasUnread.has(server.id)}
 				onclick={() => {
 					selectServer(server.id);
 					window.location.href = `/servers/${server.id}`;
