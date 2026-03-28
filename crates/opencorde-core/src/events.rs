@@ -176,6 +176,7 @@ mod tests {
             topic: None,
             position: 0,
             parent_id: None,
+            e2ee_enabled: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };

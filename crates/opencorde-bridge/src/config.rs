@@ -58,8 +58,11 @@ mod tests {
     #[test]
     fn test_config_missing_token() {
         // Without env vars set, from_env should error
-        std::env::remove_var("DISCORD_TOKEN");
-        std::env::remove_var("DATABASE_URL");
+        // SAFETY: test-only env mutation, single-threaded test runner
+        unsafe {
+            std::env::remove_var("DISCORD_TOKEN");
+            std::env::remove_var("DATABASE_URL");
+        }
         assert!(BridgeConfig::from_env().is_err());
     }
 }
