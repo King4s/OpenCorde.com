@@ -160,6 +160,36 @@ pub async fn delete_role(pool: &PgPool, id: Snowflake) -> Result<(), sqlx::Error
     Ok(())
 }
 
+/// List all roles assigned to a specific member in a server.
+///
+/// Returns full role rows joined through member_roles, ordered by position.
+///
+/// # Errors
+/// Returns sqlx::Error if the query fails.
+#[tracing::instrument(skip(pool))]
+pub async fn list_by_member(
+    pool: &PgPool,
+    user_id: Snowflake,
+    server_id: Snowflake,
+) -> Result<Vec<RoleRow>, sqlx::Error> {
+    tracing::info!(
+        user_id = user_id.as_i64(),
+        server_id = server_id.as_i64(),
+        "listing member roles"
+    );
+
+    sqlx::query_as::<_, RoleRow>(
+        "SELECT r.* FROM roles r \
+         INNER JOIN member_roles mr ON mr.role_id = r.id \
+         WHERE mr.user_id = $1 AND mr.server_id = $2 \
+         ORDER BY r.position ASC",
+    )
+    .bind(user_id.as_i64())
+    .bind(server_id.as_i64())
+    .fetch_all(pool)
+    .await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

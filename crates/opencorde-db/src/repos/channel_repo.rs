@@ -21,6 +21,10 @@ pub struct ChannelRow {
     pub position: i32,
     pub parent_id: Option<i64>,
     pub nsfw: bool,
+    /// Slowmode cooldown in seconds (0 = disabled).
+    pub slowmode_delay: i32,
+    /// Whether this channel uses E2EE (OpenMLS).
+    pub e2ee_enabled: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -101,7 +105,7 @@ pub async fn list_by_server(
     .await
 }
 
-/// Update a channel's name, topic, parent category, and nsfw flag.
+/// Update a channel's name, topic, parent category, nsfw flag, slowmode delay, and e2ee flag.
 ///
 /// # Errors
 /// Returns sqlx::Error if the update fails.
@@ -113,35 +117,29 @@ pub async fn update_channel(
     topic: Option<&str>,
     parent_id: Option<Snowflake>,
     nsfw: Option<bool>,
+    slowmode_delay: Option<i32>,
+    e2ee_enabled: Option<bool>,
 ) -> Result<(), sqlx::Error> {
     tracing::info!(channel_id = id.as_i64(), name = %name, "updating channel");
 
     let parent_id_i64 = parent_id.map(|sf| sf.as_i64());
+    let nsfw_val = nsfw.unwrap_or(false);
+    let delay = slowmode_delay.unwrap_or(0);
 
-    if let Some(nsfw_val) = nsfw {
-        sqlx::query(
-            "UPDATE channels SET name = $1, topic = $2, parent_id = $3, nsfw = $4, updated_at = NOW() \
-             WHERE id = $5",
-        )
-        .bind(name)
-        .bind(topic)
-        .bind(parent_id_i64)
-        .bind(nsfw_val)
-        .bind(id.as_i64())
-        .execute(pool)
-        .await?;
-    } else {
-        sqlx::query(
-            "UPDATE channels SET name = $1, topic = $2, parent_id = $3, updated_at = NOW() \
-             WHERE id = $4",
-        )
-        .bind(name)
-        .bind(topic)
-        .bind(parent_id_i64)
-        .bind(id.as_i64())
-        .execute(pool)
-        .await?;
-    }
+    sqlx::query(
+        "UPDATE channels \
+         SET name = $1, topic = $2, parent_id = $3, nsfw = $4, slowmode_delay = $5, e2ee_enabled = $6, updated_at = NOW() \
+         WHERE id = $7",
+    )
+    .bind(name)
+    .bind(topic)
+    .bind(parent_id_i64)
+    .bind(nsfw_val)
+    .bind(delay)
+    .bind(e2ee_enabled.unwrap_or(false))
+    .bind(id.as_i64())
+    .execute(pool)
+    .await?;
 
     Ok(())
 }
@@ -227,6 +225,8 @@ mod tests {
             position: 0,
             parent_id: None,
             nsfw: false,
+            slowmode_delay: 0,
+            e2ee_enabled: false,
             created_at: now,
             updated_at: now,
         };

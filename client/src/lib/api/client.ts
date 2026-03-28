@@ -3,20 +3,20 @@
  * @purpose Typed HTTP client with auth token management
  */
 
-const API_BASE = '/api/v1';
-
 export interface ApiError {
   code: string;
   message: string;
 }
 
+/** Return the API base URL, preferring the user-configured server over relative path. */
+function getApiBase(): string {
+  if (typeof localStorage === 'undefined') return '/api/v1';
+  const server = localStorage.getItem('opencorde_server');
+  if (server) return `${server.replace(/\/$/, '')}/api/v1`;
+  return '/api/v1';
+}
+
 class ApiClient {
-  private baseUrl: string;
-
-  constructor(baseUrl: string = API_BASE) {
-    this.baseUrl = baseUrl;
-  }
-
   setToken(token: string | null) {
     if (typeof localStorage !== 'undefined') {
       if (token) {
@@ -48,7 +48,7 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${this.baseUrl}${path}`, {
+    const response = await fetch(`${getApiBase()}${path}`, {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
@@ -82,7 +82,7 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${this.baseUrl}${path}`, {
+    const response = await fetch(`${getApiBase()}${path}`, {
       method,
       headers,
       body,
@@ -114,3 +114,14 @@ class ApiClient {
 
 export const api = new ApiClient();
 export default api;
+
+/** Save the server base URL (e.g. "http://192.168.1.10:8080") and reload. */
+export function setServerUrl(url: string): void {
+  localStorage.setItem('opencorde_server', url.replace(/\/$/, ''));
+}
+
+/** Get the currently configured server URL, or null if using relative paths. */
+export function getServerUrl(): string | null {
+  if (typeof localStorage === 'undefined') return null;
+  return localStorage.getItem('opencorde_server');
+}

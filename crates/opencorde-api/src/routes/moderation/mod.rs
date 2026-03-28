@@ -1,6 +1,7 @@
 //! # Route: Moderation - Ban, kick, and timeout management
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::helpers};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::{helpers, permission_check}};
+use opencorde_core::permissions::Permissions;
 use axum::{
     Json, Router,
     extract::{Path, State},
@@ -8,11 +9,11 @@ use axum::{
     routing::{get, put},
 };
 use chrono::Utc;
-use opencorde_db::repos::{ban_repo, member_repo, server_repo};
+use opencorde_db::repos::{ban_repo, member_repo};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-mod audit_mod;
+pub mod audit_mod;
 use audit_mod::log_mod_action;
 
 #[derive(Debug, Serialize)]
@@ -81,12 +82,8 @@ async fn ban_user(
     let server_id = helpers::parse_snowflake(&server_id)?;
     let target_user_id = helpers::parse_snowflake(&user_id)?;
 
-    let server = server_repo::get_by_id(&state.db, server_id)
-        .await
-        .map_err(ApiError::Database)?
-        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
-
-    helpers::check_server_owner(auth.user_id, server.owner_id)?;
+    // require_server_perm already verifies server exists and user has BAN_MEMBERS
+    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::BAN_MEMBERS).await?;
 
     member_repo::get_member(&state.db, target_user_id, server_id)
         .await
@@ -131,12 +128,7 @@ async fn unban_user(
     let server_id = helpers::parse_snowflake(&server_id)?;
     let target_user_id = helpers::parse_snowflake(&user_id)?;
 
-    let server = server_repo::get_by_id(&state.db, server_id)
-        .await
-        .map_err(ApiError::Database)?
-        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
-
-    helpers::check_server_owner(auth.user_id, server.owner_id)?;
+    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::BAN_MEMBERS).await?;
 
     let ban_existed = ban_repo::unban_user(&state.db, server_id.as_i64(), target_user_id.as_i64())
         .await
@@ -161,12 +153,7 @@ async fn list_bans(
     tracing::info!("listing server bans");
     let server_id = helpers::parse_snowflake(&server_id)?;
 
-    let server = server_repo::get_by_id(&state.db, server_id)
-        .await
-        .map_err(ApiError::Database)?
-        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
-
-    helpers::check_server_owner(auth.user_id, server.owner_id)?;
+    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::BAN_MEMBERS).await?;
 
     let bans = ban_repo::list_bans(&state.db, server_id.as_i64())
         .await
@@ -198,12 +185,7 @@ async fn set_timeout(
 
     validate_timeout_duration(req.duration_seconds)?;
 
-    let server = server_repo::get_by_id(&state.db, server_id)
-        .await
-        .map_err(ApiError::Database)?
-        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
-
-    helpers::check_server_owner(auth.user_id, server.owner_id)?;
+    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::MODERATE_MEMBERS).await?;
 
     member_repo::get_member(&state.db, target_user_id, server_id)
         .await
@@ -250,12 +232,7 @@ async fn remove_timeout(
     let server_id = helpers::parse_snowflake(&server_id)?;
     let target_user_id = helpers::parse_snowflake(&user_id)?;
 
-    let server = server_repo::get_by_id(&state.db, server_id)
-        .await
-        .map_err(ApiError::Database)?
-        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
-
-    helpers::check_server_owner(auth.user_id, server.owner_id)?;
+    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::MODERATE_MEMBERS).await?;
 
     let timeout = ban_repo::get_timeout(&state.db, server_id.as_i64(), target_user_id.as_i64())
         .await

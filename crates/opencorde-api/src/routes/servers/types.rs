@@ -29,23 +29,6 @@ pub struct ServerResponse {
     pub created_at: DateTime<Utc>,
 }
 
-/// Server discovery response body (for public listing).
-#[derive(Debug, Serialize, Clone)]
-pub struct DiscoveryServer {
-    /// Snowflake server ID
-    pub id: String,
-    /// Server name (1-100 chars)
-    pub name: String,
-    /// Server description (optional)
-    pub description: Option<String>,
-    /// Server icon URL (optional)
-    pub icon_url: Option<String>,
-    /// Number of members in the server
-    pub member_count: i32,
-    /// Tags for categorization (comma-separated, optional)
-    pub tags: Option<String>,
-}
-
 /// Request body for creating a server.
 #[derive(Debug, Deserialize)]
 #[allow(dead_code)]
@@ -67,17 +50,6 @@ pub struct UpdateServerRequest {
     pub vanity_url: Option<String>,
     pub system_channel_id: Option<String>,
     pub rules_channel_id: Option<String>,
-}
-
-/// Request body for updating discovery settings.
-#[derive(Debug, Deserialize)]
-pub struct DiscoveryUpdateRequest {
-    /// Whether server is publicly listed
-    pub public: bool,
-    /// Server description for discovery listing
-    pub description: Option<String>,
-    /// Tags for categorization (comma-separated)
-    pub tags: Option<String>,
 }
 
 #[cfg(test)]

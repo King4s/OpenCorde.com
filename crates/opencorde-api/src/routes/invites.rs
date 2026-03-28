@@ -1,6 +1,7 @@
 //! # Route: Invites - Server invite creation and usage
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::helpers};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::{helpers, permission_check}};
+use opencorde_core::permissions::Permissions;
 use axum::{
     Json, Router,
     extract::{Path, State},
@@ -60,11 +61,11 @@ async fn create_invite(
 ) -> Result<(StatusCode, Json<InviteResponse>), ApiError> {
     tracing::info!("creating invite");
     let server_id = helpers::parse_snowflake(&server_id)?;
+    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::CREATE_INVITE).await?;
     let server = server_repo::get_by_id(&state.db, server_id)
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
-    helpers::check_server_owner(auth.user_id, server.owner_id)?;
     let code = generate_invite_code();
     let expires_at = req
         .expires_in
@@ -104,12 +105,13 @@ async fn list_invites(
     tracing::info!("listing server invites");
     let server_id_sf = helpers::parse_snowflake(&server_id)?;
 
+    // Any member with CREATE_INVITE can list invites
+    permission_check::require_server_perm(&state.db, auth.user_id, server_id_sf, Permissions::CREATE_INVITE).await?;
+
     let server = server_repo::get_by_id(&state.db, server_id_sf)
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
-
-    helpers::check_server_owner(auth.user_id, server.owner_id)?;
 
     let invites = invite_repo::list_by_server(&state.db, server_id_sf)
         .await
@@ -224,11 +226,8 @@ async fn revoke_invite(
 ) -> Result<StatusCode, ApiError> {
     tracing::info!(code = %code, "revoking invite");
     let server_id = helpers::parse_snowflake(&server_id)?;
-    let server = server_repo::get_by_id(&state.db, server_id)
-        .await
-        .map_err(ApiError::Database)?
-        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
-    helpers::check_server_owner(auth.user_id, server.owner_id)?;
+    // Revoking requires MANAGE_SERVER (moderators can revoke any invite)
+    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::MANAGE_SERVER).await?;
     let invite = invite_repo::get_by_code(&state.db, &code)
         .await
         .map_err(ApiError::Database)?

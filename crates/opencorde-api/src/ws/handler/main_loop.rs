@@ -27,6 +27,7 @@ pub async fn run_main_loop(
     mut event_rx: tokio::sync::broadcast::Receiver<serde_json::Value>,
     user_id_str: String,
     accessible_channels: HashSet<i64>,
+    member_server_ids: HashSet<i64>,
     event_tx: tokio::sync::broadcast::Sender<serde_json::Value>,
 ) {
     // Main event loop: heartbeats + event fan-out + client messages
@@ -54,7 +55,7 @@ pub async fn run_main_loop(
                 match result {
                     Ok(event) => {
                         let event_type = event.get("type").and_then(|v| v.as_str()).unwrap_or("?");
-                        let dispatch = should_dispatch(&event, &accessible_channels);
+                        let dispatch = should_dispatch(&event, &accessible_channels, &member_server_ids);
                         tracing::debug!(user_id = %user_id_str, event_type, dispatch, "event received from broadcast");
                         // Only forward events for channels this user can access
                         if dispatch

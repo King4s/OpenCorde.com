@@ -5,7 +5,8 @@
 //! - `error` — CryptoError type
 //! - `key_package` — KeyPackage generation and TLS serialization
 //! - `group` — MLS group lifecycle (create, add members, join via welcome)
-//! - `encrypt` — Message encryption/decryption
+//! - `encrypt` — MLS application message encryption/decryption
+//! - `file_crypto` — AES-256-GCM file encryption (IV || ciphertext format)
 //!
 //! ## Design
 //! All cryptographic operations run client-side (Tauri app or browser/WASM).
@@ -17,5 +18,6 @@
 
 pub mod encrypt;
 pub mod error;
+pub mod file_crypto;
 pub mod group;
 pub mod key_package;

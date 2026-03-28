@@ -8,8 +8,23 @@
 	import hljs from 'highlight.js';
 	import 'highlight.js/styles/atom-one-dark.css';
 	import { onMount } from 'svelte';
+	import { get } from 'svelte/store';
+	import { channels } from '$lib/stores/channels';
+	import { members } from '$lib/stores/members';
+	import { roles } from '$lib/stores/roles';
+	import LinkPreview from './LinkPreview.svelte';
 
-	let { content }: { content: string } = $props();
+	let { content, showPreview = true }: { content: string; showPreview?: boolean } = $props();
+
+	// Extract the first plain URL from message content for link preview
+	// Code blocks are stripped first so we don't preview URLs inside code
+	const URL_RE = /https?:\/\/[^\s<>"'`]+[^\s<>"'`.,!?;:)\]]/g;
+	const previewUrls = $derived.by(() => {
+		if (!showPreview) return [];
+		const stripped = content.replace(/```[\s\S]*?```/g, '').replace(/`[^`]+`/g, '');
+		const matches = [...stripped.matchAll(URL_RE)].map(m => m[0]);
+		return [...new Set(matches)].slice(0, 1);
+	});
 
 	let html = $state('');
 
@@ -32,6 +47,65 @@
 		gfm: true,
 	});
 
+
+	function colorToHex(color: number | null): string {
+		if (!color) return '#b5bac1';
+		return '#' + color.toString(16).padStart(6, '0');
+	}
+
+	/** Replace Discord mention tokens with safe HTML before markdown parsing */
+	function processMentions(text: string): string {
+		const chList = get(channels);
+		const memList = get(members);
+		const roleList = get(roles);
+
+		// <#channelId>
+		text = text.replace(/<#(\d+)>/g, (_m: string, id: string) => {
+			const ch = chList.find((c: {id:string}) => c.id === id);
+			return '<span class="mention-chip mention-channel">#' + (ch ? (ch as any).name : id) + '</span>';
+		});
+		// <@userId> or <@!userId>
+		text = text.replace(/<@!?(\d+)>/g, (_m: string, id: string) => {
+			const mem = memList.find((m: any) => m.user_id === id || m.id === id);
+			const name = mem ? ((mem as any).username ?? id) : id;
+			return '<span class="mention-chip mention-user">@' + name + '</span>';
+		});
+		// <@&roleId>
+		text = text.replace(/<@&(\d+)>/g, (_m: string, id: string) => {
+			const role = roleList.find((r: {id:string}) => r.id === id);
+			const hex = colorToHex(role ? (role as any).color : null);
+			const name = role ? (role as any).name : id;
+			return '<span class="mention-chip" style="color:' + hex + ';background:' + hex + '22;">@' + name + '</span>';
+		});
+		// @everyone / @here
+		text = text.replace(/@(everyone|here)/g,
+			'<span class="mention-chip mention-user">@$1</span>');
+		// <t:timestamp:R> relative time
+		text = text.replace(/<t:(\d+)(?::[A-Za-z])?>/g, (_m: string, ts: string) => {
+			const ms = parseInt(ts) * 1000;
+			const diff = Date.now() - ms;
+			const abs = Math.abs(diff);
+			const future = diff < 0;
+			let label: string;
+			if (abs < 60000) {
+				label = 'just now';
+			} else if (abs < 3600000) {
+				const m = Math.round(abs / 60000);
+				label = m + ' min' + (m !== 1 ? 's' : '') + (future ? ' from now' : ' ago');
+			} else if (abs < 86400000) {
+				const h = Math.round(abs / 3600000);
+				label = h + ' hour' + (h !== 1 ? 's' : '') + (future ? ' from now' : ' ago');
+			} else {
+				const d = Math.round(abs / 86400000);
+				label = d + ' day' + (d !== 1 ? 's' : '') + (future ? ' from now' : ' ago');
+			}
+			const iso = new Date(ms).toISOString();
+			const loc = new Date(ms).toLocaleString();
+			return '<time title="' + loc + '" datetime="' + iso + '">' + label + '</time>';
+		});
+		return text;
+	}
+
 	/**
 	 * Sanitize HTML to prevent XSS while preserving code highlighting.
 	 * Removes script tags, iframes, and event handlers.
@@ -45,15 +119,19 @@
 	}
 
 	onMount(() => {
-		html = sanitize(marked.parse(content, { renderer }) as string);
+		html = sanitize(marked.parse(processMentions(content), { renderer }) as string);
 	});
 
 	$effect(() => {
-		html = sanitize(marked.parse(content, { renderer }) as string);
+		html = sanitize(marked.parse(processMentions(content), { renderer }) as string);
 	});
 </script>
 
 <div class="markdown-content">{@html html}</div>
+
+{#each previewUrls as previewUrl (previewUrl)}
+	<LinkPreview url={previewUrl} />
+{/each}
 
 <style>
 	:global(.hljs) {
@@ -166,6 +244,29 @@
 
 	.markdown-content :global(a:hover) {
 		text-decoration: underline;
+	}
+	.markdown-content :global(.mention-chip) {
+		display: inline;
+		padding: 0 3px;
+		border-radius: 3px;
+		font-weight: 500;
+		cursor: default;
+	}
+
+	.markdown-content :global(.mention-user) {
+		color: #c9cdfb;
+		background: rgba(88, 101, 242, 0.1);
+	}
+
+	.markdown-content :global(.mention-channel) {
+		color: #00aff4;
+		background: rgba(0, 175, 244, 0.1);
+	}
+
+	.markdown-content :global(time) {
+		color: #b5bac1;
+		text-decoration: underline dotted;
+		cursor: help;
 	}
 
 	.markdown-content :global(h1),

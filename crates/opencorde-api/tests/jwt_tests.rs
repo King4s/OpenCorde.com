@@ -28,8 +28,10 @@ fn test_create_and_validate_access_token() {
 #[test]
 fn test_create_and_validate_refresh_token() {
     let user_id = Snowflake::new(USER_ID);
-    let token = create_refresh_token(user_id, USERNAME, TEST_SECRET, 604800)
+    let (token, jti) = create_refresh_token(user_id, USERNAME, TEST_SECRET, 604800)
         .expect("token creation should succeed");
+
+    assert!(!jti.is_empty(), "jti should not be empty");
 
     let claims =
         validate_refresh_token(&token, TEST_SECRET).expect("token validation should succeed");
@@ -37,6 +39,7 @@ fn test_create_and_validate_refresh_token() {
     assert_eq!(claims.sub, USER_ID.to_string());
     assert_eq!(claims.username, USERNAME);
     assert_eq!(claims.token_type, "refresh");
+    assert_eq!(claims.jti.as_deref(), Some(jti.as_str()));
 }
 
 #[test]
@@ -55,7 +58,7 @@ fn test_access_token_rejected_as_refresh() {
 #[test]
 fn test_refresh_token_rejected_as_access() {
     let user_id = Snowflake::new(USER_ID);
-    let token = create_refresh_token(user_id, USERNAME, TEST_SECRET, 604800)
+    let (token, _jti) = create_refresh_token(user_id, USERNAME, TEST_SECRET, 604800)
         .expect("token creation should succeed");
 
     let result = validate_access_token(&token, TEST_SECRET);

@@ -36,6 +36,8 @@
 //! - Main.rs orchestrates startup and server initialization
 
 pub mod automod;
+pub mod federation;
+pub mod identity;
 pub mod config;
 pub mod email;
 pub mod emoji_helpers;
@@ -50,6 +52,8 @@ use axum::extract::FromRef;
 use sqlx::PgPool;
 use std::sync::Arc;
 use tokio::sync::broadcast;
+
+
 
 /// Shared application state.
 ///
@@ -72,6 +76,10 @@ pub struct AppState {
     /// Broadcast channel for pushing real-time events to WebSocket clients.
     /// REST handlers publish here; WS handler subscribes.
     pub event_tx: Arc<broadcast::Sender<serde_json::Value>>,
+    /// This server's Ed25519 identity (signing key + public key hex)
+    pub identity: Arc<identity::ServerIdentity>,
+    /// In-process cache for URL unfurl (link preview) results
+    pub unfurl_cache: routes::unfurl::UnfurlCache,
 }
 
 /// Allow extracting Arc<Config> from AppState.

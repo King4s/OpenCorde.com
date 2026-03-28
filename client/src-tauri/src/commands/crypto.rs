@@ -88,7 +88,7 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 
 fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return Err("hex string has odd length".into());
     }
     (0..s.len())
@@ -245,6 +245,28 @@ pub fn crypto_encrypt(
         ciphertext_hex: hex_encode(&ciphertext),
         group_state_hex: hex_encode(&updated_state),
     })
+}
+
+/// Derive a 32-byte voice encryption key from the current MLS group epoch.
+///
+/// The key is derived via MLS exporter (label "opencorde-voice"). It changes
+/// each epoch, providing automatic forward secrecy when members join/leave.
+/// Pass the returned hex to LiveKit's ExternalE2EEKeyProvider.
+#[tauri::command]
+pub fn crypto_export_voice_key(
+    group_state_hex: String,
+    state: State<'_, CryptoState>,
+) -> Result<String, String> {
+    tracing::debug!("crypto_export_voice_key");
+
+    let provider = state.provider.lock().map_err(|e| e.to_string())?;
+    let mls_group = group::deserialize_group(&hex_decode(&group_state_hex)?)
+        .map_err(|e| format!("group deserialization failed: {e:?}"))?;
+
+    let key_bytes = group::export_voice_key(&mls_group, &provider)
+        .map_err(|e| format!("voice key export failed: {e:?}"))?;
+
+    Ok(hex_encode(&key_bytes))
 }
 
 /// Decrypt an incoming MLS message.

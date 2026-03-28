@@ -8,7 +8,7 @@
   import EventCard from '$lib/components/events/EventCard.svelte';
   import { onMount } from 'svelte';
 
-  let serverId = $derived($page.params.serverId);
+  let serverId = $derived($page.params.serverId ?? '');
   let showCreate = $state(false);
   let creating = $state(false);
   let createError = $state('');

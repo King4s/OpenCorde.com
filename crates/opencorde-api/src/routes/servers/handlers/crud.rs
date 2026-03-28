@@ -12,6 +12,7 @@ use opencorde_db::repos::{channel_repo, member_repo, server_repo};
 use tracing::instrument;
 
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
+use serde_json::json;
 
 use super::super::{
     types::{CreateServerRequest, ServerResponse, UpdateServerRequest},
@@ -280,7 +281,12 @@ async fn update_server(
             ApiError::Internal(anyhow::anyhow!("server disappeared after update"))
         })?;
 
-    Ok(Json(server_row_to_response(updated)))
+    let response = server_row_to_response(updated);
+    let event = json!({"type":"ServerUpdate","data":{"server":&response}});
+    if state.event_tx.send(event).is_err() {
+        tracing::debug!("no WebSocket subscribers for ServerUpdate event");
+    }
+    Ok(Json(response))
 }
 
 /// DELETE /api/v1/servers/{id} — Delete a server (owner only).

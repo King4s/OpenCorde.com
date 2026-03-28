@@ -8,6 +8,7 @@
 //! ## Depends On
 //! - axum (web framework)
 //! - opencorde_db::repos::user_repo (CRUD operations)
+//! - opencorde_db::repos::refresh_token_repo (JTI rotation and theft detection)
 //! - opencorde_core::password (password hashing)
 //! - opencorde_core::Snowflake (ID generation)
 //! - crate::jwt (token creation)
@@ -23,9 +24,11 @@ use axum::{
     http::{HeaderValue, header::SET_COOKIE},
     response::{IntoResponse, Response},
 };
+use chrono::{Duration, Utc};
 use opencorde_core::{Snowflake, password};
-use opencorde_db::repos::user_repo;
+use opencorde_db::repos::{refresh_token_repo, user_repo};
 
+use super::totp;
 use super::types::{AuthResponse, LoginRequest, UserInfo};
 use super::validation::{make_refresh_cookie, validate_login};
 use crate::{AppState, error::ApiError, jwt};
@@ -70,6 +73,30 @@ pub async fn login(
 
     tracing::debug!(user_id = user_row.id, "password verified");
 
+    // Two-factor authentication check
+    if user_row.totp_enabled {
+        match req.totp_code.as_deref() {
+            None => {
+                tracing::info!(user_id = user_row.id, "login requires TOTP code");
+                return Err(ApiError::TwoFactorRequired);
+            }
+            Some(code) => {
+                let account_name = user_row.email.as_deref().unwrap_or(&user_row.username);
+                let valid = totp::check_totp_code(
+                    user_row.totp_secret.as_deref().unwrap_or(""),
+                    code,
+                    account_name,
+                    totp::APP_NAME,
+                )?;
+                if !valid {
+                    tracing::warn!(user_id = user_row.id, "invalid TOTP code at login");
+                    return Err(ApiError::Unauthorized);
+                }
+                tracing::debug!(user_id = user_row.id, "TOTP code verified");
+            }
+        }
+    }
+
     // Generate tokens
     let user_id = Snowflake::new(user_row.id);
     let access_token = jwt::create_access_token(
@@ -80,7 +107,7 @@ pub async fn login(
     )
     .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
 
-    let refresh_token = jwt::create_refresh_token(
+    let (refresh_token, jti) = jwt::create_refresh_token(
         user_id,
         &user_row.username,
         &state.config.jwt_secret,
@@ -88,7 +115,13 @@ pub async fn login(
     )
     .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
 
-    tracing::debug!(user_id = user_row.id, "tokens generated");
+    // Store the JTI so we can detect reuse (theft) on refresh
+    let expires_at = Utc::now() + Duration::seconds(state.config.jwt_refresh_expiry as i64);
+    refresh_token_repo::insert(&state.db, &jti, user_id.as_i64(), expires_at)
+        .await
+        .map_err(|e| ApiError::Internal(anyhow::anyhow!("failed to store refresh token JTI: {}", e)))?;
+
+    tracing::debug!(user_id = user_row.id, "tokens generated and JTI stored");
 
     // Build response
     let response = AuthResponse {
@@ -174,6 +207,43 @@ pub async fn refresh(
 
     tracing::debug!(user_id = %user_id, "user verified for token refresh");
 
+    // JTI rotation: check DB record to detect token reuse/theft
+    let jti = claims.jti.as_deref().ok_or_else(|| {
+        tracing::warn!(user_id = %user_id, "refresh token missing jti claim");
+        ApiError::Unauthorized
+    })?;
+
+    let token_record = refresh_token_repo::get_by_jti(&state.db, jti)
+        .await
+        .map_err(ApiError::Database)?;
+
+    match token_record {
+        None => {
+            // JTI not in DB — unknown token (e.g., pre-migration token or DB reset)
+            tracing::warn!(user_id = %user_id, jti = jti, "refresh token JTI not found in DB");
+            return Err(ApiError::Unauthorized);
+        }
+        Some(record) if record.revoked => {
+            // THEFT DETECTED: a previously rotated (revoked) token is being replayed.
+            // Revoke all active sessions for this user to force full re-login.
+            tracing::warn!(
+                user_id = %user_id,
+                jti = jti,
+                "SECURITY: revoked refresh token replayed — revoking all sessions (token theft)"
+            );
+            let _ = refresh_token_repo::revoke_all_for_user(&state.db, user_id.as_i64()).await;
+            return Err(ApiError::Unauthorized);
+        }
+        Some(_) => {
+            // Valid, active token — proceed with rotation
+        }
+    }
+
+    // Revoke the consumed JTI (rotation: one-time use)
+    refresh_token_repo::revoke(&state.db, jti)
+        .await
+        .map_err(ApiError::Database)?;
+
     // Generate new tokens
     let new_access_token = jwt::create_access_token(
         user_id,
@@ -183,7 +253,7 @@ pub async fn refresh(
     )
     .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
 
-    let new_refresh_token = jwt::create_refresh_token(
+    let (new_refresh_token, new_jti) = jwt::create_refresh_token(
         user_id,
         &user_row.username,
         &state.config.jwt_secret,
@@ -191,7 +261,13 @@ pub async fn refresh(
     )
     .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
 
-    tracing::debug!(user_id = %user_id, "new tokens generated");
+    // Store the new JTI
+    let expires_at = Utc::now() + Duration::seconds(state.config.jwt_refresh_expiry as i64);
+    refresh_token_repo::insert(&state.db, &new_jti, user_id.as_i64(), expires_at)
+        .await
+        .map_err(|e| ApiError::Internal(anyhow::anyhow!("failed to store new refresh token JTI: {}", e)))?;
+
+    tracing::debug!(user_id = %user_id, old_jti = jti, new_jti = %new_jti, "refresh token rotated");
 
     // Build response
     let response = AuthResponse {

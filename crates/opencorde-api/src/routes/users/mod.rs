@@ -47,6 +47,7 @@ mod tests {
             status: 0,
             bio: None,
             status_message: None,
+            totp_enabled: false,
         };
         let json = serde_json::to_string(&profile).unwrap();
         assert!(json.contains("123"));

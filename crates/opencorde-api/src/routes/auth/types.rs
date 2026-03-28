@@ -15,6 +15,8 @@ pub struct RegisterRequest {
     pub email: String,
     /// Password: minimum 8 characters
     pub password: String,
+    /// Invite code — required when REGISTRATION_MODE=invite_only
+    pub invite_code: Option<String>,
 }
 
 /// Request body for user login.
@@ -24,6 +26,9 @@ pub struct LoginRequest {
     pub email: String,
     /// Password
     pub password: String,
+    /// TOTP code from authenticator app — required if the account has 2FA enabled.
+    /// If missing and 2FA is enabled, the server returns 403 TWO_FACTOR_REQUIRED.
+    pub totp_code: Option<String>,
 }
 
 /// Response body for authentication (register/login/refresh).
@@ -78,6 +83,7 @@ mod tests {
             username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password: "password123".to_string(),
+            invite_code: None,
         };
 
         let json = serde_json::to_string(&req).unwrap();
@@ -90,6 +96,7 @@ mod tests {
         let req = LoginRequest {
             email: "test@example.com".to_string(),
             password: "password123".to_string(),
+            totp_code: None,
         };
 
         let json = serde_json::to_string(&req).unwrap();

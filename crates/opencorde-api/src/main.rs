@@ -28,11 +28,14 @@
 //! - tower_http — Middleware implementations
 
 use opencorde_api::{AppState, config::Config, middleware, routes};
+use opencorde_api::middleware::rate_limit::{RateLimitConfig, RateLimitState};
+use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio::sync::broadcast;
 use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 use aws_sdk_s3::config::{Credentials as S3Credentials, Region as S3Region};
+use opencorde_search::SearchEngine;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -58,9 +61,23 @@ async fn main() -> anyhow::Result<()> {
     opencorde_db::run_migrations(&pool).await?;
     tracing::info!("database migrations completed");
 
-    // Initialize search engine (optional)
-    let search = None; // TODO: Initialize search engine from config
-    tracing::debug!("search engine initialized: {:?}", search.is_some());
+    // Initialize search engine from SEARCH_INDEX_PATH (optional)
+    let search: Option<std::sync::Arc<SearchEngine>> = if let Some(ref index_path) = config.search_index_path {
+        match opencorde_search::open_or_create(std::path::Path::new(index_path)) {
+            Ok((index, schema)) => {
+                tracing::info!(path = %index_path, "search index opened");
+                Some(std::sync::Arc::new(SearchEngine::new(index, schema)))
+            }
+            Err(e) => {
+                tracing::warn!(error = %e, "search index init failed, disabling search");
+                None
+            }
+        }
+    } else {
+        tracing::info!("SEARCH_INDEX_PATH not set, search disabled");
+        None
+    };
+    tracing::info!(enabled = search.is_some(), "search engine initialized");
 
     // Initialize S3 client for MinIO/AWS S3 object storage
     tracing::debug!("initializing S3 client");
@@ -100,6 +117,28 @@ async fn main() -> anyhow::Result<()> {
         "email service initialized"
     );
 
+    // Initialize per-IP rate limiter from config
+    tracing::debug!("initializing rate limiter");
+    let rate_limit_state = RateLimitState::new(RateLimitConfig {
+        requests_per_second: config.rate_limit_rps,
+        burst_size: config.rate_limit_burst,
+        enabled: true,
+    });
+    tracing::info!(
+        rps = config.rate_limit_rps,
+        burst = config.rate_limit_burst,
+        "rate limiter initialized"
+    );
+
+    // Load or generate Ed25519 server identity for federation
+    let identity = Arc::new(
+        opencorde_api::identity::ServerIdentity::load_or_generate()
+            .expect("failed to load server identity"),
+    );
+
+    // Spawn registry sync background task
+    opencorde_api::federation::spawn_registry_sync(pool.clone(), Arc::new(config.clone()), identity.clone());
+
     // Build application state
     let state = AppState {
         db: pool,
@@ -108,6 +147,8 @@ async fn main() -> anyhow::Result<()> {
         s3: Arc::new(s3_client),
         email_service,
         event_tx,
+        identity,
+        unfurl_cache: opencorde_api::routes::unfurl::new_cache(),
     };
 
     // Build router with middleware
@@ -131,6 +172,11 @@ async fn main() -> anyhow::Result<()> {
     );
 
     let app = routes::api_router()
+        .layer(axum::middleware::from_fn_with_state(
+            rate_limit_state,
+            middleware::rate_limit::rate_limit_middleware,
+        ))
+        .layer(axum::middleware::from_fn(middleware::security_headers_layer))
         .layer(tower_http::limit::RequestBodyLimitLayer::new(body_limit_bytes))
         .layer(tower_http::timeout::TimeoutLayer::with_status_code(
             axum::http::StatusCode::REQUEST_TIMEOUT,
@@ -148,8 +194,12 @@ async fn main() -> anyhow::Result<()> {
     let listener = TcpListener::bind(&addr).await?;
     tracing::info!(address = %addr, "server listening");
 
-    // Serve requests
-    axum::serve(listener, app).await?;
+    // Serve requests (with_connect_info required for ConnectInfo<SocketAddr> extractor in rate limiter)
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await?;
 
     Ok(())
 }

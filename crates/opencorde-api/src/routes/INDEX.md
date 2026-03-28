@@ -25,6 +25,7 @@ Pattern: One file per resource. Each file exports a `router()` function that ret
 | members.rs | Server member management | GET/POST /servers/{server_id}/members, DELETE /servers/{server_id}/members/{user_id} | — |
 | invites.rs | Server invites | GET/POST /servers/{server_id}/invites, POST /invites/{code}/join | — |
 | admin.rs | Admin operations | System config, user management, audit logs | — |
+| push.rs | Push notification token registration | POST /api/v1/push/register, DELETE /api/v1/push/unregister | ✓ Implemented |
 
 ## Notes
 - Every handler returns `Result<T, ApiError>` for unified error handling

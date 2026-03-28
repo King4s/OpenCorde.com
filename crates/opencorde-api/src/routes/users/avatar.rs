@@ -84,5 +84,6 @@ pub async fn upload_avatar(
         status: user_row.status,
         bio: user_row.bio,
         status_message: user_row.status_message,
+        totp_enabled: user_row.totp_enabled,
     }))
 }

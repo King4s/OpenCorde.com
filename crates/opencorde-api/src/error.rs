@@ -49,6 +49,14 @@ pub enum ApiError {
     #[error("forbidden")]
     Forbidden,
 
+    /// Two-factor authentication code required (403).
+    ///
+    /// Returned when a user has TOTP enabled and submitted valid credentials
+    /// but omitted `totp_code`. The client should show the 2FA prompt and
+    /// re-submit the full login request.
+    #[error("two-factor authentication required")]
+    TwoFactorRequired,
+
     /// Resource already exists (409).
     #[error("conflict: {0}")]
     Conflict(String),
@@ -90,10 +98,15 @@ impl IntoResponse for ApiError {
 
             ApiError::Forbidden => (StatusCode::FORBIDDEN, "FORBIDDEN", "forbidden".to_string()),
 
+            ApiError::TwoFactorRequired => (
+                StatusCode::FORBIDDEN,
+                "TWO_FACTOR_REQUIRED",
+                "two-factor authentication code is required".to_string(),
+            ),
+
             ApiError::Conflict(msg) => (StatusCode::CONFLICT, "CONFLICT", msg.clone()),
 
             ApiError::RateLimited { retry_after } => {
-                // TODO: Add Retry-After header to response
                 (
                     StatusCode::TOO_MANY_REQUESTS,
                     "RATE_LIMITED",
@@ -140,7 +153,19 @@ impl IntoResponse for ApiError {
             message,
         };
 
-        (status, axum::Json(error_response)).into_response()
+        let mut resp = (status, axum::Json(error_response)).into_response();
+
+        // Add Retry-After header for rate-limited responses
+        if let ApiError::RateLimited { retry_after } = &self {
+            if let Ok(val) = axum::http::HeaderValue::from_str(&retry_after.to_string()) {
+                resp.headers_mut().insert(
+                    axum::http::header::RETRY_AFTER,
+                    val,
+                );
+            }
+        }
+
+        resp
     }
 }
 

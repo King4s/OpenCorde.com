@@ -27,6 +27,10 @@ pub struct ChannelResponse {
     pub parent_id: Option<String>,
     /// Whether channel is marked NSFW
     pub nsfw: bool,
+    /// Slowmode cooldown in seconds (0 = disabled)
+    pub slowmode_delay: i32,
+    /// Whether the channel uses E2EE
+    pub e2ee_enabled: bool,
     /// Channel creation timestamp
     pub created_at: DateTime<Utc>,
 }
@@ -58,6 +62,10 @@ pub struct UpdateChannelRequest {
     pub position: Option<i32>,
     /// Optional NSFW flag update
     pub nsfw: Option<bool>,
+    /// Optional slowmode delay in seconds (0 = disabled, max 21600)
+    pub slowmode_delay: Option<i32>,
+    /// Optional E2EE enable/disable
+    pub e2ee_enabled: Option<bool>,
 }
 
 #[cfg(test)]
@@ -103,6 +111,8 @@ mod tests {
             position: 0,
             parent_id: None,
             nsfw: false,
+            slowmode_delay: 0,
+            e2ee_enabled: false,
             created_at: now,
         };
 
@@ -125,6 +135,8 @@ mod tests {
             position: 1,
             parent_id: Some("666777".to_string()),
             nsfw: true,
+            slowmode_delay: 5,
+            e2ee_enabled: false,
             created_at: now,
         };
 

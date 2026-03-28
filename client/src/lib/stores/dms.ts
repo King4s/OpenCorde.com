@@ -23,12 +23,24 @@ export async function fetchDmChannels(): Promise<void> {
 }
 
 /**
- * Open or create a DM with a recipient
- * @param recipientId - User ID to open DM with
- * @returns Created or existing DmChannel
+ * Open or create a DM with a recipient on this server.
+ * @param recipientId - Local user snowflake ID
  */
 export async function openDm(recipientId: string): Promise<DmChannel> {
 	const dm = await api.post<DmChannel>('/users/@me/channels', { recipient_id: recipientId });
+	dmChannels.update(list => {
+		const exists = list.find(d => d.id === dm.id);
+		return exists ? list : [dm, ...list];
+	});
+	return dm;
+}
+
+/**
+ * Open or create a cross-server (federated) DM with a user on another server.
+ * @param address - Remote user address in "username@hostname" format
+ */
+export async function openFederatedDm(address: string): Promise<DmChannel> {
+	const dm = await api.post<DmChannel>('/users/@me/channels', { recipient_address: address });
 	dmChannels.update(list => {
 		const exists = list.find(d => d.id === dm.id);
 		return exists ? list : [dm, ...list];

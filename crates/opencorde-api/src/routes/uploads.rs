@@ -13,6 +13,7 @@
 //! - opencorde_db (files table insert)
 //! - crate::middleware::auth::AuthUser
 //! - crate::error::ApiError
+//! - crate::routes::upload_validation (MIME, size, magic, EXIF)
 
 use axum::{
     extract::{Multipart, Path, State},
@@ -25,9 +26,7 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
-use crate::routes::helpers::parse_snowflake;
-
-const MAX_FILE_SIZE: u64 = 100 * 1024 * 1024; // 100 MB
+use crate::routes::{helpers::parse_snowflake, upload_validation};
 
 /// Response body for successful file upload.
 #[derive(Debug, Serialize, Deserialize)]
@@ -81,19 +80,15 @@ async fn upload_attachment(
         "file extracted from multipart"
     );
 
-    // Validate file size
+    // Security validation pipeline
+    upload_validation::validate_mime_type(&content_type)?;
+    upload_validation::validate_file_size(&content_type, bytes.len() as u64)?;
+    upload_validation::verify_magic_bytes(&content_type, &bytes)?;
+    let bytes = upload_validation::strip_exif(&content_type, bytes);
+
     let size = bytes.len() as u64;
-    if size > MAX_FILE_SIZE {
-        tracing::warn!(
-            size = size,
-            max = MAX_FILE_SIZE,
-            "file exceeds maximum size"
-        );
-        return Err(ApiError::BadRequest(format!(
-            "file size exceeds maximum of {} bytes",
-            MAX_FILE_SIZE
-        )));
-    }
+
+    tracing::debug!(size = size, "file passed security validation");
 
     // Generate S3 object key with UUID
     let object_uuid = Uuid::new_v4();

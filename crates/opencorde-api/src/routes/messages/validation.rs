@@ -138,7 +138,7 @@ mod tests {
     #[test]
     fn test_extract_mention_ids() {
         assert_eq!(extract_mention_ids("hello <@123> world"), vec![123_i64]);
-        assert_eq!(extract_mention_ids("no mentions here"), vec![]);
+        assert_eq!(extract_mention_ids("no mentions here"), Vec::<i64>::new());
         // Deduplication
         let ids = extract_mention_ids("<@100> and <@100> again");
         assert_eq!(ids, vec![100_i64]);

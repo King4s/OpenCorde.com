@@ -20,10 +20,12 @@ use axum::{
     http::StatusCode,
     routing::{patch, post},
 };
+use opencorde_core::permissions::Permissions;
 use opencorde_db::repos::channel_repo;
 use tracing::instrument;
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::permission_check};
+use serde_json::json;
 
 use super::{
     types::{ChannelResponse, CreateChannelRequest, UpdateChannelRequest},
@@ -54,6 +56,8 @@ fn channel_row_to_response(row: channel_repo::ChannelRow) -> ChannelResponse {
         position: row.position,
         parent_id: row.parent_id.map(|id| id.to_string()),
         nsfw: row.nsfw,
+        slowmode_delay: row.slowmode_delay,
+        e2ee_enabled: row.e2ee_enabled,
         created_at: row.created_at,
     }
 }
@@ -73,6 +77,15 @@ async fn create_channel(
     // Parse server ID
     let server_id_sf = parse_snowflake_id(&server_id)?;
     tracing::debug!(server_id = server_id_sf.as_i64(), "parsed server id");
+
+    // Require MANAGE_CHANNELS permission
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id_sf,
+        Permissions::MANAGE_CHANNELS,
+    )
+    .await?;
 
     // Validate channel name
     validate_channel_name(&req.name)?;
@@ -122,6 +135,10 @@ async fn create_channel(
     );
 
     let response = channel_row_to_response(channel_row);
+    let event = json!({"type":"ChannelCreate","data":{"channel":&response}});
+    if state.event_tx.send(event).is_err() {
+        tracing::debug!("no WebSocket subscribers for ChannelCreate event");
+    }
     Ok((StatusCode::CREATED, Json(response)))
 }
 
@@ -168,6 +185,15 @@ async fn update_channel(
     let channel_id = parse_snowflake_id(&id)?;
     tracing::debug!(channel_id = channel_id.as_i64(), "parsed channel id");
 
+    // Require MANAGE_CHANNELS permission (channel-level check covers server owner bypass)
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id,
+        Permissions::MANAGE_CHANNELS,
+    )
+    .await?;
+
     // Fetch current channel
     let channel = channel_repo::get_by_id(&state.db, channel_id)
         .await
@@ -196,10 +222,15 @@ async fn update_channel(
         "validated channel updates"
     );
 
+    // Clamp slowmode_delay to valid range (0-21600 seconds = 6 hours)
+    let slowmode_delay = req.slowmode_delay.map(|d| d.clamp(0, 21600));
+
     // Update channel
-    channel_repo::update_channel(&state.db, channel_id, update_name, update_topic, None, req.nsfw)
-        .await
-        .map_err(ApiError::Database)?;
+    channel_repo::update_channel(
+        &state.db, channel_id, update_name, update_topic, None, req.nsfw, slowmode_delay, req.e2ee_enabled,
+    )
+    .await
+    .map_err(ApiError::Database)?;
 
     tracing::info!(channel_id = channel.id, "channel updated");
 
@@ -228,7 +259,12 @@ async fn update_channel(
             ApiError::Internal(anyhow::anyhow!("channel disappeared after update"))
         })?;
 
-    Ok(Json(channel_row_to_response(updated)))
+    let response = channel_row_to_response(updated);
+    let event = json!({"type":"ChannelUpdate","data":{"channel":&response}});
+    if state.event_tx.send(event).is_err() {
+        tracing::debug!("no WebSocket subscribers for ChannelUpdate event");
+    }
+    Ok(Json(response))
 }
 
 /// DELETE /api/v1/channels/{id} — Delete a channel.
@@ -247,6 +283,15 @@ async fn delete_channel(
     let channel_id = parse_snowflake_id(&id)?;
     tracing::debug!(channel_id = channel_id.as_i64(), "parsed channel id");
 
+    // Require MANAGE_CHANNELS permission
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id,
+        Permissions::MANAGE_CHANNELS,
+    )
+    .await?;
+
     // Fetch channel to verify it exists
     let channel = channel_repo::get_by_id(&state.db, channel_id)
         .await
@@ -264,6 +309,9 @@ async fn delete_channel(
         .map_err(ApiError::Database)?;
 
     tracing::info!(channel_id = channel.id, "channel deleted");
-
+    let event = json!({"type":"ChannelDelete","data":{"server_id":channel.server_id.to_string(),"channel_id":channel_id.as_i64().to_string()}});
+    if state.event_tx.send(event).is_err() {
+        tracing::debug!("no WebSocket subscribers for ChannelDelete event");
+    }
     Ok(StatusCode::NO_CONTENT)
 }

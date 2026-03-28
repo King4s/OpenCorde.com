@@ -11,3 +11,5 @@ Pattern: Reusable modal containers with forms or content.
 | ConfirmDeleteModal.svelte | Confirmation before destructive action |
 | UserProfileModal.svelte | User details, mutual servers, friend actions |
 | MemberContextMenu.svelte | Right-click context menu for member moderation (kick, ban, timeout) |
+| RoleManager.svelte | Role list + tabbed editor (Display / Permissions / Members) |
+| RolePermissionsTab.svelte | Permission flag checkboxes grouped by category; accepts permissions bigint, emits onChange |

@@ -4,6 +4,9 @@
 	 * @purpose Shows channels, create channel, invite link, channel context menu
 	 */
 	import { browser } from '$app/environment';
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { get } from 'svelte/store';
 	import {
 		fetchChannels,
 		currentChannelId,
@@ -20,13 +23,19 @@
 	import MemberList from '$lib/components/layout/MemberList.svelte';
 	import ChannelSidebar from '$lib/components/layout/ChannelSidebar.svelte';
 	import WebhookManager from '$lib/components/modals/WebhookManager.svelte';
-	import { members, membersLoading, fetchMembers } from '$lib/stores/members';
+	import { members, membersLoading, fetchMembers, initMemberListeners } from '$lib/stores/members';
+	import { initChannelListeners } from '$lib/stores/channels';
+	import { initRoleListeners } from '$lib/stores/roles';
+	import { initServerListeners } from '$lib/stores/servers';
+	import UserPanel from '$lib/components/layout/UserPanel.svelte';
+	import QuickSwitcher from '$lib/components/modals/QuickSwitcher.svelte';
 
 	let { children } = $props();
 	let serverId = $state('');
 
 	// Modals
 	let showCreateChannel = $state(false);
+	let showQuickSwitcher = $state(false);
 	let showInvite = $state(false);
 	let inviteCode = $state('');
 	let inviteLoading = $state(false);
@@ -43,10 +52,45 @@
 			fetchMembers(serverId).catch(() => {});
 			initUnreadListener();
 			initPresenceListener();
+			initChannelListeners();
+			initRoleListeners();
+			initMemberListeners();
+			initServerListeners();
 			loadReadStates().catch(() => {});
 		}
 	}
 
+
+	onMount(() => {
+		function handleKeydown(e: KeyboardEvent) {
+			// Ctrl+K — Quick switcher
+			if (e.ctrlKey && e.key === 'k') {
+				e.preventDefault();
+				showQuickSwitcher = !showQuickSwitcher;
+				return;
+			}
+			if (!e.altKey) return;
+			if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+			e.preventDefault();
+			const sid = serverId;
+			if (!sid) return;
+			const allChannels = get(channels);
+			const textChs = allChannels
+				.filter(c => c.channel_type === 0)
+				.sort((a, b) => a.position - b.position);
+			if (textChs.length === 0) return;
+			const curId = get(currentChannelId);
+			const idx = textChs.findIndex(c => c.id === curId);
+			let nextIdx = e.key === 'ArrowUp' ? idx - 1 : idx + 1;
+			nextIdx = Math.max(0, Math.min(nextIdx, textChs.length - 1));
+			const next = textChs[nextIdx];
+			if (next && next.id !== curId) {
+				goto('/servers/' + sid + '/channels/' + next.id);
+			}
+		}
+		window.addEventListener('keydown', handleKeydown);
+		return () => window.removeEventListener('keydown', handleKeydown);
+	});
 
 	async function handleCreateInvite() {
 		if (!serverId) return;
@@ -123,6 +167,8 @@
 		/>
 
 		<VoicePanel />
+		<UserPanel />
+		<UserPanel />
 	{#if $currentChannel?.channel_type === 3}
 		<StagePanel
 			channelId={$currentChannelId || ''}
@@ -148,4 +194,8 @@
 
 {#if webhookChannelId}
 	<WebhookManager channelId={webhookChannelId} onClose={() => webhookChannelId = null} />
+{/if}
+
+{#if showQuickSwitcher}
+	<QuickSwitcher onClose={() => showQuickSwitcher = false} />
 {/if}

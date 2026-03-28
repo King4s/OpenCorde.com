@@ -34,6 +34,8 @@ pub struct Channel {
     pub position: i32,
     /// Optional parent category ID
     pub parent_id: Option<Snowflake>,
+    /// Whether this channel uses E2EE (OpenMLS)
+    pub e2ee_enabled: bool,
     /// Creation timestamp
     pub created_at: DateTime<Utc>,
     /// Last update timestamp
@@ -54,6 +56,7 @@ mod tests {
             topic: Some("General discussion".to_string()),
             position: 0,
             parent_id: None,
+            e2ee_enabled: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -72,6 +75,7 @@ mod tests {
             topic: None,
             position: 1,
             parent_id: None,
+            e2ee_enabled: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -89,6 +93,7 @@ mod tests {
             topic: None,
             position: 2,
             parent_id: None,
+            e2ee_enabled: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -106,6 +111,7 @@ mod tests {
             topic: None,
             position: 0,
             parent_id: Some(Snowflake::new(502)),
+            e2ee_enabled: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -124,6 +130,7 @@ mod tests {
             topic: Some("Test topic".to_string()),
             position: 5,
             parent_id: None,
+            e2ee_enabled: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };

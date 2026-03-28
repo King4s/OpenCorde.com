@@ -22,8 +22,14 @@ export class GatewayClient {
   connect(token: string): void {
     this.token = token;
     if (!this.url) {
-      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-      this.url = `${proto}//${location.host}/api/v1/gateway`;
+      const server = typeof localStorage !== 'undefined' ? localStorage.getItem('opencorde_server') : null;
+      if (server) {
+        const wsProto = server.startsWith('https:') ? 'wss:' : 'ws:';
+        this.url = `${wsProto}${server.replace(/^https?/, '')}/api/v1/gateway`;
+      } else {
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        this.url = `${proto}//${location.host}/api/v1/gateway`;
+      }
     }
     this.ws = new WebSocket(this.url);
 

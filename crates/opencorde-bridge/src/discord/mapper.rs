@@ -25,6 +25,7 @@ fn next_msg_id() -> i64 {
 
 /// Active channel mapping row.
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Fields read via bridge runtime at query time
 pub struct ChannelMapping {
     pub id: i64,
     pub discord_channel_id: i64,

@@ -119,12 +119,17 @@ pub async fn list_dms_for_user(
 
     tracing::info!("listing dm channels");
 
+    // LEFT JOINs allow federated DMs where only the local user is in dm_channel_members.
+    // COALESCE falls back to remote_peer_address for the federated participant's display name.
     sqlx::query_as::<_, DmChannelRow>(
-        "SELECT d.id, u.id as other_user_id, u.username as other_username, m.last_read_id \
+        "SELECT d.id, \
+                COALESCE(m2.user_id, 0) as other_user_id, \
+                COALESCE(u.username, d.remote_peer_address, '') as other_username, \
+                m.last_read_id \
          FROM dm_channels d \
          JOIN dm_channel_members m ON m.dm_channel_id = d.id AND m.user_id = $1 \
-         JOIN dm_channel_members m2 ON m2.dm_channel_id = d.id AND m2.user_id != $1 \
-         JOIN users u ON u.id = m2.user_id \
+         LEFT JOIN dm_channel_members m2 ON m2.dm_channel_id = d.id AND m2.user_id != $1 \
+         LEFT JOIN users u ON u.id = m2.user_id \
          ORDER BY d.id DESC",
     )
     .bind(user_id_val)
@@ -197,9 +202,11 @@ pub async fn list_dm_messages(
     let messages = match before {
         Some(before_sf) => {
             sqlx::query_as::<_, DmMessageRow>(
-                "SELECT m.id, m.dm_id, m.author_id, u.username as author_username, m.content, m.attachments, m.edited_at, m.created_at \
+                "SELECT m.id, m.dm_id, COALESCE(m.author_id, 0) as author_id, \
+                        COALESCE(u.username, m.federated_author, '[remote]') as author_username, \
+                        m.content, m.attachments, m.edited_at, m.created_at \
                  FROM dm_messages m \
-                 JOIN users u ON m.author_id = u.id \
+                 LEFT JOIN users u ON m.author_id = u.id \
                  WHERE m.dm_id = $1 AND m.id < $2 \
                  ORDER BY m.id DESC LIMIT $3",
             )
@@ -211,9 +218,11 @@ pub async fn list_dm_messages(
         }
         None => {
             sqlx::query_as::<_, DmMessageRow>(
-                "SELECT m.id, m.dm_id, m.author_id, u.username as author_username, m.content, m.attachments, m.edited_at, m.created_at \
+                "SELECT m.id, m.dm_id, COALESCE(m.author_id, 0) as author_id, \
+                        COALESCE(u.username, m.federated_author, '[remote]') as author_username, \
+                        m.content, m.attachments, m.edited_at, m.created_at \
                  FROM dm_messages m \
-                 JOIN users u ON m.author_id = u.id \
+                 LEFT JOIN users u ON m.author_id = u.id \
                  WHERE m.dm_id = $1 \
                  ORDER BY m.id DESC LIMIT $2",
             )

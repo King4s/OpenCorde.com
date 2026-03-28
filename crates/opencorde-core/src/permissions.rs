@@ -1,8 +1,13 @@
 //! # Permission Bitfield
-//! 64-bit permission system with role-based overrides.
+//! 64-bit permission system using Discord's exact bit layout.
 //!
-//! Uses bitflags for efficient storage and composition.
-//! Supports per-channel permission overwrites for roles and members.
+//! Bit values are identical to Discord's permission flag spec so that
+//! the client (permissions.ts) and server agree on every flag's meaning.
+//! Reference: https://docs.discord.com/developers/topics/permissions
+//!
+//! ## Depends On
+//! - bitflags (efficient bitset type)
+//! - serde (JSON serialization)
 
 use crate::snowflake::Snowflake;
 use bitflags::bitflags;
@@ -10,84 +15,79 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 bitflags! {
     /// Permission flags for roles and channels.
-    /// Follows Discord-like permission model.
+    /// Bit positions match Discord's permission flag spec exactly.
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub struct Permissions: u64 {
-        // General
-        /// View channels and basic information
-        const VIEW_CHANNEL       = 1 << 0;
-        /// Create, edit, and delete channels
-        const MANAGE_CHANNELS    = 1 << 1;
-        /// Create and manage roles
-        const MANAGE_ROLES       = 1 << 2;
-        /// Full server administration
-        const MANAGE_SERVER      = 1 << 3;
-        /// Create invites to the server
-        const CREATE_INVITE      = 1 << 4;
-        /// Change own nickname
-        const CHANGE_NICKNAME    = 1 << 5;
-        /// Change others' nicknames
-        const MANAGE_NICKNAMES   = 1 << 6;
-        /// Remove members from server
-        const KICK_MEMBERS       = 1 << 7;
-        /// Permanently remove members
-        const BAN_MEMBERS        = 1 << 8;
-
-        // Text
-        /// Send messages in text channels
-        const SEND_MESSAGES      = 1 << 10;
-        /// Embed links in messages
-        const EMBED_LINKS        = 1 << 11;
-        /// Attach files to messages
-        const ATTACH_FILES       = 1 << 12;
-        /// Read message history
-        const READ_MESSAGE_HISTORY = 1 << 13;
-        /// Mention @everyone
-        const MENTION_EVERYONE   = 1 << 14;
-        /// Edit/delete others' messages
-        const MANAGE_MESSAGES    = 1 << 15;
-        /// Add reactions to messages
-        const ADD_REACTIONS      = 1 << 16;
-
-        // Voice
-        /// Connect to voice channels
-        const CONNECT            = 1 << 20;
-        /// Speak in voice channels
-        const SPEAK              = 1 << 21;
-        /// Stream video in voice channels
-        const VIDEO              = 1 << 22;
-        /// Mute other members in voice
-        const MUTE_MEMBERS       = 1 << 23;
-        /// Deafen other members in voice
-        const DEAFEN_MEMBERS     = 1 << 24;
-        /// Move members between voice channels
-        const MOVE_MEMBERS       = 1 << 25;
-        /// Speak with priority in voice (stage)
-        const PRIORITY_SPEAKER   = 1 << 26;
-
-        // Admin
-        /// Bypass all permission checks
-        const ADMINISTRATOR      = 1 << 30;
+        // General server permissions
+        const CREATE_INVITE         = 1 << 0;
+        const KICK_MEMBERS          = 1 << 1;
+        const BAN_MEMBERS           = 1 << 2;
+        const ADMINISTRATOR         = 1 << 3;
+        const MANAGE_CHANNELS       = 1 << 4;
+        const MANAGE_SERVER         = 1 << 5;
+        const ADD_REACTIONS         = 1 << 6;
+        const VIEW_AUDIT_LOG        = 1 << 7;
+        const PRIORITY_SPEAKER      = 1 << 8;
+        const STREAM                = 1 << 9;
+        const VIEW_CHANNEL          = 1 << 10;
+        const SEND_MESSAGES         = 1 << 11;
+        const SEND_TTS_MESSAGES     = 1 << 12;
+        const MANAGE_MESSAGES       = 1 << 13;
+        const EMBED_LINKS           = 1 << 14;
+        const ATTACH_FILES          = 1 << 15;
+        const READ_MESSAGE_HISTORY  = 1 << 16;
+        const MENTION_EVERYONE      = 1 << 17;
+        const USE_EXTERNAL_EMOJIS   = 1 << 18;
+        const VIEW_GUILD_INSIGHTS   = 1 << 19;
+        // Voice permissions
+        const CONNECT               = 1 << 20;
+        const SPEAK                 = 1 << 21;
+        const MUTE_MEMBERS          = 1 << 22;
+        const DEAFEN_MEMBERS        = 1 << 23;
+        const MOVE_MEMBERS          = 1 << 24;
+        const USE_VAD               = 1 << 25;
+        // Member management
+        const CHANGE_NICKNAME       = 1 << 26;
+        const MANAGE_NICKNAMES      = 1 << 27;
+        const MANAGE_ROLES          = 1 << 28;
+        const MANAGE_WEBHOOKS       = 1 << 29;
+        const MANAGE_GUILD_EXPRESSIONS = 1 << 30;
+        const USE_APPLICATION_COMMANDS = 1 << 31;
+        // Stage / events / threads
+        const REQUEST_TO_SPEAK      = 1 << 32;
+        const MANAGE_EVENTS         = 1 << 33;
+        const MANAGE_THREADS        = 1 << 34;
+        const CREATE_PUBLIC_THREADS = 1 << 35;
+        const CREATE_PRIVATE_THREADS = 1 << 36;
+        const USE_EXTERNAL_STICKERS = 1 << 37;
+        const SEND_MESSAGES_IN_THREADS = 1 << 38;
+        // Moderation
+        const MODERATE_MEMBERS      = 1 << 40;
+        const CREATE_EVENTS         = 1 << 44;
+        const SEND_VOICE_MESSAGES   = 1 << 46;
+        const SEND_POLLS            = 1 << 49;
+        const PIN_MESSAGES          = 1 << 51;
+        const BYPASS_SLOWMODE       = 1 << 52;
     }
 }
 
 impl Permissions {
-    /// Default permissions granted to @everyone role.
-    /// Allows basic interaction: view, send messages, read history, voice, invite.
+    /// Default permissions for the @everyone role on a new server.
     pub fn default_everyone() -> Self {
-        Permissions::VIEW_CHANNEL
+        Permissions::CREATE_INVITE
+            | Permissions::VIEW_CHANNEL
             | Permissions::SEND_MESSAGES
-            | Permissions::READ_MESSAGE_HISTORY
-            | Permissions::CONNECT
-            | Permissions::SPEAK
-            | Permissions::ADD_REACTIONS
             | Permissions::EMBED_LINKS
             | Permissions::ATTACH_FILES
-            | Permissions::CREATE_INVITE
+            | Permissions::READ_MESSAGE_HISTORY
+            | Permissions::ADD_REACTIONS
+            | Permissions::CONNECT
+            | Permissions::SPEAK
+            | Permissions::USE_VAD
             | Permissions::CHANGE_NICKNAME
     }
 
-    /// All permissions set.
+    /// All permissions set (used for Administrator bypass).
     pub fn all_permissions() -> Self {
         Permissions::all()
     }
@@ -135,7 +135,7 @@ pub struct PermissionOverwrite {
     pub deny: Permissions,
 }
 
-// Permission computation moved to permission_compute module
+// Permission computation is in permission_compute module
 pub use crate::permission_compute::compute_permissions;
 
 #[cfg(test)]
@@ -161,6 +161,17 @@ mod tests {
         assert!(perms.contains(Permissions::SEND_MESSAGES));
         assert!(perms.contains(Permissions::MANAGE_CHANNELS));
         assert!(perms.contains(Permissions::MANAGE_ROLES));
+    }
+
+    #[test]
+    fn test_administrator_bit_is_discord_compatible() {
+        // ADMINISTRATOR must be bit 3 to match Discord's layout
+        assert_eq!(Permissions::ADMINISTRATOR.bits(), 1 << 3);
+    }
+
+    #[test]
+    fn test_send_messages_bit_is_discord_compatible() {
+        assert_eq!(Permissions::SEND_MESSAGES.bits(), 1 << 11);
     }
 
     #[test]

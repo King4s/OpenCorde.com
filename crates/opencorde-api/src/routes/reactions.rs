@@ -12,7 +12,8 @@
 //! - crate::middleware::auth::AuthUser (authentication)
 //! - crate::AppState (application state)
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::helpers};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::{helpers, permission_check}};
+use opencorde_core::{permissions::Permissions, Snowflake};
 use axum::{
     Json, Router,
     extract::{Path, State},
@@ -84,6 +85,15 @@ async fn add_reaction(
         .ok_or_else(|| ApiError::NotFound("message not found".into()))?;
     let channel_id_str = msg.channel_id.to_string();
     tracing::debug!("message verified");
+
+    // Require ADD_REACTIONS permission in the message's channel
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        Snowflake::new(msg.channel_id),
+        Permissions::ADD_REACTIONS,
+    )
+    .await?;
 
     // Add reaction to database
     let is_new = reaction_repo::add_reaction(

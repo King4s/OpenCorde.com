@@ -74,6 +74,10 @@ pub struct Config {
     pub steam_api_key: Option<String>,
     /// Firebase Cloud Messaging server key (optional, for Android push notifications)
     pub fcm_server_key: Option<String>,
+    /// Shared registration invite code for invite-only mode (optional)
+    pub registration_invite_code: Option<String>,
+    /// Path to Tantivy search index directory (optional, disables search if unset)
+    pub search_index_path: Option<String>,
     /// VAPID private key in URL-safe base64 (optional, for Web Push notifications)
     pub vapid_private_key: Option<String>,
 }
@@ -194,6 +198,8 @@ impl Config {
         };
 
         let steam_api_key = env::var("STEAM_API_KEY").ok();
+        let registration_invite_code = env::var("REGISTRATION_INVITE_CODE").ok();
+        let search_index_path = env::var("SEARCH_INDEX_PATH").ok();
         let fcm_server_key = env::var("FCM_SERVER_KEY").ok();
         let vapid_private_key = env::var("VAPID_PRIVATE_KEY").ok();
 
@@ -227,6 +233,8 @@ impl Config {
             rate_limit_rps,
             rate_limit_burst,
             steam_api_key,
+            registration_invite_code,
+            search_index_path,
             fcm_server_key,
             vapid_private_key,
         };

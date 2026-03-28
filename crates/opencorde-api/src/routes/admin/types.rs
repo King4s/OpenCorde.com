@@ -16,6 +16,12 @@ pub struct InstanceStats {
     pub total_channels: i64,
     /// Active voice sessions
     pub active_voice_sessions: i64,
+    /// PostgreSQL database size in bytes
+    pub db_size_bytes: i64,
+    /// Total size of all uploaded files in bytes
+    pub attachment_storage_bytes: i64,
+    /// Total number of uploaded files
+    pub attachment_count: i64,
 }
 
 /// User row for admin listing.

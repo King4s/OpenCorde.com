@@ -113,6 +113,34 @@ See ReadMeFirst.md for complete feature list.
 - [x] Add SMTP vars to .env.example
 - [x] Update ReadMeFirst.md, tasks.md, tasks-future.md
 
+### Sprint 0: Full Security Hardening (2026-03-24 to 2026-03-25)
+- [x] 0a: Permission enforcement — wired compute_effective_permissions() into all routes (messages, channels, reactions, threads, members, invites, roles, webhooks)
+- [x] 0b: Per-endpoint rate limiting — axum-governor with per-IP token buckets; 5/min login, 3/min register, 5/sec messages, 10/min uploads, 60/min global
+- [x] 0c: JWT refresh token rotation — JTI (UUID v4) stored in refresh_tokens table; single-use; stolen token detection revokes all sessions; migration 041
+- [x] 0d: File upload security — MIME allowlist, per-category size limits (image 8MB, video 100MB, other 25MB), magic-byte verification, EXIF stripping (img-parts, lossless)
+- [x] 0e: XSS audit — custom markdown renderer already safe (escapeHtml() + code-block extraction); no DOMPurify needed
+- [x] 0f: HTTP security headers middleware — X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, Content-Security-Policy
+- [x] 0g: SQL injection audit — zero format!() in repos; all queries use .bind() parameterization
+- [x] 0h: 2FA (TOTP) — migration 042, POST /auth/2fa/enable + verify + DELETE /auth/2fa, login requires totp_code when enabled; client: TwoFactorSetup.svelte, login TOTP step, settings section
+- [x] 0i: Password security audit — Argon2id confirmed, 8-char minimum enforced, delete account requires current password
+- [x] 0j: Audit log completeness — added member.kick, member.role_assign, member.role_remove; existing: ban, unban, timeout, timeout_removed
+
+### Sprint 1: Missing WebSocket Events (2026-03-25)
+- [x] 1a: ws/dispatch.rs — add `member_server_ids: HashSet<i64>` param; route ChannelCreate/Update/Delete, RoleCreate/Update/Delete, MemberUpdate, ServerUpdate to server-member filter
+- [x] 1b: ws/handler/main_loop.rs — thread `member_server_ids` through to `should_dispatch`
+- [x] 1c: ws/handler/lifecycle.rs — load user's server IDs via `server_repo::list_by_user`; pass to `run_main_loop`
+- [x] 1d: ws/events.rs — add 7 new event builders (channel_update, channel_delete, role_create, role_update, role_delete, member_update, server_update)
+- [x] 1e: channels/handlers.rs — broadcast ChannelCreate/Update/Delete after successful CRUD
+- [x] 1f: servers/handlers/crud.rs — broadcast ServerUpdate after successful PATCH
+- [x] 1g: roles.rs — broadcast RoleCreate/Update/Delete + MemberUpdate (assign/unassign)
+- [x] 1h: client stores — initChannelListeners, initRoleListeners, initMemberListeners, initServerListeners; called from +layout.svelte
+
+### Sprint 2: Message Edit/Delete UI (2026-03-25)
+- [x] 2a: messages store — added editMessage(messageId, content) and deleteMessage(messageId) API calls
+- [x] 2b: MessageContextMenu.svelte (new) — extracted context menu buttons + added Edit (✏) and Delete (🗑) for own messages only
+- [x] 2c: MessageList.svelte — added onEdit/onDelete/currentUserId props, inline edit mode (textarea, Enter saves, Esc cancels), uses MessageContextMenu component
+- [x] 2d: channel +page.svelte — wired handleEditMessage, handleDeleteMessage, passes currentUserId to MessageList
+
 ---
 
 ## Tracking Notes
@@ -121,4 +149,25 @@ See ReadMeFirst.md for complete feature list.
 - Update ReadMeFirst.md with progress
 - Blockers noted inline with `BLOCKED: reason`
 
-**Last updated:** 2026-03-22
+### Sprint 3: Slowmode Enforcement (2026-03-25)
+- [x] 3a: migration 043_slowmode.sql — ALTER TABLE channels ADD COLUMN slowmode_delay INT NOT NULL DEFAULT 0
+- [x] 3b: channel_repo.rs — add slowmode_delay to ChannelRow; update_channel accepts slowmode_delay param
+- [x] 3c: channels/types.rs — add slowmode_delay to ChannelResponse and UpdateChannelRequest
+- [x] 3d: channels/handlers.rs — map slowmode_delay in channel_row_to_response; clamp 0–21600; pass to update_channel
+- [x] 3e: send_list.rs — after channel fetch, if slowmode_delay > 0 query user's last message; return RateLimited{retry_after} if too soon
+- [x] 3f: types.ts — add slowmode_delay to Channel interface
+- [x] 3g: ChannelSettingsModal.svelte — add slowmodeDelay state, number input (0–21600), include in PATCH body
+- [x] 3h: channel +page.svelte — pass channelSlowmode to modal, update store on save
+
+---
+
+### Sprint 4: User Profile Popup (2026-03-25)
+- [x] 4a: role_repo.rs — add list_by_member(user_id, server_id) → Vec<RoleRow> via JOIN on member_roles
+- [x] 4b: roles.rs — GET /servers/{server_id}/members/{user_id}/roles returns Vec<RoleResponse>
+- [x] 4c: UserProfilePopover.svelte (new) — avatar, status dot, bio, role chips, Send Message DM button
+- [x] 4d: MessageList.svelte — avatar div and author name wrapped in clickable buttons, open popover on click
+- [x] 4e: channel +page.svelte — pass serverId prop to MessageList
+
+---
+
+**Last updated:** 2026-03-25

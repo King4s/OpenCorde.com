@@ -39,7 +39,7 @@
 	}
 
 	async function handleDeletePost() {
-		if (!$forumStore.currentPost) return;
+		if (!forumStore.currentPost) return;
 		if (!confirm(`Delete this post? This cannot be undone.`)) return;
 		try {
 			await forumStore.deletePost(postId);
@@ -64,8 +64,8 @@
 	}
 
 	function canDeletePost(): boolean {
-		if (!$forumStore.currentPost) return false;
-		return $forumStore.currentPost.author_id === $currentUser?.id;
+		if (!forumStore.currentPost) return false;
+		return forumStore.currentPost.author_id === $currentUser?.id;
 	}
 
 	function canDeleteReply(authorId: string): boolean {
@@ -85,11 +85,11 @@
 	</div>
 
 	<!-- Post content -->
-	{#if $forumStore.loading}
+	{#if forumStore.loading}
 		<div class="flex-1 flex items-center justify-center">
 			<p class="text-gray-400">Loading post...</p>
 		</div>
-	{:else if !$forumStore.currentPost}
+	{:else if !forumStore.currentPost}
 		<div class="flex-1 flex items-center justify-center">
 			<p class="text-gray-400">Post not found</p>
 		</div>
@@ -98,7 +98,7 @@
 			<!-- Post -->
 			<div class="max-w-4xl mx-auto w-full p-6 border-b border-gray-800">
 				<div class="flex items-start justify-between mb-2">
-					<h1 class="text-2xl font-bold text-white">{$forumStore.currentPost.title}</h1>
+					<h1 class="text-2xl font-bold text-white">{forumStore.currentPost.title}</h1>
 					{#if canDeletePost()}
 						<button
 							onclick={handleDeletePost}
@@ -109,21 +109,21 @@
 					{/if}
 				</div>
 				<p class="text-gray-400 text-sm mb-4">
-					by <span class="text-gray-300 font-medium">{$forumStore.currentPost.author_username}</span>
-					on {formatDate($forumStore.currentPost.created_at)}
+					by <span class="text-gray-300 font-medium">{forumStore.currentPost.author_username}</span>
+					on {formatDate(forumStore.currentPost.created_at)}
 				</p>
 				<div class="text-gray-200 whitespace-pre-wrap mb-4">
-					{$forumStore.currentPost.content}
+					{forumStore.currentPost.content}
 				</div>
 				<div class="flex gap-2 text-xs text-gray-400">
-					<span>{$forumStore.currentPost.reply_count} {$forumStore.currentPost.reply_count === 1 ? 'reply' : 'replies'}</span>
+					<span>{forumStore.currentPost.reply_count} {forumStore.currentPost.reply_count === 1 ? 'reply' : 'replies'}</span>
 				</div>
 			</div>
 
 			<!-- Replies -->
-			{#if $forumStore.replies.length > 0}
+			{#if forumStore.replies.length > 0}
 				<div class="max-w-4xl mx-auto w-full p-6 space-y-4">
-					{#each $forumStore.replies as reply (reply.id)}
+					{#each forumStore.replies as reply (reply.id)}
 						<div class="p-4 bg-gray-800 rounded border border-gray-700">
 							<div class="flex items-start justify-between mb-2">
 								<span class="text-sm font-medium text-gray-300">{reply.author_username}</span>

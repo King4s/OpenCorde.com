@@ -41,6 +41,7 @@ pub struct AuditLogRow {
 ///
 /// # Errors
 /// Returns sqlx::Error if the insert fails.
+#[allow(clippy::too_many_arguments)]
 #[tracing::instrument(skip(pool))]
 pub async fn log_action(
     pool: &PgPool,

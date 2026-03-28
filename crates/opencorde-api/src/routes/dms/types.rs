@@ -9,9 +9,16 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 /// Request to open a DM with a recipient.
+///
+/// For local users: set `recipient_id` to their snowflake ID.
+/// For users on another server: set `recipient_address` to "username@hostname".
+/// Exactly one of the two fields must be provided.
 #[derive(Debug, Deserialize)]
 pub struct OpenDmRequest {
-    pub recipient_id: String,
+    /// Local user's snowflake ID (for same-server DMs)
+    pub recipient_id: Option<String>,
+    /// Remote user address "username@hostname" (for cross-server DMs)
+    pub recipient_address: Option<String>,
 }
 
 /// Response for a DM channel.

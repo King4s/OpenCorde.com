@@ -104,7 +104,7 @@ OpenCorde is a **self-hosted Discord alternative** built with Rust (Axum backend
 
 ## Current Project State
 
-**Phase 1, 2, and 3: COMPLETE. 26/26 browser tests passing. 30 migrations applied.**
+**Phases 1–3 + Sprint 0 Security: COMPLETE. 26/26 browser tests passing. 42 migrations applied.**
 
 All features implemented and deployed at opencorde.com:
 - Auth (register/login/JWT/refresh/password-reset UI), user profiles, settings, avatar upload
@@ -117,9 +117,39 @@ All features implemented and deployed at opencorde.com:
 - Role management UI, channel settings, server settings, audit log
 - Emoji picker, custom server emojis, markdown rendering, message grouping
 - Light/dark theme, cozy/compact display, admin dashboard, data export
-- SMTP email integration (lettre) for password reset
+- Push notifications (VAPID/FCM), channel permission overrides UI
+- SMTP email integration (lettre) for password reset + verification
+- **Security hardening (Sprint 0):**
+  - Permission enforcement on all routes (compute_effective_permissions wired)
+  - Per-endpoint rate limiting (axum-governor, per-IP token buckets)
+  - JWT refresh token rotation + theft detection (JTI in DB, all sessions revoked on replay)
+  - File upload security: MIME allowlist, size limits, magic-byte check, EXIF stripping
+  - HTTP security headers (CSP, X-Frame-Options, X-Content-Type-Options, etc.)
+  - 2FA / TOTP (RFC 6238, totp-rs; enable/verify/disable endpoints + client UI)
+  - Audit log completeness: kick, role assign/remove added
 
-Next sprint: Tauri desktop packaging, E2EE (OpenMLS), Discord bridge.
+Sprint 1 complete: ChannelCreate/Update/Delete, RoleCreate/Update/Delete, MemberUpdate, ServerUpdate all broadcast over WS and handled by client stores in real-time.
+Sprint 2 complete: Message edit (inline textarea, Enter/Esc), delete, and "edited" indicator; edit/delete only shown for own messages.
+Sprint 3 complete: Slowmode enforcement — `slowmode_delay INT` column in channels (migration 043), API enforces per-user cooldown on send_message (returns 429 with retry_after), ChannelSettingsModal exposes slowmode input (0–21600 seconds).
+Sprint 4 complete: User profile popover — click any username/avatar in chat → inline card shows avatar, status dot, bio, role chips (color-coded), "Send Message" DM button.
+Sprint 5 complete: UX polish — video/audio inline playback, category collapsing, server unread badges, status picker, emoji shortcodes (:smile: → 😄), quick switcher (Ctrl+K extends to channels+users).
+Sprint 6 complete: Voice/video quality — device selection (mic/camera/speaker via enumerateDevices), video grid (CSS grid per participant count), per-participant volume slider.
+Sprint 7 complete: Keyboard shortcuts — Alt+↑/↓ channel navigation, ↑ edit last message, Ctrl+Shift+M mute, Ctrl+K quick switcher, all wired via central keydown listener in +layout.svelte.
+
+**SMTP email live (2026-03-28):** Password reset and verification emails now send via send.one.com (SMTPS port 465). Systemd service (`opencorde-api.service`) installed for auto-start on boot.
+
+**Tauri desktop packaging (Phase 4) complete (2026-03-28):** .deb/.rpm packages build successfully. GitHub Actions CI/CD workflow for multi-platform releases (Windows/macOS/Linux) in `.github/workflows/release.yml`.
+
+**E2EE (Phase 4) complete (2026-03-28):** Full OpenMLS end-to-end encryption wired:
+- `e2ee_enabled` flag on channels (migration 047), toggle in ChannelSettingsModal
+- `crypto_init` + key package upload on every login (Tauri only)
+- Text messages encrypted with `enc:<hex>` prefix; decrypted on fetch + WebSocket receive
+- Files encrypted with AES-256-GCM, `.enc` extension marker
+- Voice E2EE via LiveKit ExternalE2EEKeyProvider (MLS epoch key export)
+- Auto-join E2EE group when entering a channel (fetches pending welcome)
+- Lock icon (🔒) on E2EE channels in channel list
+
+**All planned sprints complete. Phase 4 complete.**
 
 ## Tech Stack (Exact Versions)
 
@@ -245,6 +275,6 @@ See [`decisions.md`](./decisions.md) for rationales behind:
 
 ---
 
-**Status:** Phase 1-3 complete. 26/26 browser tests passing. 30 migrations applied. Next: Tauri desktop, E2EE, Discord bridge.
+**Status:** Phases 1–4 complete. 47 migrations applied. E2EE operational. Desktop packages building. Last updated: 2026-03-28.
 
 Last updated: 2026-03-22

@@ -34,6 +34,9 @@ serde_json = "1"
 # Secure credential storage via OS keychain/credential store
 keyring = { version = "3", features = ["sync-secret-service"] }
 
+# Base64 encoding for file E2EE blobs
+base64 = "0.22"
+
 # Structured logging
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
@@ -43,3 +46,5 @@ opencorde-crypto = { path = "../../crates/opencorde-crypto" }
 openmls = { version = "0.5", features = ["crypto-subtle"] }    # MLS protocol types
 openmls_basic_credential = "0.2"                               # SignatureKeyPair
 openmls_rust_crypto = "0.2"                                    # In-process crypto provider
+
+[workspace]

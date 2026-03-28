@@ -100,17 +100,17 @@
 
 	<!-- Posts list -->
 	<div class="flex-1 overflow-y-auto">
-		{#if $forumStore.loading}
+		{#if forumStore.loading}
 			<div class="flex items-center justify-center h-full">
 				<p class="text-gray-400">Loading posts...</p>
 			</div>
-		{:else if $forumStore.posts.length === 0}
+		{:else if forumStore.posts.length === 0}
 			<div class="flex items-center justify-center h-full">
 				<p class="text-gray-400">No posts yet. Be the first to post!</p>
 			</div>
 		{:else}
 			<div class="space-y-2 p-4">
-				{#each $forumStore.posts as post (post.id)}
+				{#each forumStore.posts as post (post.id)}
 					<button
 						onclick={() => goToPost(post.id)}
 						class="w-full text-left p-4 bg-gray-800 hover:bg-gray-750 rounded border border-gray-700 hover:border-indigo-500 transition-all group"

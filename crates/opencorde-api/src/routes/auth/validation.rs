@@ -73,6 +73,7 @@ mod tests {
             username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password: "secure_password_123".to_string(),
+            invite_code: None,
         };
         assert!(validate_register(&req).is_ok());
     }
@@ -83,6 +84,7 @@ mod tests {
             username: "ab".to_string(),
             email: "test@example.com".to_string(),
             password: "secure_password_123".to_string(),
+            invite_code: None,
         };
         assert!(validate_register(&req).is_err());
     }
@@ -93,6 +95,7 @@ mod tests {
             username: "a".repeat(33),
             email: "test@example.com".to_string(),
             password: "secure_password_123".to_string(),
+            invite_code: None,
         };
         assert!(validate_register(&req).is_err());
     }
@@ -103,6 +106,7 @@ mod tests {
             username: "test-user".to_string(),
             email: "test@example.com".to_string(),
             password: "secure_password_123".to_string(),
+            invite_code: None,
         };
         assert!(validate_register(&req).is_err());
     }
@@ -113,6 +117,7 @@ mod tests {
             username: "test_user".to_string(),
             email: "test@example.com".to_string(),
             password: "secure_password_123".to_string(),
+            invite_code: None,
         };
         assert!(validate_register(&req).is_ok());
     }
@@ -123,6 +128,7 @@ mod tests {
             username: "testuser".to_string(),
             email: "notanemail".to_string(),
             password: "secure_password_123".to_string(),
+            invite_code: None,
         };
         assert!(validate_register(&req).is_err());
     }
@@ -133,6 +139,7 @@ mod tests {
             username: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password: "short".to_string(),
+            invite_code: None,
         };
         assert!(validate_register(&req).is_err());
     }
@@ -142,6 +149,7 @@ mod tests {
         let req = LoginRequest {
             email: "test@example.com".to_string(),
             password: "password".to_string(),
+            totp_code: None,
         };
         assert!(validate_login(&req).is_ok());
     }
@@ -151,6 +159,7 @@ mod tests {
         let req = LoginRequest {
             email: "".to_string(),
             password: "password".to_string(),
+            totp_code: None,
         };
         assert!(validate_login(&req).is_err());
     }
@@ -160,6 +169,7 @@ mod tests {
         let req = LoginRequest {
             email: "test@example.com".to_string(),
             password: "".to_string(),
+            totp_code: None,
         };
         assert!(validate_login(&req).is_err());
     }

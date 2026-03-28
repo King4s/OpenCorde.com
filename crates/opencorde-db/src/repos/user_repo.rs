@@ -23,6 +23,8 @@ pub struct UserRow {
     pub bio: Option<String>,
     pub status_message: Option<String>,
     pub steam_id: Option<String>, // Optional: Steam64 ID for OpenID login
+    pub totp_secret: Option<String>, // Base32 TOTP secret (None = not set up)
+    pub totp_enabled: bool,          // True = 2FA is active for this user
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -183,6 +185,62 @@ pub async fn update_steam_id(
     Ok(())
 }
 
+/// Save a TOTP secret (base32) for a user during 2FA setup.
+///
+/// This stores the secret but does NOT enable 2FA — the user must verify a code
+/// first via `enable_totp()`.
+///
+/// # Errors
+/// Returns sqlx::Error if the update fails.
+#[tracing::instrument(skip(pool, secret))]
+pub async fn set_totp_secret(
+    pool: &PgPool,
+    id: Snowflake,
+    secret: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE users SET totp_secret = $1, updated_at = NOW() WHERE id = $2",
+    )
+    .bind(secret)
+    .bind(id.as_i64())
+    .execute(pool)
+    .await?;
+    tracing::debug!(user_id = id.as_i64(), "TOTP secret stored");
+    Ok(())
+}
+
+/// Mark TOTP as enabled for a user after successful code verification.
+///
+/// # Errors
+/// Returns sqlx::Error if the update fails.
+#[tracing::instrument(skip(pool))]
+pub async fn enable_totp(pool: &PgPool, id: Snowflake) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE users SET totp_enabled = TRUE, updated_at = NOW() WHERE id = $1",
+    )
+    .bind(id.as_i64())
+    .execute(pool)
+    .await?;
+    tracing::info!(user_id = id.as_i64(), "TOTP enabled for user");
+    Ok(())
+}
+
+/// Disable TOTP and clear the secret for a user.
+///
+/// # Errors
+/// Returns sqlx::Error if the update fails.
+#[tracing::instrument(skip(pool))]
+pub async fn disable_totp(pool: &PgPool, id: Snowflake) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE users SET totp_secret = NULL, totp_enabled = FALSE, updated_at = NOW() WHERE id = $1",
+    )
+    .bind(id.as_i64())
+    .execute(pool)
+    .await?;
+    tracing::info!(user_id = id.as_i64(), "TOTP disabled for user");
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -202,6 +260,8 @@ mod tests {
             bio: None,
             status_message: None,
             steam_id: None,
+            totp_secret: None,
+            totp_enabled: false,
             created_at: now,
             updated_at: now,
         };

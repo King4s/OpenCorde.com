@@ -17,11 +17,14 @@ use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
 };
+use chrono::Utc;
 use opencorde_core::snowflake::{Snowflake, SnowflakeGenerator};
 use opencorde_db::repos::message_repo;
 use tracing::instrument;
 
-use crate::{AppState, automod, error::ApiError, middleware::auth::AuthUser};
+use opencorde_core::permissions::Permissions;
+
+use crate::{AppState, automod, error::ApiError, middleware::auth::AuthUser, routes::permission_check};
 
 use super::types::{MessageQuery, MessageResponse, ReplyContextResponse, SendMessageRequest};
 use super::validation::{extract_mention_ids, parse_snowflake_id, validate_content, validate_limit};
@@ -69,6 +72,15 @@ pub async fn send_message(
     let channel_id_sf = parse_snowflake_id(&channel_id)?;
     tracing::debug!(channel_id = channel_id_sf.as_i64(), "parsed channel id");
 
+    // Verify the user can send messages in this channel
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::SEND_MESSAGES,
+    )
+    .await?;
+
     // Validate content
     validate_content(&req.content)?;
     tracing::debug!(content_len = req.content.len(), "content validated");
@@ -81,9 +93,9 @@ pub async fn send_message(
         .transpose()?;
     tracing::debug!(reply_to_id = ?reply_to_id, "reply_to_id parsed");
 
-    // Fetch server_id from channel and check AutoMod
-    let channel_info: (i64, i64) = sqlx::query_as(
-        "SELECT id, server_id FROM channels WHERE id = $1",
+    // Fetch server_id and slowmode_delay from channel
+    let channel_info: (i64, i64, i32) = sqlx::query_as(
+        "SELECT id, server_id, slowmode_delay FROM channels WHERE id = $1",
     )
     .bind(channel_id_sf.as_i64())
     .fetch_optional(&state.db)
@@ -92,6 +104,39 @@ pub async fn send_message(
     .ok_or(ApiError::NotFound("channel not found".to_string()))?;
 
     let server_id = Snowflake::new(channel_info.1);
+    let slowmode_delay = channel_info.2;
+
+    // Enforce slowmode: check when this user last sent a message in this channel
+    if slowmode_delay > 0 {
+        let last_sent: Option<chrono::DateTime<Utc>> = sqlx::query_scalar(
+            "SELECT created_at FROM messages \
+             WHERE channel_id = $1 AND author_id = $2 \
+             ORDER BY created_at DESC LIMIT 1",
+        )
+        .bind(channel_id_sf.as_i64())
+        .bind(auth.user_id.as_i64())
+        .fetch_optional(&state.db)
+        .await
+        .map_err(ApiError::Database)?;
+
+        if let Some(last) = last_sent {
+            let elapsed = Utc::now()
+                .signed_duration_since(last)
+                .num_seconds();
+            let remaining = slowmode_delay as i64 - elapsed;
+            if remaining > 0 {
+                tracing::info!(
+                    user_id = auth.user_id.as_i64(),
+                    channel_id = channel_id_sf.as_i64(),
+                    retry_after = remaining,
+                    "slowmode: message rejected"
+                );
+                return Err(ApiError::RateLimited {
+                    retry_after: remaining as u64,
+                });
+            }
+        }
+    }
 
     // Check AutoMod rules
     match automod::check_message(&state.db, server_id, &req.content).await {
@@ -169,6 +214,23 @@ pub async fn send_message(
         });
     }
 
+    // Index message in full-text search (non-blocking, non-fatal)
+    if let Some(ref engine) = state.search {
+        let engine = engine.clone();
+        let msg_id = response.id.parse::<u64>().unwrap_or(0);
+        let ch_id  = response.channel_id.parse::<u64>().unwrap_or(0);
+        let srv_id = server_id.as_i64() as u64;
+        let auth_id = auth.user_id.as_i64() as u64;
+        let text   = req.content.clone();
+        let ts     = chrono::Utc::now().timestamp() as u64;
+        tokio::spawn(async move {
+            if let Ok(mut indexer) = engine.make_indexer(50_000_000) {
+                let _ = indexer.index_message(msg_id, ch_id, srv_id, auth_id, &text, ts)
+                    .and_then(|_| indexer.commit());
+            }
+        });
+    }
+
     Ok((StatusCode::CREATED, Json(response)))
 }
 
@@ -190,6 +252,15 @@ pub async fn list_messages(
     // Parse channel ID
     let channel_id_sf = parse_snowflake_id(&channel_id)?;
     tracing::debug!(channel_id = channel_id_sf.as_i64(), "parsed channel id");
+
+    // Verify the user can view this channel
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
 
     // Parse cursor IDs if provided
     let before = query

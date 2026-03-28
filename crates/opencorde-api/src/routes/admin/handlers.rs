@@ -12,7 +12,7 @@ use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
 use super::types::{AdminServerRow, AdminUserRow, InstanceStats, PaginationQuery};
 
 /// Check if user is admin.
-fn is_admin(auth: &AuthUser, state: &AppState) -> bool {
+pub(super) fn is_admin(auth: &AuthUser, state: &AppState) -> bool {
     state
         .config
         .admin_user_ids
@@ -64,12 +64,31 @@ pub async fn get_stats(
         .await?;
     let active_voice_sessions: i64 = voice_row.get("count");
 
+    // PostgreSQL database size
+    let db_size_row =
+        sqlx::query("SELECT pg_database_size(current_database()) as size")
+            .fetch_one(&state.db)
+            .await?;
+    let db_size_bytes: i64 = db_size_row.get("size");
+
+    // Attachment storage (sum of file sizes + count)
+    let attach_row = sqlx::query(
+        "SELECT COALESCE(SUM(size), 0) as total_size, COUNT(*) as total_count FROM files",
+    )
+    .fetch_one(&state.db)
+    .await?;
+    let attachment_storage_bytes: i64 = attach_row.get("total_size");
+    let attachment_count: i64 = attach_row.get("total_count");
+
     let stats = InstanceStats {
         total_users,
         total_servers,
         total_messages,
         total_channels,
         active_voice_sessions,
+        db_size_bytes,
+        attachment_storage_bytes,
+        attachment_count,
     };
 
     tracing::info!(
@@ -78,6 +97,9 @@ pub async fn get_stats(
         total_messages,
         total_channels,
         active_voice_sessions,
+        db_size_bytes,
+        attachment_storage_bytes,
+        attachment_count,
         "admin: instance stats retrieved"
     );
 

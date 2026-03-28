@@ -4,7 +4,7 @@
 use axum::extract::ws::{Message, WebSocket};
 use futures::{SinkExt, StreamExt};
 use opencorde_core::Snowflake;
-use opencorde_db::repos::channel_repo;
+use opencorde_db::repos::{channel_repo, server_repo};
 use std::collections::HashSet;
 use std::time::Duration;
 use tracing::instrument;
@@ -144,10 +144,18 @@ pub async fn handle_connection(socket: WebSocket, state: AppState) {
         .into_iter()
         .collect();
 
+    let member_server_ids: HashSet<i64> = server_repo::list_by_user(&state.db, user_snowflake)
+        .await
+        .unwrap_or_default()
+        .into_iter()
+        .map(|s| s.id)
+        .collect();
+
     tracing::debug!(
         user_id = %user_id_str,
         channel_count = accessible_channels.len(),
-        "loaded accessible channels for WebSocket session"
+        server_count = member_server_ids.len(),
+        "loaded accessible channels and servers for WebSocket session"
     );
 
     // 6. Run main event loop
@@ -157,6 +165,7 @@ pub async fn handle_connection(socket: WebSocket, state: AppState) {
         event_rx,
         user_id_str.clone(),
         accessible_channels,
+        member_server_ids,
         (*state.event_tx).clone(),
     )
     .await;

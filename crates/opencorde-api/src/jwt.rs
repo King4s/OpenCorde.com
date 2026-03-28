@@ -10,10 +10,11 @@
 //! - `sub` — User ID (as string)
 //! - `username` — Username (for convenience)
 //! - `token_type` — Either "access" or "refresh"
+//! - `jti` — JWT ID (UUID v4, refresh tokens only) used for rotation and theft detection
 //!
 //! ## Features
 //! - `create_access_token` — Generate short-lived access token
-//! - `create_refresh_token` — Generate long-lived refresh token
+//! - `create_refresh_token` — Generate long-lived refresh token; returns (token, jti)
 //! - `validate_token` — Validate any token and extract claims
 //! - `validate_access_token` — Validate and ensure token is access type
 //! - `validate_refresh_token` — Validate and ensure token is refresh type
@@ -21,12 +22,14 @@
 //! ## Depends On
 //! - jsonwebtoken crate (workspace dependency)
 //! - chrono crate (workspace dependency)
+//! - uuid crate (workspace dependency) — for JTI generation
 //! - opencorde_core::Snowflake
 
 use chrono::{Duration, Utc};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
+use uuid::Uuid;
 
 use opencorde_core::Snowflake;
 
@@ -39,6 +42,10 @@ pub struct Claims {
     pub username: String,
     /// Token type: "access" or "refresh"
     pub token_type: String,
+    /// JWT ID — UUID v4, present on refresh tokens only.
+    /// Used to track issued tokens in the DB for rotation and theft detection.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub jti: Option<String>,
     /// Issued at (Unix timestamp)
     pub iat: i64,
     /// Expires at (Unix timestamp)
@@ -70,6 +77,7 @@ pub fn create_access_token(
         sub: user_id.as_i64().to_string(),
         username: username.to_string(),
         token_type: "access".to_string(),
+        jti: None,
         iat: now.timestamp(),
         exp: (now + Duration::seconds(expiry_seconds as i64)).timestamp(),
     };
@@ -86,6 +94,10 @@ pub fn create_access_token(
 
 /// Create a JWT refresh token.
 ///
+/// Generates a UUID v4 JTI which must be stored in the `refresh_tokens` table
+/// by the caller. The JTI is embedded in the token claims and also returned
+/// separately so the caller can persist it without re-decoding the token.
+///
 /// # Arguments
 /// * `user_id` — Snowflake user ID
 /// * `username` — Username for logging/debugging
@@ -93,7 +105,8 @@ pub fn create_access_token(
 /// * `expiry_seconds` — Token lifetime in seconds
 ///
 /// # Returns
-/// The encoded JWT token as a string.
+/// A tuple `(token, jti)` where `token` is the encoded JWT string and
+/// `jti` is the UUID v4 identifier embedded in the token.
 ///
 /// # Errors
 /// Returns `jsonwebtoken::errors::Error` if encoding fails.
@@ -103,24 +116,28 @@ pub fn create_refresh_token(
     username: &str,
     secret: &str,
     expiry_seconds: u64,
-) -> Result<String, jsonwebtoken::errors::Error> {
+) -> Result<(String, String), jsonwebtoken::errors::Error> {
+    let jti = Uuid::new_v4().to_string();
     let now = Utc::now();
     let claims = Claims {
         sub: user_id.as_i64().to_string(),
         username: username.to_string(),
         token_type: "refresh".to_string(),
+        jti: Some(jti.clone()),
         iat: now.timestamp(),
         exp: (now + Duration::seconds(expiry_seconds as i64)).timestamp(),
     };
 
-    encode(
+    let token = encode(
         &Header::default(),
         &claims,
         &EncodingKey::from_secret(secret.as_bytes()),
     )
-    .inspect(|_token| {
+    .inspect(|_| {
         tracing::debug!(expiry_seconds, "refresh token created");
-    })
+    })?;
+
+    Ok((token, jti))
 }
 
 /// Validate a JWT token and return the claims.
@@ -216,17 +233,27 @@ mod tests {
     #[test]
     fn test_refresh_token_roundtrip() {
         let uid = Snowflake::new(456);
-        let tok = create_refresh_token(uid, "user", SECRET, 604800).unwrap();
+        let (tok, jti) = create_refresh_token(uid, "user", SECRET, 604800).unwrap();
+        assert!(!jti.is_empty());
         let c = validate_refresh_token(&tok, SECRET).unwrap();
         assert_eq!(c.sub, "456");
         assert_eq!(c.token_type, "refresh");
+        assert_eq!(c.jti.as_deref(), Some(jti.as_str()));
+    }
+
+    #[test]
+    fn test_access_token_has_no_jti() {
+        let uid = Snowflake::new(1);
+        let tok = create_access_token(uid, "u", SECRET, 3600).unwrap();
+        let c = validate_access_token(&tok, SECRET).unwrap();
+        assert!(c.jti.is_none());
     }
 
     #[test]
     fn test_type_enforcement() {
         let uid = Snowflake::new(1);
         let access = create_access_token(uid, "u", SECRET, 3600).unwrap();
-        let refresh = create_refresh_token(uid, "u", SECRET, 3600).unwrap();
+        let (refresh, _jti) = create_refresh_token(uid, "u", SECRET, 3600).unwrap();
         assert!(validate_refresh_token(&access, SECRET).is_err());
         assert!(validate_access_token(&refresh, SECRET).is_err());
     }

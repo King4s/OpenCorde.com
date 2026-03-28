@@ -40,6 +40,7 @@ pub struct MessageRow {
 ///
 /// # Errors
 /// Returns sqlx::Error if the insert fails.
+#[allow(clippy::too_many_arguments)]
 #[tracing::instrument(skip(pool, content))]
 pub async fn create_message(
     pool: &PgPool,

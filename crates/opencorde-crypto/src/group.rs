@@ -140,6 +140,34 @@ pub fn deserialize_group(bytes: &[u8]) -> Result<MlsGroup, CryptoError> {
     serde_json::from_slice(bytes).map_err(CryptoError::Serialization)
 }
 
+/// Derive a 32-byte file encryption key from the current MLS epoch.
+///
+/// Uses MLS exporter with label "opencorde-file". The key changes on every
+/// epoch transition, providing automatic forward secrecy for new file uploads.
+/// Pass this key to `file_crypto::encrypt_bytes` / `decrypt_bytes`.
+pub fn export_file_key(
+    group: &MlsGroup,
+    provider: &OpenMlsRustCrypto,
+) -> Result<Vec<u8>, CryptoError> {
+    group
+        .export_secret(provider, "opencorde-file", b"", 32)
+        .map_err(|e| CryptoError::group(format!("file key export failed: {e:?}")))
+}
+
+/// Derive a 32-byte voice encryption key from the current MLS epoch.
+///
+/// Uses MLS exporter with label "opencorde-voice". The key changes on every
+/// epoch transition (member add/remove), providing automatic key rotation.
+/// Safe to pass to LiveKit's ExternalE2EEKeyProvider as raw key material.
+pub fn export_voice_key(
+    group: &MlsGroup,
+    provider: &OpenMlsRustCrypto,
+) -> Result<Vec<u8>, CryptoError> {
+    group
+        .export_secret(provider, "opencorde-voice", b"", 32)
+        .map_err(|e| CryptoError::group(format!("voice key export failed: {e:?}")))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

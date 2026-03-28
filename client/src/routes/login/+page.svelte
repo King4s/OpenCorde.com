@@ -14,6 +14,8 @@
 	let error = $state('');
 	let loading = $state(false);
 	let showForgotPassword = $state(false);
+	let showTotp = $state(false);
+	let totpCode = $state('');
 
 	// Handle OAuth-style callback from Steam
 	onMount(async () => {
@@ -44,10 +46,16 @@
 		error = '';
 		loading = true;
 		try {
-			await login(email, password);
+			await login(email, password, showTotp ? totpCode : undefined);
 			window.location.href = '/servers';
 		} catch (e: any) {
-			error = e.message || 'Login failed';
+			if (e.code === 'TWO_FACTOR_REQUIRED') {
+				showTotp = true;
+				totpCode = '';
+				error = '';
+			} else {
+				error = e.message || 'Login failed';
+			}
 		} finally {
 			loading = false;
 		}
@@ -123,12 +131,32 @@
 				/>
 			</div>
 
+			{#if showTotp}
+				<div class="bg-indigo-900/30 border border-indigo-700/50 rounded p-3 text-sm text-indigo-300">
+					This account has two-factor authentication enabled. Enter the 6-digit code from your authenticator app.
+				</div>
+				<div>
+					<label for="totp" class="block text-sm font-medium text-gray-300 mb-1">Authenticator Code</label>
+					<input
+						id="totp"
+						type="text"
+						inputmode="numeric"
+						maxlength="6"
+						bind:value={totpCode}
+						required
+						autocomplete="one-time-code"
+						class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 tracking-widest text-center text-lg"
+						placeholder="000000"
+					/>
+				</div>
+			{/if}
+
 			<button
 				type="submit"
-				disabled={loading}
+				disabled={loading || (showTotp && totpCode.length !== 6)}
 				class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium rounded transition-colors"
 			>
-				{loading ? 'Logging in...' : 'Log In'}
+				{loading ? 'Logging in...' : showTotp ? 'Verify Code' : 'Log In'}
 			</button>
 		</form>
 

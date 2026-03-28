@@ -11,13 +11,8 @@ Pattern: One file per middleware concern. Each middleware is wrapped via Axum's 
 | request_id.rs | UUID generation and tracing context propagation | ✓ Implemented |
 | cors.rs | CORS configuration (environment-aware) | ✓ Implemented |
 | auth.rs | JWT validation and AuthUser extractor | ✓ Implemented |
+| rate_limit.rs | Per-IP token-bucket rate limiting (governor, admin-configurable) | ✓ Implemented |
 | mod.rs | Middleware module exports | ✓ Implemented |
-
-## Planned (Phase 2-3)
-
-| File | Purpose | Status |
-|------|---------|--------|
-| rate_limit.rs | Rate limiting by user or IP | — |
 
 ## Implementation Notes
 - Middleware is applied in main.rs in order: CORS → request_id → trace

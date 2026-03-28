@@ -1,18 +1,30 @@
 /**
  * @file Voice store — manages voice channel state with LiveKit WebRTC
- * @purpose Join/leave voice channels, mute/deafen, track participants via LiveKit room
- * @depends api/client, livekit-client
+ * @purpose Join/leave voice channels, mute/deafen, track participants via LiveKit room.
+ *          Enables E2EE for channels that have an active MLS group state.
+ * @depends api/client, livekit-client, stores/e2ee, @tauri-apps/api/core
  */
 import { writable, get } from 'svelte/store';
 import api from '$lib/api/client';
 import type { VoiceState } from '$lib/api/types';
-import { Room, RoomEvent, type RemoteParticipant, type LocalParticipant, Track, type Participant } from 'livekit-client';
+import {
+	Room,
+	RoomEvent,
+	type RemoteParticipant,
+	ExternalE2EEKeyProvider,
+	isE2EESupported,
+	type RoomOptions
+} from 'livekit-client';
+import { invoke } from '@tauri-apps/api/core';
+import { getGroupState, hexToBytes } from './e2ee';
 
 export const inVoice = writable(false);
 export const currentVoiceChannelId = writable<string | null>(null);
 export const selfMute = writable(false);
 export const selfDeaf = writable(false);
 export const participants = writable<VoiceState[]>([]);
+/** True when the current voice session has E2EE active. */
+export const voiceE2EEActive = writable(false);
 
 /** LiveKit participants (includes remote speakers) */
 export const livekitParticipants = writable<Map<string, { identity: string; speaking: boolean; muted: boolean }>>(new Map());
@@ -55,13 +67,43 @@ export async function joinVoice(channelId: string): Promise<void> {
   currentVoiceChannelId.set(channelId);
   selfMute.set(res.voice_state.self_mute);
   selfDeaf.set(res.voice_state.self_deaf);
+  voiceE2EEActive.set(false);
 
-  // Connect to LiveKit room
-  const room = new Room({
+  // Build room options, enabling E2EE if an MLS group state exists for this channel
+  const roomOptions: RoomOptions = {
     audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     adaptiveStream: true,
     dynacast: true,
-  });
+  };
+
+  const groupState = getGroupState(channelId);
+  if (groupState && isE2EESupported()) {
+    try {
+      const keyHex = await invoke<string>('crypto_export_voice_key', {
+        group_state_hex: groupState
+      });
+      const keyBytes = hexToBytes(keyHex);
+      // Uint8Array.buffer is ArrayBufferLike; slice to get a plain ArrayBuffer
+      const keyBuffer: ArrayBuffer = keyBytes.buffer.slice(
+        keyBytes.byteOffset,
+        keyBytes.byteOffset + keyBytes.byteLength
+      ) as ArrayBuffer;
+      const keyProvider = new ExternalE2EEKeyProvider();
+      // Worker required by E2EEManagerOptions — use livekit's pre-built worker
+      const worker = new Worker(
+        new URL('livekit-client/e2ee-worker', import.meta.url),
+        { type: 'module' }
+      );
+      roomOptions.e2ee = { keyProvider, worker };
+      await keyProvider.setKey(keyBuffer);
+      voiceE2EEActive.set(true);
+    } catch (err) {
+      console.warn('[E2EE] Voice key export failed, joining without E2EE:', err);
+    }
+  }
+
+  // Connect to LiveKit room
+  const room = new Room(roomOptions);
   activeRoom = room;
 
   room
@@ -91,6 +133,7 @@ export async function leaveVoice(): Promise<void> {
   await api.post('/voice/leave');
   inVoice.set(false);
   currentVoiceChannelId.set(null);
+  voiceE2EEActive.set(false);
   participants.set([]);
   livekitParticipants.set(new Map());
 }

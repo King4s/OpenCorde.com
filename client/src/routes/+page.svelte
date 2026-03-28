@@ -131,7 +131,7 @@
 	<!-- Hero -->
 	<section class="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
 		<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-950 border border-indigo-800/50 text-indigo-300 text-xs font-medium mb-6">
-			AGPL-3.0 · Self-hosted · Federation-ready
+			AGPL-3.0 · Self-hosted · E2EE Live · Desktop App
 		</div>
 		<h1 class="text-5xl md:text-6xl font-bold tracking-tight mb-5 leading-tight">
 			Team communication<br />

@@ -5,7 +5,10 @@
  */
 import { writable, derived } from 'svelte/store';
 import api from '$lib/api/client';
+import { gateway } from '$lib/api/websocket';
 import type { Channel } from '$lib/api/types';
+
+let activeServerId: string | null = null;
 
 export const channels = writable<Channel[]>([]);
 export const currentChannelId = writable<string | null>(null);
@@ -17,10 +20,43 @@ export const currentChannel = derived(
 export const textChannels = derived(channels, ($ch) => $ch.filter(c => c.channel_type === 0));
 export const voiceChannels = derived(channels, ($ch) => $ch.filter(c => c.channel_type === 1));
 export const stageChannels = derived(channels, ($ch) => $ch.filter(c => c.channel_type === 3));
+export const categoryChannels = derived(channels, ($ch) =>
+  $ch.filter(c => c.channel_type === 2).sort((a, b) => a.position - b.position)
+);
+
+// Maps channel_id → server_id across all servers the user has visited this session.
+// Used by the server list to show unread badges.
+export const channelServerIndex = writable<Map<string, string>>(new Map());
 
 export async function fetchChannels(serverId: string): Promise<void> {
+  activeServerId = serverId;
   const list = await api.get<Channel[]>(`/servers/${serverId}/channels`);
   channels.set(list);
+  // Update cross-server index so unread badges work on the server list
+  channelServerIndex.update(idx => {
+    const next = new Map(idx);
+    for (const ch of list) next.set(ch.id, serverId);
+    return next;
+  });
+}
+
+export function initChannelListeners(): void {
+  gateway.on('ChannelCreate', (data: unknown) => {
+    const event = data as { channel: Channel };
+    if (event.channel.server_id === activeServerId) {
+      channels.update(list => [...list, event.channel]);
+    }
+  });
+
+  gateway.on('ChannelUpdate', (data: unknown) => {
+    const event = data as { channel: Channel };
+    channels.update(list => list.map(c => c.id === event.channel.id ? event.channel : c));
+  });
+
+  gateway.on('ChannelDelete', (data: unknown) => {
+    const event = data as { channel_id: string };
+    channels.update(list => list.filter(c => c.id !== event.channel_id));
+  });
 }
 
 export async function createChannel(serverId: string, name: string, channelType: number = 0): Promise<Channel> {

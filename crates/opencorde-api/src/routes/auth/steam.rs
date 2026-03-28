@@ -27,8 +27,9 @@ use axum::{
     extract::{Query, State},
     response::Redirect,
 };
+use chrono::{Duration, Utc};
 use opencorde_core::Snowflake;
-use opencorde_db::repos::user_repo;
+use opencorde_db::repos::{refresh_token_repo, user_repo};
 use serde::Deserialize;
 
 use crate::{jwt, AppState, error::ApiError};
@@ -130,7 +131,7 @@ pub async fn steam_callback(
     )
     .map_err(|e| ApiError::Internal(anyhow!("token creation failed: {}", e)))?;
 
-    let refresh_token = jwt::create_refresh_token(
+    let (refresh_token, jti) = jwt::create_refresh_token(
         user_id,
         &user_row.username,
         &state.config.jwt_secret,
@@ -138,7 +139,13 @@ pub async fn steam_callback(
     )
     .map_err(|e| ApiError::Internal(anyhow!("token creation failed: {}", e)))?;
 
-    tracing::info!(user_id = user_row.id, "steam login tokens generated");
+    // Store JTI for rotation and theft detection
+    let expires_at = Utc::now() + Duration::seconds(state.config.jwt_refresh_expiry as i64);
+    refresh_token_repo::insert(&state.db, &jti, user_id.as_i64(), expires_at)
+        .await
+        .map_err(|e| ApiError::Internal(anyhow!("failed to store refresh token JTI: {}", e)))?;
+
+    tracing::info!(user_id = user_row.id, "steam login tokens generated and JTI stored");
 
     // Redirect to login page with tokens as URL encoded query params
     let redirect_url = format!(

@@ -5,8 +5,10 @@
 	 */
 	import { currentUser } from '$lib/stores/auth';
 	import { themeStore } from '$lib/stores/theme';
+	import { notificationsEnabled, registerPushToken, unregisterPushToken } from '$lib/stores/pushNotifications';
 	import api from '$lib/api/client';
 	import type { UserProfile } from '$lib/api/types';
+	import TwoFactorSetup from '$lib/components/settings/TwoFactorSetup.svelte';
 
 	const messageStyle = themeStore.messageStyle;
 
@@ -20,6 +22,8 @@
 	let success = $state('');
 	let fileInput: HTMLInputElement;
 
+	let totpEnabled = $state(false);
+
 	// Sync form with store
 	$effect(() => {
 		if ($currentUser) {
@@ -27,6 +31,7 @@
 			email = email || ($currentUser.email ?? '');
 			bio = bio || ($currentUser.bio ?? '');
 			statusMessage = statusMessage || ($currentUser.status_message ?? '');
+			totpEnabled = $currentUser.totp_enabled;
 		}
 	});
 
@@ -84,6 +89,26 @@
 	function getColor(id: string) {
 		const colors = ['bg-indigo-600','bg-purple-600','bg-pink-600','bg-red-600','bg-orange-600','bg-teal-600'];
 		return colors[id.split('').reduce((a,c)=>a+c.charCodeAt(0),0)%colors.length];
+	}
+
+	// --- Push notifications ---
+	let pushLoading = $state(false);
+	let pushError = $state('');
+
+	async function handlePushToggle() {
+		pushLoading = true;
+		pushError = '';
+		try {
+			if ($notificationsEnabled) {
+				await unregisterPushToken();
+			} else {
+				await registerPushToken();
+			}
+		} catch (e: any) {
+			pushError = e.message ?? 'Notification toggle failed';
+		} finally {
+			pushLoading = false;
+		}
 	}
 
 	// --- Data export ---
@@ -228,6 +253,35 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- Notifications -->
+		<div class="bg-gray-800 rounded-lg p-4 space-y-4 mt-4">
+			<h2 class="text-sm font-semibold text-gray-400 uppercase">Notifications</h2>
+			{#if pushError}
+				<div class="px-3 py-2 bg-red-900/40 border border-red-700/50 rounded text-red-300 text-sm">{pushError}</div>
+			{/if}
+			<div class="flex items-center justify-between">
+				<div>
+					<p class="text-sm text-gray-300">Push Notifications</p>
+					<p class="text-xs text-gray-500 mt-0.5">Receive alerts for mentions even when the tab is in the background.</p>
+				</div>
+				<button
+					onclick={handlePushToggle}
+					disabled={pushLoading}
+					class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50
+						{$notificationsEnabled ? 'bg-indigo-600' : 'bg-gray-600'}"
+					aria-pressed={$notificationsEnabled}
+					aria-label="Toggle push notifications"
+				>
+					<span class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform
+						{$notificationsEnabled ? 'translate-x-6' : 'translate-x-1'}">
+					</span>
+				</button>
+			</div>
+		</div>
+
+		<!-- Two-Factor Authentication -->
+		<TwoFactorSetup enabled={totpEnabled} onchange={(val) => { totpEnabled = val; }} />
 
 		<!-- Data & Privacy -->
 		<div class="bg-gray-800 rounded-lg p-4 space-y-4 mt-4">

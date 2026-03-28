@@ -5,6 +5,7 @@
  */
 import { writable, derived } from 'svelte/store';
 import api from '$lib/api/client';
+import { gateway } from '$lib/api/websocket';
 import type { Server } from '$lib/api/types';
 
 export const servers = writable<Server[]>([]);
@@ -27,4 +28,11 @@ export async function createServer(name: string, description?: string): Promise<
 
 export function selectServer(id: string): void {
   currentServerId.set(id);
+}
+
+export function initServerListeners(): void {
+  gateway.on('ServerUpdate', (data: unknown) => {
+    const event = data as { server: Server };
+    servers.update(list => list.map(s => s.id === event.server.id ? event.server : s));
+  });
 }

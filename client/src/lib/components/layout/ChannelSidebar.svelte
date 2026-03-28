@@ -13,6 +13,7 @@
 		stageChannels
 	} from '$lib/stores/channels';
 	import api from '$lib/api/client';
+	import { notifSettings, setNotifLevel, fetchNotifSettings, NOTIF_LABELS, type NotifLevel } from '$lib/stores/notificationSettings';
 	import ChannelList from './ChannelList.svelte';
 
 	interface Props {
@@ -61,6 +62,9 @@
 			error = e.message || 'Failed to create channel';
 		}
 	}
+
+	// Load notification settings alongside channel list
+	fetchNotifSettings();
 
 	function openChannelMenu(e: MouseEvent, channel: { id: string; name: string }) {
 		e.preventDefault();
@@ -216,6 +220,19 @@
 					onkeydown={(e) => e.key === 'Enter' && handleRenameChannel()}
 				/>
 				<button onclick={handleRenameChannel} class="px-2 py-1 bg-indigo-700 hover:bg-indigo-600 text-white text-xs rounded">OK</button>
+			</div>
+		</div>
+		<!-- Notification level picker -->
+		<div class="px-3 py-2 border-b border-gray-700">
+			<p class="text-xs text-gray-500 mb-1.5 font-semibold uppercase">Notifications</p>
+			<div class="flex flex-col gap-0.5">
+				{#each ([0, 1, 2] as const) as lvl (lvl)}
+					{@const active = ($notifSettings.get(channelMenu?.channelId ?? '') ?? 0) === lvl}
+					<button
+						class="text-left px-2 py-1 rounded text-xs transition-colors {active ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:bg-gray-800'}"
+						onclick={async () => { if (channelMenu) { await setNotifLevel(channelMenu.channelId, lvl as NotifLevel); } }}
+					>{NOTIF_LABELS[lvl]}</button>
+				{/each}
 			</div>
 		</div>
 		<button

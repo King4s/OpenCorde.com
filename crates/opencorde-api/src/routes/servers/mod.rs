@@ -13,7 +13,7 @@
 //! - opencorde_core::Snowflake
 
 mod handlers;
-mod types;
+pub mod types;
 mod validation;
 
 pub use handlers::router;

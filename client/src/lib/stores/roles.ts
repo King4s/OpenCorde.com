@@ -4,6 +4,9 @@
  */
 import { writable } from 'svelte/store';
 import api from '$lib/api/client';
+import { gateway } from '$lib/api/websocket';
+
+let activeServerId: string | null = null;
 
 export interface Role {
   id: string;
@@ -19,8 +22,32 @@ export interface Role {
 export const roles = writable<Role[]>([]);
 
 export async function fetchRoles(serverId: string): Promise<void> {
+  activeServerId = serverId;
   const list = await api.get<Role[]>(`/servers/${serverId}/roles`);
   roles.set(list);
+}
+
+export function initRoleListeners(): void {
+  gateway.on('RoleCreate', (data: unknown) => {
+    const event = data as { server_id: string; role: Role };
+    if (event.server_id === activeServerId) {
+      roles.update(list => [...list, event.role]);
+    }
+  });
+
+  gateway.on('RoleUpdate', (data: unknown) => {
+    const event = data as { server_id: string; role: Role };
+    if (event.server_id === activeServerId) {
+      roles.update(list => list.map(r => r.id === event.role.id ? event.role : r));
+    }
+  });
+
+  gateway.on('RoleDelete', (data: unknown) => {
+    const event = data as { server_id: string; role_id: string };
+    if (event.server_id === activeServerId) {
+      roles.update(list => list.filter(r => r.id !== event.role_id));
+    }
+  });
 }
 
 export async function createRole(serverId: string, name: string, color?: number): Promise<Role> {

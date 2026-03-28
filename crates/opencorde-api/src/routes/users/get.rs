@@ -18,6 +18,7 @@ pub struct UserProfile {
     pub status: i16,
     pub bio: Option<String>,
     pub status_message: Option<String>,
+    pub totp_enabled: bool,
 }
 
 /// Public user profile (no email or public key).
@@ -61,6 +62,7 @@ pub async fn get_me(
         status: user_row.status,
         bio: user_row.bio,
         status_message: user_row.status_message,
+        totp_enabled: user_row.totp_enabled,
     };
 
     Ok(Json(profile))

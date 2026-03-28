@@ -27,3 +27,5 @@ base64 = "0.22"
 rand = "0.8"
 # SHA-256 hashing
 sha2 = "0.10"
+# AES-256-GCM for file encryption (format: IV || ciphertext)
+aes-gcm = "0.10"

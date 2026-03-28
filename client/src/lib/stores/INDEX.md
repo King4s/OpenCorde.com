@@ -14,3 +14,5 @@ Pattern: One store per domain. camelCase naming. Each exports get(), subscribe()
 | voice.ts | Voice session state | activeVoiceChannel, participants, audioDevices |
 | presence.ts | User online status, presence | onlineUsers, afkUsers |
 | moderation.ts | Server moderation (ban, kick, timeout) | banList, fetchBans, banUser, unbanUser, kickUser, timeoutUser |
+| e2ee.ts | MLS group state management for E2EE channels | e2eeGroupStates, joinE2EEGroup, initE2EEGroup, addE2EEMember |
+| pushNotifications.ts | Web Push subscription lifecycle | notificationsEnabled, registerPushToken, unregisterPushToken |

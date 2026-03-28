@@ -11,6 +11,7 @@ Repository pattern — one module per domain entity. Each provides async CRUD vi
 | channel_repo.rs | Channels | create, get_by_id, list_by_server, update, update_position, delete |
 | message_repo.rs | Messages | create, get_by_id, list_by_channel (cursor pagination), update_content, delete |
 | member_repo.rs | Members | add, remove, get_member, list_by_server, update_nickname, add_role, remove_role, list_member_roles |
+| webhook_repo.rs | Webhooks | create_webhook, get_by_id, get_by_token, list_by_channel, delete_webhook |
 | mod.rs | Meta | Exports all repos |
 
 ## Function Signature Pattern

@@ -5,13 +5,14 @@
 //! - Plugin registration (shell, notification, autostart, deep-link, os)
 //! - IPC command registration (auth, settings, crypto)
 //! - Window management (show/hide to tray on close)
-//! - Deep-link event forwarding to SvelteKit frontend
+//! - Deep-link handling via tauri-plugin-deep-link
 
 mod commands;
+#[cfg(mobile)]
+mod mobile;
 mod notifications;
 mod tray;
 
-use tauri::Manager;
 use tracing_subscriber::EnvFilter;
 
 /// Main application entry point. Builds and runs the Tauri app.
@@ -36,41 +37,44 @@ pub fn run() {
             commands::crypto::crypto_process_welcome,
             commands::crypto::crypto_encrypt,
             commands::crypto::crypto_decrypt,
+            commands::crypto::crypto_export_voice_key,
+            commands::file_crypto::crypto_encrypt_file,
+            commands::file_crypto::crypto_decrypt_file,
         ])
         // E2EE session state: one OpenMLS provider per app process
         .manage(commands::crypto::CryptoState::default())
         // Register Tauri plugins for system integration
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_notification::init())
-        .plugin(tauri_plugin_autostart::init())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_os::init())
-        // Deep-link event handler: forward opencorde:// URLs to frontend
-        .on_uri_scheme_request("opencorde", |request| {
-            tracing::info!(uri = %request.uri, "deep-link received");
-            // Forward to frontend via event; frontend listens on "deep-link" event
-            if let Some(app_handle) = request.app_handle() {
-                let url = request.uri.to_string();
-                let _ = app_handle.emit("deep-link", url);
-            }
-        })
         // Set up main window and tray
         .setup(|app| {
             tracing::info!("setting up OpenCorde desktop app");
 
-            // Build and initialize system tray
-            let _tray = tray::build_tray(&app.handle())?;
+            // Mobile-specific initialisation (push permission, etc.)
+            #[cfg(mobile)]
+            mobile::init(app.handle())?;
 
-            // Request notification permission
-            notifications::request_permission(app.handle().clone());
+            // Build and initialize system tray (desktop only)
+            #[cfg(not(mobile))]
+            {
+                let _tray = tray::build_tray(app.handle())?;
+                // Request notification permission
+                notifications::request_permission(app.handle().clone());
+            }
 
             Ok(())
         })
         // Window close handler: hide to tray instead of quit
         .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { invoke, .. } = event {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 window.hide().ok();
-                *invoke = false; // Prevent actual close; hide instead
+                api.prevent_close();
             }
         })
         .build(tauri::generate_context!())

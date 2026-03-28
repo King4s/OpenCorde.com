@@ -4,6 +4,7 @@
 	 * @purpose Edit channel settings (Overview tab) and manage permission overrides (Permissions tab)
 	 */
 	import api from '$lib/api/client';
+	import { initE2EEGroup } from '$lib/stores/e2ee';
 	import ChannelPermissionsTab from './ChannelPermissionsTab.svelte';
 
 	type Tab = 'overview' | 'permissions';
@@ -14,17 +15,21 @@
 		channelName: string;
 		channelTopic: string | null;
 		channelNsfw: boolean;
+		channelSlowmode: number;
+		channelE2EEEnabled?: boolean;
 		onClose: () => void;
-		onSave: (updated: { name: string; topic: string | null; nsfw: boolean }) => void;
+		onSave: (updated: { name: string; topic: string | null; nsfw: boolean; slowmode_delay: number }) => void;
 	}
 
-	let { channelId, serverId, channelName, channelTopic, channelNsfw, onClose, onSave }: Props =
+	let { channelId, serverId, channelName, channelTopic, channelNsfw, channelSlowmode, channelE2EEEnabled = false, onClose, onSave }: Props =
 		$props();
 
 	let activeTab = $state<Tab>('overview');
 	let name = $state('');
 	let topic = $state('');
 	let nsfw = $state(false);
+	let slowmodeDelay = $state(0);
+	let e2eeEnabled = $state(false);
 	let saving = $state(false);
 	let error = $state('');
 
@@ -33,6 +38,8 @@
 		name = channelName;
 		topic = channelTopic ?? '';
 		nsfw = channelNsfw;
+		slowmodeDelay = channelSlowmode;
+		e2eeEnabled = channelE2EEEnabled ?? false;
 	});
 
 	async function handleSave() {
@@ -42,15 +49,40 @@
 			const body: Record<string, unknown> = {
 				name: name.trim(),
 				topic: topic.trim() || null,
-				nsfw
+				nsfw,
+				slowmode_delay: slowmodeDelay
 			};
 			await api.patch(`/channels/${channelId}`, body);
-			onSave({ name: name.trim(), topic: topic.trim() || null, nsfw });
+			onSave({ name: name.trim(), topic: topic.trim() || null, nsfw, slowmode_delay: slowmodeDelay });
 			onClose();
 		} catch (e: any) {
 			error = e.message ?? 'Failed to save channel settings';
 		} finally {
 			saving = false;
+		}
+	}
+
+	async function handleE2EEToggle(): Promise<void> {
+		const newVal = !e2eeEnabled;
+		try {
+			const updated = await api.patch<{ e2ee_enabled: boolean }>(`/channels/${channelId}`, { e2ee_enabled: newVal });
+			e2eeEnabled = updated.e2ee_enabled;
+			// If enabling and in Tauri: fetch member key packages and init group
+			if (newVal && typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+				const members = await api.get<{ id: string }[]>(`/servers/${serverId}/members`);
+				const kpMap = new Map<string, string>();
+				for (const m of members) {
+					try {
+						const kpRes = await api.get<{ key_package: string }>(`/users/${m.id}/key-packages/one`);
+						kpMap.set(m.id, kpRes.key_package);
+					} catch { /* member has no key package */ }
+				}
+				if (kpMap.size > 0) {
+					await initE2EEGroup(channelId, kpMap);
+				}
+			}
+		} catch (err: any) {
+			console.error('[E2EE] Toggle failed:', err);
 		}
 	}
 
@@ -154,6 +186,37 @@
 						<label for="modal-channel-nsfw" class="text-sm text-gray-300 cursor-pointer"
 							>Mark as NSFW</label
 						>
+					</div>
+
+					<!-- Slowmode -->
+					<div>
+						<label class="block text-xs text-gray-400 mb-1.5" for="modal-slowmode">
+							Slowmode (seconds, 0 = off)
+						</label>
+						<input
+							id="modal-slowmode"
+							type="number"
+							bind:value={slowmodeDelay}
+							min="0"
+							max="21600"
+							placeholder="0"
+							class="w-32 px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-indigo-500"
+						/>
+					</div>
+
+					<!-- E2EE toggle -->
+					<div class="flex items-center justify-between py-2">
+						<div>
+							<span class="text-sm font-medium text-gray-200">End-to-End Encryption</span>
+							<p class="text-xs text-gray-400 mt-0.5">Encrypt messages using OpenMLS (Tauri app only)</p>
+						</div>
+						<button
+							onclick={handleE2EEToggle}
+							class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {e2eeEnabled ? 'bg-indigo-600' : 'bg-gray-600'}"
+							aria-label="Toggle E2EE"
+						>
+							<span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {e2eeEnabled ? 'translate-x-6' : 'translate-x-1'}"></span>
+						</button>
 					</div>
 				</div>
 			{:else}

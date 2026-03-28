@@ -151,6 +151,7 @@ pub async fn update_me(
         status: user_row.status,
         bio: user_row.bio,
         status_message: user_row.status_message,
+        totp_enabled: user_row.totp_enabled,
     };
 
     Ok(Json(profile))

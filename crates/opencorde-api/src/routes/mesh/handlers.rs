@@ -33,8 +33,11 @@ pub async fn mesh_status(
         .map_err(ApiError::Database)?;
     let peers_count = peers.len() as i64;
 
-    // TODO: Get actual user count from database
-    let users_count = 1i64;
+    // Get actual user count from the database
+    let users_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM users")
+        .fetch_one(&state.db)
+        .await
+        .unwrap_or(0);
 
     let response = MeshStatusResponse {
         hostname: state.config.mesh_hostname.clone(),

@@ -11,6 +11,8 @@
 	import EmojiPicker from './EmojiPicker.svelte';
 	import CommandAutocomplete from './CommandAutocomplete.svelte';
 	import AttachmentPreview from './AttachmentPreview.svelte';
+	import { invoke } from '@tauri-apps/api/core';
+	import { getGroupState } from '$lib/stores/e2ee';
 
 	interface Props {
 		onSend: (content: string, replyToId?: string, attachments?: Attachment[]) => void;
@@ -106,17 +108,56 @@
 		inputElement?.focus();
 	}
 
+	/** Convert ArrayBuffer to base64 string for Tauri IPC. */
+	function arrayBufferToBase64(buf: ArrayBuffer): string {
+		const bytes = new Uint8Array(buf);
+		let binary = '';
+		for (const b of bytes) binary += String.fromCharCode(b);
+		return btoa(binary);
+	}
+
+	/** Convert base64 string back to Uint8Array. */
+	function base64ToUint8Array(b64: string): Uint8Array {
+		const binary = atob(b64);
+		const arr = new Uint8Array(binary.length);
+		for (let i = 0; i < binary.length; i++) arr[i] = binary.charCodeAt(i);
+		return arr;
+	}
+
 	async function handleFilesSelected(e: Event) {
 		const input = e.target as HTMLInputElement;
 		if (!input.files || input.files.length === 0) return;
 
 		uploading = true;
 		uploadError = '';
+		const groupState = getGroupState(channelId);
 
 		for (const file of Array.from(input.files)) {
 			try {
+				let uploadFile: File = file;
+
+				// Encrypt file if channel has an active E2EE group
+				if (groupState) {
+					const fileBuffer = await file.arrayBuffer();
+					const fileB64 = arrayBufferToBase64(fileBuffer);
+					const encryptedB64 = await invoke<string>('crypto_encrypt_file', {
+						group_state_hex: groupState,
+						file_data_b64: fileB64
+					});
+					const encryptedBytes = base64ToUint8Array(encryptedB64);
+					// Slice to get a plain ArrayBuffer (Uint8Array.buffer is ArrayBufferLike)
+					const encBuf = encryptedBytes.buffer.slice(
+						encryptedBytes.byteOffset,
+						encryptedBytes.byteOffset + encryptedBytes.byteLength
+					) as ArrayBuffer;
+					// Mark as encrypted: append .enc extension, octet-stream MIME
+					uploadFile = new File([encBuf], file.name + '.enc', {
+						type: 'application/octet-stream'
+					});
+				}
+
 				const formData = new FormData();
-				formData.append('file', file);
+				formData.append('file', uploadFile);
 				const attachment = await api.postFormData<Attachment>(
 					`/channels/${channelId}/attachments`,
 					formData

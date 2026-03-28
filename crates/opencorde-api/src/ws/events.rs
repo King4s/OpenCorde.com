@@ -108,6 +108,98 @@ pub fn channel_create(channel: &Value) -> String {
     .to_string()
 }
 
+/// Create a CHANNEL_UPDATE event.
+///
+/// Fired when a channel is edited (name, topic, settings).
+pub fn channel_update(channel: &Value) -> String {
+    json!({
+        "type": "ChannelUpdate",
+        "data": { "channel": channel }
+    })
+    .to_string()
+}
+
+/// Create a CHANNEL_DELETE event.
+///
+/// Fired when a channel is deleted.
+pub fn channel_delete(server_id: &str, channel_id: &str) -> String {
+    json!({
+        "type": "ChannelDelete",
+        "data": {
+            "server_id": server_id,
+            "channel_id": channel_id
+        }
+    })
+    .to_string()
+}
+
+/// Create a ROLE_CREATE event.
+///
+/// Fired when a new role is created.
+pub fn role_create(server_id: &str, role: &Value) -> String {
+    json!({
+        "type": "RoleCreate",
+        "data": {
+            "server_id": server_id,
+            "role": role
+        }
+    })
+    .to_string()
+}
+
+/// Create a ROLE_UPDATE event.
+///
+/// Fired when a role is modified (name, color, permissions).
+pub fn role_update(server_id: &str, role: &Value) -> String {
+    json!({
+        "type": "RoleUpdate",
+        "data": {
+            "server_id": server_id,
+            "role": role
+        }
+    })
+    .to_string()
+}
+
+/// Create a ROLE_DELETE event.
+///
+/// Fired when a role is deleted.
+pub fn role_delete(server_id: &str, role_id: &str) -> String {
+    json!({
+        "type": "RoleDelete",
+        "data": {
+            "server_id": server_id,
+            "role_id": role_id
+        }
+    })
+    .to_string()
+}
+
+/// Create a MEMBER_UPDATE event.
+///
+/// Fired when a member's roles or nickname changes.
+pub fn member_update(server_id: &str, member: &Value) -> String {
+    json!({
+        "type": "MemberUpdate",
+        "data": {
+            "server_id": server_id,
+            "member": member
+        }
+    })
+    .to_string()
+}
+
+/// Create a SERVER_UPDATE event.
+///
+/// Fired when a server's name, icon, or settings change.
+pub fn server_update(server: &Value) -> String {
+    json!({
+        "type": "ServerUpdate",
+        "data": { "server": server }
+    })
+    .to_string()
+}
+
 /// Create a MEMBER_JOIN event.
 ///
 /// Fired when a user joins a server.

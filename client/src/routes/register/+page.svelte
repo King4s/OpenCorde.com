@@ -14,6 +14,24 @@
 	let passwordConfirm = $state('');
 	let error = $state('');
 	let loading = $state(false);
+	let inviteCode = $state('');
+
+	// Handle Steam callback
+	onMount(() => {
+		const params = new URLSearchParams(window.location.search);
+		const accessToken = params.get('access_token');
+		const refreshToken = params.get('refresh_token');
+
+		if (accessToken && refreshToken) {
+			try {
+				localStorage.setItem('access_token', accessToken);
+				localStorage.setItem('refresh_token', refreshToken);
+				window.location.href = '/servers';
+			} catch (e) {
+				error = 'Failed to store tokens';
+			}
+		}
+	});
 
 	// Handle Steam callback
 	onMount(() => {
@@ -48,7 +66,7 @@
 
 		loading = true;
 		try {
-			await register(username, email, password);
+			await register(username, email, password, inviteCode || undefined);
 			window.location.href = '/servers';
 		} catch (e: any) {
 			error = e.message || 'Registration failed';
@@ -121,6 +139,19 @@
 					required
 					class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
 					placeholder="••••••••"
+				/>
+			</div>
+
+			<div>
+				<label for="invite" class="block text-sm font-medium text-gray-300 mb-1">
+					Invite Code <span class="text-gray-500 font-normal">(if required)</span>
+				</label>
+				<input
+					id="invite"
+					type="text"
+					bind:value={inviteCode}
+					class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+					placeholder="Optional invite code"
 				/>
 			</div>
 

@@ -131,6 +131,16 @@ impl SearchEngine {
         tracing::info!(results = results.len(), "search complete");
         Ok(results)
     }
+
+    /// Create an indexer that writes to this engine's index.
+    ///
+    /// Caller is responsible for calling commit() after indexing.
+    ///
+    /// # Errors
+    /// Returns tantivy error if writer creation fails.
+    pub fn make_indexer(&self, heap_size: usize) -> tantivy::Result<crate::SearchIndexer> {
+        crate::SearchIndexer::new(&self.index, heap_size)
+    }
 }
 
 #[cfg(test)]

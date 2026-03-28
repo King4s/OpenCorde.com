@@ -32,6 +32,7 @@ mod password_reset;
 mod register;
 mod steam;
 mod steam_verify;
+pub mod totp;
 mod types;
 mod validation;
 mod verification;
@@ -53,6 +54,9 @@ pub fn router() -> Router<AppState> {
         .route("/api/v1/auth/resend-verification", post(verification::resend_verification))
         .route("/api/v1/auth/steam", get(steam::steam_login))
         .route("/api/v1/auth/steam/callback", get(steam::steam_callback))
+        .route("/api/v1/auth/2fa/enable", post(totp::enable))
+        .route("/api/v1/auth/2fa/verify", post(totp::verify))
+        .route("/api/v1/auth/2fa", axum::routing::delete(totp::disable))
 }
 
 #[cfg(test)]

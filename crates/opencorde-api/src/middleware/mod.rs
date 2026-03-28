@@ -12,8 +12,12 @@
 
 pub mod auth;
 pub mod cors;
+pub mod rate_limit;
 pub mod request_id;
+pub mod security_headers;
 
 pub use auth::AuthUser;
 pub use cors::cors_layer;
+pub use rate_limit::RateLimitState;
 pub use request_id::make_request_id_layer;
+pub use security_headers::security_headers as security_headers_layer;

@@ -7,18 +7,23 @@
 	 */
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
+	import { get } from 'svelte/store';
 	import {
 		messages,
 		fetchMessages,
 		sendMessage,
+		editMessage,
+		deleteMessage,
 		toggleReaction,
 		loading,
 		hasMore,
 		initMessageListener
 	} from '$lib/stores/messages';
+	import { currentUser } from '$lib/stores/auth';
 	import { currentChannel, selectChannel } from '$lib/stores/channels';
+	import { joinE2EEGroup } from '$lib/stores/e2ee';
 	import { initTypingListener, getTypingForChannel } from '$lib/stores/typing';
-	import { ackChannel } from '$lib/stores/unread';
+	import { ackChannel, lastReadIds } from '$lib/stores/unread';
 	import MessageList from '$lib/components/chat/MessageList.svelte';
 	import MessageInput from '$lib/components/chat/MessageInput.svelte';
 	import TypingIndicator from '$lib/components/chat/TypingIndicator.svelte';
@@ -27,6 +32,7 @@
 	import ThreadPanel from '$lib/components/chat/ThreadPanel.svelte';
 	import ChannelSettingsModal from '$lib/components/modals/ChannelSettingsModal.svelte';
 	import { threadStore } from '$lib/stores/threads.svelte';
+import RecordingsPanel from '$lib/components/voice/RecordingsPanel.svelte';
 	import api from '$lib/api/client';
 	import type { Message, Attachment } from '$lib/api/types';
 
@@ -37,6 +43,8 @@
 	let showPins = $state(false);
 	let showThread = $state(false);
 	let showChannelSettings = $state(false);
+	let showRecordings = $state(false);
+	let startEditMsgId = $state<string | null>(null);
 
 	if (browser) {
 		const serverMatch = window.location.pathname.match(/\/servers\/([^/]+)/);
@@ -47,10 +55,26 @@
 		if (id) {
 			channelId = id;
 			selectChannel(id);
+			const jumpMsgId = new URLSearchParams(window.location.search).get('msg');
 			fetchMessages(id).then(() => {
 				const latest = $messages[$messages.length - 1];
 				if (latest) {
 					ackChannel(id, latest.id).catch(() => {});
+				}
+				// Attempt to join E2EE group (no-op if not E2EE channel or already joined)
+				const ch = get(currentChannel);
+				if (ch?.e2ee_enabled) {
+					joinE2EEGroup(id).catch(() => {});
+				}
+				if (jumpMsgId) {
+					setTimeout(() => {
+						const el = document.getElementById('msg-' + jumpMsgId);
+						if (el) {
+							el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+							el.classList.add('highlight-flash');
+							setTimeout(() => el.classList.remove('highlight-flash'), 1500);
+						}
+					}, 100);
 				}
 			}).catch(() => {});
 		}
@@ -114,12 +138,30 @@
 		}
 	}
 
-	function handleChannelSettingsSave(updated: { name: string; topic: string | null; nsfw: boolean }) {
+	async function handleEditMessage(msgId: string, content: string) {
+		await editMessage(msgId, content);
+	}
+
+	async function handleDeleteMessage(msgId: string) {
+		await deleteMessage(msgId);
+	}
+
+	function handleEditLast() {
+		const myMsgs = $messages.filter(m => m.author_id === $currentUser?.id);
+		if (myMsgs.length > 0) {
+			const last = myMsgs[myMsgs.length - 1];
+			startEditMsgId = last.id;
+			setTimeout(() => { startEditMsgId = null; }, 100);
+		}
+	}
+
+	function handleChannelSettingsSave(updated: { name: string; topic: string | null; nsfw: boolean; slowmode_delay: number }) {
 		// Update the current channel in the store with new values
 		if ($currentChannel) {
 			$currentChannel.name = updated.name;
 			$currentChannel.topic = updated.topic;
 			$currentChannel.nsfw = updated.nsfw;
+			$currentChannel.slowmode_delay = updated.slowmode_delay;
 		}
 	}
 </script>
@@ -151,6 +193,12 @@
 			aria-label="Pinned messages"
 		>📌</button>
 		<button
+			onclick={() => showRecordings = !showRecordings}
+			class="text-gray-400 hover:text-white p-1 rounded hover:bg-gray-700/50 transition-colors {showRecordings ? 'text-white bg-gray-700/50' : ''}"
+			title="Recordings"
+			aria-label="Recordings"
+		>🎥</button>
+		<button
 			onclick={() => showSearch = true}
 			class="text-gray-400 hover:text-white p-1 rounded hover:bg-gray-700/50 transition-colors"
 			title="Search messages"
@@ -167,11 +215,17 @@
 			messages={$messages}
 			loading={$loading}
 			hasMore={$hasMore}
+			currentUserId={$currentUser?.id}
+			{serverId}
 			onLoadMore={handleLoadMore}
 			onReply={handleReply}
 			onReact={handleReact}
 			onPin={handlePin}
 			onOpenThread={handleOpenThread}
+			onEdit={handleEditMessage}
+			onDelete={handleDeleteMessage}
+			lastReadId={$lastReadIds.get(channelId) ?? null}
+			{startEditMsgId}
 		/>
 
 		<!-- Typing indicator -->
@@ -186,6 +240,7 @@
 			{channelId}
 			{replyTo}
 			onCancelReply={() => { replyTo = null; }}
+		onEditLast={handleEditLast}
 		/>
 	</div>
 	{#if showPins}
@@ -193,6 +248,9 @@
 	{/if}
 	{#if showThread}
 		<ThreadPanel onClose={() => { showThread = false; threadStore.closeThread(); }} />
+	{/if}
+	{#if showRecordings}
+		<RecordingsPanel {channelId} onClose={() => showRecordings = false} />
 	{/if}
 </div>
 
@@ -207,6 +265,8 @@
 		channelName={$currentChannel.name}
 		channelTopic={$currentChannel.topic ?? null}
 		channelNsfw={$currentChannel.nsfw}
+		channelSlowmode={$currentChannel.slowmode_delay ?? 0}
+		channelE2EEEnabled={$currentChannel.e2ee_enabled}
 		onClose={() => showChannelSettings = false}
 		onSave={handleChannelSettingsSave}
 	/>

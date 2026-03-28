@@ -34,10 +34,18 @@ rand = { workspace = true }
 futures = { workspace = true }
 aws-sdk-s3 = { workspace = true }  # S3/MinIO uploads
 aws-config = { workspace = true }  # S3 config builder
-reqwest = { workspace = true }  # HTTP client for slash command webhooks
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }  # HTTP client for webhooks + federation
+url = "2"  # URL parsing + SSRF guard in unfurl endpoint
 hex = "0.4"  # Hex encoding for password reset tokens
+ed25519-dalek = { workspace = true }  # Ed25519 signing for mesh federation
+
 base64 = "0.22"  # Base64 encoding/decoding for E2EE key package blobs
 password-hash = "0.5"  # Password hash traits and implementations (for SaltString generation)
 lettre = { version = "0.11", features = ["tokio1-native-tls", "builder"] }  # Async SMTP email sending
 governor = { version = "0.6", features = ["dashmap"] }  # Token-bucket per-IP rate limiting (dashmap = thread-safe keyed limiter)
+img-parts = "0.3"  # Lossless EXIF metadata stripping from JPEG/PNG uploads (binary chunk manipulation, no re-encode)
+totp-rs = { version = "5", features = ["gen_secret", "otpauth"] }  # RFC 6238 TOTP for 2FA (gen_secret = random secret gen, otpauth = QR URL)
 urlencoding = "2.1"  # URL encoding for Steam OpenID 2.0 parameters
+# WHY: Web Push (VAPID) notification delivery to browser service workers
+web-push = "0.10"
+rand_core = { version = "0.6", features = ["getrandom"] }  # OsRng for Ed25519 keypair generation

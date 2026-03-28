@@ -105,3 +105,15 @@ export const hasAnyUnread = derived(
   unreadCounts,
   $counts => Array.from($counts.values()).some(c => c > 0)
 );
+
+/** Map of channel_id → last_read_id (for NEW MESSAGES divider placement). */
+export const lastReadIds = derived(
+  readStates,
+  $states => {
+    const map = new Map<string, string>();
+    for (const [id, s] of $states) {
+      if (s.last_read_id) map.set(id, s.last_read_id);
+    }
+    return map;
+  }
+);

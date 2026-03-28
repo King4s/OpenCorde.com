@@ -1,6 +1,7 @@
 //! # Route: Members - Server membership management
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::helpers};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::{helpers, moderation::audit_mod::log_mod_action, permission_check}};
+use opencorde_core::permissions::Permissions;
 use axum::{
     Json, Router,
     extract::{Path, State},
@@ -85,12 +86,9 @@ async fn remove_member(
     tracing::info!("removing member");
     let server_id = helpers::parse_snowflake(&server_id)?;
     let target_user_id = helpers::parse_snowflake(&user_id)?;
-    let server = server_repo::get_by_id(&state.db, server_id)
-        .await
-        .map_err(ApiError::Database)?
-        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
+    // Kicking another user requires KICK_MEMBERS; leaving (self-remove) is always allowed
     if target_user_id != auth.user_id {
-        helpers::check_server_owner(auth.user_id, server.owner_id)?;
+        permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::KICK_MEMBERS).await?;
     }
     member_repo::get_member(&state.db, target_user_id, server_id)
         .await
@@ -100,6 +98,10 @@ async fn remove_member(
         .await
         .map_err(ApiError::Database)?;
     tracing::info!(target_user_id = target_user_id.as_i64(), "member removed");
+    // Audit: log kick (not self-leave)
+    if target_user_id != auth.user_id {
+        log_mod_action(&state, server_id, auth.user_id, "member.kick", target_user_id.as_i64()).await;
+    }
     Ok(StatusCode::NO_CONTENT)
 }
 

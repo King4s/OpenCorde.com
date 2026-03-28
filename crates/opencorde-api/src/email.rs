@@ -21,7 +21,10 @@
 
 use lettre::{
     message::header::ContentType,
-    transport::smtp::authentication::Credentials,
+    transport::smtp::{
+        authentication::Credentials,
+        client::{Tls, TlsParameters},
+    },
     AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor,
 };
 use tracing::instrument;
@@ -163,7 +166,15 @@ impl EmailService {
             .header(ContentType::TEXT_HTML)
             .body(html_body.to_string())?;
 
-        let mut builder = AsyncSmtpTransport::<Tokio1Executor>::relay(host)?.port(self.smtp_port);
+        // Port 465 = SMTPS (implicit TLS); all other ports = STARTTLS via relay()
+        let mut builder = if self.smtp_port == 465 {
+            let tls = TlsParameters::new(host.to_string())?;
+            AsyncSmtpTransport::<Tokio1Executor>::builder_dangerous(host)
+                .port(465)
+                .tls(Tls::Wrapper(tls))
+        } else {
+            AsyncSmtpTransport::<Tokio1Executor>::relay(host)?.port(self.smtp_port)
+        };
 
         if let (Some(username), Some(password)) = (&self.smtp_username, &self.smtp_password) {
             let creds = Credentials::new(username.clone(), password.clone());

@@ -18,6 +18,7 @@ export interface UserProfile {
   status: number;
   bio: string | null;
   status_message: string | null;
+  totp_enabled: boolean;
 }
 
 export interface AuthResponse {
@@ -44,6 +45,8 @@ export interface Channel {
   position: number;
   parent_id: string | null;
   nsfw: boolean;
+  slowmode_delay: number;
+  e2ee_enabled: boolean;
   created_at: string;
 }
 

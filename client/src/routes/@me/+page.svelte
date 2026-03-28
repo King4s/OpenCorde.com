@@ -5,7 +5,7 @@
 	 * @depends stores/dms, stores/auth
 	 */
 	import { browser } from '$app/environment';
-	import { dmChannels, fetchDmChannels, openDm } from '$lib/stores/dms';
+	import { dmChannels, fetchDmChannels, openDm, openFederatedDm } from '$lib/stores/dms';
 	import api from '$lib/api/client';
 
 	let searchQuery = $state('');
@@ -13,6 +13,12 @@
 	let isSearching = $state(false);
 	let showSearchResults = $state(false);
 	let error = $state('');
+
+	// True when input looks like "username@hostname" (cross-server DM)
+	let isFederatedAddress = $derived(
+		searchQuery.includes('@') &&
+		/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(searchQuery.trim())
+	);
 
 	// Load DM channels on mount
 	if (browser) {
@@ -25,10 +31,10 @@
 	}
 
 	/**
-	 * Search for users to start new DM
+	 * Search for local users. Skipped when address looks like username@server.
 	 */
 	async function handleSearch() {
-		if (!searchQuery.trim()) {
+		if (!searchQuery.trim() || isFederatedAddress) {
 			searchResults = [];
 			showSearchResults = false;
 			return;
@@ -50,9 +56,7 @@
 		}
 	}
 
-	/**
-	 * Start a DM with a user
-	 */
+	/** Start a DM with a local user by ID */
 	async function startDm(userId: string) {
 		error = '';
 		try {
@@ -66,8 +70,28 @@
 		}
 	}
 
+	/** Start a cross-server DM with username@hostname */
+	async function startFederatedDm() {
+		const address = searchQuery.trim();
+		if (!address) return;
+		error = '';
+		isSearching = true;
+		try {
+			const dm = await openFederatedDm(address);
+			searchQuery = '';
+			showSearchResults = false;
+			window.location.href = `/@me/dms/${dm.id}`;
+		} catch (e: any) {
+			error = e.message || 'Could not reach remote server';
+		} finally {
+			isSearching = false;
+		}
+	}
+
 	function getInitials(name: string): string {
-		return name.slice(0, 2).toUpperCase();
+		// For "alice@server.com", show "alice" initials
+		const displayName = name.includes('@') ? name.split('@')[0] : name;
+		return displayName.slice(0, 2).toUpperCase();
 	}
 
 	function getAvatarColor(userId: string): string {
@@ -84,6 +108,12 @@
 		const hash = userId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
 		return colors[hash % colors.length];
 	}
+
+	/** For federated DMs, show a badge with the server hostname */
+	function getFederationBadge(username: string): string | null {
+		if (username.includes('@')) return username.split('@')[1];
+		return null;
+	}
 </script>
 
 <div class="flex-1 flex flex-col bg-gray-900">
@@ -92,23 +122,42 @@
 		<h1 class="text-lg font-semibold text-white">Direct Messages</h1>
 	</div>
 
-	<!-- Search box -->
+	<!-- Search / new DM box -->
 	<div class="p-4 border-b border-gray-800">
 		<div class="relative">
 			<input
 				type="text"
 				bind:value={searchQuery}
-				onkeyup={() => handleSearch()}
-				placeholder="Search users..."
+				onkeyup={(e) => {
+					if (e.key === 'Enter' && isFederatedAddress) startFederatedDm();
+					else handleSearch();
+				}}
+				placeholder="Search users or type username@server.com..."
 				class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-indigo-500"
 			/>
 			{#if isSearching}
-				<div class="absolute right-3 top-2 text-xs text-gray-500">Searching...</div>
+				<div class="absolute right-3 top-2 text-xs text-gray-500">Connecting...</div>
 			{/if}
 		</div>
 
-		<!-- Search results dropdown -->
-		{#if showSearchResults && searchResults.length > 0}
+		<!-- Cross-server DM prompt -->
+		{#if isFederatedAddress}
+			<div class="mt-2 flex items-center gap-2">
+				<div class="flex-1 text-xs text-indigo-300">
+					Start a cross-server DM with <strong>{searchQuery.trim()}</strong>
+				</div>
+				<button
+					onclick={startFederatedDm}
+					disabled={isSearching}
+					class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs rounded-lg transition-colors"
+				>
+					Open DM
+				</button>
+			</div>
+		{/if}
+
+		<!-- Local search results dropdown -->
+		{#if showSearchResults && !isFederatedAddress && searchResults.length > 0}
 			<div class="absolute top-16 left-4 right-4 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
 				{#each searchResults as user (user.id)}
 					<button
@@ -119,9 +168,9 @@
 					</button>
 				{/each}
 			</div>
-		{:else if showSearchResults && searchQuery.trim()}
+		{:else if showSearchResults && !isFederatedAddress && searchQuery.trim()}
 			<div class="absolute top-16 left-4 right-4 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 px-3 py-2">
-				<p class="text-xs text-gray-500">No users found</p>
+				<p class="text-xs text-gray-500">No users found — try username@server.com for cross-server</p>
 			</div>
 		{/if}
 
@@ -136,7 +185,7 @@
 			<div class="flex flex-col items-center justify-center h-full text-center px-4">
 				<div class="text-4xl mb-3">💬</div>
 				<p class="text-gray-400">No direct messages yet</p>
-				<p class="text-gray-500 text-sm mt-1">Search for a user above to start a conversation</p>
+				<p class="text-gray-500 text-sm mt-1">Search for a user or type username@server.com for cross-server DMs</p>
 			</div>
 		{:else}
 			<div class="space-y-1 p-2">
@@ -150,7 +199,11 @@
 						</div>
 						<div class="flex-1 min-w-0">
 							<p class="text-sm font-medium text-white truncate">{dm.other_username}</p>
-							<p class="text-xs text-gray-500">Direct message</p>
+							{#if getFederationBadge(dm.other_username)}
+								<p class="text-xs text-indigo-400">via {getFederationBadge(dm.other_username)}</p>
+							{:else}
+								<p class="text-xs text-gray-500">Direct message</p>
+							{/if}
 						</div>
 					</button>
 				{/each}

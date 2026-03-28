@@ -38,9 +38,11 @@ pub mod health;
 pub mod helpers;
 pub mod invites;
 pub mod members;
+pub mod federation;
 pub mod mesh;
 pub mod messages;
 pub mod moderation;
+pub mod permission_check;
 pub mod pins;
 pub mod reactions;
 pub mod read_state;
@@ -51,6 +53,9 @@ pub mod servers;
 pub mod slash_commands;
 pub mod stage;
 pub mod threads;
+pub mod notification_settings;
+pub mod unfurl;
+pub mod upload_validation;
 pub mod uploads;
 pub mod users;
 pub mod push;
@@ -78,6 +83,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(invites::router())
         .merge(members::router())
         .merge(mesh::router())
+        .merge(federation::router())
         .merge(roles::router())
         .merge(messages::router())
         .merge(threads::router())
@@ -98,6 +104,8 @@ pub fn api_router() -> Router<AppState> {
         .merge(audit_log::router())
         .merge(data_export::router())
         .merge(e2ee::router())
+        .merge(notification_settings::router())
+        .merge(unfurl::router())
         .merge(push::router())
         .merge(crate::ws::handler::router())
 }

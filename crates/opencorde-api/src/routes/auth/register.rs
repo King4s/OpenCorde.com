@@ -45,9 +45,19 @@ pub async fn register(
             return Err(ApiError::Forbidden);
         }
         RegistrationMode::InviteOnly => {
-            // TODO: validate invite code once invite system supports this mode
-            tracing::warn!("invite-only mode: open registration blocked");
-            return Err(ApiError::BadRequest("registration requires an invite code".into()));
+            match (&state.config.registration_invite_code, &req.invite_code) {
+                (Some(expected), Some(provided)) if expected == provided => {
+                    tracing::info!("invite-only: valid invite code accepted");
+                }
+                (Some(_), Some(_)) => {
+                    tracing::warn!("invite-only: invalid invite code provided");
+                    return Err(ApiError::BadRequest("invalid invite code".into()));
+                }
+                _ => {
+                    tracing::warn!("invite-only: no invite code provided");
+                    return Err(ApiError::BadRequest("registration requires an invite code".into()));
+                }
+            }
         }
         RegistrationMode::Open => {}
     }
@@ -134,7 +144,7 @@ pub async fn register(
     )
     .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
 
-    let refresh_token = jwt::create_refresh_token(
+    let (refresh_token, jti) = jwt::create_refresh_token(
         user_id,
         &req.username,
         &state.config.jwt_secret,
@@ -142,7 +152,13 @@ pub async fn register(
     )
     .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
 
-    tracing::debug!(user_id = %user_id, "tokens generated");
+    // Store the JTI for rotation and theft detection
+    let expires_at = chrono::Utc::now() + chrono::Duration::seconds(state.config.jwt_refresh_expiry as i64);
+    opencorde_db::repos::refresh_token_repo::insert(&state.db, &jti, user_id.as_i64(), expires_at)
+        .await
+        .map_err(|e| ApiError::Internal(anyhow::anyhow!("failed to store refresh token JTI: {}", e)))?;
+
+    tracing::debug!(user_id = %user_id, "tokens generated and JTI stored");
 
     // Build response
     let response = AuthResponse {
