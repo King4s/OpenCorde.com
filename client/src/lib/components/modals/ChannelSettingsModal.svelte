@@ -32,6 +32,14 @@
 	let e2eeEnabled = $state(false);
 	let saving = $state(false);
 	let error = $state('');
+	let idCopied = $state(false);
+
+	function copyChannelId() {
+		navigator.clipboard.writeText(channelId).then(() => {
+			idCopied = true;
+			setTimeout(() => { idCopied = false; }, 1500);
+		});
+	}
 
 	// Initialise form state from props whenever they change
 	$effect(() => {
@@ -202,6 +210,21 @@
 							placeholder="0"
 							class="w-32 px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-indigo-500"
 						/>
+					</div>
+
+					<!-- Channel ID (for bridge / developer use) -->
+					<div class="flex items-center justify-between py-2 border-t border-gray-700/50">
+						<div>
+							<span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Channel ID</span>
+							<p class="text-xs font-mono text-gray-300 mt-0.5 select-all">{channelId}</p>
+						</div>
+						<button
+							onclick={copyChannelId}
+							class="px-2 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+							title="Copy channel ID"
+						>
+							{idCopied ? 'Copied!' : 'Copy'}
+						</button>
 					</div>
 
 					<!-- E2EE toggle -->

@@ -23,6 +23,9 @@ Phases 1, 2, and 3 are complete as of 2026-03-22 (26/26 browser tests, 30 migrat
 - [x] Discord REST API client (twilight-http, webhook execute with username/avatar override)
 - [x] Message/user/channel mapping (bridge_channel_mappings, migrations 034-035)
 - [x] Ghost user management (bridge_ghost_users, auto-create on first message)
+- [x] Bridge management API (GET/POST/PATCH/DELETE /api/v1/servers/{id}/bridge/mappings)
+- [x] Bridge settings UI (IntegrationsPanel Discord Bridge section with live mapping management)
+- [x] Bridge systemd service (opencorde-bridge.service, reads .env.bridge for DISCORD_TOKEN)
 
 ### SMTP: Account Verification
 - [x] Extend email.rs: send verification email on register
@@ -39,11 +42,11 @@ Phases 1, 2, and 3 are complete as of 2026-03-22 (26/26 browser tests, 30 migrat
 - [x] Instance admin: storage usage monitor, rate limiting config
 - [x] GDPR data export improvements (unlimited messages, file attachments, account deletion)
 - [x] Accessibility audit (WCAG 2.1 AA) — dialog tabindex, backdrop Escape, keyboard nav (AutomodManager, EmojiManager, SlashCommandManager, WebhookManager)
-- [ ] Recording (LiveKit Egress)
+- [x] Recording (LiveKit Egress — start/stop/list endpoints + RecordingsPanel + VoicePanel button)
 - [x] Steam OAuth login (OpenID 2.0 flow, migration 036, ghost user creation)
 
 ---
 
 **Note:** Federation via Matrix protocol is explicitly excluded per user decision.
 
-**Last updated:** 2026-03-24
+**Last updated:** 2026-03-28
