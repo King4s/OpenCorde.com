@@ -22,6 +22,7 @@
 
 pub mod admin;
 pub mod audit_log;
+pub mod bridge;
 pub mod data_export;
 pub mod auth;
 pub mod e2ee;
@@ -107,6 +108,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(notification_settings::router())
         .merge(unfurl::router())
         .merge(push::router())
+        .merge(bridge::router())
         .merge(crate::ws::handler::router())
 }
 
