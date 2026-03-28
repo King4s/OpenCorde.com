@@ -10,8 +10,8 @@ import json
 import aiohttp
 from playwright.async_api import async_playwright
 
-BASE = "http://localhost:5173"
-API = "http://localhost:8080/api/v1"
+BASE = "https://opencorde.com"
+API = "https://opencorde.com/api/v1"
 SHOTS = "/tmp/opencorde_shots"
 TEST_USER = "browsertest_user"
 TEST_PASS = "BrowserTest@99"
