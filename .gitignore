@@ -40,3 +40,8 @@ data/
 # Test artifacts
 /tests/e2e/test-results/
 /tests/e2e/playwright-report/
+
+# Secrets and runtime data
+.env.bridge
+.opencorde.key
+search-index/
