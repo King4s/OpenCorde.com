@@ -20,7 +20,7 @@ use axum::{
     Json, Router,
     extract::{Path, State},
     http::StatusCode,
-    routing::{get, patch, post},
+    routing::{delete, get, patch, post},
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -74,7 +74,7 @@ pub fn router() -> Router<AppState> {
         )
         .route(
             "/api/v1/servers/{server_id}/bridge/mappings/{mapping_id}",
-            patch(update_mapping).delete(axum::routing::delete(delete_mapping)),
+            patch(update_mapping).delete(delete_mapping),
         )
 }
 

@@ -52,6 +52,7 @@ use axum::extract::FromRef;
 use sqlx::PgPool;
 use std::sync::Arc;
 use tokio::sync::broadcast;
+use crate::middleware::rate_limit::RateLimitState;
 
 
 
@@ -80,6 +81,8 @@ pub struct AppState {
     pub identity: Arc<identity::ServerIdentity>,
     /// In-process cache for URL unfurl (link preview) results
     pub unfurl_cache: routes::unfurl::UnfurlCache,
+    /// Shared rate limiter state — allows admin API to read/update live config
+    pub rate_limit_state: Arc<RateLimitState>,
 }
 
 /// Allow extracting Arc<Config> from AppState.

@@ -21,7 +21,7 @@
 
 use std::{fs, path::Path};
 use ed25519_dalek::{Signature, Signer, SigningKey};
-use rand::rngs::OsRng;
+use rand_core::OsRng;
 
 const DEFAULT_KEY_PATH: &str = ".opencorde.key";
 

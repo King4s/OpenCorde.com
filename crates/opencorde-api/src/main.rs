@@ -149,6 +149,7 @@ async fn main() -> anyhow::Result<()> {
         event_tx,
         identity,
         unfurl_cache: opencorde_api::routes::unfurl::new_cache(),
+        rate_limit_state: rate_limit_state.clone(),
     };
 
     // Build router with middleware
