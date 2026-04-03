@@ -63,7 +63,7 @@ export async function createRole(serverId: string, name: string, color?: number)
 export async function updateRole(
   serverId: string,
   roleId: string,
-  data: Partial<{ name: string; color: number | null; permissions: number }>
+  data: Partial<{ name: string; color: number | null; permissions: number; mentionable: boolean }>
 ): Promise<void> {
   const updated = await api.patch<Role>(`/servers/${serverId}/roles/${roleId}`, data);
   roles.update(list => list.map(r => r.id === roleId ? updated : r));

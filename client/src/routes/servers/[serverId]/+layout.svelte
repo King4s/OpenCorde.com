@@ -9,6 +9,7 @@
 	import { get } from 'svelte/store';
 	import {
 		fetchChannels,
+		channels,
 		currentChannelId,
 		currentChannel
 	} from '$lib/stores/channels';
@@ -167,7 +168,6 @@
 		/>
 
 		<VoicePanel />
-		<UserPanel />
 		<UserPanel />
 	{#if $currentChannel?.channel_type === 3}
 		<StagePanel

@@ -20,9 +20,10 @@
 		channelId: string;
 		replyTo?: Message | null;
 		onCancelReply?: () => void;
+		onEditLast?: () => void;
 	}
 
-	let { onSend, channelName, channelId, replyTo = null, onCancelReply }: Props = $props();
+	let { onSend, channelName, channelId, replyTo = null, onCancelReply, onEditLast }: Props = $props();
 	let content = $state('');
 	let inputElement: HTMLInputElement;
 	let fileInputElement: HTMLInputElement;
@@ -89,6 +90,8 @@
 			} else if (replyTo) {
 				onCancelReply?.();
 			}
+		} else if (e.key === 'ArrowUp' && !content.trim() && !replyTo) {
+			onEditLast?.();
 		} else if (content.length > 0 || e.key.length === 1) {
 			// Update command autocomplete
 			const trimmed = content.trim();
