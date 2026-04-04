@@ -141,6 +141,7 @@ async fn create_role(
     .await
     .map_err(ApiError::Database)?;
     tracing::info!(role_id = role.id, "role created");
+    log_mod_action(&state, server_id, auth.user_id, "role.create", role.id).await;
     let response = role_row_to_response(role);
     let event = json!({"type":"RoleCreate","data":{"server_id":server_id.as_i64().to_string(),"role":&response}});
     if state.event_tx.send(event).is_err() {
@@ -190,6 +191,7 @@ async fn update_role(
     .await
     .map_err(ApiError::Database)?;
     tracing::info!(role_id = role.id, name = %new_name, "role updated");
+    log_mod_action(&state, server_id, auth.user_id, "role.update", role_id.as_i64()).await;
     let updated = role_repo::get_by_id(&state.db, role_id)
         .await
         .map_err(ApiError::Database)?
@@ -223,6 +225,7 @@ async fn delete_role(
         .await
         .map_err(ApiError::Database)?;
     tracing::info!(role_id = role.id, "role deleted");
+    log_mod_action(&state, server_id, auth.user_id, "role.delete", role_id.as_i64()).await;
     let event = json!({"type":"RoleDelete","data":{"server_id":server_id.as_i64().to_string(),"role_id":role_id.as_i64().to_string()}});
     if state.event_tx.send(event).is_err() {
         tracing::debug!("no WebSocket subscribers for RoleDelete event");

@@ -1,38 +1,50 @@
 /**
- * @file Server store — manages server list state
- * @purpose Fetch, create, select servers
+ * @file Space store — manages space list state
+ * @purpose Fetch, create, select spaces
  * @depends api/client, api/types
  */
 import { writable, derived } from 'svelte/store';
 import api from '$lib/api/client';
 import { gateway } from '$lib/api/websocket';
-import type { Server } from '$lib/api/types';
+import type { Space } from '$lib/api/types';
 
-export const servers = writable<Server[]>([]);
-export const currentServerId = writable<string | null>(null);
-export const currentServer = derived(
-  [servers, currentServerId],
+export const spaces = writable<Space[]>([]);
+export const currentSpaceId = writable<string | null>(null);
+export const currentSpace = derived(
+  [spaces, currentSpaceId],
   ([$servers, $id]) => $servers.find(s => s.id === $id) ?? null
 );
 
-export async function fetchServers(): Promise<void> {
-  const list = await api.get<Server[]>('/servers');
-  servers.set(list);
+export { spaces as servers };
+export { currentSpaceId as currentServerId };
+export { currentSpace as currentServer };
+
+export async function fetchSpaces(): Promise<void> {
+  const list = await api.get<Space[]>('/servers');
+  spaces.set(list);
 }
 
-export async function createServer(name: string, description?: string): Promise<Server> {
-  const server = await api.post<Server>('/servers', { name, description });
-  servers.update(list => [...list, server]);
-  return server;
+export { fetchSpaces as fetchServers };
+
+export async function createSpace(name: string, description?: string): Promise<Space> {
+  const space = await api.post<Space>('/servers', { name, description });
+  spaces.update(list => [...list, space]);
+  return space;
 }
 
-export function selectServer(id: string): void {
-  currentServerId.set(id);
+export { createSpace as createServer };
+
+export function selectSpace(id: string): void {
+  currentSpaceId.set(id);
 }
 
-export function initServerListeners(): void {
+export { selectSpace as selectServer };
+
+export function initSpaceListeners(): void {
   gateway.on('ServerUpdate', (data: unknown) => {
-    const event = data as { server: Server };
-    servers.update(list => list.map(s => s.id === event.server.id ? event.server : s));
+    const event = data as { server: Space };
+    spaces.update(list => list.map(s => s.id === event.server.id ? event.server : s));
   });
 }
+
+export { initSpaceListeners as initServerListeners };

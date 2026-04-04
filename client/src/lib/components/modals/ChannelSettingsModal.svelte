@@ -3,15 +3,16 @@
 	 * @file Channel settings modal
 	 * @purpose Edit channel settings (Overview tab) and manage permission overrides (Permissions tab)
 	 */
-	import api from '$lib/api/client';
-	import { initE2EEGroup } from '$lib/stores/e2ee';
-	import ChannelPermissionsTab from './ChannelPermissionsTab.svelte';
+import api from '$lib/api/client';
+import { initE2EEGroup } from '$lib/stores/e2ee';
+import { edgeResize } from '$lib/actions/edgeResize';
+import ChannelPermissionsTab from './ChannelPermissionsTab.svelte';
 
 	type Tab = 'overview' | 'permissions';
 
 	interface Props {
 		channelId: string;
-		serverId: string;
+		spaceId: string;
 		channelName: string;
 		channelTopic: string | null;
 		channelNsfw: boolean;
@@ -21,7 +22,7 @@
 		onSave: (updated: { name: string; topic: string | null; nsfw: boolean; slowmode_delay: number }) => void;
 	}
 
-	let { channelId, serverId, channelName, channelTopic, channelNsfw, channelSlowmode, channelE2EEEnabled = false, onClose, onSave }: Props =
+	let { channelId, spaceId, channelName, channelTopic, channelNsfw, channelSlowmode, channelE2EEEnabled = false, onClose, onSave }: Props =
 		$props();
 
 	let activeTab = $state<Tab>('overview');
@@ -77,7 +78,7 @@
 			e2eeEnabled = updated.e2ee_enabled;
 			// If enabling and in Tauri: fetch member key packages and init group
 			if (newVal && typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-				const members = await api.get<{ id: string }[]>(`/servers/${serverId}/members`);
+				const members = await api.get<{ id: string }[]>(`/servers/${spaceId}/members`);
 				const kpMap = new Map<string, string>();
 				for (const m of members) {
 					try {
@@ -101,14 +102,16 @@
 
 <!-- Modal backdrop -->
 <div
-	class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+	class="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-4 py-6 backdrop-blur-sm"
 	role="presentation"
 	onclick={handleCancel}
 	onkeydown={(e) => e.key === 'Escape' && handleCancel()}
 >
 	<!-- Modal content (stop propagation) -->
 	<div
-		class="bg-gray-800 rounded-lg shadow-xl w-[520px] max-w-[95vw] max-h-[85vh] flex flex-col"
+		use:edgeResize={{ handles: ['left', 'right'], minWidth: 540, maxWidth: 1000 }}
+		class="w-[760px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-3rem)] overflow-auto rounded-2xl border border-gray-700 bg-gray-800 shadow-2xl ring-1 ring-white/10 flex flex-col"
+		style="min-width: 540px; min-height: 420px;"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="modal-title"
@@ -117,15 +120,26 @@
 		onkeydown={(e) => e.stopPropagation()}
 	>
 		<!-- Header -->
-		<div class="px-6 py-4 border-b border-gray-700 flex-shrink-0">
-			<h2 id="modal-title" class="text-lg font-semibold text-white">Channel Settings</h2>
+		<div class="px-6 py-4 border-b border-gray-700 flex-shrink-0 flex items-start justify-between gap-4 bg-gray-800/95 backdrop-blur">
+			<div>
+				<p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-500">Floating editor</p>
+				<h2 id="modal-title" class="text-lg font-semibold text-white">Channel Settings</h2>
+			</div>
+			<button
+				onclick={handleCancel}
+				class="rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors"
+				aria-label="Close channel settings"
+				title="Close"
+			>
+				✕
+			</button>
 		</div>
 
 		<!-- Tab bar -->
-		<div class="flex border-b border-gray-700 flex-shrink-0 px-6">
+		<div class="flex border-b border-gray-700 flex-shrink-0 px-6 bg-gray-800/90">
 			<button
 				class="py-3 px-1 mr-6 text-sm font-medium border-b-2 transition-colors {activeTab === 'overview'
-					? 'border-indigo-500 text-white'
+					? 'border-gray-500 text-white'
 					: 'border-transparent text-gray-400 hover:text-gray-200'}"
 				onclick={() => (activeTab = 'overview')}
 			>
@@ -133,7 +147,7 @@
 			</button>
 			<button
 				class="py-3 px-1 text-sm font-medium border-b-2 transition-colors {activeTab === 'permissions'
-					? 'border-indigo-500 text-white'
+					? 'border-gray-500 text-white'
 					: 'border-transparent text-gray-400 hover:text-gray-200'}"
 				onclick={() => (activeTab = 'permissions')}
 			>
@@ -142,12 +156,12 @@
 		</div>
 
 		<!-- Scrollable body -->
-		<div class="px-6 py-4 overflow-y-auto flex-1">
+		<div class="px-6 py-5 overflow-y-auto flex-1 bg-gray-800/85">
 			{#if activeTab === 'overview'}
 				<div class="space-y-4">
 					{#if error}
 						<div
-							class="px-3 py-2 bg-red-900/40 border border-red-700/50 rounded text-red-300 text-sm"
+							class="px-3 py-2 bg-gray-900/40 border border-gray-700/50 rounded text-gray-300 text-sm"
 						>
 							{error}
 						</div>
@@ -164,7 +178,7 @@
 							bind:value={name}
 							maxlength="100"
 							placeholder="Channel name"
-							class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-indigo-500"
+							class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-gray-500"
 						/>
 					</div>
 
@@ -179,7 +193,7 @@
 							bind:value={topic}
 							maxlength="512"
 							placeholder="Channel topic"
-							class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-indigo-500"
+							class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-gray-500"
 						/>
 					</div>
 
@@ -208,7 +222,7 @@
 							min="0"
 							max="21600"
 							placeholder="0"
-							class="w-32 px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-indigo-500"
+							class="w-32 px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-gray-500"
 						/>
 					</div>
 
@@ -235,7 +249,7 @@
 						</div>
 						<button
 							onclick={handleE2EEToggle}
-							class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {e2eeEnabled ? 'bg-indigo-600' : 'bg-gray-600'}"
+							class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {e2eeEnabled ? 'bg-gray-600' : 'bg-gray-600'}"
 							aria-label="Toggle E2EE"
 						>
 							<span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {e2eeEnabled ? 'translate-x-6' : 'translate-x-1'}"></span>
@@ -243,13 +257,13 @@
 					</div>
 				</div>
 			{:else}
-				<ChannelPermissionsTab {channelId} {serverId} />
+				<ChannelPermissionsTab {channelId} {spaceId} />
 			{/if}
 		</div>
 
 		<!-- Footer (only shown on overview tab) -->
 		{#if activeTab === 'overview'}
-			<div class="px-6 py-4 border-t border-gray-700 flex gap-2 justify-end flex-shrink-0">
+			<div class="px-6 py-4 border-t border-gray-700 bg-gray-800/95 backdrop-blur flex gap-2 justify-end flex-shrink-0">
 				<button
 					onclick={handleCancel}
 					class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm font-medium rounded transition-colors"
@@ -259,7 +273,7 @@
 				<button
 					onclick={handleSave}
 					disabled={saving}
-					class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium rounded transition-colors"
+					class="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white text-sm font-medium rounded transition-colors"
 				>
 					{saving ? 'Saving...' : 'Save'}
 				</button>

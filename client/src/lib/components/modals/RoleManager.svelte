@@ -11,15 +11,15 @@
   import RolePermissionsTab from './RolePermissionsTab.svelte';
 
   interface Props {
-    serverId: string;
+    spaceId: string;
     onClose: () => void;
   }
 
-  let { serverId, onClose }: Props = $props();
+  let { spaceId, onClose }: Props = $props();
 
   // ── state ──────────────────────────────────────────────────────────────
   let newRoleName  = $state('');
-  let newRoleColor = $state('#5865f2');
+  let newRoleColor = $state('#e5e7eb');
   let selected     = $state<Role | null>(null);
   let activeTab    = $state<'display' | 'permissions' | 'members'>('display');
   let error        = $state('');
@@ -27,20 +27,20 @@
 
   // edit fields (synced from selected role)
   let editName        = $state('');
-  let editColor       = $state('#5865f2');
+  let editColor       = $state('#e5e7eb');
   let editMentionable = $state(false);
   let editPermissions = $state(0n);
 
   // ── lifecycle ─────────────────────────────────────────────────────────
-  $effect(() => { fetchRoles(serverId).catch(() => {}); });
-  $effect(() => { fetchMembers(serverId).catch(() => {}); });
+  $effect(() => { fetchRoles(spaceId).catch(() => {}); });
+  $effect(() => { fetchMembers(spaceId).catch(() => {}); });
 
   // ── helpers ───────────────────────────────────────────────────────────
   function hexToInt(hex: string): number {
     return parseInt(hex.replace('#', ''), 16);
   }
   function intToHex(n: number | null): string {
-    if (n === null || n === undefined) return '#5865f2';
+    if (n === null || n === undefined) return '#e5e7eb';
     return '#' + n.toString(16).padStart(6, '0');
   }
 
@@ -63,7 +63,7 @@
     if (!newRoleName.trim()) return;
     saving = true; error = '';
     try {
-      const role = await createRole(serverId, newRoleName.trim(), hexToInt(newRoleColor));
+      const role = await createRole(spaceId, newRoleName.trim(), hexToInt(newRoleColor));
       newRoleName = '';
       selectRole(role);
     } catch (e: any) { error = e.message ?? 'Failed to create role'; }
@@ -74,7 +74,7 @@
     if (!selected || !editName.trim()) return;
     saving = true; error = '';
     try {
-      await updateRole(serverId, selected.id, {
+      await updateRole(spaceId, selected.id, {
         name:        editName.trim(),
         color:       hexToInt(editColor),
         mentionable: editMentionable,
@@ -91,7 +91,7 @@
     if (!confirm(`Delete role "${role.name}"?`)) return;
     error = '';
     try {
-      await deleteRole(serverId, role.id);
+      await deleteRole(spaceId, role.id);
       if (selected?.id === role.id) selected = null;
     } catch (e: any) { error = e.message ?? 'Failed to delete role'; }
   }
@@ -112,7 +112,7 @@
     </div>
 
     {#if error}
-      <p class="px-4 py-2 text-red-400 text-xs flex-shrink-0">{error}</p>
+      <p class="px-4 py-2 text-gray-400 text-xs flex-shrink-0">{error}</p>
     {/if}
 
     <div class="flex flex-1 overflow-hidden">
@@ -128,7 +128,7 @@
               placeholder="New role"
               maxlength="100"
               class="flex-1 min-w-0 px-2 py-1 bg-gray-900 border border-gray-700 rounded text-white text-xs
-                     focus:outline-none focus:border-indigo-500"
+                     focus:outline-none focus:border-gray-500"
               onkeydown={(e) => e.key === 'Enter' && handleCreate()}
             />
             <input
@@ -140,7 +140,7 @@
             <button
               onclick={handleCreate}
               disabled={saving || !newRoleName.trim()}
-              class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50
+              class="px-2 py-1 bg-gray-600 hover:bg-gray-700 disabled:opacity-50
                      text-white text-xs rounded transition-colors flex-shrink-0"
             >+</button>
           </div>
@@ -151,7 +151,7 @@
           {#each $roles as role (role.id)}
             <div
               class="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer group
-                     {selected?.id === role.id ? 'bg-indigo-600/30' : 'hover:bg-gray-700/50'}"
+                     {selected?.id === role.id ? 'bg-gray-600/30' : 'hover:bg-gray-700/50'}"
               onclick={() => selectRole(role)}
               role="button"
               tabindex="0"
@@ -164,7 +164,7 @@
               <span class="text-gray-200 text-xs flex-1 truncate">{role.name}</span>
               <button
                 onclick={(e) => { e.stopPropagation(); handleDelete(role); }}
-                class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 text-xs
+                class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-300 text-xs
                        px-1 rounded hover:bg-gray-600 transition-opacity"
                 title="Delete role"
               >&#x2715;</button>
@@ -205,7 +205,7 @@
                     bind:value={editName}
                     maxlength="100"
                     class="w-full px-2 py-1.5 bg-gray-900 border border-gray-700 rounded text-white text-sm
-                           focus:outline-none focus:border-indigo-500"
+                           focus:outline-none focus:border-gray-500"
                   />
                 </div>
                 <div>
@@ -225,7 +225,7 @@
                     <input
                       type="checkbox"
                       bind:checked={editMentionable}
-                      class="w-4 h-4 accent-indigo-500"
+                      class="w-4 h-4 accent-gray-500"
                     />
                     <span class="text-sm text-gray-200">Mentionable</span>
                   </label>
@@ -249,7 +249,7 @@
                 <div class="space-y-1">
                   {#each roleMembers as m (m.user_id)}
                     <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-700/40">
-                      <div class="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center
+                      <div class="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center
                                   text-white text-xs font-bold flex-shrink-0">
                         {(m.nickname ?? m.username)[0].toUpperCase()}
                       </div>
@@ -275,7 +275,7 @@
               <button
                 onclick={handleSave}
                 disabled={saving || !editName.trim()}
-                class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50
+                class="px-4 py-1.5 bg-gray-600 hover:bg-gray-700 disabled:opacity-50
                        text-white text-xs rounded transition-colors"
               >{saving ? 'Saving…' : 'Save Changes'}</button>
             </div>

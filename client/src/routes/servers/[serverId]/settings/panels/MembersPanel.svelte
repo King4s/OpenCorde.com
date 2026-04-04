@@ -8,7 +8,7 @@
   import api from '$lib/api/client';
   import type { Member } from '$lib/api/types';
 
-  let { serverId }: { serverId: string } = $props();
+  let { spaceId }: { spaceId: string } = $props();
 
   let members = $state<Member[]>([]);
   let loading = $state(false);
@@ -19,9 +19,9 @@
   let showTimeoutFor = $state<string | null>(null);
 
   $effect(() => {
-    if (serverId) {
+    if (spaceId) {
       loadMembers();
-      fetchRoles(serverId).catch(() => {});
+      fetchRoles(spaceId).catch(() => {});
     }
   });
 
@@ -29,7 +29,7 @@
     loading = true;
     error = '';
     try {
-      members = await api.get<Member[]>(`/servers/${serverId}/members`);
+      members = await api.get<Member[]>(`/servers/${spaceId}/members`);
     } catch (e: any) {
       error = e.message ?? 'Failed to load members';
     } finally {
@@ -40,7 +40,7 @@
   async function kickMember(userId: string, username: string) {
     if (!confirm(`Kick ${username}?`)) return;
     try {
-      await api.delete(`/servers/${serverId}/members/${userId}`);
+      await api.delete(`/servers/${spaceId}/members/${userId}`);
       members = members.filter(m => m.user_id !== userId);
     } catch (e: any) {
       error = e.message ?? 'Failed to kick member';
@@ -50,7 +50,7 @@
   async function banMember(userId: string, username: string) {
     if (!confirm(`Ban ${username}? They will be removed and cannot rejoin.`)) return;
     try {
-      await api.put(`/servers/${serverId}/bans/${userId}`, { reason: null, delete_messages: false });
+      await api.put(`/servers/${spaceId}/bans/${userId}`, { reason: null, delete_messages: false });
       members = members.filter(m => m.user_id !== userId);
     } catch (e: any) {
       error = e.message ?? 'Failed to ban member';
@@ -61,7 +61,7 @@
     const minutes = parseInt(timeoutInput[userId] ?? '');
     if (!minutes || minutes <= 0) { error = 'Enter a valid duration in minutes'; return; }
     try {
-      await api.put(`/servers/${serverId}/members/${userId}/timeout`, {
+      await api.put(`/servers/${spaceId}/members/${userId}/timeout`, {
         duration_seconds: minutes * 60,
         reason: null
       });
@@ -89,12 +89,12 @@
       type="search"
       placeholder="Search members..."
       bind:value={search}
-      class="px-3 py-1.5 bg-gray-900 border border-gray-700 rounded text-white text-sm placeholder-gray-500 focus:outline-none focus:border-indigo-500 w-48"
+      class="px-3 py-1.5 bg-gray-900 border border-gray-700 rounded text-white text-sm placeholder-gray-500 focus:outline-none focus:border-gray-500 w-48"
     />
   </div>
 
   {#if error}
-    <div class="mb-4 px-3 py-2 bg-red-900/40 border border-red-700/50 rounded text-red-300 text-sm">{error}</div>
+    <div class="mb-4 px-3 py-2 bg-gray-900/40 border border-gray-700/50 rounded text-gray-300 text-sm">{error}</div>
   {/if}
 
   {#if loading}
@@ -106,7 +106,7 @@
       {#each filtered as member (member.user_id)}
         <div class="flex items-center gap-3 px-3 py-2.5 rounded hover:bg-gray-700/40 group">
           <!-- Avatar placeholder -->
-          <div class="w-8 h-8 rounded-full bg-indigo-700 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 select-none">
+          <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 select-none">
             {member.username.charAt(0).toUpperCase()}
           </div>
 
@@ -130,11 +130,11 @@
                   placeholder="mins"
                   bind:value={timeoutInput[member.user_id]}
                   min="1"
-                  class="w-16 px-1.5 py-0.5 bg-gray-900 border border-gray-600 rounded text-white text-xs focus:outline-none focus:border-indigo-500"
+                  class="w-16 px-1.5 py-0.5 bg-gray-900 border border-gray-600 rounded text-white text-xs focus:outline-none focus:border-gray-500"
                 />
                 <button
                   onclick={() => setMemberTimeout(member.user_id)}
-                  class="px-2 py-0.5 bg-yellow-700 hover:bg-yellow-600 text-white text-xs rounded"
+                  class="px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded"
                 >Set</button>
                 <button
                   onclick={() => (showTimeoutFor = null)}
@@ -144,16 +144,16 @@
             {:else}
               <button
                 onclick={() => (showTimeoutFor = member.user_id)}
-                class="px-2 py-0.5 text-xs text-yellow-400 hover:bg-gray-700 rounded transition-colors"
+                class="px-2 py-0.5 text-xs text-gray-400 hover:bg-gray-700 rounded transition-colors"
                 title="Timeout"
               >Timeout</button>
               <button
                 onclick={() => kickMember(member.user_id, member.username)}
-                class="px-2 py-0.5 text-xs text-orange-400 hover:bg-gray-700 rounded transition-colors"
+                class="px-2 py-0.5 text-xs text-gray-400 hover:bg-gray-700 rounded transition-colors"
               >Kick</button>
               <button
                 onclick={() => banMember(member.user_id, member.username)}
-                class="px-2 py-0.5 text-xs text-red-400 hover:bg-gray-700 rounded transition-colors"
+                class="px-2 py-0.5 text-xs text-gray-400 hover:bg-gray-700 rounded transition-colors"
               >Ban</button>
             {/if}
           </div>

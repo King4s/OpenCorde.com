@@ -6,6 +6,7 @@
 <script lang="ts">
 	import { webhookStore } from '$lib/stores/webhooks.svelte';
 	import { onMount } from 'svelte';
+	import { edgeResize } from '$lib/actions/edgeResize';
 
 	let { channelId, onClose }: { channelId: string; onClose: () => void } = $props();
 
@@ -44,7 +45,7 @@
 </script>
 
 <div class="modal-backdrop" onclick={onClose} role="presentation" onkeydown={(e) => e.key === 'Escape' && onClose()}>
-	<div class="modal" onclick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && onClose()}>
+	<div use:edgeResize={{ handles: ['left', 'right'], minWidth: 420, maxWidth: 920 }} class="modal resizable-modal" onclick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && onClose()}>
 		<div class="modal-header">
 			<h2>Webhooks</h2>
 			<button class="close-btn" onclick={onClose}>✕</button>
@@ -122,6 +123,14 @@
 		display: flex;
 		flex-direction: column;
 	}
+
+	.resizable-modal {
+		overflow: auto;
+		min-width: 420px;
+		min-height: 360px;
+		max-width: min(90vw, 920px);
+		max-height: min(85vh, 780px);
+	}
 	.modal-header {
 		display: flex;
 		align-items: center;
@@ -169,10 +178,10 @@
 		outline: none;
 	}
 	.create-form input:focus {
-		border-color: #5865f2;
+		border-color: #e5e7eb;
 	}
 	.create-form button {
-		background: #5865f2;
+		background: #e5e7eb;
 		border: none;
 		border-radius: 4px;
 		color: white;

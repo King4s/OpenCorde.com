@@ -43,6 +43,8 @@ pub mod federation;
 pub mod mesh;
 pub mod messages;
 pub mod moderation;
+pub mod notification_settings;
+pub mod onboarding;
 pub mod permission_check;
 pub mod pins;
 pub mod reactions;
@@ -52,9 +54,9 @@ pub mod roles;
 pub mod search;
 pub mod servers;
 pub mod slash_commands;
+pub mod soundboard;
 pub mod stage;
 pub mod threads;
-pub mod notification_settings;
 pub mod unfurl;
 pub mod upload_validation;
 pub mod uploads;
@@ -85,6 +87,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(members::router())
         .merge(mesh::router())
         .merge(federation::router())
+        .merge(onboarding::router())
         .merge(roles::router())
         .merge(messages::router())
         .merge(threads::router())
@@ -94,6 +97,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(moderation::router())
         .merge(automod::router())
         .merge(slash_commands::router())
+        .merge(soundboard::router())
         .merge(stage::router())
         .merge(dms::router())
         .merge(friends::router())

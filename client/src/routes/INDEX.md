@@ -14,3 +14,4 @@ Pattern: kebab-case directories. Each route has +page.svelte. Dynamic segments i
 | servers/[serverId]/channels/[channelId]/ | Channel with messages and voice |
 | settings/ | User profile and app settings |
 | +layout.svelte | Root layout, nav initialization |
+| ../../NAVIGATION_MAP.md | Human-readable route / drawer / panel map |

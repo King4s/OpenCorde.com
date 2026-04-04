@@ -33,7 +33,7 @@
 				</button>
 				<button
 					onclick={onConfirm}
-					class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
+					class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-colors"
 				>
 					Delete
 				</button>

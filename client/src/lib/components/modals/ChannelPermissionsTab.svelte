@@ -17,10 +17,10 @@
 
 	interface Props {
 		channelId: string;
-		serverId: string;
+		spaceId: string;
 	}
 
-	let { channelId, serverId }: Props = $props();
+	let { channelId, spaceId }: Props = $props();
 
 	// Permission bit definitions shown in the UI
 	const PERMS = [
@@ -161,7 +161,7 @@
 	<div class="py-6 text-center text-gray-400 text-sm">Loading permissions...</div>
 {:else}
 	{#if error}
-		<div class="mb-3 px-3 py-2 bg-red-900/40 border border-red-700/50 rounded text-red-300 text-sm">
+		<div class="mb-3 px-3 py-2 bg-gray-900/40 border border-gray-700/50 rounded text-gray-300 text-sm">
 			{error}
 		</div>
 	{/if}
@@ -169,9 +169,10 @@
 	<!-- Add role override -->
 	{#if availableRoles.length > 0}
 		<div class="mb-4">
-			<label class="block text-xs text-gray-400 mb-1.5">Add role override</label>
+			<label for="add-role-override" class="block text-xs text-gray-400 mb-1.5">Add role override</label>
 			<select
-				class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-indigo-500"
+				id="add-role-override"
+				class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-gray-500"
 				onchange={(e) => {
 					const v = (e.target as HTMLSelectElement).value;
 					if (v) { addRoleOverride(v); (e.target as HTMLSelectElement).value = ''; }
@@ -203,7 +204,7 @@
 							<span class="text-gray-500 text-xs uppercase">{ov.target_type}</span>
 						</div>
 						<button
-							class="text-gray-500 hover:text-red-400 text-lg leading-none px-1"
+							class="text-gray-500 hover:text-gray-400 text-lg leading-none px-1"
 							onclick={() => removeOverride(ov)}
 							aria-label="Remove override"
 						>×</button>
@@ -218,7 +219,7 @@
 								<div class="flex gap-1">
 									<!-- Allow -->
 									<button
-										class="w-7 h-7 rounded text-xs font-bold transition-colors {state === 'allow' ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}"
+										class="w-7 h-7 rounded text-xs font-bold transition-colors {state === 'allow' ? 'bg-gray-600 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}"
 										onclick={() => toggleBit(ov.id, perm.bit, 'allow')}
 										title="Allow"
 									>✓</button>
@@ -233,7 +234,7 @@
 									>–</button>
 									<!-- Deny -->
 									<button
-										class="w-7 h-7 rounded text-xs font-bold transition-colors {state === 'deny' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}"
+										class="w-7 h-7 rounded text-xs font-bold transition-colors {state === 'deny' ? 'bg-gray-600 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}"
 										onclick={() => toggleBit(ov.id, perm.bit, 'deny')}
 										title="Deny"
 									>✗</button>
@@ -247,7 +248,7 @@
 						<button
 							onclick={() => saveOverride(ov)}
 							disabled={saving[ov.id]}
-							class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-medium rounded transition-colors"
+							class="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white text-xs font-medium rounded transition-colors"
 						>
 							{saving[ov.id] ? 'Saving...' : 'Save'}
 						</button>

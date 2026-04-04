@@ -23,7 +23,7 @@
       case 'active': return '#3ba55c';
       case 'completed': return '#b5bac1';
       case 'cancelled': return '#ed4245';
-      default: return '#5865f2';
+      default: return '#e5e7eb';
     }
   }
 
@@ -110,7 +110,7 @@
   .event-footer { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .rsvp-count { font-size: 13px; color: #b5bac1; flex: 1; }
   .rsvp-btn {
-    background: #5865f2;
+    background: #e5e7eb;
     border: none;
     border-radius: 4px;
     color: white;

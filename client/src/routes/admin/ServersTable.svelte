@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * @file Servers table component
-	 * @purpose Display and manage admin servers list
+	 * @purpose Display and manage admin instances list
 	 */
 	import type { AdminServerRow } from '$lib/api/types';
 
@@ -32,15 +32,15 @@
 
 <div class="bg-gray-800 rounded-lg overflow-hidden">
 	{#if loading}
-		<div class="p-8 text-center text-gray-400">Loading servers...</div>
+		<div class="p-8 text-center text-gray-400">Loading instances...</div>
 	{:else if servers.length === 0}
-		<div class="p-8 text-center text-gray-400">No servers found</div>
+		<div class="p-8 text-center text-gray-400">No instances found</div>
 	{:else}
 		<div class="overflow-x-auto">
 			<table class="w-full text-sm">
 				<thead class="bg-gray-900">
 					<tr class="border-b border-gray-700">
-						<th class="px-4 py-3 text-left text-gray-400 font-semibold">Server Name</th>
+						<th class="px-4 py-3 text-left text-gray-400 font-semibold">Space Name</th>
 						<th class="px-4 py-3 text-left text-gray-400 font-semibold">Owner ID</th>
 						<th class="px-4 py-3 text-center text-gray-400 font-semibold">Members</th>
 						<th class="px-4 py-3 text-left text-gray-400 font-semibold">Created</th>
@@ -57,7 +57,7 @@
 							<td class="px-4 py-3 text-center">
 								<button
 									onclick={() => onDelete('server', server.id, server.name)}
-									class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"
+									class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded transition-colors"
 								>
 									Delete
 								</button>

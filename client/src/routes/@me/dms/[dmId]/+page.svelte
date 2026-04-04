@@ -76,14 +76,14 @@
 
 	function getAvatarColor(userId: string): string {
 		const colors = [
-			'bg-indigo-600',
-			'bg-purple-600',
-			'bg-pink-600',
-			'bg-red-600',
-			'bg-orange-600',
-			'bg-yellow-600',
-			'bg-green-600',
-			'bg-teal-600'
+			'bg-gray-600',
+			'bg-gray-600',
+			'bg-gray-600',
+			'bg-gray-600',
+			'bg-gray-600',
+			'bg-gray-600',
+			'bg-gray-600',
+			'bg-gray-600'
 		];
 		const hash = userId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
 		return colors[hash % colors.length];
@@ -133,7 +133,7 @@
 	<!-- Message input -->
 	<div class="px-4 pb-3 border-t border-gray-800">
 		{#if error}
-			<p class="text-red-400 text-xs mb-2">{error}</p>
+			<p class="text-gray-400 text-xs mb-2">{error}</p>
 		{/if}
 		<form
 			onsubmit={(e) => {
@@ -153,7 +153,7 @@
 				<button
 					type="submit"
 					disabled={!messageContent.trim() || isSending}
-					class="ml-2 text-indigo-400 hover:text-indigo-300 disabled:text-gray-600 transition-colors text-sm font-medium"
+					class="ml-2 text-gray-400 hover:text-gray-300 disabled:text-gray-600 transition-colors text-sm font-medium"
 				>
 					{isSending ? 'Sending...' : 'Send'}
 				</button>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	/**
-	 * @file Server layout — channel sidebar + content
+	 * @file Space layout — channel sidebar + content
 	 * @purpose Shows channels, create channel, invite link, channel context menu
 	 */
 	import { browser } from '$app/environment';
@@ -13,26 +13,29 @@
 		currentChannelId,
 		currentChannel
 	} from '$lib/stores/channels';
-	import { currentServer } from '$lib/stores/servers';
+	import { currentSpace } from '$lib/stores/servers';
 	import { currentUser } from '$lib/stores/auth';
 	import { currentVoiceChannelId } from '$lib/stores/voice';
 	import { initUnreadListener, loadReadStates } from '$lib/stores/unread';
 	import { presenceMap, initPresenceListener } from '$lib/stores/presence';
 	import api from '$lib/api/client';
 	import VoicePanel from '$lib/components/voice/VoicePanel.svelte';
+	import SoundboardPanel from '$lib/components/voice/SoundboardPanel.svelte';
 	import StagePanel from '$lib/components/voice/StagePanel.svelte';
+	import OnboardingModal from '$lib/components/modals/OnboardingModal.svelte';
 	import MemberList from '$lib/components/layout/MemberList.svelte';
 	import ChannelSidebar from '$lib/components/layout/ChannelSidebar.svelte';
 	import WebhookManager from '$lib/components/modals/WebhookManager.svelte';
 	import { members, membersLoading, fetchMembers, initMemberListeners } from '$lib/stores/members';
 	import { initChannelListeners } from '$lib/stores/channels';
 	import { initRoleListeners } from '$lib/stores/roles';
-	import { initServerListeners } from '$lib/stores/servers';
+	import { initSpaceListeners } from '$lib/stores/servers';
 	import UserPanel from '$lib/components/layout/UserPanel.svelte';
 	import QuickSwitcher from '$lib/components/modals/QuickSwitcher.svelte';
+	import { edgeResize } from '$lib/actions/edgeResize';
 
 	let { children } = $props();
-	let serverId = $state('');
+	let spaceId = $state('');
 
 	// Modals
 	let showCreateChannel = $state(false);
@@ -45,19 +48,47 @@
 	// Webhook manager
 	let webhookChannelId = $state<string | null>(null);
 
+	// Onboarding
+	let showOnboarding = $state(false);
+	let onboardingData = $state<{ welcome_message: string | null; prompts: unknown[] } | null>(null);
+
 	if (browser) {
 		const match = window.location.pathname.match(/\/servers\/([^/]+)/);
-		serverId = match?.[1] ?? '';
-		if (serverId) {
-			fetchChannels(serverId).catch(() => {});
-			fetchMembers(serverId).catch(() => {});
-			initUnreadListener();
-			initPresenceListener();
-			initChannelListeners();
-			initRoleListeners();
-			initMemberListeners();
-			initServerListeners();
-			loadReadStates().catch(() => {});
+		const sid = match?.[1] ?? '';
+		spaceId = sid;
+		if (sid) {
+			initializeSpace(sid);
+		}
+	}
+
+	function initializeSpace(sid: string) {
+		fetchChannels(sid).catch(() => {});
+		fetchMembers(sid).catch(() => {});
+		initUnreadListener();
+		initPresenceListener();
+		initChannelListeners();
+		initRoleListeners();
+		initMemberListeners();
+		initSpaceListeners();
+		loadReadStates().catch(() => {});
+		// Check onboarding (show once per server per browser session)
+		const seenKey = `onboarding_seen_${sid}`;
+		if (!sessionStorage.getItem(seenKey)) {
+			api.get<{ enabled: boolean; welcome_message: string | null; prompts: unknown[] }>(`/servers/${sid}/onboarding`)
+				.then(d => {
+					if (d.enabled) {
+						onboardingData = d;
+						showOnboarding = true;
+					}
+				})
+				.catch(() => {});
+		}
+	}
+
+	function dismissOnboarding() {
+		showOnboarding = false;
+		if (browser && spaceId) {
+			sessionStorage.setItem(`onboarding_seen_${spaceId}`, '1');
 		}
 	}
 
@@ -73,7 +104,7 @@
 			if (!e.altKey) return;
 			if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
 			e.preventDefault();
-			const sid = serverId;
+			const sid = spaceId;
 			if (!sid) return;
 			const allChannels = get(channels);
 			const textChs = allChannels
@@ -94,10 +125,10 @@
 	});
 
 	async function handleCreateInvite() {
-		if (!serverId) return;
+		if (!spaceId) return;
 		inviteLoading = true;
 		try {
-			const res = await api.post<{ code: string }>(`/servers/${serverId}/invites`, {});
+			const res = await api.post<{ code: string }>(`/servers/${spaceId}/invites`, {});
 			inviteCode = `https://opencorde.com/invite/${res.code}`;
 		} catch (e: any) {
 			error = e.message || 'Failed to create invite';
@@ -113,11 +144,11 @@
 </script>
 
 <div class="flex flex-1">
-	<div class="w-60 bg-gray-800 flex flex-col">
-		<!-- Server header with actions -->
+	<div use:edgeResize={{ handles: ['right'], minWidth: 224, maxWidth: 384 }} class="w-60 bg-gray-800 flex flex-col flex-shrink-0 overflow-auto" style="min-width: 14rem; max-width: 24rem;">
+		<!-- Space header with actions -->
 		<div class="h-12 px-3 flex items-center justify-between border-b border-gray-900">
 			<h2 class="font-semibold text-white truncate text-sm">
-				{$currentServer?.name ?? 'Server'}
+				{$currentSpace?.name ?? 'Space'}
 			</h2>
 			<div class="flex gap-1">
 				<button
@@ -130,11 +161,11 @@
 					class="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 text-xs"
 					title="Create Channel"
 				>+#</button>
-				{#if $currentUser?.id === $currentServer?.owner_id}
+				{#if $currentUser?.id === $currentSpace?.owner_id}
 					<button
-						onclick={() => { window.location.href = `/servers/${serverId}/settings`; }}
+						onclick={() => { window.location.href = `/servers/${spaceId}/settings`; }}
 						class="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 text-xs"
-						title="Server Settings"
+						title="Space Settings"
 					>⚙</button>
 				{/if}
 			</div>
@@ -148,11 +179,11 @@
 						<input type="text" value={inviteCode} readonly
 							class="flex-1 px-2 py-1 bg-gray-900 border border-gray-700 rounded text-white text-xs" />
 						<button onclick={copyInvite}
-							class="px-2 py-1 bg-indigo-600 text-white text-xs rounded">Copy</button>
+							class="px-2 py-1 bg-gray-600 text-white text-xs rounded">Copy</button>
 					</div>
 				{:else}
 					<button onclick={handleCreateInvite} disabled={inviteLoading}
-						class="w-full text-xs py-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded">
+						class="w-full text-xs py-1 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white rounded">
 						{inviteLoading ? 'Creating...' : 'Generate Invite Link'}
 					</button>
 				{/if}
@@ -161,21 +192,27 @@
 
 		<!-- Channel sidebar -->
 		<ChannelSidebar
-			{serverId}
+			spaceId={spaceId}
 			{showCreateChannel}
 			onCreateChannelToggle={() => showCreateChannel = false}
 			onWebhookOpen={(channelId) => webhookChannelId = channelId}
 		/>
 
-		<VoicePanel />
+		<VoicePanel canRecord={$currentUser?.id === $currentSpace?.owner_id} />
+		{#if $currentVoiceChannelId && spaceId}
+			<SoundboardPanel
+				spaceId={spaceId}
+				isOwner={$currentUser?.id === $currentSpace?.owner_id}
+			/>
+		{/if}
+		{#if $currentChannel?.channel_type === 3}
+			<StagePanel
+				channelId={$currentChannelId || ''}
+				spaceId={spaceId}
+				isOwner={$currentUser?.id === $currentSpace?.owner_id}
+			/>
+		{/if}
 		<UserPanel />
-	{#if $currentChannel?.channel_type === 3}
-		<StagePanel
-			channelId={$currentChannelId || ''}
-			{serverId}
-			isOwner={$currentUser?.id === $currentServer?.owner_id}
-		/>
-	{/if}
 	</div>
 
 	<div class="flex-1 flex flex-col">
@@ -185,8 +222,8 @@
 	<MemberList
 		members={$members}
 		loading={$membersLoading}
-		serverId={serverId}
-		isOwner={$currentUser?.id === $currentServer?.owner_id}
+		spaceId={spaceId}
+		isOwner={$currentUser?.id === $currentSpace?.owner_id}
 		onlineUserIds={new Set($presenceMap.keys())}
 	/>
 </div>
@@ -198,4 +235,13 @@
 
 {#if showQuickSwitcher}
 	<QuickSwitcher onClose={() => showQuickSwitcher = false} />
+{/if}
+
+{#if showOnboarding && onboardingData}
+	<OnboardingModal
+		serverName={$currentSpace?.name ?? 'this server'}
+		welcomeMessage={onboardingData.welcome_message}
+		prompts={onboardingData.prompts as any[]}
+		onDismiss={dismissOnboarding}
+	/>
 {/if}

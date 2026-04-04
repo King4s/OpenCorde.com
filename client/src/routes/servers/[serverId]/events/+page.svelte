@@ -8,7 +8,7 @@
   import EventCard from '$lib/components/events/EventCard.svelte';
   import { onMount } from 'svelte';
 
-  let serverId = $derived($page.params.serverId ?? '');
+  let spaceId = $derived($page.params.serverId ?? '');
   let showCreate = $state(false);
   let creating = $state(false);
   let createError = $state('');
@@ -22,7 +22,7 @@
   let endsAt = $state('');
 
   onMount(async () => {
-    await eventStore.fetchForServer(serverId);
+    await eventStore.fetchForServer(spaceId);
   });
 
   async function handleCreate() {
@@ -30,7 +30,7 @@
     creating = true;
     createError = '';
     try {
-      await eventStore.create(serverId, {
+      await eventStore.create(spaceId, {
         title: title.trim(),
         description: description.trim() || undefined,
         location_type: locationType,
@@ -116,7 +116,7 @@
   .events-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
   .events-header h1 { margin: 0; font-size: 20px; font-weight: 700; color: #f2f3f5; }
   .create-btn {
-    background: #5865f2;
+    background: #e5e7eb;
     border: none;
     border-radius: 4px;
     color: white;
@@ -147,11 +147,11 @@
     outline: none;
     font-family: inherit;
   }
-  input:focus, select:focus, textarea:focus { border-color: #5865f2; }
+  input:focus, select:focus, textarea:focus { border-color: #e5e7eb; }
   textarea { resize: vertical; }
   .error { color: #ed4245; font-size: 13px; margin: 0 0 12px 0; }
   .submit-btn {
-    background: #5865f2;
+    background: #e5e7eb;
     border: none;
     border-radius: 4px;
     color: white;

@@ -6,7 +6,7 @@
 <script lang="ts">
   import api from '$lib/api/client';
 
-  let { serverId }: { serverId: string } = $props();
+  let { spaceId }: { spaceId: string } = $props();
 
   let verificationLevel = $state('0');
   let contentFilter = $state('0');
@@ -19,7 +19,7 @@
     success = '';
     error = '';
     try {
-      await api.patch(`/servers/${serverId}`, {
+      await api.patch(`/servers/${spaceId}`, {
         verification_level: parseInt(verificationLevel),
         content_filter: parseInt(contentFilter)
       });
@@ -36,10 +36,10 @@
   <h1 class="text-xl font-semibold text-white mb-6">Moderation</h1>
 
   {#if error}
-    <div class="mb-4 px-3 py-2 bg-red-900/40 border border-red-700/50 rounded text-red-300 text-sm">{error}</div>
+    <div class="mb-4 px-3 py-2 bg-gray-900/40 border border-gray-700/50 rounded text-gray-300 text-sm">{error}</div>
   {/if}
   {#if success}
-    <div class="mb-4 px-3 py-2 bg-green-900/40 border border-green-700/50 rounded text-green-300 text-sm">{success}</div>
+    <div class="mb-4 px-3 py-2 bg-gray-900/40 border border-gray-700/50 rounded text-gray-300 text-sm">{success}</div>
   {/if}
 
   <div class="space-y-6">
@@ -51,7 +51,7 @@
       <select
         id="verification-level"
         bind:value={verificationLevel}
-        class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-indigo-500"
+        class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-gray-500"
       >
         <option value="0">None — unrestricted</option>
         <option value="1">Low — verified email required</option>
@@ -69,7 +69,7 @@
       <select
         id="content-filter"
         bind:value={contentFilter}
-        class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-indigo-500"
+        class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-gray-500"
       >
         <option value="0">Don't scan any messages</option>
         <option value="1">Scan messages from members without roles</option>
@@ -80,7 +80,7 @@
     <button
       onclick={handleSave}
       disabled={saving}
-      class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium rounded transition-colors"
+      class="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white text-sm font-medium rounded transition-colors"
     >
       {saving ? 'Saving...' : 'Save Changes'}
     </button>

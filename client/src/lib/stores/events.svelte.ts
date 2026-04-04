@@ -31,12 +31,12 @@ export const eventStore = {
   get loading() { return loading; },
   get error() { return error; },
 
-  async fetchForServer(serverId: string, past = false) {
+  async fetchForServer(spaceId: string, past = false) {
     loading = true;
     error = null;
     try {
       const query = past ? '?past=true' : '';
-      events = await api.get<ServerEvent[]>(`/servers/${serverId}/events${query}`);
+      events = await api.get<ServerEvent[]>(`/servers/${spaceId}/events${query}`);
     } catch (e: any) {
       error = e.message ?? 'Failed to fetch events';
       events = [];
@@ -45,7 +45,7 @@ export const eventStore = {
     }
   },
 
-  async create(serverId: string, data: {
+  async create(spaceId: string, data: {
     title: string;
     description?: string;
     location_name?: string;
@@ -54,7 +54,7 @@ export const eventStore = {
     starts_at: string;
     ends_at?: string;
   }): Promise<ServerEvent> {
-    const event = await api.post<ServerEvent>(`/servers/${serverId}/events`, data);
+    const event = await api.post<ServerEvent>(`/servers/${spaceId}/events`, data);
     events = [event, ...events];
     return event;
   },

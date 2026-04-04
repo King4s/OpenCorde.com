@@ -23,6 +23,7 @@ use tracing::instrument;
 use crate::config::Config;
 
 /// A token row fetched from `push_tokens`.
+#[derive(sqlx::FromRow)]
 struct PushToken {
     token: String,
     platform: String,
@@ -42,11 +43,10 @@ struct PushToken {
 #[instrument(skip(pool, config), fields(user_id = user_id))]
 pub async fn send_push(pool: &PgPool, config: &Config, user_id: i64, title: &str, body: &str) {
     // Fetch all tokens registered for this user
-    let tokens: Vec<PushToken> = match sqlx::query_as!(
-        PushToken,
+    let tokens: Vec<PushToken> = match sqlx::query_as::<_, PushToken>(
         "SELECT token, platform FROM push_tokens WHERE user_id = $1",
-        user_id
     )
+    .bind(user_id)
     .fetch_all(pool)
     .await
     {

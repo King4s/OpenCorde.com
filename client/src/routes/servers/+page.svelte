@@ -1,11 +1,11 @@
 <script lang="ts">
 	/**
 	 * @file Server home page
-	 * @purpose Landing page — create server, join via invite
+	 * @purpose Landing page — create space, join via invite
 	 * @depends stores/servers
 	 */
 	import { goto } from '$app/navigation';
-	import { servers, createServer, selectServer } from '$lib/stores/servers';
+	import { spaces, createSpace, selectSpace } from '$lib/stores/servers';
 	import api from '$lib/api/client';
 
 	let showCreateModal = $state(false);
@@ -21,13 +21,13 @@
 		error = '';
 		loading = true;
 		try {
-			const server = await createServer(serverName.trim(), serverDesc.trim() || undefined);
+			const server = await createSpace(serverName.trim(), serverDesc.trim() || undefined);
 			showCreateModal = false;
 			serverName = '';
 			serverDesc = '';
 			window.location.href = '/servers';
 		} catch (e: any) {
-			error = e.message || 'Failed to create server';
+			error = e.message || 'Failed to create space';
 		} finally {
 			loading = false;
 		}
@@ -50,61 +50,79 @@
 	}
 
 	function handleServerClick(id: string) {
-		selectServer(id);
+		selectSpace(id);
 		window.location.href = `/servers/${id}`;
 	}
 </script>
 
-<div class="flex-1 flex flex-col items-center justify-center bg-gray-900">
-	<div class="text-center">
-		<div class="text-6xl mb-4">🎙️</div>
+<div class="flex-1 flex flex-col items-center justify-center bg-gray-900 px-6">
+	<div class="text-center max-w-md w-full">
+		<div class="text-5xl mb-4" role="img" aria-label="Microphone">🎙️</div>
 		<h1 class="text-3xl font-bold text-white mb-2">Welcome to OpenCorde</h1>
-		<p class="text-gray-400 mb-8">
-			{#if $servers.length === 0}
-				You haven't joined any servers yet. Create or join one to get started!
-			{:else}
-				Select a server from the sidebar to begin
-			{/if}
-		</p>
+
+		{#if $spaces.length === 0}
+			<p class="text-gray-400 mb-2">
+				You haven't joined any spaces yet.
+			</p>
+			<p class="text-gray-500 text-sm mb-8">
+				A <strong class="text-gray-400">space</strong> is a community or team hub — it contains channels, voice rooms, and members.
+				Create your own or join one with an invite code.
+			</p>
+		{:else}
+			<p class="text-gray-400 mb-8">
+				Select a space from the sidebar to start chatting, or create a new one.
+			</p>
+		{/if}
 
 		<div class="flex gap-4 justify-center">
 			<button
 				onclick={() => { showCreateModal = true; showJoinModal = false; error = ''; }}
-				class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+				class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors"
 			>
-				Create Server
+				Create a Space
 			</button>
 			<button
 				onclick={() => { showJoinModal = true; showCreateModal = false; error = ''; }}
 				class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
 			>
-				Join Server
+				Join with Invite
 			</button>
 		</div>
 
 		{#if showCreateModal}
-			<div class="mt-6 w-full max-w-sm mx-auto bg-gray-800 p-6 rounded-lg text-left">
-				<h2 class="text-lg font-semibold text-white mb-4">Create a Server</h2>
-				{#if error}<p class="text-red-400 text-sm mb-3">{error}</p>{/if}
-				<input
-					type="text"
-					bind:value={serverName}
-					placeholder="Server name"
-					class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 mb-3"
-				/>
-				<input
-					type="text"
-					bind:value={serverDesc}
-					placeholder="Description (optional)"
-					class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 mb-4"
-				/>
-				<div class="flex gap-2">
+			<div class="mt-6 w-full bg-gray-800 p-6 rounded-lg text-left">
+				<h2 class="text-lg font-semibold text-white mb-1">Create a Space</h2>
+				<p class="text-gray-500 text-sm mb-4">Give your community a name. You can add channels and invite people after creation.</p>
+				{#if error}<p role="alert" class="text-red-400 text-sm mb-3">{error}</p>{/if}
+				<div class="space-y-3">
+					<div>
+						<label for="space-name" class="block text-sm font-medium text-gray-300 mb-1">Space name <span class="text-gray-500 font-normal">(required)</span></label>
+						<input
+							id="space-name"
+							type="text"
+							bind:value={serverName}
+							placeholder="e.g. My Team"
+							class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50"
+						/>
+					</div>
+					<div>
+						<label for="space-desc" class="block text-sm font-medium text-gray-300 mb-1">Description <span class="text-gray-500 font-normal">(optional)</span></label>
+						<input
+							id="space-desc"
+							type="text"
+							bind:value={serverDesc}
+							placeholder="What's this space about?"
+							class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50"
+						/>
+					</div>
+				</div>
+				<div class="flex gap-2 mt-4">
 					<button
 						onclick={handleCreate}
 						disabled={loading || !serverName.trim()}
-						class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded transition-colors"
+						class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition-colors"
 					>
-						{loading ? 'Creating...' : 'Create'}
+						{loading ? 'Creating…' : 'Create Space'}
 					</button>
 					<button
 						onclick={() => showCreateModal = false}
@@ -117,22 +135,27 @@
 		{/if}
 
 		{#if showJoinModal}
-			<div class="mt-6 w-full max-w-sm mx-auto bg-gray-800 p-6 rounded-lg text-left">
-				<h2 class="text-lg font-semibold text-white mb-4">Join a Server</h2>
-				{#if error}<p class="text-red-400 text-sm mb-3">{error}</p>{/if}
-				<input
-					type="text"
-					bind:value={inviteCode}
-					placeholder="Invite code"
-					class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 mb-4"
-				/>
+			<div class="mt-6 w-full bg-gray-800 p-6 rounded-lg text-left">
+				<h2 class="text-lg font-semibold text-white mb-1">Join a Space</h2>
+				<p class="text-gray-500 text-sm mb-4">Enter the invite code shared with you by a space admin or member.</p>
+				{#if error}<p role="alert" class="text-red-400 text-sm mb-3">{error}</p>{/if}
+				<div>
+					<label for="invite-code" class="block text-sm font-medium text-gray-300 mb-1">Invite code</label>
+					<input
+						id="invite-code"
+						type="text"
+						bind:value={inviteCode}
+						placeholder="Paste invite code here"
+						class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 mb-4"
+					/>
+				</div>
 				<div class="flex gap-2">
 					<button
 						onclick={handleJoin}
 						disabled={loading || !inviteCode.trim()}
-						class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded transition-colors"
+						class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition-colors"
 					>
-						{loading ? 'Joining...' : 'Join'}
+						{loading ? 'Joining…' : 'Join Space'}
 					</button>
 					<button
 						onclick={() => showJoinModal = false}
@@ -144,13 +167,13 @@
 			</div>
 		{/if}
 
-		{#if $servers.length > 0}
-			<div class="mt-8">
-				<p class="text-gray-400 text-sm mb-2">Your servers:</p>
-				{#each $servers as server (server.id)}
+		{#if $spaces.length > 0}
+			<div class="mt-8 text-left w-full">
+				<p class="text-gray-400 text-sm mb-2 font-medium">Your spaces</p>
+				{#each $spaces as server (server.id)}
 					<button
 						onclick={() => handleServerClick(server.id)}
-						class="block w-full text-left px-4 py-2 rounded hover:bg-gray-800 text-gray-300 text-sm transition-colors"
+						class="block w-full text-left px-4 py-2.5 rounded-lg hover:bg-gray-800 text-gray-300 hover:text-white text-sm transition-colors"
 					>
 						{server.name}
 					</button>

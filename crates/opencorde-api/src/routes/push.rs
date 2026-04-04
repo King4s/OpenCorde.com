@@ -91,16 +91,14 @@ async fn register_token(
         return Err(ApiError::BadRequest("token must not be empty".to_string()));
     }
 
-    sqlx::query!(
-        r#"
-        INSERT INTO push_tokens (user_id, token, platform)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (user_id, token) DO NOTHING
-        "#,
-        auth.user_id.as_i64(),
-        req.token,
-        req.platform,
+    sqlx::query(
+        "INSERT INTO push_tokens (user_id, token, platform) \
+         VALUES ($1, $2, $3) \
+         ON CONFLICT (user_id, token) DO NOTHING",
     )
+    .bind(auth.user_id.as_i64())
+    .bind(&req.token)
+    .bind(&req.platform)
     .execute(&state.db)
     .await
     .map_err(|e| {
@@ -123,11 +121,11 @@ async fn unregister_token(
 ) -> Result<Json<PushResponse>, ApiError> {
     tracing::info!("unregistering push token");
 
-    sqlx::query!(
+    sqlx::query(
         "DELETE FROM push_tokens WHERE user_id = $1 AND token = $2",
-        auth.user_id.as_i64(),
-        req.token,
     )
+    .bind(auth.user_id.as_i64())
+    .bind(&req.token)
     .execute(&state.db)
     .await
     .map_err(|e| {

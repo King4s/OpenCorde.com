@@ -56,7 +56,7 @@
 							<td class="px-4 py-3 text-center">
 								<button
 									onclick={() => onDelete('user', user.id, user.username)}
-									class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"
+									class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded transition-colors"
 								>
 									Delete
 								</button>

@@ -70,7 +70,7 @@
 		font-family: monospace;
 		font-size: 13px;
 		font-weight: 600;
-		color: #5865f2;
+		color: #e5e7eb;
 	}
 
 	.command-desc {

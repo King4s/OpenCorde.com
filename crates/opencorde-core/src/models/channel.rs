@@ -1,11 +1,11 @@
 //! # Model: Channel
-//! Channels: text, voice, and category.
+//! Channels: text, voice, category, and forum.
 
 use crate::snowflake::Snowflake;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-/// Channel type: text, voice, or category.
+/// Channel type: text, voice, category, or forum.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ChannelType {
@@ -15,6 +15,8 @@ pub enum ChannelType {
     Voice,
     /// Category to organize channels
     Category,
+    /// Forum channel with posts and replies
+    Forum,
 }
 
 /// Channel: text, voice, or organizational category.
@@ -102,6 +104,24 @@ mod tests {
     }
 
     #[test]
+    fn test_forum_channel() {
+        let channel = Channel {
+            id: Snowflake::new(505),
+            server_id: Snowflake::new(100),
+            name: "Forums".to_string(),
+            channel_type: ChannelType::Forum,
+            topic: Some("Discussion posts".to_string()),
+            position: 3,
+            parent_id: None,
+            e2ee_enabled: false,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        assert_eq!(channel.channel_type, ChannelType::Forum);
+    }
+
+    #[test]
     fn test_channel_with_parent() {
         let channel = Channel {
             id: Snowflake::new(503),
@@ -144,7 +164,12 @@ mod tests {
 
     #[test]
     fn test_channel_type_serialization() {
-        let types = vec![ChannelType::Text, ChannelType::Voice, ChannelType::Category];
+        let types = vec![
+            ChannelType::Text,
+            ChannelType::Voice,
+            ChannelType::Category,
+            ChannelType::Forum,
+        ];
 
         for ty in types {
             let json = serde_json::to_string(&ty).unwrap();

@@ -1,89 +1,83 @@
 <!--
-  @component VideoGrid
-  @purpose Multi-participant video grid with per-participant volume control
-  @version 1.0.0
-  @depends stores/voice
+	@component VideoGrid
+	@purpose Multi-participant video grid for voice/video calls
+	@version 1.0.0
+	@uses stores/voice (livekitParticipants)
 -->
 <script lang="ts">
-	import { videoTracks, livekitParticipants, activeRoomStore } from '$lib/stores/voice';
-	import type { Track } from 'livekit-client';
+	import { livekitParticipants, videoTracks } from '$lib/stores/voice';
 
-	/** Svelte action: attach a LiveKit video track to a <video> element */
-	function attachTrack(el: HTMLVideoElement, track: Track | null) {
-		if (track) track.attach(el);
-		return {
-			update(newTrack: Track | null) {
-				if (newTrack) {
-					newTrack.attach(el);
-				} else {
-					el.srcObject = null;
-				}
-			},
-			destroy() {
-				if (track) track.detach(el);
-			}
-		};
+	interface Participant {
+		identity: string;
+		speaking: boolean;
+		muted: boolean;
+		videoTrack?: MediaStreamTrack | null;
 	}
 
-	// Build display list: participants that have a video track
-	const videoParticipants = $derived(() => {
-		const list: Array<{ identity: string; track: Track }> = [];
-		for (const [identity, track] of $videoTracks) {
-			list.push({ identity, track });
-		}
-		return list;
-	});
+	// Determine grid columns based on participant count
+	function gridCols(count: number): string {
+		if (count <= 1) return 'grid-cols-1';
+		if (count <= 4) return 'grid-cols-2';
+		if (count <= 9) return 'grid-cols-3';
+		return 'grid-cols-4';
+	}
 
-	// Per-participant volume state (0–200%)
-	let volumes = $state<Map<string, number>>(new Map());
+	// Volume per participant (0-200)
+	let volumes = $state<Record<string, number>>({});
 
 	function getVolume(identity: string): number {
-		return volumes.get(identity) ?? 100;
+		return volumes[identity] ?? 100;
 	}
 
-	function setVolume(identity: string, value: number) {
-		volumes = new Map(volumes).set(identity, value);
-		// Apply to LiveKit participant
-		const room = $activeRoomStore;
-		if (!room) return;
-		room.remoteParticipants.forEach((p) => {
-			if (p.identity === identity) p.setVolume(value / 100);
-		});
+	function setVolume(identity: string, v: number) {
+		volumes = { ...volumes, [identity]: v };
+		// Wire to LiveKit participant volume if available
+		try {
+			(window as any).__lk_room?.participants.forEach((p: any) => {
+				if (p.identity === identity) p.setVolume(v / 100);
+			});
+		} catch { /* room not available */ }
 	}
-
-	// Grid columns: 1 for 2 people, 2 for 3-4, 3 for 5+
-	const gridCols = $derived(() => {
-		const count = $videoTracks.size;
-		if (count <= 2) return 'grid-cols-1';
-		if (count <= 4) return 'grid-cols-2';
-		return 'grid-cols-3';
-	});
 </script>
 
-{#if $videoTracks.size > 0}
-	<div class="p-2 border-t border-gray-700 bg-gray-900">
-		<div class="grid {gridCols()} gap-2">
-			{#each videoParticipants() as { identity, track } (identity)}
-				<div class="relative rounded overflow-hidden bg-gray-800 aspect-video">
-					<!-- svelte-ignore a11y-media-has-caption -->
+{#if $livekitParticipants.size > 0}
+	<div class="p-2 bg-gray-900 border-t border-gray-700">
+		<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Video</p>
+		<div class="grid gap-1.5 {gridCols($livekitParticipants.size)}">
+			{#each [...$livekitParticipants.values()] as p (p.identity)}
+				<div class="relative bg-gray-800 rounded-lg overflow-hidden aspect-video flex items-center justify-center
+					{p.speaking ? 'ring-2 ring-gray-400' : ''}">
+
+					<!-- Video element (populated by LiveKit SDK when track is available) -->
 					<video
-						use:attachTrack={track}
+						class="w-full h-full object-cover"
 						autoplay
 						playsinline
-						class="w-full h-full object-cover"
+						data-participant={p.identity}
 					></video>
-					<!-- Name overlay -->
-					<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1 flex items-center justify-between">
-						<span class="text-white text-xs truncate">{identity}</span>
-						<!-- Volume slider -->
+
+					<!-- Avatar placeholder when no video -->
+					<div class="absolute inset-0 flex items-center justify-center {$videoTracks.has(p.identity) ? 'hidden' : ''}">
+						<div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold text-sm">
+							{p.identity[0]?.toUpperCase() ?? '?'}
+						</div>
+					</div>
+
+					<!-- Name + status overlay -->
+					<div class="absolute bottom-0 left-0 right-0 flex items-center gap-1 bg-black/50 px-1.5 py-0.5">
+						<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {p.speaking ? 'bg-gray-400' : 'bg-gray-500'}"></span>
+						<span class="text-white text-xs truncate flex-1">{p.identity}</span>
+						{#if p.muted}<span class="text-xs">🔇</span>{/if}
+					</div>
+
+					<!-- Volume slider on hover -->
+					<div class="absolute top-1 right-1 opacity-0 hover:opacity-100 group-hover:opacity-100 transition-opacity">
 						<input
-							type="range"
-							min="0"
-							max="200"
-							value={getVolume(identity)}
-							oninput={(e) => setVolume(identity, Number((e.target as HTMLInputElement).value))}
-							class="w-16 h-1 accent-indigo-500 cursor-pointer"
-							title="Volume: {getVolume(identity)}%"
+							type="range" min="0" max="200"
+							value={getVolume(p.identity)}
+							oninput={(e) => setVolume(p.identity, parseInt((e.target as HTMLInputElement).value))}
+							class="w-16 h-1 accent-gray-500"
+							title="Volume: {getVolume(p.identity)}%"
 						/>
 					</div>
 				</div>

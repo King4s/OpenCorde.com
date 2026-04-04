@@ -18,9 +18,9 @@ opencorde.com {
     handle /ws {
         # WebSocket headers for persistent connections
         reverse_proxy localhost:8080 {
-            header_uri Host {host}
-            header_uri X-Forwarded-Proto https
-            header_uri X-Forwarded-For {remote_host}
+            header_up Host {host}
+            header_up X-Forwarded-Proto https
+            header_up X-Forwarded-For {remote_host}
         }
     }
 
@@ -29,10 +29,19 @@ opencorde.com {
         reverse_proxy localhost:9010
     }
 
-    # Default route to SvelteKit client
-    # In production, serve static files instead of proxying to dev server
+    # Static SvelteKit client build
+    # / -> prerendered landing page (index.html)
+    # all other app routes -> SPA fallback (200.html)
+    @root path /
+    handle @root {
+        root * /home/mb/opencorde/client/build
+        file_server
+    }
+
     handle {
-        reverse_proxy localhost:5173
+        root * /home/mb/opencorde/client/build
+        try_files {path} {path}/ /200.html
+        file_server
     }
 
     # Note: LiveKit uses its own port (7880) and handles WebSockets directly

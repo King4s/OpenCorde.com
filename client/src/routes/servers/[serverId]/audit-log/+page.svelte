@@ -17,22 +17,22 @@
 		created_at: string;
 	}
 
-	let serverId = $state('');
+	let spaceId = $state('');
 	let entries = $state<AuditEntry[]>([]);
 	let loading = $state(false);
 	let error = $state('');
 
 	if (browser) {
 		const match = window.location.pathname.match(/\/servers\/([^/]+)/);
-		serverId = match?.[1] ?? '';
+		spaceId = match?.[1] ?? '';
 	}
 
 	async function loadEntries() {
-		if (!serverId) return;
+		if (!spaceId) return;
 		loading = true;
 		error = '';
 		try {
-			entries = await api.get<AuditEntry[]>(`/servers/${serverId}/audit-log`);
+			entries = await api.get<AuditEntry[]>(`/servers/${spaceId}/audit-log`);
 		} catch (e: any) {
 			error = e.message ?? 'Failed to load audit log';
 			entries = [];
@@ -42,12 +42,12 @@
 	}
 
 	async function loadMore() {
-		if (!serverId || entries.length === 0) return;
+		if (!spaceId || entries.length === 0) return;
 		loading = true;
 		try {
 			const lastId = entries[entries.length - 1].id;
 			const moreEntries = await api.get<AuditEntry[]>(
-				`/servers/${serverId}/audit-log?before=${lastId}&limit=50`
+				`/servers/${spaceId}/audit-log?before=${lastId}&limit=50`
 			);
 			entries = [...entries, ...moreEntries];
 		} catch (e: any) {
@@ -58,16 +58,16 @@
 	}
 
 	$effect(() => {
-		if (serverId) loadEntries();
+		if (spaceId) loadEntries();
 	});
 
 	function getActionColor(action: string): string {
-		if (action.includes('ban')) return 'bg-red-900/40 text-red-300';
-		if (action.includes('kick')) return 'bg-orange-900/40 text-orange-300';
-		if (action.includes('timeout')) return 'bg-yellow-900/40 text-yellow-300';
-		if (action.includes('create')) return 'bg-green-900/40 text-green-300';
-		if (action.includes('delete')) return 'bg-red-900/40 text-red-300';
-		if (action.includes('update')) return 'bg-blue-900/40 text-blue-300';
+		if (action.includes('ban')) return 'bg-gray-900/40 text-gray-300';
+		if (action.includes('kick')) return 'bg-gray-900/40 text-gray-300';
+		if (action.includes('timeout')) return 'bg-gray-900/40 text-gray-300';
+		if (action.includes('create')) return 'bg-gray-900/40 text-gray-300';
+		if (action.includes('delete')) return 'bg-gray-900/40 text-gray-300';
+		if (action.includes('update')) return 'bg-gray-900/40 text-gray-300';
 		return 'bg-gray-700 text-gray-300';
 	}
 
@@ -89,7 +89,7 @@
 		<div class="flex items-center justify-between mb-6">
 			<h1 class="text-xl font-semibold text-white">Audit Log</h1>
 			<a
-				href="/servers/{serverId}/settings"
+				href="/servers/{spaceId}/settings"
 				class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded transition-colors"
 			>
 				Back to Settings
@@ -97,7 +97,7 @@
 		</div>
 
 		{#if error}
-			<div class="mb-4 px-3 py-2 bg-red-900/40 border border-red-700/50 rounded text-red-300 text-sm">
+			<div class="mb-4 px-3 py-2 bg-gray-900/40 border border-gray-700/50 rounded text-gray-300 text-sm">
 				{error}
 			</div>
 		{/if}
@@ -140,7 +140,7 @@
 			{#if !loading}
 				<button
 					onclick={loadMore}
-					class="mt-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded transition-colors"
+					class="mt-6 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded transition-colors"
 				>
 					Load More
 				</button>

@@ -76,7 +76,7 @@
 		padding: 12px;
 		background: #2b2d31;
 		border: 1px solid #35373c;
-		border-left: 4px solid #5865f2;
+		border-left: 4px solid #e5e7eb;
 		border-radius: 4px;
 		text-decoration: none;
 		max-width: 480px;

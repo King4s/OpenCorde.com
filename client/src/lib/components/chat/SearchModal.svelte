@@ -1,9 +1,14 @@
 <script lang="ts">
 	/**
 	 * @file Search modal component
-	 * @purpose Full-text message search via Tantivy backend
+	 * @purpose Full-text message search, channel lookup, member search
+	 * @version 2.0.0 — channels + members results
 	 */
+	import { goto } from '$app/navigation';
+	import { get } from 'svelte/store';
 	import api from '$lib/api/client';
+	import { channels } from '$lib/stores/channels';
+	import { members } from '$lib/stores/members';
 
 	interface SearchResult {
 		message_id: string;
@@ -21,17 +26,31 @@
 
 	interface Props {
 		channelId: string;
-		serverId?: string;
+		spaceId?: string;
 		onClose: () => void;
 	}
 
-	let { channelId, serverId, onClose }: Props = $props();
+	let { channelId, spaceId, onClose }: Props = $props();
 	let query = $state('');
 	let results = $state<SearchResult[]>([]);
 	let searching = $state(false);
 	let searched = $state(false);
 	let error = $state('');
 	let inputEl: HTMLInputElement;
+
+	const channelResults = $derived.by(() => {
+		const q = query.toLowerCase().trim();
+		if (!q) return [];
+		const ch = get(channels).filter(c => c.name.toLowerCase().includes(q));
+		return ch.slice(0, 5);
+	});
+
+	const memberResults = $derived.by(() => {
+		const q = query.toLowerCase().trim();
+		if (!q) return [];
+		const mem = get(members).filter(m => m.username.toLowerCase().includes(q));
+		return mem.slice(0, 5);
+	});
 
 	$effect(() => {
 		inputEl?.focus();
@@ -85,12 +104,12 @@
 					type="text"
 					bind:value={query}
 					placeholder="Search messages…"
-					class="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+					class="flex-1 px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm placeholder-gray-500 focus:outline-none focus:border-gray-500"
 				/>
 				<button
 					type="submit"
 					disabled={searching || !query.trim()}
-					class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm rounded transition-colors"
+					class="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white text-sm rounded transition-colors"
 				>
 					{searching ? '…' : 'Search'}
 				</button>
@@ -99,21 +118,56 @@
 
 		<div class="max-h-96 overflow-y-auto p-2">
 			{#if error}
-				<p class="text-red-400 text-sm p-3">{error}</p>
+				<p class="text-gray-400 text-sm p-3">{error}</p>
 			{:else if searching}
 				<p class="text-gray-500 text-sm p-3">Searching…</p>
-			{:else if searched && results.length === 0}
-				<p class="text-gray-500 text-sm p-3">No results for "{query}"</p>
-			{:else if results.length > 0}
-				<p class="text-gray-500 text-xs px-3 py-1">{results.length} result{results.length !== 1 ? 's' : ''}</p>
-				{#each results as r (r.message_id)}
-					<div class="px-3 py-2 rounded hover:bg-gray-700/50 transition-colors">
-						<p class="text-gray-300 text-sm leading-relaxed">{r.content}</p>
-						<p class="text-gray-600 text-xs mt-0.5">message #{r.message_id}</p>
-					</div>
-				{/each}
 			{:else}
-				<p class="text-gray-600 text-sm p-3">Type to search messages in this channel.</p>
+				<!-- Channel results -->
+				{#if channelResults.length > 0}
+					<div class="border-b border-gray-700 pb-2 mb-2">
+						<p class="text-gray-500 text-xs px-3 py-1 font-semibold">Channels</p>
+						{#each channelResults as ch (ch.id)}
+							<button
+								class="w-full text-left px-3 py-2 rounded hover:bg-gray-700/50 transition-colors"
+								onclick={() => {
+									goto(`/servers/${spaceId || ch.id}/channels/${ch.id}`);
+									onClose();
+								}}
+							>
+								<p class="text-gray-300 text-sm">#{ch.name}</p>
+							</button>
+						{/each}
+					</div>
+				{/if}
+
+				<!-- Member results -->
+				{#if memberResults.length > 0}
+					<div class="border-b border-gray-700 pb-2 mb-2">
+						<p class="text-gray-500 text-xs px-3 py-1 font-semibold">Members</p>
+						{#each memberResults as mem (mem.user_id)}
+							<div class="px-3 py-2 rounded hover:bg-gray-700/50 transition-colors">
+								<p class="text-gray-300 text-sm">@{mem.username}</p>
+							</div>
+						{/each}
+					</div>
+				{/if}
+
+				<!-- Message results -->
+				{#if searched && results.length === 0 && channelResults.length === 0 && memberResults.length === 0}
+					<p class="text-gray-500 text-sm p-3">No results for "{query}"</p>
+				{:else if results.length > 0}
+					<div>
+						<p class="text-gray-500 text-xs px-3 py-1 font-semibold">Messages</p>
+						{#each results as r (r.message_id)}
+							<div class="px-3 py-2 rounded hover:bg-gray-700/50 transition-colors">
+								<p class="text-gray-300 text-sm leading-relaxed">{r.content}</p>
+								<p class="text-gray-600 text-xs mt-0.5">message #{r.message_id}</p>
+							</div>
+						{/each}
+					</div>
+				{:else if !searched && query.length === 0}
+					<p class="text-gray-600 text-sm p-3">Type to search messages, channels, or members.</p>
+				{/if}
 			{/if}
 		</div>
 	</div>

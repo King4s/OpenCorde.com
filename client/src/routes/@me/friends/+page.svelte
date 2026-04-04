@@ -4,6 +4,8 @@
 -->
 <script lang="ts">
 	import { friendStore } from '$lib/stores/friends.svelte';
+	import { currentUser } from '$lib/stores/auth';
+	import { openDm } from '$lib/stores/dms';
 	import { onMount } from 'svelte';
 	import FriendItem from '$lib/components/layout/FriendItem.svelte';
 	import AddFriendForm from '$lib/components/layout/AddFriendForm.svelte';
@@ -41,6 +43,14 @@
 	async function handleRemove(id: string) {
 		await friendStore.remove(id);
 	}
+
+	async function handleMessage(rel: { from_user: string; to_user: string }) {
+		const me = $currentUser?.id;
+		const otherUserId = rel.from_user === me ? rel.to_user : rel.from_user;
+		if (!otherUserId) return;
+		const dm = await openDm(otherUserId);
+		window.location.href = `/@me/dms/${dm.id}`;
+	}
 </script>
 
 <div class="friends-page">
@@ -70,9 +80,11 @@
 					{#each friendStore.friends as friend (friend.id)}
 						<FriendItem
 							id={friend.id}
+							userId={friend.from_user === $currentUser?.id ? friend.to_user : friend.from_user}
 							username={friend.other_username}
 							avatarUrl={friend.other_avatar_url}
 							type="friend"
+							onMessage={() => handleMessage(friend)}
 							onRemove={() => handleRemove(friend.id)}
 						/>
 					{/each}
@@ -85,6 +97,7 @@
 					{#each friendStore.incoming as req (req.id)}
 						<FriendItem
 							id={req.id}
+							userId={req.from_user === $currentUser?.id ? req.to_user : req.from_user}
 							username={req.other_username}
 							avatarUrl={req.other_avatar_url}
 							type="incoming"
@@ -100,6 +113,7 @@
 					{#each friendStore.outgoing as req (req.id)}
 						<FriendItem
 							id={req.id}
+							userId={req.from_user === $currentUser?.id ? req.to_user : req.from_user}
 							username={req.other_username}
 							avatarUrl={req.other_avatar_url}
 							type="outgoing"

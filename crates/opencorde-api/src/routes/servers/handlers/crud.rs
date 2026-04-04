@@ -12,6 +12,7 @@ use opencorde_db::repos::{channel_repo, member_repo, server_repo};
 use tracing::instrument;
 
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
+use crate::routes::moderation::audit_mod::log_mod_action;
 use serde_json::json;
 
 use super::super::{
@@ -268,6 +269,7 @@ async fn update_server(
         name = %update_name,
         "server updated"
     );
+    log_mod_action(&state, server_id, auth.user_id, "server.update", server_id.as_i64()).await;
 
     // Fetch updated server
     let updated = server_repo::get_by_id(&state.db, server_id)
@@ -333,5 +335,6 @@ async fn delete_server(
         .map_err(ApiError::Database)?;
 
     tracing::info!(server_id = server.id, "server deleted");
+    log_mod_action(&state, server_id, auth.user_id, "server.delete", server_id.as_i64()).await;
     Ok(StatusCode::NO_CONTENT)
 }

@@ -23,7 +23,7 @@
 	async function connect() {
 		error = '';
 		if (!url.trim()) {
-			error = 'Enter your server address';
+			error = 'Enter your instance address';
 			return;
 		}
 
@@ -46,7 +46,7 @@
 		}
 
 		if (!reachable) {
-			error = `Could not reach server. Check the address and make sure OpenCorde is running.`;
+			error = `Could not reach instance. Check the address and make sure OpenCorde is running.`;
 			testing = false;
 			return;
 		}
@@ -60,19 +60,20 @@
 	<div class="bg-gray-900 border border-gray-700 rounded-xl p-8 w-full max-w-md shadow-2xl">
 		<h1 class="text-2xl font-bold text-white mb-2">Connect to OpenCorde</h1>
 		<p class="text-gray-400 text-sm mb-6">
-			Enter the address of your OpenCorde server. You only need to do this once.
+			Enter the address of your OpenCorde instance. You only need to do this once.
 		</p>
 
-		<label class="block text-sm font-medium text-gray-300 mb-1">Server address</label>
+		<label for="instance-address" class="block text-sm font-medium text-gray-300 mb-1">Instance address</label>
 		<input
+			id="instance-address"
 			type="text"
 			bind:value={url}
 			placeholder="opencorde.com  or  192.168.1.10:8080"
-			class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 mb-1"
+			class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-gray-500 mb-1"
 			onkeydown={(e) => e.key === 'Enter' && connect()}
 		/>
 		{#if error}
-			<p class="text-red-400 text-sm mb-3">{error}</p>
+			<p class="text-gray-400 text-sm mb-3">{error}</p>
 		{:else}
 			<p class="text-gray-600 text-xs mb-3">No need for http:// — just type the address</p>
 		{/if}
@@ -80,7 +81,7 @@
 		<button
 			onclick={connect}
 			disabled={testing}
-			class="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition-colors"
+			class="w-full bg-gray-600 hover:bg-gray-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition-colors"
 		>
 			{testing ? 'Connecting…' : 'Connect'}
 		</button>

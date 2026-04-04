@@ -29,7 +29,7 @@ export function disableShortcuts() {
 	enabled = false;
 }
 
-export function handleKeydown(e: KeyboardEvent, serverId?: string) {
+export function handleKeydown(e: KeyboardEvent, spaceId?: string) {
 	if (!enabled) return;
 
 	// Don't fire when typing in inputs/textareas

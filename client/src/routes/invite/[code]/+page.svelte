@@ -63,7 +63,7 @@
 			<div class="text-6xl mb-4">&#x26A0;</div>
 			<h1 class="text-xl font-bold text-white mb-2">Invalid Invite</h1>
 			<p class="text-gray-400 mb-4">{error}</p>
-			<a href="/" class="text-indigo-400 hover:underline">Go home</a>
+			<a href="/" class="text-gray-400 hover:underline">Go home</a>
 		{:else if joined}
 			<div class="text-6xl mb-4">&#x2705;</div>
 			<h1 class="text-xl font-bold text-white mb-2">Joined {serverName}!</h1>
@@ -71,20 +71,20 @@
 		{:else}
 			<div class="text-6xl mb-4">&#x1F517;</div>
 			<h1 class="text-xl font-bold text-white mb-2">You've been invited to</h1>
-			<h2 class="text-2xl font-bold text-indigo-400 mb-6">{serverName}</h2>
+			<h2 class="text-2xl font-bold text-gray-400 mb-6">{serverName}</h2>
 
 			{#if needsLogin}
 				<p class="text-gray-400 mb-4">You need an account to join</p>
 				<div class="flex gap-3 justify-center">
-					<a href="/login" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">Log In</a>
+					<a href="/login" class="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg">Log In</a>
 					<a href="/register" class="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg">Register</a>
 				</div>
 			{:else}
 				<button
 					onclick={handleJoin}
-					class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+					class="px-8 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors"
 				>
-					Join Server
+					Join Space
 				</button>
 			{/if}
 		{/if}

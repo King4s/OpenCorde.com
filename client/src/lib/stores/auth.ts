@@ -61,7 +61,16 @@ if (initialToken) {
 
 export const accessToken = writable<string | null>(initialToken);
 export const currentUser = writable<UserProfile | null>(null);
-export const isAuthenticated = derived(accessToken, ($token) => $token !== null);
+export const isAuthenticated=derived(accessToken, ($token) => $token !== null);
+
+export async function establishSession(token: string): Promise<UserProfile> {
+  accessToken.set(token);
+  const profile = await api.get<UserProfile>('/users/@me');
+  currentUser.set(profile);
+  uploadKeyPackage(profile.id);
+  gateway.connect(token);
+  return profile;
+}
 
 // Sync token changes to storage + API client
 accessToken.subscribe((token) => {

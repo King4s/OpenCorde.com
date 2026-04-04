@@ -24,6 +24,7 @@ use totp_rs::{Algorithm, Secret, TOTP};
 use tracing::instrument;
 
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
+use crate::routes::moderation::audit_mod::log_mod_action;
 use opencorde_db::repos::user_repo;
 
 /// Issuer name shown in authenticator apps (e.g., Google Authenticator).
@@ -144,6 +145,7 @@ pub async fn verify(
         .map_err(ApiError::Database)?;
 
     tracing::info!(user_id = %auth.user_id, "2FA successfully enabled");
+    log_mod_action(&state, opencorde_core::Snowflake::new(0), auth.user_id, "2fa.enable", auth.user_id.as_i64()).await;
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -193,6 +195,7 @@ pub async fn disable(
         .map_err(ApiError::Database)?;
 
     tracing::info!(user_id = %auth.user_id, "2FA disabled");
+    log_mod_action(&state, opencorde_core::Snowflake::new(0), auth.user_id, "2fa.disable", auth.user_id.as_i64()).await;
     Ok(StatusCode::NO_CONTENT)
 }
 

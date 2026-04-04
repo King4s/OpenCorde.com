@@ -4,16 +4,20 @@
   @uses Svelte 5 $props() rune
 -->
 <script lang="ts">
+	import { presenceMap } from '$lib/stores/presence';
+
 	interface Props {
 		id: string;
+		userId: string;
 		username: string;
 		avatarUrl: string | null;
 		type: 'friend' | 'incoming' | 'outgoing';
 		onAccept?: () => void;
 		onRemove: () => void;
+		onMessage?: () => void;
 	}
 
-	let { id, username, avatarUrl, type, onAccept, onRemove }: Props = $props();
+	let { id, userId, username, avatarUrl, type, onAccept, onRemove, onMessage }: Props = $props();
 
 	function getInitials(name: string) {
 		return name.slice(0, 2).toUpperCase();
@@ -27,9 +31,30 @@
 		{:else}
 			<span class="initials">{getInitials(username)}</span>
 		{/if}
+		{#if $presenceMap.has(userId)}
+			<span class="presence-dot online"></span>
+		{/if}
 	</div>
-	<span class="friend-name">{username}</span>
+	<div class="friend-main">
+		<span class="friend-name">{username}</span>
+		{#if type === 'friend'}
+			<span class="friend-status">{$presenceMap.has(userId) ? 'Online' : 'Offline'}</span>
+		{:else if type === 'incoming'}
+			<span class="friend-status">Incoming request</span>
+		{:else}
+			<span class="friend-status">Outgoing request</span>
+		{/if}
+	</div>
 	<div class="friend-actions">
+		{#if type === 'friend' && onMessage}
+			<button
+				class="action-btn message"
+				onclick={onMessage}
+				title="Message"
+			>
+				💬
+			</button>
+		{/if}
 		{#if type === 'incoming'}
 			<button
 				class="action-btn accept"
@@ -65,12 +90,13 @@
 		width: 36px;
 		height: 36px;
 		border-radius: 50%;
-		background: #5865f2;
+		background: #e5e7eb;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		flex-shrink: 0;
 		overflow: hidden;
+		position: relative;
 	}
 	.friend-avatar img {
 		width: 100%;
@@ -82,11 +108,37 @@
 		font-weight: 700;
 		color: white;
 	}
-	.friend-name {
+	.presence-dot {
+		position: absolute;
+		right: -1px;
+		bottom: -1px;
+		width: 11px;
+		height: 11px;
+		border-radius: 999px;
+		border: 2px solid #313338;
+		background: #6b7280;
+	}
+	.presence-dot.online {
+		background: #3ba55c;
+	}
+	.friend-main {
 		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+	.friend-name {
 		font-size: 15px;
 		font-weight: 600;
 		color: #f2f3f5;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.friend-status {
+		font-size: 12px;
+		color: #8b949e;
 	}
 	.friend-actions {
 		display: flex;
@@ -108,6 +160,13 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+	}
+	.action-btn.message {
+		color: #e5e7eb;
+	}
+	.action-btn.message:hover {
+		background: #e5e7eb;
+		color: white;
 	}
 	.action-btn.accept {
 		color: #3ba55c;

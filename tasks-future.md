@@ -44,61 +44,41 @@ Phases 1, 2, and 3 are complete as of 2026-03-22 (26/26 browser tests, 30 migrat
 - [x] Accessibility audit (WCAG 2.1 AA) — dialog tabindex, backdrop Escape, keyboard nav (AutomodManager, EmojiManager, SlashCommandManager, WebhookManager)
 - [x] Recording (LiveKit Egress — start/stop/list endpoints + RecordingsPanel + VoicePanel button)
 - [x] Steam OAuth login (OpenID 2.0 flow, migration 036, ghost user creation)
+- [x] Announcement channel type (type 4) — megaphone icon in ChannelList, accepted by API validation
+- [x] Discord server structure import — Danish-Truckers.com (8 categories, 57 channels, 24 roles) imported via scripts/import_discord_server.py
+
+### Gap Analysis: Discord Features Not Yet in OpenCorde
+- [x] Server onboarding (GUILD_ONBOARDING) — GET/PUT /onboarding endpoint, OnboardingModal.svelte (shown once per session), OnboardingPanel in settings
+- [x] Server guide (GUILD_SERVER_GUIDE) — server home page now shows channel overview, member count, welcome message
+- [x] Soundboard — GET/POST/DELETE/play endpoints (migration 048), SoundboardPanel.svelte in voice sidebar
+- [x] Verification level enforcement (field exists; enforced on send_message and join via invite)
+
+---
+
+## Phase 6: Security Hardening & UX Polish (completed 2026-04-01)
+
+### Security
+- [x] Permission enforcement — `require_channel_perm` / `require_server_perm` wired to all relevant routes
+- [x] Per-endpoint rate limiting — `axum-governor` (login 5/min, register 3/min, messages 5/sec, files 10/min, etc.)
+- [x] JWT refresh token rotation — JTI tracking + theft detection (revoke all tokens on replay)
+- [x] 2FA / TOTP — totp-rs (RFC 6238), enable/verify/disable endpoints, login integration
+- [x] File upload security — MIME type allowlist, magic byte verification, EXIF strip, 8MB/100MB/25MB limits
+- [x] XSS prevention — MarkdownContent.svelte: script/iframe/event-handler/javascript:-URL stripping
+- [x] HTTP security headers — CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- [x] SQL injection audit — all queries use sqlx parameterized binds, no raw interpolation
+- [x] Audit log completeness — channel, role, webhook, server, 2FA events logged (2fa.enable, 2fa.disable, server.update, server.delete, channel.create/update/delete, role.create/update/delete, webhook.create/delete)
+
+### Voice / Video
+- [x] Video grid (multi-participant) — VideoGrid.svelte: responsive columns, speaking ring, volume slider per participant
+- [x] Voice device selection — VoiceSettings.svelte: mic/camera/speaker via enumerateDevices(), persisted to localStorage
+
+### UX
+- [x] Quick switcher extended — SearchModal now searches channels + members in addition to messages
+- [x] Keyboard shortcuts — Alt+↑/↓ channel navigation, Ctrl+K quick switcher (wired in server layout)
+- [x] WebSocket events — ChannelCreate/Update/Delete, RoleCreate/Update/Delete, MemberUpdate, ServerUpdate broadcast to all subscribers
 
 ---
 
 **Note:** Federation via Matrix protocol is explicitly excluded per user decision.
----
 
-## Sprint Completions (2026-03-28)
-
-### Security Hardening
-- [x] Permission enforcement wired on all critical routes (require_channel_perm / require_server_perm)
-- [x] Per-endpoint rate limiting (axum-governor — auth 5/min, messages 5/sec, files 10/min)
-- [x] JWT refresh token rotation (refresh_token_repo, JTI tracking, theft detection)
-- [x] File upload validation (MIME type, magic bytes, size limits per type, EXIF strip)
-- [x] XSS prevention (DOMPurify in MarkdownContent, marked sanitizer)
-- [x] HTTP security headers (SecurityHeaders middleware: CSP, X-Frame-Options, etc.)
-- [x] 2FA TOTP (totp.rs routes, TwoFactorSetup/TwoFactorModal components, login gate)
-- [x] Argon2id password hashing verified; minimum length enforced
-- [x] Audit log completeness (role changes, permission overrides, ban/kick/timeout, webhooks)
-
-### WebSocket Events
-- [x] ChannelCreate / ChannelUpdate / ChannelDelete broadcast + client store handlers
-- [x] RoleCreate / RoleUpdate / RoleDelete broadcast + client store handlers
-- [x] MemberUpdate (role assign/remove) broadcast + client store handler
-- [x] ServerUpdate broadcast + client store handler
-
-### UX Completions
-- [x] Message edit inline (textarea in MessageList, ↑ in empty input to edit last message)
-- [x] Message delete (context menu → confirm → DELETE /messages/{id})
-- [x] Slowmode enforcement (last_message_at check in send_message, 429 if too fast)
-- [x] User profile popover (UserProfilePopover.svelte — avatar, roles, DM button)
-- [x] Video/audio inline playback (<video>/<audio> based on MIME type)
-- [x] Category collapsing (ChannelList groups by parent_id, click to toggle)
-- [x] Server unread badges (red dot on ServerIcon when any channel has unread)
-- [x] Status picker in UserPanel (Online/Idle/DND/Invisible + PATCH /users/@me)
-- [x] Quick switcher Ctrl+K (QuickSwitcher.svelte — channels, servers, users)
-- [x] Alt+↑/↓ channel navigation (fixed missing channels import in serverId layout)
-
-### Voice/Video Quality
-- [x] Voice device selection (VoiceSettings.svelte — mic/cam/speaker via enumerateDevices)
-- [x] Video grid (VideoGrid.svelte — multi-participant with CSS grid, per-participant volume)
-- [x] Per-participant volume slider (LiveKit participant.setVolume)
-
-### Keyboard Shortcuts
-- [x] Alt+↑/↓ navigate channels
-- [x] ↑ in empty input — edit last own message
-- [x] Ctrl+K quick switcher
-- [x] Ctrl+, settings
-- [x] Alt+Home DMs
-- [x] Esc close modal
-
-### Discord Mention Rendering (in MarkdownContent.svelte)
-- [x] <#channelId> → channel name chip with lookup
-- [x] <@userId> / <@!userId> → @username chip
-- [x] <@&roleId> → role name chip with role color
-- [x] @everyone / @here mentions
-- [x] <t:timestamp:R> → relative time display
-
-**Last updated:** 2026-03-28
+**Last updated:** 2026-04-01 (Phase 6 complete — security hardening, video grid, device selection, audit log, 26/26 browser tests)

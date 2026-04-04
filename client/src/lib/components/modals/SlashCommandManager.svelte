@@ -9,7 +9,7 @@
 	import SlashCommandForm from './SlashCommandForm.svelte';
 	import SlashCommandList from './SlashCommandList.svelte';
 
-	let { serverId, onClose }: { serverId: string; onClose: () => void } = $props();
+	let { spaceId, onClose }: { spaceId: string; onClose: () => void } = $props();
 
 	let newName = $state('');
 	let newDescription = $state('');
@@ -17,7 +17,7 @@
 	let creating = $state(false);
 	let error = $state('');
 
-	onMount(() => slashCommandsStore.fetchCommands(serverId));
+	onMount(() => slashCommandsStore.fetchCommands(spaceId));
 
 	async function handleCreate() {
 		if (!newName.trim()) {
@@ -32,7 +32,7 @@
 		error = '';
 		try {
 			await slashCommandsStore.createCommand(
-				serverId,
+				spaceId,
 				newName.trim(),
 				newDescription.trim(),
 				newHandlerUrl.trim()

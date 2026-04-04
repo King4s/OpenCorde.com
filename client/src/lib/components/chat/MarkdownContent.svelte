@@ -108,14 +108,14 @@
 
 	/**
 	 * Sanitize HTML to prevent XSS while preserving code highlighting.
-	 * Removes script tags, iframes, and event handlers.
 	 */
 	function sanitize(html: string): string {
-		return html
-			.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-			.replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '')
-			.replace(/on\w+="[^"]*"/gi, '')
-			.replace(/on\w+='[^']*'/gi, '');
+		html = html.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<iframe[\s\S]*?<\/iframe>/gi, '');
+		html = html.replace(/<(object|embed|form|meta|link|base|applet)[^>]*\/?>/gi, '');
+		html = html.replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+		html = html.replace(/(href|src|action|formaction)\s*=\s*(['"]?)\s*(?:javascript|vbscript):[^'"\s>]*/gi, '$1=$2#');
+		html = html.replace(/(href|src|action)\s*=\s*(['"]?)data:(?!image\/)[^'"\s>]*/gi, '$1=$2');
+		return html;
 	}
 
 	onMount(() => {
@@ -229,7 +229,7 @@
 	}
 
 	.markdown-content :global(blockquote) {
-		border-left: 4px solid #5865f2;
+		border-left: 4px solid #e5e7eb;
 		padding: 4px 12px;
 		margin: 4px 0;
 		color: #b5bac1;

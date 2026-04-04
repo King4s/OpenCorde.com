@@ -13,7 +13,7 @@
   --border-color: #35373c;
   --channel-bg: #2b2d31;
   --input-bg: #383a40;
-  --accent: #5865f2;
+  --accent: #e5e7eb;
 }
 
 /* Light theme */
@@ -28,5 +28,5 @@
   --border-color: #d7d9dc;
   --channel-bg: #ffffff;
   --input-bg: #e3e5e8;
-  --accent: #5865f2;
+  --accent: #e5e7eb;
 }

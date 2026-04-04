@@ -188,6 +188,16 @@ async fn join_invite(
     {
         return Err(ApiError::Conflict("already a member".into()));
     }
+
+    // Check server verification level
+    crate::routes::helpers::check_verification_level(
+        &state.db,
+        auth.user_id,
+        server_id,
+        false,  // no member tenure check on join
+    )
+    .await?;
+
     member_repo::add_member(&state.db, auth.user_id, server_id)
         .await
         .map_err(ApiError::Database)?;

@@ -27,7 +27,7 @@ export interface AuthResponse {
   expires_in: number;
 }
 
-export interface Server {
+export interface Space {
   id: string;
   name: string;
   owner_id: string;
@@ -35,6 +35,8 @@ export interface Server {
   description: string | null;
   created_at: string;
 }
+
+export type Server = Space;
 
 export interface Channel {
   id: string;
@@ -183,3 +185,5 @@ export interface AdminServerRow {
   member_count: number;
   created_at: string;
 }
+
+export type AdminSpaceRow = AdminServerRow;

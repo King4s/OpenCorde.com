@@ -63,14 +63,14 @@
 		{#if loading}
 			<p class="text-gray-500 text-sm">Loading…</p>
 		{:else if error}
-			<p class="text-red-400 text-sm">{error}</p>
+			<p class="text-gray-400 text-sm">{error}</p>
 		{:else if pins.length === 0}
 			<p class="text-gray-500 text-sm">No pinned messages in this channel.</p>
 		{:else}
 			{#each pins as pin (pin.message_id)}
 				<div class="bg-gray-700/50 rounded p-2 group">
 					<div class="flex items-baseline justify-between mb-1">
-						<span class="text-xs font-semibold text-indigo-400">{pin.author_username}</span>
+						<span class="text-xs font-semibold text-gray-400">{pin.author_username}</span>
 						<span class="text-xs text-gray-500">{formatDate(pin.created_at)}</span>
 					</div>
 					<div class="text-gray-300 text-sm prose-sm break-words">
@@ -78,7 +78,7 @@
 					</div>
 					<button
 						onclick={() => handleUnpin(pin.message_id)}
-						class="mt-1.5 text-xs text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+						class="mt-1.5 text-xs text-gray-500 hover:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
 					>
 						Unpin
 					</button>

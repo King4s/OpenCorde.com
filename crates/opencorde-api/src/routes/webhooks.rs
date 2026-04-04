@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
-use crate::routes::helpers::parse_snowflake;
+use crate::routes::{helpers::parse_snowflake, moderation::audit_mod::log_mod_action};
 
 /// Public response for a webhook (excludes sensitive data).
 #[derive(Debug, Serialize)]
@@ -123,6 +123,8 @@ async fn create_webhook(
     .await
     .map_err(ApiError::Database)?;
 
+    let wh_id = webhook.id;
+    log_mod_action(&state, server_id_sf, auth.user_id, "webhook.create", wh_id).await;
     Ok((StatusCode::CREATED, Json(webhook_row_to_response(webhook))))
 }
 
@@ -178,6 +180,8 @@ async fn delete_webhook(
         .map_err(ApiError::Database)?;
 
     tracing::info!(webhook_id = webhook_id_sf.as_i64(), "webhook deleted");
+    let server_id_sf = opencorde_core::Snowflake::new(webhook.server_id);
+    log_mod_action(&state, server_id_sf, auth.user_id, "webhook.delete", webhook_id_sf.as_i64()).await;
     Ok(StatusCode::NO_CONTENT)
 }
 

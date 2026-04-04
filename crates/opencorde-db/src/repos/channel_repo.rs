@@ -1,7 +1,7 @@
 //! # Repository: Channels
 //! CRUD operations for server channels (text and voice).
 //!
-//! Supports channel types: 0=Text, 1=Voice, 2=Category.
+//! Supports channel types: 0=Text, 1=Voice, 2=Category, 3=Stage, 4=Announcement, 5=Forum.
 //!
 //! ## Depends On
 //! - opencorde_core::snowflake::Snowflake

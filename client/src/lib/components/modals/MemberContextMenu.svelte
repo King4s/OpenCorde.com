@@ -9,14 +9,14 @@
 	interface Props {
 		userId: string;
 		username: string;
-		serverId: string;
+		spaceId: string;
 		isOwner: boolean;
 		x: number;
 		y: number;
 		onClose: () => void;
 	}
 
-	let { userId, username, serverId, isOwner, x, y, onClose }: Props = $props();
+	let { userId, username, spaceId, isOwner, x, y, onClose }: Props = $props();
 
 	let showBanReason = $state(false);
 	let banReason = $state('');
@@ -27,7 +27,7 @@
 	async function handleKick() {
 		if (confirm(`Kick ${username}?`)) {
 			try {
-				await kickUser(serverId, userId);
+				await kickUser(spaceId, userId);
 				onClose();
 			} catch (err) {
 				error = `Failed to kick: ${(err as any)?.message || 'Unknown error'}`;
@@ -37,7 +37,7 @@
 
 	async function handleBan() {
 		try {
-			await banUser(serverId, userId, banReason || undefined);
+			await banUser(spaceId, userId, banReason || undefined);
 			onClose();
 		} catch (err) {
 			error = `Failed to ban: ${(err as any)?.message || 'Unknown error'}`;
@@ -46,7 +46,7 @@
 
 	async function handleTimeout() {
 		try {
-			await timeoutUser(serverId, userId, timeoutHours * 3600);
+			await timeoutUser(spaceId, userId, timeoutHours * 3600);
 			onClose();
 		} catch (err) {
 			error = `Failed to timeout: ${(err as any)?.message || 'Unknown error'}`;
@@ -80,7 +80,7 @@
 	</div>
 
 	{#if error}
-		<div class="px-3 py-1.5 text-xs text-red-400 border-b border-gray-700">
+		<div class="px-3 py-1.5 text-xs text-gray-400 border-b border-gray-700">
 			{error}
 		</div>
 	{/if}
@@ -97,7 +97,7 @@
 			<div class="border-t border-gray-700 my-1"></div>
 
 			<button
-				class="w-full text-left px-3 py-1.5 text-sm text-orange-400 hover:bg-gray-800 transition-colors"
+				class="w-full text-left px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-800 transition-colors"
 				onclick={() => {
 					showTimeout = true;
 					error = '';
@@ -107,20 +107,20 @@
 			</button>
 
 			<button
-				class="w-full text-left px-3 py-1.5 text-sm text-yellow-400 hover:bg-gray-800 transition-colors"
+				class="w-full text-left px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-800 transition-colors"
 				onclick={handleKick}
 			>
-				Kick from Server
+				Kick from Space
 			</button>
 
 			<button
-				class="w-full text-left px-3 py-1.5 text-sm text-red-400 hover:bg-gray-800 transition-colors"
+				class="w-full text-left px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-800 transition-colors"
 				onclick={() => {
 					showBanReason = true;
 					error = '';
 				}}
 			>
-				Ban from Server
+				Ban from Space
 			</button>
 		{/if}
 	{:else if showBanReason}
@@ -131,12 +131,12 @@
 				type="text"
 				bind:value={banReason}
 				placeholder="Enter reason"
-				class="w-full bg-gray-800 text-white text-sm rounded px-2 py-1.5 mb-2 outline-none border border-gray-700 focus:border-red-600"
+				class="w-full bg-gray-800 text-white text-sm rounded px-2 py-1.5 mb-2 outline-none border border-gray-700 focus:border-gray-600"
 			/>
 			<div class="flex gap-2">
 				<button
 					onclick={handleBan}
-					class="flex-1 bg-red-700 hover:bg-red-600 text-white text-xs font-medium py-1.5 rounded transition-colors"
+					class="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium py-1.5 rounded transition-colors"
 				>
 					Ban
 				</button>
@@ -158,7 +158,7 @@
 			<select
 				id="timeout-select"
 				bind:value={timeoutHours}
-				class="w-full bg-gray-800 text-white text-sm rounded px-2 py-1.5 mb-2 outline-none border border-gray-700 focus:border-orange-600"
+				class="w-full bg-gray-800 text-white text-sm rounded px-2 py-1.5 mb-2 outline-none border border-gray-700 focus:border-gray-600"
 			>
 				<option value={0.25}>15 minutes</option>
 				<option value={1}>1 hour</option>
@@ -169,7 +169,7 @@
 			<div class="flex gap-2">
 				<button
 					onclick={handleTimeout}
-					class="flex-1 bg-orange-700 hover:bg-orange-600 text-white text-xs font-medium py-1.5 rounded transition-colors"
+					class="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium py-1.5 rounded transition-colors"
 				>
 					Timeout
 				</button>

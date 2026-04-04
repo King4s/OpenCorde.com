@@ -193,7 +193,7 @@ cd client && pnpm install && pnpm dev
 
 ### Production
 
-See `docs/deployment.md` (Phase 2). For now: placeholder.
+See [`docs/deployment.md`](./docs/deployment.md) for the web-client/static-host routing rules and deployment checklist.
 
 ---
 

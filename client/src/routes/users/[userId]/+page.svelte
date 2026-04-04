@@ -34,7 +34,7 @@
 	}
 
 	function getAvatarColor(id: string): string {
-		const colors = ['bg-indigo-600', 'bg-purple-600', 'bg-pink-600', 'bg-red-600', 'bg-orange-600', 'bg-teal-600'];
+		const colors = ['bg-gray-600', 'bg-gray-600', 'bg-gray-600', 'bg-gray-600', 'bg-gray-600', 'bg-gray-600'];
 		const hash = id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
 		return colors[hash % colors.length];
 	}
@@ -46,11 +46,11 @@
 	{#if loading}
 		<p class="text-gray-400">Loading…</p>
 	{:else if error}
-		<p class="text-red-400">{error}</p>
+		<p class="text-gray-400">{error}</p>
 	{:else if profile}
 		<div class="bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
 			<!-- Banner -->
-			<div class="h-24 bg-gradient-to-r from-indigo-800 to-purple-800"></div>
+			<div class="h-24 bg-gradient-to-r from-gray-800 to-gray-800"></div>
 			<!-- Avatar -->
 			<div class="px-6 pb-6">
 				<div class="-mt-10 mb-4">

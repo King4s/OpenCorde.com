@@ -86,19 +86,19 @@
 			<h2 class="text-sm font-semibold text-gray-400 uppercase">Two-Factor Authentication</h2>
 			<p class="text-xs text-gray-500 mt-0.5">Protect your account with a TOTP authenticator app.</p>
 		</div>
-		<span class="text-xs font-medium px-2 py-1 rounded-full {enabled ? 'bg-green-900/60 text-green-300' : 'bg-gray-700 text-gray-400'}">
+		<span class="text-xs font-medium px-2 py-1 rounded-full {enabled ? 'bg-gray-900/60 text-gray-300' : 'bg-gray-700 text-gray-400'}">
 			{enabled ? 'Enabled' : 'Disabled'}
 		</span>
 	</div>
 
 	{#if !enabled && step === 'idle'}
 		{#if enableError}
-			<div class="px-3 py-2 bg-red-900/40 border border-red-700/50 rounded text-red-300 text-sm">{enableError}</div>
+			<div class="px-3 py-2 bg-gray-900/40 border border-gray-700/50 rounded text-gray-300 text-sm">{enableError}</div>
 		{/if}
 		<button
 			onclick={handleEnable}
 			disabled={enableLoading}
-			class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium rounded transition-colors"
+			class="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white text-sm font-medium rounded transition-colors"
 		>
 			{enableLoading ? 'Generating…' : 'Enable 2FA'}
 		</button>
@@ -111,7 +111,7 @@
 			<div class="bg-gray-900 rounded p-3 space-y-2">
 				<p class="text-xs text-gray-500 uppercase font-medium">Manual entry secret</p>
 				<div class="flex items-center gap-2">
-					<code class="flex-1 text-green-400 text-sm font-mono break-all">{secret}</code>
+					<code class="flex-1 text-gray-400 text-sm font-mono break-all">{secret}</code>
 					<button
 						onclick={copySecret}
 						class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs rounded transition-colors whitespace-nowrap"
@@ -121,7 +121,7 @@
 				</div>
 				<a
 					href={otpauthUrl}
-					class="block text-xs text-indigo-400 hover:underline break-all"
+					class="block text-xs text-gray-400 hover:underline break-all"
 					title="Open in authenticator app"
 				>
 					Open otpauth:// link
@@ -129,7 +129,7 @@
 			</div>
 
 			{#if enableError}
-				<div class="px-3 py-2 bg-red-900/40 border border-red-700/50 rounded text-red-300 text-sm">{enableError}</div>
+				<div class="px-3 py-2 bg-gray-900/40 border border-gray-700/50 rounded text-gray-300 text-sm">{enableError}</div>
 			{/if}
 
 			<div>
@@ -142,7 +142,7 @@
 					bind:value={verifyCode}
 					autocomplete="one-time-code"
 					placeholder="000000"
-					class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm tracking-widest text-center focus:outline-none focus:border-indigo-500"
+					class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm tracking-widest text-center focus:outline-none focus:border-gray-500"
 				/>
 			</div>
 
@@ -150,7 +150,7 @@
 				<button
 					onclick={handleVerify}
 					disabled={enableLoading || verifyCode.length !== 6}
-					class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium rounded transition-colors"
+					class="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white text-sm font-medium rounded transition-colors"
 				>
 					{enableLoading ? 'Verifying…' : 'Activate 2FA'}
 				</button>
@@ -167,14 +167,14 @@
 		{#if !showDisable}
 			<button
 				onclick={() => { showDisable = true; disableCode = ''; disableError = ''; }}
-				class="px-4 py-2 bg-red-900/60 hover:bg-red-800 text-red-300 text-sm rounded transition-colors"
+				class="px-4 py-2 bg-gray-900/60 hover:bg-gray-800 text-gray-300 text-sm rounded transition-colors"
 			>
 				Disable 2FA
 			</button>
 		{:else}
 			<div class="space-y-3">
 				{#if disableError}
-					<div class="px-3 py-2 bg-red-900/40 border border-red-700/50 rounded text-red-300 text-sm">{disableError}</div>
+					<div class="px-3 py-2 bg-gray-900/40 border border-gray-700/50 rounded text-gray-300 text-sm">{disableError}</div>
 				{/if}
 				<div>
 					<label for="2fa-disable-code" class="block text-xs text-gray-400 mb-1">Enter your current authenticator code to confirm</label>
@@ -186,14 +186,14 @@
 						bind:value={disableCode}
 						autocomplete="one-time-code"
 						placeholder="000000"
-						class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm tracking-widest text-center focus:outline-none focus:border-indigo-500"
+						class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm tracking-widest text-center focus:outline-none focus:border-gray-500"
 					/>
 				</div>
 				<div class="flex gap-2">
 					<button
 						onclick={handleDisable}
 						disabled={disableLoading || disableCode.length !== 6}
-						class="px-4 py-2 bg-red-700 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-medium rounded transition-colors"
+						class="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white text-sm font-medium rounded transition-colors"
 					>
 						{disableLoading ? 'Disabling…' : 'Confirm Disable'}
 					</button>

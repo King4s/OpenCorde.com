@@ -9,14 +9,14 @@
 	import EmojiGrid from './EmojiGrid.svelte';
 	import EmojiUploadForm from './EmojiUploadForm.svelte';
 
-	let { serverId, onClose }: { serverId: string; onClose: () => void } = $props();
+	let { spaceId, onClose }: { spaceId: string; onClose: () => void } = $props();
 
 	let name = $state('');
 	let file: File | null = $state(null);
 	let uploading = $state(false);
 	let error = $state('');
 
-	onMount(() => emojiStore.fetchEmojis(serverId));
+	onMount(() => emojiStore.fetchEmojis(spaceId));
 
 	async function handleUpload() {
 		if (!name.trim() || !file) {
@@ -34,7 +34,7 @@
 		uploading = true;
 		error = '';
 		try {
-			await emojiStore.uploadEmoji(serverId, name, file);
+			await emojiStore.uploadEmoji(spaceId, name, file);
 			name = '';
 			file = null;
 		} catch (e: unknown) {
@@ -47,7 +47,7 @@
 	async function handleDelete(emojiId: string, emojiName: string) {
 		if (!confirm(`Delete emoji "${emojiName}"?`)) return;
 		try {
-			await emojiStore.deleteEmoji(serverId, emojiId);
+			await emojiStore.deleteEmoji(spaceId, emojiId);
 		} catch (e: unknown) {
 			error = (e as { message?: string }).message ?? 'Failed to delete emoji';
 		}

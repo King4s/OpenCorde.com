@@ -1,12 +1,12 @@
 <script lang="ts">
   /**
-   * @file Server settings page shell
+   * @file Space settings page shell
    * @purpose Discord-style settings layout: left sidebar nav + right panel content area
    * @section routes/servers/[serverId]/settings
    */
   import { browser } from '$app/environment';
   import OverviewPanel from './panels/OverviewPanel.svelte';
-  import RolesPanel from './panels/RolesPanel.svelte';
+  import RolesPermissionsPanel from './panels/RolesPermissionsPanel.svelte';
   import MembersPanel from './panels/MembersPanel.svelte';
   import BansPanel from './panels/BansPanel.svelte';
   import InvitesPanel from './panels/InvitesPanel.svelte';
@@ -15,10 +15,12 @@
   import AuditLogPanel from './panels/AuditLogPanel.svelte';
   import IntegrationsPanel from './panels/IntegrationsPanel.svelte';
   import EmojisPanel from './panels/EmojisPanel.svelte';
+  import OnboardingPanel from './panels/OnboardingPanel.svelte';
+import { edgeResize } from '$lib/actions/edgeResize';
 
   type Section =
     | 'overview'
-    | 'roles'
+    | 'roles-permissions'
     | 'members'
     | 'bans'
     | 'invites'
@@ -26,7 +28,8 @@
     | 'automod'
     | 'audit-log'
     | 'integrations'
-    | 'emojis';
+    | 'emojis'
+    | 'onboarding';
 
   interface NavGroup {
     label: string;
@@ -39,9 +42,9 @@
       items: [{ id: 'overview', label: 'Overview' }]
     },
     {
-      label: 'Server Settings',
+      label: 'Space Settings',
       items: [
-        { id: 'roles', label: 'Roles' },
+        { id: 'roles-permissions', label: 'Roles & Permissions' },
         { id: 'members', label: 'Members' },
         { id: 'bans', label: 'Bans' },
         { id: 'invites', label: 'Invites' }
@@ -61,15 +64,21 @@
         { id: 'integrations', label: 'Slash Commands' },
         { id: 'emojis', label: 'Emojis' }
       ]
+    },
+    {
+      label: 'Community',
+      items: [
+        { id: 'onboarding', label: 'Onboarding' }
+      ]
     }
   ];
 
-  let serverId = $state('');
+  let spaceId = $state('');
   let activeSection = $state<Section>('overview');
 
   if (browser) {
     const match = window.location.pathname.match(/\/servers\/([^/]+)/);
-    serverId = match?.[1] ?? '';
+    spaceId = match?.[1] ?? '';
   }
 
   function navigate(section: Section) {
@@ -78,7 +87,7 @@
 
   function goBack() {
     if (browser) {
-      window.location.href = `/servers/${serverId}`;
+      window.location.href = `/servers/${spaceId}`;
     }
   }
 </script>
@@ -86,9 +95,9 @@
 <div class="flex h-full bg-gray-800 text-white overflow-hidden">
 
   <!-- Left sidebar -->
-  <nav class="w-56 flex-shrink-0 bg-gray-850 border-r border-gray-700 flex flex-col overflow-y-auto" style="background-color: #1e2124;">
+  <nav use:edgeResize={{ handles: ['right'], minWidth: 224, maxWidth: 384 }} class="w-56 flex-shrink-0 bg-gray-850 border-r border-gray-700 flex flex-col overflow-y-auto" style="background-color: #1e2124; min-width: 14rem; max-width: 24rem;">
     <div class="px-4 pt-6 pb-2">
-      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider truncate">Server Settings</p>
+      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider truncate">Space Settings</p>
     </div>
 
     {#each navGroups as group}
@@ -114,34 +123,36 @@
         class="w-full text-left px-2 py-1.5 rounded text-sm text-gray-400 hover:bg-gray-700/50 hover:text-gray-200 transition-colors flex items-center gap-2"
       >
         <span class="text-xs">&#8592;</span>
-        Back to Server
+        Back to Space
       </button>
     </div>
   </nav>
 
   <!-- Right content panel -->
   <main class="flex-1 overflow-y-auto bg-gray-750" style="background-color: #313338;">
-    {#if serverId}
+    {#if spaceId}
       {#if activeSection === 'overview'}
-        <OverviewPanel {serverId} />
-      {:else if activeSection === 'roles'}
-        <RolesPanel {serverId} />
+        <OverviewPanel spaceId={spaceId} />
+      {:else if activeSection === 'roles-permissions'}
+        <RolesPermissionsPanel spaceId={spaceId} />
       {:else if activeSection === 'members'}
-        <MembersPanel {serverId} />
+        <MembersPanel spaceId={spaceId} />
       {:else if activeSection === 'bans'}
-        <BansPanel {serverId} />
+        <BansPanel spaceId={spaceId} />
       {:else if activeSection === 'invites'}
-        <InvitesPanel {serverId} />
+        <InvitesPanel spaceId={spaceId} />
       {:else if activeSection === 'moderation'}
-        <ModerationPanel {serverId} />
+        <ModerationPanel spaceId={spaceId} />
       {:else if activeSection === 'automod'}
-        <AutomodPanel {serverId} />
+        <AutomodPanel serverId={spaceId} />
       {:else if activeSection === 'audit-log'}
-        <AuditLogPanel {serverId} />
+        <AuditLogPanel spaceId={spaceId} />
       {:else if activeSection === 'integrations'}
-        <IntegrationsPanel {serverId} />
+        <IntegrationsPanel spaceId={spaceId} />
       {:else if activeSection === 'emojis'}
-        <EmojisPanel {serverId} />
+        <EmojisPanel spaceId={spaceId} />
+      {:else if activeSection === 'onboarding'}
+        <OnboardingPanel spaceId={spaceId} />
       {/if}
     {:else}
       <div class="p-8 text-gray-400 text-sm">Loading...</div>

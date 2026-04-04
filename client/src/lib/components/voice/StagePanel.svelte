@@ -23,13 +23,13 @@
 
 	interface Props {
 		channelId: string;
-		serverId: string;
+		spaceId: string;
 		isOwner: boolean;
 		/** When true the record button is shown (server owner / manage_channels). */
 		canRecord?: boolean;
 	}
 
-	let { channelId, serverId, isOwner, canRecord = false }: Props = $props();
+	let { channelId, spaceId, isOwner, canRecord = false }: Props = $props();
 
 	let recording = $state(false);
 
@@ -125,7 +125,7 @@
 				<h3 class="text-sm font-semibold text-white flex items-center gap-1.5">
 					🎙️ Stage {$stageSession.topic ? `: ${$stageSession.topic}` : ''}
 					{#if recording}
-						<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block" title="Recording active"></span>
+						<span class="w-2 h-2 rounded-full bg-gray-500 animate-pulse inline-block" title="Recording active"></span>
 					{/if}
 				</h3>
 				<div class="flex gap-1">
@@ -133,7 +133,7 @@
 						<button
 							onclick={toggleRecording}
 							class="px-2 py-1 text-xs rounded transition-colors {recording
-								? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
+								? 'bg-gray-600 hover:bg-gray-700 text-white animate-pulse'
 								: 'bg-gray-700 hover:bg-gray-600 text-white'}"
 							title={recording ? 'Stop recording' : 'Start recording'}
 							aria-label={recording ? 'Stop recording' : 'Start recording'}
@@ -144,7 +144,7 @@
 					{#if $stageSession.started_by === $currentUser?.id}
 						<button
 							onclick={handleEndStage}
-							class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded"
+							class="px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded"
 						>
 							End Stage
 						</button>
@@ -160,7 +160,7 @@
 						{#each $speakers as speaker (speaker.id)}
 							<div class="flex items-center justify-between text-xs bg-gray-700 rounded px-2 py-1">
 								<div class="flex items-center gap-1 min-w-0">
-									<span class="text-green-400">🎤</span>
+									<span class="text-gray-400">🎤</span>
 									<span class="text-gray-200 truncate">{speaker.username}</span>
 								</div>
 								{#if $stageSession.started_by === $currentUser?.id && speaker.user_id !== $currentUser?.id}
@@ -189,7 +189,7 @@
 							>
 								<div class="flex items-center gap-1 min-w-0">
 									{#if listener.hand_raised}
-										<span class="text-yellow-400">✋</span>
+										<span class="text-gray-400">✋</span>
 									{:else}
 										<span class="text-gray-600">👤</span>
 									{/if}
@@ -217,8 +217,8 @@
 						<button
 							onclick={handleToggleHand}
 							class="flex-1 px-2 py-1 text-xs rounded {currentUserParticipant.hand_raised
-								? 'bg-yellow-600 hover:bg-yellow-700 text-white'
-								: 'bg-indigo-600 hover:bg-indigo-700 text-white'}"
+								? 'bg-gray-600 hover:bg-gray-700 text-white'
+								: 'bg-gray-600 hover:bg-gray-700 text-white'}"
 						>
 							{currentUserParticipant.hand_raised ? 'Lower Hand' : 'Raise Hand'}
 						</button>
@@ -233,7 +233,7 @@
 			{:else}
 				<button
 					onclick={handleJoinStage}
-					class="w-full px-2 py-1 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded"
+					class="w-full px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded"
 				>
 					Join Stage
 				</button>
@@ -248,12 +248,12 @@
 						type="text"
 						bind:value={topicInput}
 						placeholder="Optional topic (e.g., Q&A Session)"
-						class="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs placeholder-gray-500 focus:outline-none focus:border-indigo-500 mb-1"
+						class="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-xs placeholder-gray-500 focus:outline-none focus:border-gray-500 mb-1"
 					/>
 					<div class="flex gap-1">
 						<button
 							onclick={handleStartStage}
-							class="flex-1 px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded"
+							class="flex-1 px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded"
 						>
 							Start
 						</button>
@@ -271,7 +271,7 @@
 			{:else}
 				<button
 					onclick={() => (showStartForm = true)}
-					class="w-full px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded"
+					class="w-full px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded"
 				>
 					🎙️ Start Stage
 				</button>

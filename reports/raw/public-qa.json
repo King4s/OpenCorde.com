@@ -1,0 +1,1203 @@
+[
+  {
+    "browser": "chromium",
+    "viewport": "mobile",
+    "route": "/",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": true,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "chromium",
+    "viewport": "mobile",
+    "route": "/login",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/login",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": true,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "chromium",
+    "viewport": "mobile",
+    "route": "/register",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/register",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": true,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "chromium",
+    "viewport": "mobile",
+    "route": "/servers",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/servers",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": true,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "chromium",
+    "viewport": "mobile",
+    "route": "/invite/invalid-code-123",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/invite/invalid-code-123",
+    "title": "OpenCorde",
+    "h1": "Team communication on your terms",
+    "console": [
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      }
+    ],
+    "pageErrors": [
+      "TypeError: Failed to fetch dynamically imported module: https://opencorde.com/invite/_app/immutable/entry/start.BJ3W6YJb.js"
+    ],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": true,
+    "textSnippet": "OpenCorde BETA\n GitHub Sign in Get started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account  View on GitHub Sign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your"
+  },
+  {
+    "browser": "chromium",
+    "viewport": "tablet",
+    "route": "/",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "chromium",
+    "viewport": "tablet",
+    "route": "/login",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/login",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "chromium",
+    "viewport": "tablet",
+    "route": "/register",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/register",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "chromium",
+    "viewport": "tablet",
+    "route": "/servers",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/servers",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "chromium",
+    "viewport": "tablet",
+    "route": "/invite/invalid-code-123",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/invite/invalid-code-123",
+    "title": "OpenCorde",
+    "h1": "Team communication on your terms",
+    "console": [
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      }
+    ],
+    "pageErrors": [
+      "TypeError: Failed to fetch dynamically imported module: https://opencorde.com/invite/_app/immutable/entry/start.BJ3W6YJb.js"
+    ],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde BETA\n GitHub Sign in Get started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account  View on GitHub Sign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your"
+  },
+  {
+    "browser": "chromium",
+    "viewport": "desktop",
+    "route": "/",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "chromium",
+    "viewport": "desktop",
+    "route": "/login",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/login",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "chromium",
+    "viewport": "desktop",
+    "route": "/register",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/register",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "chromium",
+    "viewport": "desktop",
+    "route": "/servers",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/servers",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "chromium",
+    "viewport": "desktop",
+    "route": "/invite/invalid-code-123",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/invite/invalid-code-123",
+    "title": "OpenCorde",
+    "h1": "Team communication on your terms",
+    "console": [
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec."
+      }
+    ],
+    "pageErrors": [
+      "TypeError: Failed to fetch dynamically imported module: https://opencorde.com/invite/_app/immutable/entry/start.BJ3W6YJb.js"
+    ],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde BETA\n GitHub Sign in Get started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account  View on GitHub Sign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your"
+  },
+  {
+    "browser": "firefox",
+    "viewport": "mobile",
+    "route": "/",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": true,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "firefox",
+    "viewport": "mobile",
+    "route": "/login",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/login",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": true,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "firefox",
+    "viewport": "mobile",
+    "route": "/register",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/register",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": true,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "firefox",
+    "viewport": "mobile",
+    "route": "/servers",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/servers",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": true,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "firefox",
+    "viewport": "mobile",
+    "route": "/invite/invalid-code-123",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/invite/invalid-code-123",
+    "title": "OpenCorde",
+    "h1": "Team communication on your terms",
+    "console": [
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/entry/start.BJ3W6YJb.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/F4uU4e3v.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/DJjTL3lE.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/BUKLBh0t.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/BLo0Xyqj.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/Dp1pzeXC.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/DCiFIFw8.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/DQDl6td0.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/oJOeYW8T.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/IkC7fuWH.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/DUrArRXF.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/entry/app.DpeWYKzg.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/nodes/0.w6lerSaW.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/nodes/6.CHZLdXS2.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/B7ArOoG8.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"The stylesheet https://opencorde.com/invite/_app/immutable/assets/0.D4pC_hAA.css was not loaded because its MIME type, “text/html”, is not “text/css”.\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/Cc1u7ki5.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/BtnM7rji.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/BXsl7I6k.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/C2tpUBrB.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      }
+    ],
+    "pageErrors": [
+      "TypeError: error loading dynamically imported module: https://opencorde.com/invite/_app/immutable/entry/start.BJ3W6YJb.js"
+    ],
+    "failedRequests": [
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/entry/start.BJ3W6YJb.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/F4uU4e3v.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/DJjTL3lE.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/BUKLBh0t.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/BLo0Xyqj.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/Dp1pzeXC.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/DCiFIFw8.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/DQDl6td0.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/oJOeYW8T.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/IkC7fuWH.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/DUrArRXF.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/entry/app.DpeWYKzg.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/nodes/0.w6lerSaW.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/nodes/6.CHZLdXS2.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/B7ArOoG8.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/Cc1u7ki5.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/BtnM7rji.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/BXsl7I6k.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/C2tpUBrB.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      }
+    ],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": true,
+    "textSnippet": "OpenCorde BETA\n GitHub Sign in Get started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account  View on GitHub Sign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your"
+  },
+  {
+    "browser": "firefox",
+    "viewport": "tablet",
+    "route": "/",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "firefox",
+    "viewport": "tablet",
+    "route": "/login",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/login",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "firefox",
+    "viewport": "tablet",
+    "route": "/register",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/register",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "firefox",
+    "viewport": "tablet",
+    "route": "/servers",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/servers",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "firefox",
+    "viewport": "tablet",
+    "route": "/invite/invalid-code-123",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/invite/invalid-code-123",
+    "title": "OpenCorde",
+    "h1": "Team communication on your terms",
+    "console": [
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/entry/start.BJ3W6YJb.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/DCiFIFw8.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/oJOeYW8T.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/DJjTL3lE.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/F4uU4e3v.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/BUKLBh0t.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/BLo0Xyqj.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/DUrArRXF.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/Dp1pzeXC.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/IkC7fuWH.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/Cc1u7ki5.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/entry/app.DpeWYKzg.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/nodes/0.w6lerSaW.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/C2tpUBrB.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/BXsl7I6k.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/BtnM7rji.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/B7ArOoG8.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/nodes/6.CHZLdXS2.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/DQDl6td0.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"The stylesheet https://opencorde.com/invite/_app/immutable/assets/0.D4pC_hAA.css was not loaded because its MIME type, “text/html”, is not “text/css”.\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      }
+    ],
+    "pageErrors": [
+      "TypeError: error loading dynamically imported module: https://opencorde.com/invite/_app/immutable/entry/start.BJ3W6YJb.js"
+    ],
+    "failedRequests": [
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/entry/start.BJ3W6YJb.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/DCiFIFw8.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/oJOeYW8T.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/DJjTL3lE.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/F4uU4e3v.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/BUKLBh0t.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/BLo0Xyqj.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/DUrArRXF.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/Dp1pzeXC.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/IkC7fuWH.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/Cc1u7ki5.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/entry/app.DpeWYKzg.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/nodes/0.w6lerSaW.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/C2tpUBrB.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/BXsl7I6k.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/BtnM7rji.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/B7ArOoG8.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/nodes/6.CHZLdXS2.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/DQDl6td0.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      }
+    ],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde BETA\n GitHub Sign in Get started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account  View on GitHub Sign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your"
+  },
+  {
+    "browser": "firefox",
+    "viewport": "desktop",
+    "route": "/",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "firefox",
+    "viewport": "desktop",
+    "route": "/login",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/login",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "firefox",
+    "viewport": "desktop",
+    "route": "/register",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/register",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "firefox",
+    "viewport": "desktop",
+    "route": "/servers",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/servers",
+    "title": "OpenCorde — Self-hosted Discord alternative with E2EE",
+    "h1": "Team communication on your terms",
+    "console": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde\nBETA\nGitHub\nSign in\nGet started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account\nView on GitHub\nSign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your d"
+  },
+  {
+    "browser": "firefox",
+    "viewport": "desktop",
+    "route": "/invite/invalid-code-123",
+    "status": 200,
+    "finalUrl": "https://opencorde.com/invite/invalid-code-123",
+    "title": "OpenCorde",
+    "h1": "Team communication on your terms",
+    "console": [
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/entry/start.BJ3W6YJb.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/DCiFIFw8.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/DJjTL3lE.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/BUKLBh0t.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/BLo0Xyqj.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/Dp1pzeXC.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/BXsl7I6k.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/F4uU4e3v.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/oJOeYW8T.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/IkC7fuWH.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/DUrArRXF.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/entry/app.DpeWYKzg.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/nodes/0.w6lerSaW.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/C2tpUBrB.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"The stylesheet https://opencorde.com/invite/_app/immutable/assets/0.D4pC_hAA.css was not loaded because its MIME type, “text/html”, is not “text/css”.\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/BtnM7rji.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/B7ArOoG8.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/nodes/6.CHZLdXS2.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/Cc1u7ki5.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      },
+      {
+        "type": "error",
+        "text": "[JavaScript Error: \"Loading module from “https://opencorde.com/invite/_app/immutable/chunks/DQDl6td0.js” was blocked because of a disallowed MIME type (“text/html”).\" {file: \"https://opencorde.com/invite/invalid-code-123\" line: 0}]"
+      }
+    ],
+    "pageErrors": [
+      "TypeError: error loading dynamically imported module: https://opencorde.com/invite/_app/immutable/entry/start.BJ3W6YJb.js"
+    ],
+    "failedRequests": [
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/entry/start.BJ3W6YJb.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/DCiFIFw8.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/DJjTL3lE.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/BUKLBh0t.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/BLo0Xyqj.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/Dp1pzeXC.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/BXsl7I6k.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/F4uU4e3v.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/oJOeYW8T.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/IkC7fuWH.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/DUrArRXF.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/entry/app.DpeWYKzg.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/nodes/0.w6lerSaW.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/C2tpUBrB.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/BtnM7rji.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/B7ArOoG8.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/nodes/6.CHZLdXS2.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/Cc1u7ki5.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      },
+      {
+        "url": "https://opencorde.com/invite/_app/immutable/chunks/DQDl6td0.js",
+        "error": "NS_ERROR_CORRUPTED_CONTENT"
+      }
+    ],
+    "anchorCount": 10,
+    "buttonCount": 0,
+    "horizontalOverflow": false,
+    "textSnippet": "OpenCorde BETA\n GitHub Sign in Get started\nAGPL-3.0 · Self-hosted · E2EE Live · Desktop App\nTeam communication\non your terms\n\nOpenCorde is a feature-complete OpenCorde platform you run yourself. Spaces, channels, voice, video, threads, forums, E2EE, and a Discord bridge — all on infrastructure you own.\n\nCreate an account  View on GitHub Sign in →\nEverything your team needs\n🔐\nEnd-to-End Encryption\n\nMLS protocol (RFC 9420) for text channels, voice, video, and file transfers. Keys never leave your"
+  },
+  {
+    "browser": "webkit",
+    "launch_error": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Missing libraries:                                   ║\n║     libicudata.so.76                                 ║\n║     libicui18n.so.76                                 ║\n║     libicuuc.so.76                                   ║\n║     libjxl.so.0.11                                   ║\n║     libavif.so.16                                    ║\n╚══════════════════════════════════════════════════════╝"
+  }
+]

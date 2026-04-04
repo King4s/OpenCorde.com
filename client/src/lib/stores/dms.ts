@@ -3,7 +3,7 @@
  * @purpose Manage DM channel list and active DM messages
  * @depends api/client, api/websocket, api/types
  */
-import { writable } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 import api from '$lib/api/client';
 import { gateway } from '$lib/api/websocket';
 import type { DmChannel, DmMessage } from '$lib/api/types';
@@ -11,8 +11,26 @@ import type { DmChannel, DmMessage } from '$lib/api/types';
 export const dmChannels = writable<DmChannel[]>([]);
 export const activeDmMessages = writable<DmMessage[]>([]);
 export const dmLoading = writable(false);
+export const dmUnreadCounts = writable<Map<string, number>>(new Map());
+export const hasAnyDmUnread = derived(dmUnreadCounts, $counts => Array.from($counts.values()).some(c => c > 0));
 
 let activeDmId: string | null = null;
+
+function clearDmUnread(dmId: string): void {
+	dmUnreadCounts.update(counts => {
+		const next = new Map(counts);
+		next.delete(dmId);
+		return next;
+	});
+}
+
+function incrementDmUnread(dmId: string): void {
+	dmUnreadCounts.update(counts => {
+		const next = new Map(counts);
+		next.set(dmId, (next.get(dmId) ?? 0) + 1);
+		return next;
+	});
+}
 
 /**
  * Fetch all DM channels for current user
@@ -64,6 +82,7 @@ export async function fetchDmMessages(dmId: string, before?: string): Promise<vo
 		activeDmMessages.update(existing => [...list, ...existing]);
 	} else {
 		activeDmMessages.set(list);
+		clearDmUnread(dmId);
 	}
 	dmLoading.set(false);
 }
@@ -87,6 +106,8 @@ export function initDmListener(): void {
 		const evt = data as { message: DmMessage };
 		if (evt.message.dm_id === activeDmId) {
 			activeDmMessages.update(list => [...list, evt.message]);
+		} else {
+			incrementDmUnread(evt.message.dm_id);
 		}
 		// Update DM channel list to bubble up the DM with new message
 		dmChannels.update(list => {

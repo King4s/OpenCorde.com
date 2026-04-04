@@ -82,7 +82,7 @@
 		outline: none;
 	}
 	.search-row input:focus {
-		border-color: #5865f2;
+		border-color: #e5e7eb;
 	}
 	.error {
 		color: #ed4245;
@@ -117,7 +117,7 @@
 		width: auto;
 		border-radius: 4px;
 		padding: 6px 16px;
-		background: #5865f2;
+		background: #e5e7eb;
 		color: white;
 		font-size: 13px;
 	}

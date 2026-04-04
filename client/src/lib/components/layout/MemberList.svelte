@@ -9,7 +9,7 @@
 	interface Props {
 		members: Member[];
 		loading: boolean;
-		serverId: string;
+		spaceId: string;
 		isOwner: boolean;
 		onlineUserIds?: Set<string>;
 	}
@@ -22,7 +22,7 @@
 		username: string;
 	}
 
-	let { members, loading, serverId, isOwner, onlineUserIds = new Set() }: Props = $props();
+	let { members, loading, spaceId, isOwner, onlineUserIds = new Set() }: Props = $props();
 	let contextMenu = $state<ContextMenuState>({
 		visible: false,
 		x: 0,
@@ -37,8 +37,8 @@
 
 	function getAvatarColor(userId: string): string {
 		const colors = [
-			'bg-indigo-600', 'bg-purple-600', 'bg-pink-600', 'bg-red-600',
-			'bg-orange-600', 'bg-yellow-600', 'bg-green-600', 'bg-teal-600'
+			'bg-gray-600', 'bg-gray-600', 'bg-gray-600', 'bg-gray-600',
+			'bg-gray-600', 'bg-gray-600', 'bg-gray-600', 'bg-gray-600'
 		];
 		const hash = userId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
 		return colors[hash % colors.length];
@@ -62,7 +62,7 @@
 	let offlineMembers = $derived(members.filter(m => !onlineUserIds.has(m.user_id)));
 </script>
 
-<div class="w-48 bg-gray-800 flex flex-col border-l border-gray-900">
+<div class="w-48 bg-gray-800 flex flex-col flex-shrink-0 overflow-auto border-l border-gray-900" style="min-width: 12rem; max-width: 22rem;">
 	<div class="h-12 px-3 flex items-center border-b border-gray-900">
 		<h3 class="text-xs font-semibold text-gray-400 uppercase">Members — {members.length}</h3>
 	</div>
@@ -87,7 +87,7 @@
 								{getInitials(member.nickname ?? member.username)}
 							</div>
 							<!-- Online indicator dot -->
-							<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-gray-800"></span>
+							<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-gray-500 border-2 border-gray-800"></span>
 						</div>
 						<span class="text-gray-200 text-sm truncate group-hover:text-white transition-colors">
 							{member.nickname ?? member.username}
@@ -124,7 +124,7 @@
 	<MemberContextMenu
 		userId={contextMenu.userId}
 		username={contextMenu.username}
-		serverId={serverId}
+		spaceId={spaceId}
 		isOwner={isOwner}
 		x={contextMenu.x}
 		y={contextMenu.y}

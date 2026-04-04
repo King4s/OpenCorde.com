@@ -14,21 +14,21 @@
     created_at: string;
   }
 
-  let { serverId }: { serverId: string } = $props();
+  let { spaceId }: { spaceId: string } = $props();
 
   let invites = $state<Invite[]>([]);
   let loading = $state(false);
   let error = $state('');
 
   $effect(() => {
-    if (serverId) loadInvites();
+    if (spaceId) loadInvites();
   });
 
   async function loadInvites() {
     loading = true;
     error = '';
     try {
-      invites = await api.get<Invite[]>(`/servers/${serverId}/invites`);
+      invites = await api.get<Invite[]>(`/servers/${spaceId}/invites`);
     } catch (e: any) {
       error = e.message ?? 'Failed to load invites';
       invites = [];
@@ -39,7 +39,7 @@
 
   async function revokeInvite(code: string) {
     try {
-      await api.delete(`/servers/${serverId}/invites/${code}`);
+      await api.delete(`/servers/${spaceId}/invites/${code}`);
       invites = invites.filter(i => i.code !== code);
     } catch (e: any) {
       error = e.message ?? 'Failed to revoke invite';
@@ -48,7 +48,7 @@
 
   async function createInvite() {
     try {
-      const inv = await api.post<Invite>(`/servers/${serverId}/invites`, {});
+      const inv = await api.post<Invite>(`/servers/${spaceId}/invites`, {});
       invites = [inv, ...invites];
     } catch (e: any) {
       error = e.message ?? 'Failed to create invite';
@@ -66,14 +66,14 @@
     <h1 class="text-xl font-semibold text-white">Invites</h1>
     <button
       onclick={createInvite}
-      class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded transition-colors"
+      class="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded transition-colors"
     >
       Create Invite
     </button>
   </div>
 
   {#if error}
-    <div class="mb-4 px-3 py-2 bg-red-900/40 border border-red-700/50 rounded text-red-300 text-sm">{error}</div>
+    <div class="mb-4 px-3 py-2 bg-gray-900/40 border border-gray-700/50 rounded text-gray-300 text-sm">{error}</div>
   {/if}
 
   {#if loading}
@@ -86,12 +86,12 @@
     <div class="space-y-2">
       {#each invites as inv (inv.code)}
         <div class="flex items-center gap-3 px-4 py-3 bg-gray-900 border border-gray-700 rounded">
-          <code class="text-indigo-400 text-sm flex-1">{inv.code}</code>
+          <code class="text-gray-400 text-sm flex-1">{inv.code}</code>
           <span class="text-gray-500 text-xs whitespace-nowrap">{inv.uses} uses</span>
           <span class="text-gray-500 text-xs whitespace-nowrap">Expires: {formatExpiry(inv.expires_at)}</span>
           <button
             onclick={() => revokeInvite(inv.code)}
-            class="px-2 py-1 text-xs text-red-400 hover:bg-gray-800 rounded transition-colors flex-shrink-0"
+            class="px-2 py-1 text-xs text-gray-400 hover:bg-gray-800 rounded transition-colors flex-shrink-0"
           >Revoke</button>
         </div>
       {/each}

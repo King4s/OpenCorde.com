@@ -10,17 +10,21 @@
 	let { params } = $props();
 	let postId = $state('');
 	let channelId = $state('');
-	let serverId = $state('');
+	let spaceId = $state('');
 	let replyContent = $state('');
 	let replying = $state(false);
 	let replyError = $state('');
 
 	if (browser) {
-		postId = params.postId;
-		channelId = params.channelId;
-		serverId = params.serverId;
-		if (postId) {
-			forumStore.fetchPost(postId).catch(() => {});
+		const match = window.location.pathname.match(/^\/servers\/([^/]+)\/forum\/([^/]+)\/([^/]+)/);
+		const sid = match?.[1] ?? '';
+		const cid = match?.[2] ?? '';
+		const pid = match?.[3] ?? '';
+		postId = pid;
+		channelId = cid;
+		spaceId = sid;
+		if (pid) {
+			forumStore.fetchPost(pid).catch(() => {});
 		}
 	}
 
@@ -43,7 +47,7 @@
 		if (!confirm(`Delete this post? This cannot be undone.`)) return;
 		try {
 			await forumStore.deletePost(postId);
-			window.location.href = `/servers/${serverId}/forum/${channelId}`;
+			window.location.href = `/servers/${spaceId}/forum/${channelId}`;
 		} catch (e: any) {
 			alert(e.message || 'Failed to delete post');
 		}
@@ -77,8 +81,8 @@
 	<!-- Header with back button -->
 	<div class="h-12 px-6 flex items-center border-b border-gray-800">
 		<a
-			href={`/servers/${serverId}/forum/${channelId}`}
-			class="text-indigo-400 hover:text-indigo-300 text-sm font-medium"
+			href={`/servers/${spaceId}/forum/${channelId}`}
+			class="text-gray-400 hover:text-gray-300 text-sm font-medium"
 		>
 			← Back to Posts
 		</a>
@@ -102,7 +106,7 @@
 					{#if canDeletePost()}
 						<button
 							onclick={handleDeletePost}
-							class="px-3 py-1 text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded transition-colors"
+							class="px-3 py-1 text-xs text-gray-400 hover:text-gray-300 hover:bg-gray-900/20 rounded transition-colors"
 						>
 							Delete
 						</button>
@@ -130,7 +134,7 @@
 								{#if canDeleteReply(reply.author_id)}
 									<button
 										onclick={() => handleDeleteReply(reply.id)}
-										class="text-xs text-red-400 hover:text-red-300 hover:bg-red-900/20 px-2 py-1 rounded transition-colors"
+										class="text-xs text-gray-400 hover:text-gray-300 hover:bg-gray-900/20 px-2 py-1 rounded transition-colors"
 									>
 										Delete
 									</button>
@@ -147,18 +151,18 @@
 		<!-- Reply form -->
 		<div class="max-w-4xl mx-auto w-full px-6 py-4 border-t border-gray-800 bg-gray-850">
 			{#if replyError}
-				<p class="text-red-400 text-sm mb-2">{replyError}</p>
+				<p class="text-gray-400 text-sm mb-2">{replyError}</p>
 			{/if}
 			<textarea
 				bind:value={replyContent}
 				placeholder="Write a reply..."
 				rows={3}
-				class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm placeholder-gray-500 focus:outline-none focus:border-indigo-500 resize-none mb-2"
+				class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm placeholder-gray-500 focus:outline-none focus:border-gray-500 resize-none mb-2"
 			></textarea>
 			<button
 				onclick={handleCreateReply}
 				disabled={!replyContent.trim() || replying}
-				class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm rounded font-medium transition-colors"
+				class="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white text-sm rounded font-medium transition-colors"
 			>
 				{replying ? 'Posting...' : 'Post Reply'}
 			</button>

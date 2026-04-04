@@ -106,6 +106,15 @@ pub async fn send_message(
     let server_id = Snowflake::new(channel_info.1);
     let slowmode_delay = channel_info.2;
 
+    // Enforce server verification level (requires member tenure check)
+    crate::routes::helpers::check_verification_level(
+        &state.db,
+        auth.user_id,
+        server_id,
+        true,
+    )
+    .await?;
+
     // Enforce slowmode: check when this user last sent a message in this channel
     if slowmode_delay > 0 {
         let last_sent: Option<chrono::DateTime<Utc>> = sqlx::query_scalar(

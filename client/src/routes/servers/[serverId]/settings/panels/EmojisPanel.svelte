@@ -9,14 +9,14 @@
   import EmojiGrid from '$lib/components/modals/EmojiGrid.svelte';
   import EmojiUploadForm from '$lib/components/modals/EmojiUploadForm.svelte';
 
-  let { serverId }: { serverId: string } = $props();
+  let { spaceId }: { spaceId: string } = $props();
 
   let name = $state('');
   let file: File | null = $state(null);
   let uploading = $state(false);
   let error = $state('');
 
-  onMount(() => emojiStore.fetchEmojis(serverId));
+  onMount(() => emojiStore.fetchEmojis(spaceId));
 
   async function handleUpload() {
     if (!name.trim() || !file) { error = 'Please enter a name and select a file'; return; }
@@ -25,7 +25,7 @@
     uploading = true;
     error = '';
     try {
-      await emojiStore.uploadEmoji(serverId, name, file);
+      await emojiStore.uploadEmoji(spaceId, name, file);
       name = '';
       file = null;
     } catch (e: unknown) {
@@ -38,7 +38,7 @@
   async function handleDelete(emojiId: string, emojiName: string) {
     if (!confirm(`Delete emoji "${emojiName}"?`)) return;
     try {
-      await emojiStore.deleteEmoji(serverId, emojiId);
+      await emojiStore.deleteEmoji(spaceId, emojiId);
     } catch (e: unknown) {
       error = (e as { message?: string }).message ?? 'Failed to delete emoji';
     }
@@ -49,7 +49,7 @@
   <h1 class="text-xl font-semibold text-white mb-6">Custom Emojis</h1>
 
   {#if error}
-    <div class="mb-4 px-3 py-2 bg-red-900/40 border border-red-700/50 rounded text-red-300 text-sm">{error}</div>
+    <div class="mb-4 px-3 py-2 bg-gray-900/40 border border-gray-700/50 rounded text-gray-300 text-sm">{error}</div>
   {/if}
 
   <div class="mb-6">

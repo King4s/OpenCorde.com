@@ -27,11 +27,11 @@ export const slashCommandsStore = {
     return error;
   },
 
-  async fetchCommands(serverId: string) {
+  async fetchCommands(spaceId: string) {
     loading = true;
     error = '';
     try {
-      commands = await api.get<SlashCommand[]>(`/servers/${serverId}/commands`);
+      commands = await api.get<SlashCommand[]>(`/servers/${spaceId}/commands`);
     } catch (e: any) {
       error = e.message ?? 'Failed to load commands';
       commands = [];
@@ -41,12 +41,12 @@ export const slashCommandsStore = {
   },
 
   async createCommand(
-    serverId: string,
+    spaceId: string,
     name: string,
     description: string,
     handler_url: string
   ) {
-    const command = await api.post<SlashCommand>(`/servers/${serverId}/commands`, {
+    const command = await api.post<SlashCommand>(`/servers/${spaceId}/commands`, {
       name,
       description,
       handler_url,

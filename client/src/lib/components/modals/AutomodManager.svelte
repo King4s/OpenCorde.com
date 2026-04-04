@@ -9,7 +9,7 @@
   import AutomodRuleItem from './AutomodRuleItem.svelte';
   import AutomodRuleForm from './AutomodRuleForm.svelte';
 
-  let { serverId, onClose }: { serverId: string; onClose: () => void } = $props();
+  let { spaceId, onClose }: { spaceId: string; onClose: () => void } = $props();
 
   let newName = $state('Keyword Filter');
   let newKeywords = $state('');
@@ -17,7 +17,7 @@
   let creating = $state(false);
   let error = $state('');
 
-  onMount(() => automodStore.fetch(serverId));
+  onMount(() => automodStore.fetch(spaceId));
 
   async function handleCreate() {
     const keywords = newKeywords
@@ -31,7 +31,7 @@
     creating = true;
     error = '';
     try {
-      await automodStore.create(serverId, keywords, newName, newAction);
+      await automodStore.create(spaceId, keywords, newName, newAction);
       newKeywords = '';
       newName = 'Keyword Filter';
     } catch (e: unknown) {

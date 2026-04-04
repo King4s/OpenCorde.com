@@ -25,6 +25,7 @@ pub struct UserRow {
     pub steam_id: Option<String>, // Optional: Steam64 ID for OpenID login
     pub totp_secret: Option<String>, // Base32 TOTP secret (None = not set up)
     pub totp_enabled: bool,          // True = 2FA is active for this user
+    pub email_verified: bool,        // True = user has verified their email
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -262,6 +263,7 @@ mod tests {
             steam_id: None,
             totp_secret: None,
             totp_enabled: false,
+            email_verified: false,
             created_at: now,
             updated_at: now,
         };

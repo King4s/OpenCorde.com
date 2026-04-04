@@ -191,7 +191,7 @@
 	<!-- Reply indicator -->
 	{#if replyTo}
 		<div class="flex items-center justify-between px-3 py-1.5 mb-1 bg-gray-700/50 rounded-t-lg border-b border-gray-600/30 text-xs text-gray-400">
-			<span>↩ Replying to <span class="text-indigo-400 font-medium">{replyTo.author_username}</span></span>
+			<span>↩ Replying to <span class="text-gray-400 font-medium">{replyTo.author_username}</span></span>
 			<button onclick={onCancelReply} class="text-gray-500 hover:text-gray-300 ml-2">✕</button>
 		</div>
 	{/if}
@@ -207,7 +207,7 @@
 	{/if}
 
 	{#if uploadError}
-		<p class="text-red-400 text-xs px-3 py-1">{uploadError}</p>
+		<p class="text-gray-400 text-xs px-3 py-1">{uploadError}</p>
 	{/if}
 
 	{#if showCommandAutocomplete}
@@ -257,7 +257,7 @@
 			<button
 				type="submit"
 				disabled={(!content.trim() && pendingAttachments.length === 0) || dispatchingCommand}
-				class="ml-2 text-indigo-400 hover:text-indigo-300 disabled:text-gray-600 transition-colors text-sm font-medium"
+				class="ml-2 text-gray-400 hover:text-gray-300 disabled:text-gray-600 transition-colors text-sm font-medium"
 			>
 				{dispatchingCommand ? 'Executing...' : 'Send'}
 			</button>

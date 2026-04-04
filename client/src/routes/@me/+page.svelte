@@ -5,7 +5,8 @@
 	 * @depends stores/dms, stores/auth
 	 */
 	import { browser } from '$app/environment';
-	import { dmChannels, fetchDmChannels, openDm, openFederatedDm } from '$lib/stores/dms';
+	import { dmChannels, dmUnreadCounts, fetchDmChannels, openDm, openFederatedDm } from '$lib/stores/dms';
+	import { presenceMap } from '$lib/stores/presence';
 	import api from '$lib/api/client';
 
 	let searchQuery = $state('');
@@ -96,14 +97,14 @@
 
 	function getAvatarColor(userId: string): string {
 		const colors = [
-			'bg-indigo-600',
-			'bg-purple-600',
-			'bg-pink-600',
-			'bg-red-600',
-			'bg-orange-600',
-			'bg-yellow-600',
-			'bg-green-600',
-			'bg-teal-600'
+			'bg-gray-600',
+			'bg-gray-600',
+			'bg-gray-600',
+			'bg-gray-600',
+			'bg-gray-600',
+			'bg-gray-600',
+			'bg-gray-600',
+			'bg-gray-600'
 		];
 		const hash = userId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
 		return colors[hash % colors.length];
@@ -123,7 +124,7 @@
 	</div>
 
 	<!-- Search / new DM box -->
-	<div class="p-4 border-b border-gray-800">
+	<div class="relative p-4 border-b border-gray-800">
 		<div class="relative">
 			<input
 				type="text"
@@ -133,7 +134,7 @@
 					else handleSearch();
 				}}
 				placeholder="Search users or type username@server.com..."
-				class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+				class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-gray-500"
 			/>
 			{#if isSearching}
 				<div class="absolute right-3 top-2 text-xs text-gray-500">Connecting...</div>
@@ -143,13 +144,13 @@
 		<!-- Cross-server DM prompt -->
 		{#if isFederatedAddress}
 			<div class="mt-2 flex items-center gap-2">
-				<div class="flex-1 text-xs text-indigo-300">
+				<div class="flex-1 text-xs text-gray-300">
 					Start a cross-server DM with <strong>{searchQuery.trim()}</strong>
 				</div>
 				<button
 					onclick={startFederatedDm}
 					disabled={isSearching}
-					class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs rounded-lg transition-colors"
+					class="px-3 py-1.5 bg-gray-600 hover:bg-gray-500 disabled:opacity-50 text-white text-xs rounded-lg transition-colors"
 				>
 					Open DM
 				</button>
@@ -175,7 +176,7 @@
 		{/if}
 
 		{#if error}
-			<p class="text-red-400 text-xs mt-2">{error}</p>
+			<p class="text-gray-400 text-xs mt-2">{error}</p>
 		{/if}
 	</div>
 
@@ -194,13 +195,23 @@
 						onclick={() => (window.location.href = `/@me/dms/${dm.id}`)}
 						class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 transition-colors text-left"
 					>
-						<div class="flex-shrink-0 w-10 h-10 rounded-full {getAvatarColor(dm.other_user_id)} flex items-center justify-center text-white font-semibold text-sm">
+						<div class="relative flex-shrink-0 w-10 h-10 rounded-full {getAvatarColor(dm.other_user_id)} flex items-center justify-center text-white font-semibold text-sm">
 							{getInitials(dm.other_username)}
+							{#if $presenceMap.has(dm.other_user_id)}
+								<span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-gray-500 ring-2 ring-gray-900"></span>
+							{/if}
 						</div>
 						<div class="flex-1 min-w-0">
-							<p class="text-sm font-medium text-white truncate">{dm.other_username}</p>
+							<div class="flex items-center gap-2 min-w-0">
+								<p class="text-sm font-medium text-white truncate">{dm.other_username}</p>
+								{#if ($dmUnreadCounts.get(dm.id) ?? 0) > 0}
+									<span class="ml-auto inline-flex items-center justify-center rounded-full bg-gray-500 px-2 py-0.5 text-[11px] font-semibold text-white">
+										{$dmUnreadCounts.get(dm.id)}
+									</span>
+								{/if}
+							</div>
 							{#if getFederationBadge(dm.other_username)}
-								<p class="text-xs text-indigo-400">via {getFederationBadge(dm.other_username)}</p>
+								<p class="text-xs text-gray-400">via {getFederationBadge(dm.other_username)}</p>
 							{:else}
 								<p class="text-xs text-gray-500">Direct message</p>
 							{/if}

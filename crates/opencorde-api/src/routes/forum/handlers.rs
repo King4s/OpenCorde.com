@@ -16,7 +16,7 @@ use crate::routes::helpers;
 use super::types::{CreatePostRequest, CreateReplyRequest, ListPostsQuery, PostDetailResponse, PostResponse, ReplyResponse};
 use super::auth_check;
 
-/// Create a forum post in a channel. Verifies channel exists and is forum type (2).
+/// Create a forum post in a channel. Verifies channel exists and is forum type (5).
 #[instrument(skip(state, auth, body), fields(user_id = %auth.user_id))]
 pub async fn create_post(
     State(state): State<AppState>,
@@ -35,7 +35,7 @@ pub async fn create_post(
 
     let channel_id_sf = helpers::parse_snowflake(&channel_id)?;
 
-    // Verify channel exists and is forum type (2)
+    // Verify channel exists and is forum type (5)
     let channel_type: (i16,) = sqlx::query_as("SELECT channel_type FROM channels WHERE id = $1")
         .bind(channel_id_sf.as_i64())
         .fetch_optional(&state.db)
@@ -43,7 +43,7 @@ pub async fn create_post(
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("channel not found".into()))?;
 
-    if channel_type.0 != 2 {
+    if channel_type.0 != 5 {
         return Err(ApiError::BadRequest("channel is not a forum channel".into()));
     }
 

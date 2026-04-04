@@ -7,18 +7,18 @@
   import { roles, fetchRoles, createRole, updateRole, deleteRole } from '$lib/stores/roles';
   import type { Role } from '$lib/stores/roles';
 
-  let { serverId }: { serverId: string } = $props();
+  let { spaceId }: { spaceId: string } = $props();
 
   let newRoleName = $state('');
-  let newRoleColor = $state('#5865f2');
+  let newRoleColor = $state('#e5e7eb');
   let editingRole = $state<Role | null>(null);
   let editName = $state('');
-  let editColor = $state('#5865f2');
+  let editColor = $state('#e5e7eb');
   let error = $state('');
   let loading = $state(false);
 
   $effect(() => {
-    fetchRoles(serverId).catch(() => {});
+    fetchRoles(spaceId).catch(() => {});
   });
 
   function hexToInt(hex: string): number {
@@ -26,7 +26,7 @@
   }
 
   function intToHex(n: number | null): string {
-    if (n === null || n === undefined) return '#5865f2';
+    if (n === null || n === undefined) return '#e5e7eb';
     return '#' + n.toString(16).padStart(6, '0');
   }
 
@@ -35,7 +35,7 @@
     loading = true;
     error = '';
     try {
-      await createRole(serverId, newRoleName.trim(), hexToInt(newRoleColor));
+      await createRole(spaceId, newRoleName.trim(), hexToInt(newRoleColor));
       newRoleName = '';
     } catch (e: any) {
       error = e.message ?? 'Failed to create role';
@@ -54,7 +54,7 @@
     loading = true;
     error = '';
     try {
-      await updateRole(serverId, editingRole.id, {
+      await updateRole(spaceId, editingRole.id, {
         name: editName.trim(),
         color: hexToInt(editColor)
       });
@@ -69,7 +69,7 @@
     if (!confirm(`Delete role "${role.name}"?`)) return;
     error = '';
     try {
-      await deleteRole(serverId, role.id);
+      await deleteRole(spaceId, role.id);
     } catch (e: any) {
       error = e.message ?? 'Failed to delete role';
     }
@@ -80,7 +80,7 @@
   <h1 class="text-xl font-semibold text-white mb-6">Roles</h1>
 
   {#if error}
-    <p class="mb-3 text-red-400 text-xs">{error}</p>
+    <p class="mb-3 text-gray-400 text-xs">{error}</p>
   {/if}
 
   <!-- Create Role -->
@@ -91,7 +91,7 @@
         bind:value={newRoleName}
         placeholder="Role name"
         maxlength="100"
-        class="flex-1 px-2 py-1.5 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-indigo-500"
+        class="flex-1 px-2 py-1.5 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-gray-500"
         onkeydown={(e) => e.key === 'Enter' && handleCreate()}
       />
       <input
@@ -103,7 +103,7 @@
       <button
         onclick={handleCreate}
         disabled={loading || !newRoleName.trim()}
-        class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm rounded transition-colors"
+        class="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white text-sm rounded transition-colors"
       >
         Add
       </button>
@@ -118,7 +118,7 @@
           <input
             bind:value={editName}
             maxlength="100"
-            class="flex-1 px-2 py-1 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-indigo-500"
+            class="flex-1 px-2 py-1 bg-gray-900 border border-gray-700 rounded text-white text-sm focus:outline-none focus:border-gray-500"
             onkeydown={(e) => e.key === 'Enter' && handleUpdate()}
           />
           <input
@@ -128,7 +128,7 @@
           />
           <button
             onclick={handleUpdate}
-            class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded"
+            class="px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded"
           >Save</button>
           <button
             onclick={() => (editingRole = null)}
@@ -149,7 +149,7 @@
             >Edit</button>
             <button
               onclick={() => handleDelete(role)}
-              class="text-red-400 hover:text-red-300 text-xs px-1.5 py-0.5 rounded hover:bg-gray-600"
+              class="text-gray-400 hover:text-gray-300 text-xs px-1.5 py-0.5 rounded hover:bg-gray-600"
             >Delete</button>
           </div>
         </div>

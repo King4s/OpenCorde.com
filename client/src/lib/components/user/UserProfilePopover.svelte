@@ -22,12 +22,12 @@
 
 	interface Props {
 		userId: string;
-		serverId: string | null;
+		spaceId: string | null;
 		anchorRect: DOMRect;
 		onClose: () => void;
 	}
 
-	let { userId, serverId, anchorRect, onClose }: Props = $props();
+	let { userId, spaceId, anchorRect, onClose }: Props = $props();
 
 	let profile = $state<PublicProfile | null>(null);
 	let memberRoles = $state<Role[]>([]);
@@ -37,7 +37,7 @@
 
 	// Colours for avatar based on user ID (same hash as MessageList)
 	const avatarColors = [
-		'#5865f2', '#9b59b6', '#e91e8c', '#e74c3c',
+		'#e5e7eb', '#9b59b6', '#e91e8c', '#e74c3c',
 		'#e67e22', '#f1c40f', '#2ecc71', '#1abc9c'
 	];
 
@@ -70,7 +70,7 @@
 		// Load profile + roles in parallel
 		Promise.all([
 			api.get<PublicProfile>(`/users/${userId}`),
-			serverId ? api.get<Role[]>(`/servers/${serverId}/members/${userId}/roles`) : Promise.resolve([])
+			spaceId ? api.get<Role[]>(`/servers/${spaceId}/members/${userId}/roles`) : Promise.resolve([])
 		]).then(([prof, roles]) => {
 			profile = prof;
 			memberRoles = roles as Role[];
@@ -100,7 +100,7 @@
 	}
 
 	function roleColor(color: number | null): string {
-		if (!color) return '#5865f2';
+		if (!color) return '#e5e7eb';
 		const r = (color >> 16) & 0xff;
 		const g = (color >> 8) & 0xff;
 		const b = color & 0xff;
@@ -195,7 +195,7 @@
 			<button
 				onclick={handleSendMessage}
 				disabled={dmLoading}
-				class="w-full py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium rounded transition-colors"
+				class="w-full py-1.5 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white text-sm font-medium rounded transition-colors"
 			>
 				{dmLoading ? 'Opening...' : 'Send Message'}
 			</button>

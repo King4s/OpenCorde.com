@@ -30,10 +30,10 @@ function createEmojiStore() {
   return {
     subscribe,
 
-    async fetchEmojis(serverId: string) {
+    async fetchEmojis(spaceId: string) {
       update(s => ({ ...s, loading: true, error: '' }));
       try {
-        const emojis = await api.get<EmojiRow[]>(`/servers/${serverId}/emojis`);
+        const emojis = await api.get<EmojiRow[]>(`/servers/${spaceId}/emojis`);
         update(s => ({ ...s, emojis, loading: false }));
       } catch (err: any) {
         const error = err.message ?? 'Failed to fetch emojis';
@@ -42,13 +42,13 @@ function createEmojiStore() {
       }
     },
 
-    async uploadEmoji(serverId: string, name: string, file: Blob) {
+    async uploadEmoji(spaceId: string, name: string, file: Blob) {
       const formData = new FormData();
       formData.append('name', name);
       formData.append('file', file);
 
       try {
-        const response = await fetch(`/api/v1/servers/${serverId}/emojis`, {
+        const response = await fetch(`/api/v1/servers/${spaceId}/emojis`, {
           method: 'POST',
           body: formData
         });
@@ -66,9 +66,9 @@ function createEmojiStore() {
       }
     },
 
-    async deleteEmoji(serverId: string, emojiId: string) {
+    async deleteEmoji(spaceId: string, emojiId: string) {
       try {
-        await api.delete(`/servers/${serverId}/emojis/${emojiId}`);
+        await api.delete(`/servers/${spaceId}/emojis/${emojiId}`);
         update(s => ({
           ...s,
           emojis: s.emojis.filter(e => e.id !== emojiId)

@@ -76,18 +76,18 @@
 		<p class="text-gray-400 mb-6">Enter your new password below</p>
 
 		{#if error}
-			<div class="bg-red-900/50 text-red-300 p-3 rounded mb-4 text-sm">{error}</div>
+			<div class="bg-gray-900/50 text-gray-300 p-3 rounded mb-4 text-sm">{error}</div>
 		{/if}
 
 		{#if success}
-			<div class="bg-green-900/50 text-green-300 p-3 rounded mb-4 text-sm">{success}</div>
+			<div class="bg-gray-900/50 text-gray-300 p-3 rounded mb-4 text-sm">{success}</div>
 		{/if}
 
 		{#if !token}
-			<div class="bg-yellow-900/50 text-yellow-300 p-4 rounded text-sm">
+			<div class="bg-gray-900/50 text-gray-300 p-4 rounded text-sm">
 				<p class="font-bold mb-2">Reset token not found</p>
 				<p>Please use the reset link from your email.</p>
-				<a href="/login" class="text-indigo-400 hover:underline mt-2 inline-block">
+				<a href="/login" class="text-gray-400 hover:underline mt-2 inline-block">
 					Back to Login
 				</a>
 			</div>
@@ -102,7 +102,7 @@
 						type="password"
 						bind:value={newPassword}
 						required
-						class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+						class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-gray-500"
 						placeholder="••••••••"
 					/>
 					<p class="text-gray-500 text-xs mt-1">Minimum 8 characters</p>
@@ -117,7 +117,7 @@
 						type="password"
 						bind:value={confirmPassword}
 						required
-						class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+						class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:border-gray-500"
 						placeholder="••••••••"
 					/>
 				</div>
@@ -125,14 +125,14 @@
 				<button
 					type="submit"
 					disabled={loading}
-					class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium rounded transition-colors"
+					class="w-full py-2 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white font-medium rounded transition-colors"
 				>
 					{loading ? 'Resetting...' : 'Reset Password'}
 				</button>
 			</form>
 
 			<p class="text-gray-400 text-sm mt-4 text-center">
-				<a href="/login" class="text-indigo-400 hover:underline">Back to Login</a>
+				<a href="/login" class="text-gray-400 hover:underline">Back to Login</a>
 			</p>
 		{/if}
 	</div>

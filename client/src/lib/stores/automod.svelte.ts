@@ -19,17 +19,17 @@ export const automodStore = {
     return rules;
   },
 
-  async fetch(serverId: string) {
-    rules = await api.get<AutomodRule[]>(`/servers/${serverId}/automod`);
+  async fetch(spaceId: string) {
+    rules = await api.get<AutomodRule[]>(`/servers/${spaceId}/automod`);
   },
 
   async create(
-    serverId: string,
+    spaceId: string,
     keywords: string[],
     name?: string,
     action?: string
   ) {
-    const rule = await api.post<AutomodRule>(`/servers/${serverId}/automod`, {
+    const rule = await api.post<AutomodRule>(`/servers/${spaceId}/automod`, {
       name: name ?? 'Keyword Filter',
       keywords,
       action: action ?? 'delete',

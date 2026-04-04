@@ -12,21 +12,21 @@
     reason: string | null;
   }
 
-  let { serverId }: { serverId: string } = $props();
+  let { spaceId }: { spaceId: string } = $props();
 
   let bans = $state<Ban[]>([]);
   let loading = $state(false);
   let error = $state('');
 
   $effect(() => {
-    if (serverId) loadBans();
+    if (spaceId) loadBans();
   });
 
   async function loadBans() {
     loading = true;
     error = '';
     try {
-      bans = await api.get<Ban[]>(`/servers/${serverId}/bans`);
+      bans = await api.get<Ban[]>(`/servers/${spaceId}/bans`);
     } catch (e: any) {
       error = e.message ?? 'Failed to load bans';
     } finally {
@@ -36,7 +36,7 @@
 
   async function unban(userId: string) {
     try {
-      await api.delete(`/servers/${serverId}/bans/${userId}`);
+      await api.delete(`/servers/${spaceId}/bans/${userId}`);
       bans = bans.filter(b => b.user_id !== userId);
     } catch (e: any) {
       error = e.message ?? 'Failed to unban user';
@@ -48,7 +48,7 @@
   <h1 class="text-xl font-semibold text-white mb-6">Bans</h1>
 
   {#if error}
-    <div class="mb-4 px-3 py-2 bg-red-900/40 border border-red-700/50 rounded text-red-300 text-sm">{error}</div>
+    <div class="mb-4 px-3 py-2 bg-gray-900/40 border border-gray-700/50 rounded text-gray-300 text-sm">{error}</div>
   {/if}
 
   {#if loading}
@@ -62,7 +62,7 @@
       {#each bans as ban (ban.user_id)}
         <div class="flex items-center gap-3 px-4 py-3 bg-gray-900 border border-gray-700 rounded">
           <div class="flex-1 min-w-0">
-            <p class="text-gray-200 text-sm font-medium">User ID: <span class="font-mono text-indigo-400">{ban.user_id}</span></p>
+            <p class="text-gray-200 text-sm font-medium">User ID: <span class="font-mono text-gray-400">{ban.user_id}</span></p>
             {#if ban.reason}
               <p class="text-gray-500 text-xs mt-0.5">Reason: {ban.reason}</p>
             {:else}

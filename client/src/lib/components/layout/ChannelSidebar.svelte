@@ -1,6 +1,7 @@
 <!--
   @component ChannelSidebar
-  @purpose Renders text/voice/stage channel lists with drag-drop, context menu, and create forms
+  @purpose Renders text/voice/stage/forum channel lists with drag-drop, context menu, and create forms
+  @version 2.0.0 — category collapsing
   @uses Svelte 5 $props(), $state(), $derived() runes
 -->
 <script lang="ts">
@@ -10,21 +11,22 @@
 		channels,
 		textChannels,
 		voiceChannels,
-		stageChannels
+		stageChannels,
+		forumChannels
 	} from '$lib/stores/channels';
 	import api from '$lib/api/client';
 	import { notifSettings, setNotifLevel, fetchNotifSettings, NOTIF_LABELS, type NotifLevel } from '$lib/stores/notificationSettings';
 	import ChannelList from './ChannelList.svelte';
 
 	interface Props {
-		serverId: string;
+		spaceId: string;
 		showCreateChannel: boolean;
 		onCreateChannelToggle: () => void;
 		onWebhookOpen: (channelId: string) => void;
 	}
 
 	let {
-		serverId,
+		spaceId,
 		showCreateChannel,
 		onCreateChannelToggle,
 		onWebhookOpen
@@ -45,15 +47,15 @@
 	let draggedChannelType = $state<number | null>(null);
 
 	async function handleCreateChannel() {
-		if (!channelName.trim() || !serverId) return;
+		if (!channelName.trim() || !spaceId) return;
 		error = '';
 		try {
-			await api.post(`/servers/${serverId}/channels`, {
+			await api.post(`/servers/${spaceId}/channels`, {
 				name: channelName.trim(),
 				channel_type: channelType,
 				nsfw: channelNsfw
 			});
-			await fetchChannels(serverId);
+			await fetchChannels(spaceId);
 			onCreateChannelToggle();
 			channelName = '';
 			channelType = 0;
@@ -83,7 +85,7 @@
 		channelMenuError = '';
 		try {
 			await api.patch(`/channels/${channelMenu.channelId}`, { name: editingChannelName.trim() });
-			await fetchChannels(serverId);
+			await fetchChannels(spaceId);
 			closeChannelMenu();
 		} catch (e: any) {
 			channelMenuError = e.message ?? 'Failed to rename';
@@ -96,7 +98,7 @@
 		channelMenuError = '';
 		try {
 			await api.delete(`/channels/${channelMenu.channelId}`);
-			await fetchChannels(serverId);
+			await fetchChannels(spaceId);
 			closeChannelMenu();
 		} catch (e: any) {
 			channelMenuError = e.message ?? 'Failed to delete';
@@ -127,7 +129,13 @@
 		}
 
 		const allChannels = get(channels);
-		const list = draggedChannelType === 0 ? get(textChannels) : draggedChannelType === 1 ? get(voiceChannels) : get(stageChannels);
+		const list = draggedChannelType === 0
+			? get(textChannels)
+			: draggedChannelType === 1
+				? get(voiceChannels)
+				: draggedChannelType === 3
+					? get(stageChannels)
+					: get(forumChannels);
 		const draggedIdx = list.findIndex((c) => c.id === draggedChannelId);
 		const targetIdx = list.findIndex((c) => c.id === targetChannelId);
 
@@ -151,7 +159,7 @@
 			await api.patch(`/channels/${draggedChannelId}`, { position: targetIdx });
 		} catch (e: any) {
 			// Revert on error
-			await fetchChannels(serverId);
+			await fetchChannels(spaceId);
 		}
 
 		draggedChannelId = null;
@@ -164,32 +172,35 @@
 	}
 </script>
 
+<div class="w-full bg-gray-800 flex flex-col flex-shrink-0 overflow-auto">
 <!-- Create channel form -->
 {#if showCreateChannel}
 	<div class="p-2 bg-gray-750 border-b border-gray-900">
-		{#if error}<p class="text-red-400 text-xs mb-1">{error}</p>{/if}
+		{#if error}<p class="text-gray-400 text-xs mb-1">{error}</p>{/if}
 		<input type="text" bind:value={channelName} placeholder="channel-name"
-			class="w-full px-2 py-1 bg-gray-900 border border-gray-700 rounded text-white text-xs placeholder-gray-500 focus:outline-none focus:border-indigo-500 mb-1" />
+			class="w-full px-2 py-1 bg-gray-900 border border-gray-700 rounded text-white text-xs placeholder-gray-500 focus:outline-none focus:border-gray-500 mb-1" />
 		<div class="flex gap-1 mb-1">
 			<button onclick={() => channelType = 0}
-				class="flex-1 text-xs py-1 rounded {channelType === 0 ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-400'}">Text</button>
+				class="flex-1 text-xs py-1 rounded {channelType === 0 ? 'bg-gray-600 text-white' : 'bg-gray-700 text-gray-400'}">Text</button>
 			<button onclick={() => channelType = 1}
-				class="flex-1 text-xs py-1 rounded {channelType === 1 ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-400'}">Voice</button>
+				class="flex-1 text-xs py-1 rounded {channelType === 1 ? 'bg-gray-600 text-white' : 'bg-gray-700 text-gray-400'}">Voice</button>
 			<button onclick={() => channelType = 3}
-				class="flex-1 text-xs py-1 rounded {channelType === 3 ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-400'}">Stage</button>
+				class="flex-1 text-xs py-1 rounded {channelType === 3 ? 'bg-gray-600 text-white' : 'bg-gray-700 text-gray-400'}">Stage</button>
+			<button onclick={() => channelType = 5}
+				class="flex-1 text-xs py-1 rounded {channelType === 5 ? 'bg-gray-600 text-white' : 'bg-gray-700 text-gray-400'}">Forum</button>
 		</div>
 		<label class="flex items-center gap-2 mb-1 cursor-pointer">
 			<input type="checkbox" bind:checked={channelNsfw} class="w-4 h-4" />
 			<span class="text-xs text-gray-400">NSFW</span>
 		</label>
 		<button onclick={handleCreateChannel} disabled={!channelName.trim()}
-			class="w-full text-xs py-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded">Create</button>
+			class="w-full text-xs py-1 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white rounded">Create</button>
 	</div>
 {/if}
 
 <div class="flex-1 overflow-y-auto p-2 space-y-4">
 	<ChannelList
-		{serverId}
+		{spaceId}
 		onDragStart={handleDragStart}
 		onDragOver={handleDragOver}
 		onDrop={handleDrop}
@@ -207,7 +218,7 @@
 			#{channelMenu.channelName}
 		</div>
 		{#if channelMenuError}
-			<p class="px-3 py-1 text-xs text-red-400">{channelMenuError}</p>
+			<p class="px-3 py-1 text-xs text-gray-400">{channelMenuError}</p>
 		{/if}
 		<div class="px-3 py-2 border-b border-gray-700">
 			<label class="block text-xs text-gray-500 mb-1" for="rename-channel-input">Rename</label>
@@ -216,10 +227,10 @@
 					id="rename-channel-input"
 					type="text"
 					bind:value={editingChannelName}
-					class="flex-1 min-w-0 px-2 py-1 bg-gray-800 text-white text-xs rounded border border-gray-700 focus:border-indigo-500 outline-none"
+					class="flex-1 min-w-0 px-2 py-1 bg-gray-800 text-white text-xs rounded border border-gray-700 focus:border-gray-500 outline-none"
 					onkeydown={(e) => e.key === 'Enter' && handleRenameChannel()}
 				/>
-				<button onclick={handleRenameChannel} class="px-2 py-1 bg-indigo-700 hover:bg-indigo-600 text-white text-xs rounded">OK</button>
+				<button onclick={handleRenameChannel} class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded">OK</button>
 			</div>
 		</div>
 		<!-- Notification level picker -->
@@ -229,22 +240,23 @@
 				{#each ([0, 1, 2] as const) as lvl (lvl)}
 					{@const active = ($notifSettings.get(channelMenu?.channelId ?? '') ?? 0) === lvl}
 					<button
-						class="text-left px-2 py-1 rounded text-xs transition-colors {active ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:bg-gray-800'}"
+						class="text-left px-2 py-1 rounded text-xs transition-colors {active ? 'bg-gray-600 text-white' : 'text-gray-400 hover:bg-gray-800'}"
 						onclick={async () => { if (channelMenu) { await setNotifLevel(channelMenu.channelId, lvl as NotifLevel); } }}
 					>{NOTIF_LABELS[lvl]}</button>
 				{/each}
 			</div>
 		</div>
 		<button
-			class="w-full text-left px-3 py-1.5 text-sm text-blue-400 hover:bg-gray-800 transition-colors"
+			class="w-full text-left px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-800 transition-colors"
 			onclick={() => { onWebhookOpen(channelMenu?.channelId ?? ''); channelMenu = null; }}
 		>Webhooks</button>
 		<button
-			class="w-full text-left px-3 py-1.5 text-sm text-red-400 hover:bg-gray-800 transition-colors"
+			class="w-full text-left px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-800 transition-colors"
 			onclick={handleDeleteChannel}
 		>Delete Channel</button>
 	</div>
 {/if}
+</div>
 
 <style>
 	/* Modal and drag styles are handled inline with Tailwind */

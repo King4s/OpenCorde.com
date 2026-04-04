@@ -5,6 +5,7 @@
 -->
 <script lang="ts">
   import { threadStore } from '$lib/stores/threads.svelte';
+import { edgeResize } from '$lib/actions/edgeResize';
 
   let { onClose }: { onClose: () => void } = $props();
 
@@ -36,7 +37,7 @@
   }
 </script>
 
-<div class="thread-panel">
+<div use:edgeResize={{ handles: ['left'], minWidth: 260, maxWidth: 520 }} class="thread-panel resizable-thread-panel">
   <div class="thread-header">
     <span class="thread-title">🧵 {threadStore.activeThread?.name ?? 'Thread'}</span>
     <button class="close-btn" onclick={onClose}>✕</button>
@@ -86,6 +87,12 @@
     background: #2b2d31;
     border-left: 1px solid #1e1f22;
     flex-shrink: 0;
+  }
+
+  .resizable-thread-panel {
+    overflow: auto;
+    min-width: 260px;
+    max-width: 520px;
   }
 
   .thread-header {
@@ -191,7 +198,7 @@
 
   .thread-input button {
     align-self: flex-end;
-    background: #5865f2;
+    background: #e5e7eb;
     border: none;
     border-radius: 4px;
     color: white;

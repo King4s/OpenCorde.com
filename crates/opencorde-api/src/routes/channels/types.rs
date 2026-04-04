@@ -17,7 +17,7 @@ pub struct ChannelResponse {
     pub server_id: String,
     /// Channel name (1-100 chars)
     pub name: String,
-    /// Channel type (0=Text, 1=Voice, 2=Category)
+    /// Channel type (0=Text, 1=Voice, 2=Category, 3=Stage, 4=Announcement, 5=Forum)
     pub channel_type: i16,
     /// Channel topic (optional)
     pub topic: Option<String>,
@@ -41,7 +41,7 @@ pub struct ChannelResponse {
 pub struct CreateChannelRequest {
     /// Channel name (must be 1-100 chars)
     pub name: String,
-    /// Channel type: 0=Text, 1=Voice, 2=Category (optional, defaults to 0)
+    /// Channel type: 0=Text, 1=Voice, 2=Category, 3=Stage, 4=Announcement, 5=Forum (optional, defaults to 0)
     pub channel_type: Option<i16>,
     /// Channel topic (optional)
     pub topic: Option<String>,

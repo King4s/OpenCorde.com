@@ -23,7 +23,7 @@
 		loading: boolean;
 		hasMore: boolean;
 		currentUserId?: string;
-		serverId?: string;
+		spaceId?: string;
 		onLoadMore: () => void;
 		onReply?: (msg: Message) => void;
 		onReact?: (msgId: string, emoji: string, currentlyReacted: boolean) => void;
@@ -36,7 +36,7 @@
 		lastReadId?: string | null;
 	}
 
-	let { messages, loading, hasMore, currentUserId, serverId, onLoadMore, onReply, onReact, onPin, onOpenThread, onEdit, onDelete, startEditMsgId = null, lastReadId = null }: Props = $props();
+	let { messages, loading, hasMore, currentUserId, spaceId, onLoadMore, onReply, onReact, onPin, onOpenThread, onEdit, onDelete, startEditMsgId = null, lastReadId = null }: Props = $props();
 
 	let editingMsgId = $state<string | null>(null);
 	let editContent = $state('');
@@ -115,8 +115,8 @@
 
 	function getAvatarColor(authorId: string): string {
 		const colors = [
-			'bg-indigo-600', 'bg-purple-600', 'bg-pink-600', 'bg-red-600',
-			'bg-orange-600', 'bg-yellow-600', 'bg-green-600', 'bg-teal-600'
+			'bg-gray-600', 'bg-gray-600', 'bg-gray-600', 'bg-gray-600',
+			'bg-gray-600', 'bg-gray-600', 'bg-gray-600', 'bg-gray-600'
 		];
 		const hash = authorId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
 		return colors[hash % colors.length];
@@ -218,7 +218,7 @@
 
 <div bind:this={scrollContainer} class="flex-1 overflow-y-auto px-4 pt-4 pb-2 flex flex-col gap-0">
 	{#if hasMore && !loading}
-		<button class="text-indigo-400 text-sm hover:underline py-2 self-center" onclick={onLoadMore}>
+		<button class="text-gray-400 text-sm hover:underline py-2 self-center" onclick={onLoadMore}>
 			Load older messages
 		</button>
 	{:else if hasMore && loading}
@@ -228,9 +228,9 @@
 	{#each displayMessages as { msg, compact } (msg.id)}
 		{#if dividerBeforeId === msg.id}
 			<div class="flex items-center gap-3 px-4 py-1 select-none" aria-label="New messages divider">
-				<div class="flex-1 h-px bg-red-500/60"></div>
-				<span class="text-red-400 text-xs font-semibold whitespace-nowrap px-1">NEW MESSAGES</span>
-				<div class="flex-1 h-px bg-red-500/60"></div>
+				<div class="flex-1 h-px bg-gray-500/60"></div>
+				<span class="text-gray-400 text-xs font-semibold whitespace-nowrap px-1">NEW MESSAGES</span>
+				<div class="flex-1 h-px bg-gray-500/60"></div>
 			</div>
 		{/if}
 		<div
@@ -289,19 +289,19 @@
 						onclick={() => msg.reply_to_id && scrollToMessage(msg.reply_to_id)}
 						onkeydown={(e) => e.key === 'Enter' && msg.reply_to_id && scrollToMessage(msg.reply_to_id)}>
 						<span class="text-gray-600">↩</span>
-						<span class="font-medium text-indigo-400">{msg.reply_to.author_username}</span>
+						<span class="font-medium text-gray-400">{msg.reply_to.author_username}</span>
 						<span class="truncate max-w-xs">{msg.reply_to.content}</span>
 					</div>
 				{/if}
 
 				<!-- Message content rendered as markdown with syntax highlighting -->
 				{#if editingMsgId === msg.id}
-					<textarea class="w-full bg-gray-700 text-gray-200 text-sm rounded p-2 resize-none border border-gray-600 focus:border-indigo-500 outline-none mt-1" rows="3"
+					<textarea class="w-full bg-gray-700 text-gray-200 text-sm rounded p-2 resize-none border border-gray-600 focus:border-gray-500 outline-none mt-1" rows="3"
 						bind:value={editContent}
 						onkeydown={(e) => { if (e.key === 'Escape') cancelEdit(); else if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitEdit(); } }}
 					></textarea>
 					<div class="flex gap-2 mt-1 text-xs">
-						<button class="text-indigo-400 hover:text-indigo-300" onclick={submitEdit}>Save</button>
+						<button class="text-gray-400 hover:text-gray-300" onclick={submitEdit}>Save</button>
 						<button class="text-gray-500 hover:text-gray-300" onclick={cancelEdit}>Cancel</button>
 						<span class="text-gray-600">Enter to save · Esc to cancel</span>
 					</div>
@@ -319,12 +319,12 @@
 								<!-- E2EE encrypted attachment: decrypt on demand -->
 								<button
 									onclick={() => decryptAndDownload(att.url, att.filename)}
-									class="flex items-center gap-2 px-3 py-2 bg-gray-700/50 border border-indigo-600/50 rounded hover:border-indigo-400/50 transition-colors text-sm text-gray-300 hover:text-white"
+									class="flex items-center gap-2 px-3 py-2 bg-gray-700/50 border border-gray-600/50 rounded hover:border-gray-400/50 transition-colors text-sm text-gray-300 hover:text-white"
 									title="Click to decrypt and download"
 								>
 									<span>🔐</span>
 									<span class="truncate max-w-xs">{originalName(att.filename)}</span>
-									<span class="text-xs text-indigo-400 whitespace-nowrap">E2EE</span>
+									<span class="text-xs text-gray-400 whitespace-nowrap">E2EE</span>
 									<span class="text-xs text-gray-500 whitespace-nowrap">{formatFileSize(att.size)}</span>
 								</button>
 							{:else if att.content_type?.startsWith('image/')}
@@ -342,7 +342,9 @@
 									controls
 									class="max-h-64 max-w-sm rounded border border-gray-600"
 									preload="metadata"
+									aria-label={att.filename}
 								>
+									<track kind="captions" label="Captions" src="data:text/vtt,WEBVTT%0A%0A" default />
 									<a href={att.url} download={att.filename}>{att.filename}</a>
 								</video>
 							{:else if att.content_type?.startsWith('audio/')}
@@ -372,7 +374,7 @@
 					<div class="flex flex-wrap gap-1 mt-1 items-center">
 						{#each (msg.reactions ?? []) as r (r.emoji)}
 							<button
-								class="flex items-center gap-1 px-1.5 py-0.5 rounded text-xs {r.reacted ? 'bg-indigo-900/50 border border-indigo-600/50' : 'bg-gray-700/50 border border-gray-600/30'} hover:border-indigo-500/50 transition-colors"
+								class="flex items-center gap-1 px-1.5 py-0.5 rounded text-xs {r.reacted ? 'bg-gray-900/50 border border-gray-600/50' : 'bg-gray-700/50 border border-gray-600/30'} hover:border-gray-500/50 transition-colors"
 								onclick={() => onReact?.(msg.id, r.emoji, r.reacted)}
 								title="{r.reacted ? 'Remove reaction' : 'Add reaction'}"
 							>
@@ -385,7 +387,7 @@
 						{#if onReact}
 							<div class="relative">
 								<button
-									class="opacity-0 group-hover:opacity-100 transition-opacity px-1.5 py-0.5 rounded text-xs bg-gray-700/50 border border-gray-600/30 hover:border-indigo-500/50 text-gray-400 hover:text-gray-200"
+									class="opacity-0 group-hover:opacity-100 transition-opacity px-1.5 py-0.5 rounded text-xs bg-gray-700/50 border border-gray-600/30 hover:border-gray-500/50 text-gray-400 hover:text-gray-200"
 									onclick={() => toggleEmojiPicker(msg.id)}
 									title="Add reaction"
 								>+😀</button>
@@ -418,7 +420,7 @@
 				{/if}
 			</div>
 
-			<MessageContextMenu {msg} {currentUserId} {serverId} {onReply} {onPin} {onOpenThread} {onDelete}
+			<MessageContextMenu {msg} {currentUserId} {spaceId} {onReply} {onPin} {onOpenThread} {onDelete}
 				onStartEdit={startEdit} />
 		</div>
 	{/each}
@@ -427,7 +429,7 @@
 {#if popoverUserId && popoverAnchorRect}
 	<UserProfilePopover
 		userId={popoverUserId}
-		serverId={serverId ?? null}
+		spaceId={spaceId ?? null}
 		anchorRect={popoverAnchorRect}
 		onClose={() => { popoverUserId = null; popoverAnchorRect = null; }}
 	/>

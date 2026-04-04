@@ -20,9 +20,9 @@ pub fn validate_channel_name(name: &str) -> Result<(), ApiError> {
 
 /// Validate channel type.
 pub fn validate_channel_type(channel_type: i16) -> Result<(), ApiError> {
-    if ![0, 1, 2, 3].contains(&channel_type) {
+    if ![0, 1, 2, 3, 4, 5].contains(&channel_type) {
         return Err(ApiError::BadRequest(
-            "channel_type must be 0 (Text), 1 (Voice), 2 (Category), or 3 (Stage)".into(),
+            "channel_type must be 0 (Text), 1 (Voice), 2 (Category), 3 (Stage), 4 (Announcement), or 5 (Forum)".into(),
         ));
     }
     Ok(())
@@ -69,13 +69,15 @@ mod tests {
     fn test_validate_channel_type_valid() {
         assert!(validate_channel_type(0).is_ok()); // Text
         assert!(validate_channel_type(1).is_ok()); // Voice
-        assert!(validate_channel_type(2).is_ok()); // Category (forum)
+        assert!(validate_channel_type(2).is_ok()); // Category
         assert!(validate_channel_type(3).is_ok()); // Stage
+        assert!(validate_channel_type(4).is_ok()); // Announcement
+        assert!(validate_channel_type(5).is_ok()); // Forum
     }
 
     #[test]
     fn test_validate_channel_type_invalid() {
-        assert!(validate_channel_type(4).is_err());
+        assert!(validate_channel_type(6).is_err());
         assert!(validate_channel_type(-1).is_err());
     }
 

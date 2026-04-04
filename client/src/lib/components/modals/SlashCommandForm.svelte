@@ -105,7 +105,7 @@
 	}
 
 	input:focus {
-		border-color: #5865f2;
+		border-color: #e5e7eb;
 	}
 
 	input:disabled {
@@ -120,7 +120,7 @@
 	}
 
 	button {
-		background: #5865f2;
+		background: #e5e7eb;
 		border: none;
 		border-radius: 4px;
 		color: white;

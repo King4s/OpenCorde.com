@@ -71,14 +71,14 @@
 		{#if loading}
 			<p class="text-gray-400 text-xs text-center py-6">Loading…</p>
 		{:else if error}
-			<p class="text-red-400 text-xs text-center py-6">{error}</p>
+			<p class="text-gray-400 text-xs text-center py-6">{error}</p>
 		{:else if recordings.length === 0}
 			<p class="text-gray-400 text-xs text-center py-6">No recordings yet.</p>
 		{:else}
 			{#each recordings as rec (rec.id)}
 				<div class="bg-gray-750 rounded p-3 border border-gray-700 space-y-1">
 					<div class="flex items-center justify-between">
-						<span class="text-xs font-medium {rec.status === 'active' ? 'text-red-400' : 'text-gray-200'}">
+						<span class="text-xs font-medium {rec.status === 'active' ? 'text-gray-400' : 'text-gray-200'}">
 							{rec.status === 'active' ? '⏺ Recording…' : '🎥 Recording'}
 						</span>
 						<span class="text-xs text-gray-500">{formatDuration(rec.started_at, rec.stopped_at)}</span>
@@ -88,7 +88,7 @@
 						<a
 							href={downloadUrl(rec.file_path)}
 							download
-							class="inline-block mt-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+							class="inline-block mt-1 text-xs text-gray-400 hover:text-gray-300 transition-colors"
 							aria-label="Download recording"
 						>
 							⬇ Download

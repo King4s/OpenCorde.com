@@ -40,7 +40,7 @@ export function renderMarkdown(text: string): string {
 	const inlineCodes: string[] = [];
 	processed = processed.replace(/`([^`\n]+?)`/g, (_, code) => {
 		inlineCodes.push(
-			`<code class="bg-gray-900 rounded px-1 py-0.5 text-xs font-mono text-pink-300">${escapeHtml(code)}</code>`
+			`<code class="bg-gray-900 rounded px-1 py-0.5 text-xs font-mono text-gray-300">${escapeHtml(code)}</code>`
 		);
 		return `\x00INLINE${inlineCodes.length - 1}\x00`;
 	});

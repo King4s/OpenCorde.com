@@ -10,7 +10,7 @@
   import SlashCommandList from '$lib/components/modals/SlashCommandList.svelte';
   import api from '$lib/api/client';
 
-  let { serverId }: { serverId: string } = $props();
+  let { spaceId }: { spaceId: string } = $props();
 
   // ── Slash Commands ────────────────────────────────────────────────────────
   let newName = $state('');
@@ -20,7 +20,7 @@
   let error = $state('');
 
   onMount(() => {
-    slashCommandsStore.fetchCommands(serverId);
+    slashCommandsStore.fetchCommands(spaceId);
     loadMappings();
   });
 
@@ -31,7 +31,7 @@
     error = '';
     try {
       await slashCommandsStore.createCommand(
-        serverId,
+        spaceId,
         newName.trim(),
         newDescription.trim(),
         newHandlerUrl.trim()
@@ -83,7 +83,7 @@
     bridgeLoading = true;
     bridgeError = '';
     try {
-      mappings = await api.get<BridgeMapping[]>(`/servers/${serverId}/bridge/mappings`);
+      mappings = await api.get<BridgeMapping[]>(`/servers/${spaceId}/bridge/mappings`);
     } catch (e: unknown) {
       bridgeError = (e as { message?: string }).message ?? 'Failed to load mappings';
     } finally {
@@ -99,7 +99,7 @@
     bCreating = true;
     bridgeError = '';
     try {
-      const created = await api.post<BridgeMapping>(`/servers/${serverId}/bridge/mappings`, {
+      const created = await api.post<BridgeMapping>(`/servers/${spaceId}/bridge/mappings`, {
         discord_guild_id: bDiscordGuildId.trim(),
         discord_channel_id: bDiscordChannelId.trim(),
         discord_webhook_id: bWebhookId.trim() || null,
@@ -122,7 +122,7 @@
   async function toggleMapping(m: BridgeMapping) {
     try {
       const updated = await api.patch<BridgeMapping>(
-        `/servers/${serverId}/bridge/mappings/${m.id}`,
+        `/servers/${spaceId}/bridge/mappings/${m.id}`,
         { enabled: !m.enabled }
       );
       mappings = mappings.map(x => x.id === m.id ? updated : x);
@@ -133,7 +133,7 @@
 
   async function removeMapping(id: number) {
     try {
-      await api.delete(`/servers/${serverId}/bridge/mappings/${id}`);
+      await api.delete(`/servers/${spaceId}/bridge/mappings/${id}`);
       mappings = mappings.filter(m => m.id !== id);
     } catch (e: unknown) {
       bridgeError = (e as { message?: string }).message ?? 'Failed to delete mapping';
@@ -152,7 +152,7 @@
     </p>
 
     {#if bridgeError}
-      <div class="mb-4 px-3 py-2 bg-red-900/40 border border-red-700/50 rounded text-red-300 text-sm">{bridgeError}</div>
+      <div class="mb-4 px-3 py-2 bg-gray-900/40 border border-gray-700/50 rounded text-gray-300 text-sm">{bridgeError}</div>
     {/if}
 
     <!-- Existing mappings -->
@@ -166,8 +166,8 @@
           <div class="flex items-center justify-between bg-gray-900 border border-gray-700 rounded px-4 py-3 text-sm">
             <div class="space-y-0.5 min-w-0">
               <div class="text-gray-200 font-mono text-xs">
-                Discord <span class="text-indigo-400">#{m.discord_channel_id}</span>
-                ↔ OpenCorde <span class="text-indigo-400">#{m.opencorde_channel_id}</span>
+                Discord <span class="text-gray-400">#{m.discord_channel_id}</span>
+                ↔ OpenCorde <span class="text-gray-400">#{m.opencorde_channel_id}</span>
               </div>
               <div class="text-gray-500 text-xs">
                 Guild {m.discord_guild_id}
@@ -178,14 +178,14 @@
               <button
                 onclick={() => toggleMapping(m)}
                 class="px-2 py-1 rounded text-xs font-medium transition-colors {m.enabled
-                  ? 'bg-green-700/40 text-green-300 hover:bg-green-700/60'
+                  ? 'bg-gray-700/40 text-gray-300 hover:bg-gray-700/60'
                   : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}"
               >
                 {m.enabled ? 'Enabled' : 'Disabled'}
               </button>
               <button
                 onclick={() => removeMapping(m.id)}
-                class="text-red-400 hover:text-red-300 text-xs px-2 py-1 rounded hover:bg-red-900/30 transition-colors"
+                class="text-gray-400 hover:text-gray-300 text-xs px-2 py-1 rounded hover:bg-gray-900/30 transition-colors"
               >
                 Remove
               </button>
@@ -200,55 +200,60 @@
       <h3 class="text-sm font-semibold text-gray-300">Add Channel Bridge</h3>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-xs text-gray-400 mb-1">Discord Guild ID</label>
-          <input
-            bind:value={bDiscordGuildId}
+			<label for="discord-guild-id" class="block text-xs text-gray-400 mb-1">Discord Guild ID</label>
+			<input
+				id="discord-guild-id"
+				bind:value={bDiscordGuildId}
             type="text"
             placeholder="123456789012345678"
-            class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-indigo-500"
+            class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-gray-500"
           />
         </div>
         <div>
-          <label class="block text-xs text-gray-400 mb-1">Discord Channel ID</label>
-          <input
-            bind:value={bDiscordChannelId}
+			<label for="discord-channel-id" class="block text-xs text-gray-400 mb-1">Discord Channel ID</label>
+			<input
+				id="discord-channel-id"
+				bind:value={bDiscordChannelId}
             type="text"
             placeholder="123456789012345678"
-            class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-indigo-500"
+            class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-gray-500"
           />
         </div>
         <div>
-          <label class="block text-xs text-gray-400 mb-1">OpenCorde Channel ID</label>
-          <input
-            bind:value={bOpenCordeChannelId}
+			<label for="opencorde-channel-id" class="block text-xs text-gray-400 mb-1">OpenCorde Channel ID</label>
+			<input
+				id="opencorde-channel-id"
+				bind:value={bOpenCordeChannelId}
             type="text"
             placeholder="Channel snowflake ID"
-            class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-indigo-500"
+            class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-gray-500"
           />
         </div>
         <div>
-          <label class="block text-xs text-gray-400 mb-1">Webhook ID <span class="text-gray-600">(optional)</span></label>
-          <input
-            bind:value={bWebhookId}
+			<label for="webhook-id" class="block text-xs text-gray-400 mb-1">Webhook ID <span class="text-gray-600">(optional)</span></label>
+			<input
+				id="webhook-id"
+				bind:value={bWebhookId}
             type="text"
             placeholder="For OpenCorde → Discord"
-            class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-indigo-500"
+            class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-gray-500"
           />
         </div>
         <div class="col-span-2">
-          <label class="block text-xs text-gray-400 mb-1">Webhook Token <span class="text-gray-600">(optional)</span></label>
-          <input
-            bind:value={bWebhookToken}
+			<label for="webhook-token" class="block text-xs text-gray-400 mb-1">Webhook Token <span class="text-gray-600">(optional)</span></label>
+			<input
+				id="webhook-token"
+				bind:value={bWebhookToken}
             type="password"
             placeholder="Discord webhook token"
-            class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-indigo-500"
+            class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-gray-500"
           />
         </div>
       </div>
       <button
         onclick={createMapping}
         disabled={bCreating}
-        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm rounded transition-colors"
+        class="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white text-sm rounded transition-colors"
       >
         {bCreating ? 'Adding…' : 'Add Bridge'}
       </button>
@@ -260,7 +265,7 @@
     <h1 class="text-xl font-semibold text-white mb-6">Slash Commands</h1>
 
     {#if error}
-      <div class="mb-4 px-3 py-2 bg-red-900/40 border border-red-700/50 rounded text-red-300 text-sm">{error}</div>
+      <div class="mb-4 px-3 py-2 bg-gray-900/40 border border-gray-700/50 rounded text-gray-300 text-sm">{error}</div>
     {/if}
 
     <div class="mb-6">

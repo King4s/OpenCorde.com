@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * @file Server Discovery page
-	 * @purpose Browse and join public servers + discover federated mesh network peers
+	 * @purpose Browse and join public spaces + discover federated mesh network nodes
 	 */
 	import api from '$lib/api/client';
 	import { goto } from '$app/navigation';
@@ -23,17 +23,17 @@
 		last_seen_at: string | null;
 	}
 
-	let servers = $state<DiscoveryServer[]>([]);
+	let spaces = $state<DiscoveryServer[]>([]);
 	let peers = $state<MeshPeer[]>([]);
 	let query = $state('');
 	let loading = $state(true);
 	let tab = $state<'local' | 'network'>('local');
 
-	async function fetchServers() {
+	async function fetchSpaces() {
 		loading = true;
 		try {
 			const q = query.trim() ? `&q=${encodeURIComponent(query)}` : '';
-			servers = await api.get<DiscoveryServer[]>(`/discover?limit=50${q}`);
+			spaces = await api.get<DiscoveryServer[]>(`/discover?limit=50${q}`);
 		} finally {
 			loading = false;
 		}
@@ -49,12 +49,12 @@
 	}
 
 	onMount(() => {
-		fetchServers();
+		fetchSpaces();
 		fetchPeers();
 	});
 
-	async function joinServer(serverId: string) {
-		goto(`/servers/${serverId}/channels`);
+	async function joinServer(spaceId: string) {
+		goto(`/servers/${spaceId}/channels`);
 	}
 
 	function visitPeer(hostname: string) {
@@ -78,7 +78,7 @@
 <div class="discover-page">
 	<div class="discover-header">
 		<h1>Discover</h1>
-		<p class="subtitle">Find communities on this server and across the network</p>
+		<p class="subtitle">Find communities on this instance and across the network</p>
 
 		<!-- Tab switcher -->
 		<div class="tabs">
@@ -87,14 +87,14 @@
 				class:active={tab === 'local'}
 				onclick={() => { tab = 'local'; }}
 			>
-				This Server
+				This Instance
 			</button>
 			<button
 				class="tab-btn"
 				class:active={tab === 'network'}
 				onclick={() => { tab = 'network'; fetchPeers(); }}
 			>
-				Federation Network
+				Network
 				{#if peers.length > 0}
 					<span class="badge">{peers.length}</span>
 				{/if}
@@ -103,46 +103,46 @@
 	</div>
 
 	{#if tab === 'local'}
-		<!-- Local server discovery -->
+		<!-- Local space discovery -->
 		<div class="search-bar">
 			<input
 				bind:value={query}
-				placeholder="Search servers..."
-				oninput={fetchServers}
+				placeholder="Search spaces..."
+				oninput={fetchSpaces}
 			/>
 		</div>
 
 		{#if loading}
 			<p class="loading">Loading...</p>
-		{:else if servers.length === 0}
-			<p class="empty">No public servers found.</p>
+		{:else if spaces.length === 0}
+			<p class="empty">No public spaces found.</p>
 		{:else}
-			<div class="server-grid">
-				{#each servers as server (server.id)}
+			<div class="space-grid">
+				{#each spaces as space (space.id)}
 					<div
-						class="server-card"
+						class="space-card"
 						role="button"
 						tabindex="0"
-						onclick={() => joinServer(server.id)}
-						onkeydown={(e) => e.key === 'Enter' && joinServer(server.id)}
+						onclick={() => joinServer(space.id)}
+						onkeydown={(e) => e.key === 'Enter' && joinServer(space.id)}
 					>
-						<div class="server-icon">
-							{#if server.icon_url}
-								<img src={server.icon_url} alt={server.name} />
+						<div class="space-icon">
+							{#if space.icon_url}
+								<img src={space.icon_url} alt={space.name} />
 							{:else}
-								<span class="initials">{getInitials(server.name)}</span>
+								<span class="initials">{getInitials(space.name)}</span>
 							{/if}
 						</div>
-						<div class="server-info">
-							<h3 class="server-name">{server.name}</h3>
-							{#if server.description}
-								<p class="server-desc">{server.description}</p>
+						<div class="space-info">
+							<h3 class="space-name">{space.name}</h3>
+							{#if space.description}
+								<p class="space-desc">{space.description}</p>
 							{/if}
-							<div class="server-meta">
-								<span class="member-count">👥 {server.member_count.toLocaleString()} members</span>
-								{#if server.tags}
+							<div class="space-meta">
+								<span class="member-count">👥 {space.member_count.toLocaleString()} members</span>
+								{#if space.tags}
 									<div class="tags">
-										{#each server.tags.split(',').slice(0, 3) as tag}
+										{#each space.tags.split(',').slice(0, 3) as tag}
 											<span class="tag">{tag.trim()}</span>
 										{/each}
 									</div>
@@ -158,15 +158,15 @@
 		<!-- Federation network tab -->
 		<div class="network-header">
 			<p class="network-desc">
-				Other OpenCorde servers in the federation network. You can message users on these servers
+				Other OpenCorde instances in the network. You can message users on these spaces
 				using <strong>username@hostname</strong> in the DM search.
 			</p>
 		</div>
 
 		{#if peers.length === 0}
 			<div class="empty-network">
-				<p class="empty">No federated servers connected yet.</p>
-				<p class="empty-hint">Servers that introduce themselves via the federation protocol will appear here.</p>
+				<p class="empty">No nodes connected yet.</p>
+				<p class="empty-hint">Instances that introduce themselves via the federation protocol will appear here.</p>
 			</div>
 		{:else}
 			<div class="peer-list">
@@ -214,7 +214,7 @@
 		transition: background 0.15s, color 0.15s; display: flex; align-items: center; gap: 6px;
 	}
 	.tab-btn:hover { background: #35373c; color: #dbdee1; }
-	.tab-btn.active { background: #5865f2; color: white; }
+	.tab-btn.active { background: #e5e7eb; color: white; }
 	.badge {
 		background: #ed4245; color: white; font-size: 10px; font-weight: 700;
 		padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center;
@@ -225,29 +225,29 @@
 		border-radius: 24px; color: #dbdee1; padding: 12px 20px; font-size: 15px;
 		outline: none; box-sizing: border-box;
 	}
-	.search-bar input:focus { border-color: #5865f2; }
+	.search-bar input:focus { border-color: #e5e7eb; }
 	.loading, .empty { text-align: center; color: #b5bac1; padding: 40px; }
 	.empty-hint { text-align: center; color: #6b6d73; font-size: 13px; margin-top: -24px; }
-	.server-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-	.server-card {
+	.space-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+	.space-card {
 		background: #2b2d31; border-radius: 10px; padding: 16px; cursor: pointer;
 		border: 1px solid transparent; transition: border-color 0.1s, background 0.1s;
 	}
-	.server-card:hover { border-color: #5865f2; background: #313338; }
-	.server-icon {
-		width: 56px; height: 56px; border-radius: 16px; background: #5865f2;
+	.space-card:hover { border-color: #e5e7eb; background: #313338; }
+	.space-icon {
+		width: 56px; height: 56px; border-radius: 16px; background: #e5e7eb;
 		display: flex; align-items: center; justify-content: center;
 		margin-bottom: 12px; overflow: hidden; flex-shrink: 0;
 	}
-	.server-icon img { width: 100%; height: 100%; object-fit: cover; }
+	.space-icon img { width: 100%; height: 100%; object-fit: cover; }
 	.initials { font-size: 18px; font-weight: 800; color: white; }
-	.server-name { margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: #f2f3f5; }
-	.server-desc {
+	.space-name { margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: #f2f3f5; }
+	.space-desc {
 		margin: 0 0 10px 0; font-size: 13px; color: #b5bac1; line-height: 1.4;
 		display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
 		-webkit-box-orient: vertical; overflow: hidden;
 	}
-	.server-meta { display: flex; flex-direction: column; gap: 6px; }
+	.space-meta { display: flex; flex-direction: column; gap: 6px; }
 	.member-count { font-size: 12px; color: #b5bac1; }
 	.tags { display: flex; gap: 4px; flex-wrap: wrap; }
 	.tag { background: #35373c; color: #b5bac1; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
@@ -264,7 +264,7 @@
 	}
 	.peer-icon {
 		width: 48px; height: 48px; border-radius: 12px;
-		background: linear-gradient(135deg, #5865f2, #57f287);
+		background: linear-gradient(135deg, #e5e7eb, #57f287);
 		display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 	}
 	.peer-initial { font-size: 20px; font-weight: 800; color: white; }
@@ -280,5 +280,5 @@
 		background: #35373c; color: #dbdee1; border: none; border-radius: 6px;
 		padding: 6px 14px; font-size: 13px; cursor: pointer; transition: background 0.1s;
 	}
-	.visit-btn:hover { background: #5865f2; color: white; }
+	.visit-btn:hover { background: #e5e7eb; color: white; }
 </style>
