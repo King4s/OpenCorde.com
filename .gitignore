@@ -45,3 +45,5 @@ data/
 .env.bridge
 .opencorde.key
 search-index/
+.env.bridge
+.opencorde.key
