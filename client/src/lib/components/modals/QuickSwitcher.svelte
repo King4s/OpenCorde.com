@@ -44,7 +44,7 @@
 <div class="fixed inset-0 z-50 bg-black/60 flex items-start justify-center pt-24" onclick={onClose}>
 	<div
 		class="w-full max-w-lg bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-4"
-		onclick|stopPropagation
+		onclick={(e) => e.stopPropagation()}
 	>
 		<div class="flex items-center justify-between gap-3 mb-3">
 			<h2 class="text-sm font-semibold text-white">Quick Switcher</h2>

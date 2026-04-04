@@ -105,6 +105,16 @@ pub async fn list_by_server(
     .await
 }
 
+/// Optional fields for channel updates.
+#[derive(Debug)]
+pub struct ChannelUpdate<'a> {
+    pub topic: Option<&'a str>,
+    pub parent_id: Option<Snowflake>,
+    pub nsfw: Option<bool>,
+    pub slowmode_delay: Option<i32>,
+    pub e2ee_enabled: Option<bool>,
+}
+
 /// Update a channel's name, topic, parent category, nsfw flag, slowmode delay, and e2ee flag.
 ///
 /// # Errors
@@ -114,12 +124,9 @@ pub async fn update_channel(
     pool: &PgPool,
     id: Snowflake,
     name: &str,
-    topic: Option<&str>,
-    parent_id: Option<Snowflake>,
-    nsfw: Option<bool>,
-    slowmode_delay: Option<i32>,
-    e2ee_enabled: Option<bool>,
+    update: ChannelUpdate<'_>,
 ) -> Result<(), sqlx::Error> {
+    let ChannelUpdate { topic, parent_id, nsfw, slowmode_delay, e2ee_enabled } = update;
     tracing::info!(channel_id = id.as_i64(), name = %name, "updating channel");
 
     let parent_id_i64 = parent_id.map(|sf| sf.as_i64());

@@ -229,7 +229,16 @@ async fn update_channel(
 
     // Update channel
     channel_repo::update_channel(
-        &state.db, channel_id, update_name, update_topic, None, req.nsfw, slowmode_delay, req.e2ee_enabled,
+        &state.db,
+        channel_id,
+        update_name,
+        channel_repo::ChannelUpdate {
+            topic: update_topic,
+            parent_id: None,
+            nsfw: req.nsfw,
+            slowmode_delay,
+            e2ee_enabled: req.e2ee_enabled,
+        },
     )
     .await
     .map_err(ApiError::Database)?;

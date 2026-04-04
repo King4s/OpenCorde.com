@@ -215,9 +215,9 @@ import RecordingsPanel from '$lib/components/voice/RecordingsPanel.svelte';
 			messages={$messages}
 			loading={$loading}
 			hasMore={$hasMore}
-			currentUserId={$currentUser?.id}
-			{serverId}
-			onLoadMore={handleLoadMore}
+		currentUserId={$currentUser?.id}
+		spaceId={serverId}
+		onLoadMore={handleLoadMore}
 			onReply={handleReply}
 			onReact={handleReact}
 			onPin={handlePin}
@@ -255,13 +255,13 @@ import RecordingsPanel from '$lib/components/voice/RecordingsPanel.svelte';
 </div>
 
 {#if showSearch}
-	<SearchModal {channelId} {serverId} onClose={() => showSearch = false} />
+	<SearchModal {channelId} spaceId={serverId} onClose={() => showSearch = false} />
 {/if}
 
 {#if showChannelSettings && $currentChannel}
 	<ChannelSettingsModal
 		{channelId}
-		{serverId}
+		spaceId={serverId}
 		channelName={$currentChannel.name}
 		channelTopic={$currentChannel.topic ?? null}
 		channelNsfw={$currentChannel.nsfw}

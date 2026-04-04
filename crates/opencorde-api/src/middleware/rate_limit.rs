@@ -141,6 +141,7 @@ fn nz(v: u32) -> NonZeroU32 {
 ///
 /// 1. Checks strict path-specific limit (always active).
 /// 2. Checks global per-IP limit (when `enabled = true`).
+///
 /// Returns HTTP 429 if either limit is exceeded.
 pub async fn rate_limit_middleware(
     State(rl): State<Arc<RateLimitState>>,
@@ -153,8 +154,8 @@ pub async fn rate_limit_middleware(
     let method = req.method().clone();
 
     // Strict path-specific check (always runs)
-    if let Some(strict_limiter) = rl.strict.limiter_for(&method, &path) {
-        if strict_limiter.check_key(&ip).is_err() {
+    if let Some(strict_limiter) = rl.strict.limiter_for(&method, &path)
+        && strict_limiter.check_key(&ip).is_err() {
             tracing::warn!(
                 client_ip = %ip,
                 path = %path,
@@ -162,7 +163,6 @@ pub async fn rate_limit_middleware(
             );
             return Err(StatusCode::TOO_MANY_REQUESTS);
         }
-    }
 
     // Global per-IP check
     let enabled = rl.config.read().await.enabled;

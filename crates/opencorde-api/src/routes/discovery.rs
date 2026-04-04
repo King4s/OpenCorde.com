@@ -66,11 +66,7 @@ async fn list_discovery(
     State(state): State<AppState>,
     Query(params): Query<DiscoveryQuery>,
 ) -> Result<Json<Vec<DiscoveryServer>>, ApiError> {
-    let limit = params
-        .limit
-        .unwrap_or(20)
-        .min(50)
-        .max(1);
+    let limit = params.limit.unwrap_or(20).clamp(1, 50);
 
     tracing::info!(limit = limit, query = ?params.q, "fetching public servers");
 

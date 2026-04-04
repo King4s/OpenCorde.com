@@ -59,7 +59,7 @@ async fn list_audit_log(
     tracing::info!("fetching audit log");
 
     let server_id = helpers::parse_snowflake(&server_id)?;
-    let limit = query.limit.max(1).min(100);
+    let limit = query.limit.clamp(1, 100);
     let before_id = query.before.as_ref().map(|b| {
         b.parse::<i64>()
             .map_err(|_| ApiError::BadRequest("invalid before cursor".into()))
