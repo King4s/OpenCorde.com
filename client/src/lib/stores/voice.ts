@@ -92,109 +92,142 @@ function updateParticipantMap(room: Room) {
 }
 
 export async function joinVoice(channelId: string): Promise<void> {
-  // Leave current room if in one
+  // Leave current room if in one. If the LiveKit connection is stale, don't
+  // block joining a new channel — just log and continue.
   if (activeRoom) {
-    await activeRoom.disconnect();
-    activeRoom = null;
-  }
-
-  const res = await api.post<JoinResponse>("/voice/join", {
-    channel_id: channelId,
-  });
-  inVoice.set(true);
-  currentVoiceChannelId.set(channelId);
-  selfMute.set(res.voice_state.self_mute);
-  selfDeaf.set(res.voice_state.self_deaf);
-  voiceE2EEActive.set(false);
-
-  // Build room options, enabling E2EE if an MLS group state exists for this channel
-  const roomOptions: RoomOptions = {
-    audioCaptureDefaults: {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true,
-    },
-    adaptiveStream: true,
-    dynacast: true,
-  };
-
-  const groupState = getGroupState(channelId);
-  if (groupState && isE2EESupported()) {
     try {
-      const keyHex = await invoke<string>("crypto_export_voice_key", {
-        group_state_hex: groupState,
-      });
-      const keyBytes = hexToBytes(keyHex);
-      // Uint8Array.buffer is ArrayBufferLike; slice to get a plain ArrayBuffer
-      const keyBuffer: ArrayBuffer = keyBytes.buffer.slice(
-        keyBytes.byteOffset,
-        keyBytes.byteOffset + keyBytes.byteLength,
-      ) as ArrayBuffer;
-      const keyProvider = new ExternalE2EEKeyProvider();
-      // Worker required by E2EEManagerOptions — use livekit's pre-built worker
-      const worker = new Worker(
-        new URL("livekit-client/e2ee-worker", import.meta.url),
-        { type: "module" },
-      );
-      roomOptions.e2ee = { keyProvider, worker };
-      await keyProvider.setKey(keyBuffer);
-      voiceE2EEActive.set(true);
+      await activeRoom.disconnect();
     } catch (err) {
-      console.warn(
-        "[E2EE] Voice key export failed, joining without E2EE:",
-        err,
-      );
+      console.warn("[Voice] stale room disconnect failed, continuing:", err);
+    } finally {
+      activeRoom = null;
+      activeRoomStore.set(null);
     }
   }
 
-  // Connect to LiveKit room
-  const room = new Room(roomOptions);
-  activeRoom = room;
-  activeRoomStore.set(room);
-
-  room
-    .on(RoomEvent.ParticipantConnected, () => updateParticipantMap(room))
-    .on(RoomEvent.ParticipantDisconnected, () => updateParticipantMap(room))
-    .on(RoomEvent.ActiveSpeakersChanged, () => updateParticipantMap(room))
-    .on(RoomEvent.TrackMuted, () => updateParticipantMap(room))
-    .on(RoomEvent.TrackUnmuted, () => updateParticipantMap(room))
-    .on(
-      RoomEvent.TrackSubscribed,
-      (track: Track, _pub: unknown, participant: RemoteParticipant) => {
-        if (track.kind === "video") {
-          videoTracks.update((m) => {
-            const n = new Map(m);
-            n.set(participant.identity, track);
-            return n;
-          });
-        }
-      },
-    )
-    .on(
-      RoomEvent.TrackUnsubscribed,
-      (track: Track, _pub: unknown, participant: RemoteParticipant) => {
-        if (track.kind === "video") {
-          videoTracks.update((m) => {
-            const n = new Map(m);
-            n.delete(participant.identity);
-            return n;
-          });
-        }
-      },
-    )
-    .on(RoomEvent.Disconnected, () => {
-      inVoice.set(false);
-      currentVoiceChannelId.set(null);
-      activeRoom = null;
-      activeRoomStore.set(null);
-      videoTracks.set(new Map());
-      livekitParticipants.set(new Map());
+  let joinedServerSide = false;
+  try {
+    const res = await api.post<JoinResponse>("/voice/join", {
+      channel_id: channelId,
     });
+    joinedServerSide = true;
+    inVoice.set(true);
+    currentVoiceChannelId.set(channelId);
+    selfMute.set(res.voice_state.self_mute);
+    selfDeaf.set(res.voice_state.self_deaf);
+    voiceE2EEActive.set(false);
 
-  await room.connect(res.livekit_url, res.livekit_token);
-  // Enable microphone by default (respecting self_mute)
-  await room.localParticipant.setMicrophoneEnabled(!res.voice_state.self_mute);
-  updateParticipantMap(room);
+    // Build room options, enabling E2EE if an MLS group state exists for this channel
+    const roomOptions: RoomOptions = {
+      audioCaptureDefaults: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+      adaptiveStream: true,
+      dynacast: true,
+    };
+
+    const groupState = getGroupState(channelId);
+    if (groupState && isE2EESupported()) {
+      try {
+        const keyHex = await invoke<string>("crypto_export_voice_key", {
+          group_state_hex: groupState,
+        });
+        const keyBytes = hexToBytes(keyHex);
+        // Uint8Array.buffer is ArrayBufferLike; slice to get a plain ArrayBuffer
+        const keyBuffer: ArrayBuffer = keyBytes.buffer.slice(
+          keyBytes.byteOffset,
+          keyBytes.byteOffset + keyBytes.byteLength,
+        ) as ArrayBuffer;
+        const keyProvider = new ExternalE2EEKeyProvider();
+        // Worker required by E2EEManagerOptions — use livekit's pre-built worker
+        const worker = new Worker(
+          new URL("livekit-client/e2ee-worker", import.meta.url),
+          { type: "module" },
+        );
+        roomOptions.e2ee = { keyProvider, worker };
+        await keyProvider.setKey(keyBuffer);
+        voiceE2EEActive.set(true);
+      } catch (err) {
+        console.warn(
+          "[E2EE] Voice key export failed, joining without E2EE:",
+          err,
+        );
+      }
+    }
+
+    // Connect to LiveKit room
+    const room = new Room(roomOptions);
+    activeRoom = room;
+    activeRoomStore.set(room);
+
+    room
+      .on(RoomEvent.ParticipantConnected, () => updateParticipantMap(room))
+      .on(RoomEvent.ParticipantDisconnected, () => updateParticipantMap(room))
+      .on(RoomEvent.ActiveSpeakersChanged, () => updateParticipantMap(room))
+      .on(RoomEvent.TrackMuted, () => updateParticipantMap(room))
+      .on(RoomEvent.TrackUnmuted, () => updateParticipantMap(room))
+      .on(
+        RoomEvent.TrackSubscribed,
+        (track: Track, _pub: unknown, participant: RemoteParticipant) => {
+          if (track.kind === "video") {
+            videoTracks.update((m) => {
+              const n = new Map(m);
+              n.set(participant.identity, track);
+              return n;
+            });
+          }
+        },
+      )
+      .on(
+        RoomEvent.TrackUnsubscribed,
+        (track: Track, _pub: unknown, participant: RemoteParticipant) => {
+          if (track.kind === "video") {
+            videoTracks.update((m) => {
+              const n = new Map(m);
+              n.delete(participant.identity);
+              return n;
+            });
+          }
+        },
+      )
+      .on(RoomEvent.Disconnected, () => {
+        inVoice.set(false);
+        currentVoiceChannelId.set(null);
+        activeRoom = null;
+        activeRoomStore.set(null);
+        videoTracks.set(new Map());
+        livekitParticipants.set(new Map());
+      });
+
+    await room.connect(res.livekit_url, res.livekit_token);
+    // Enable microphone by default (respecting self_mute)
+    await room.localParticipant.setMicrophoneEnabled(!res.voice_state.self_mute);
+    updateParticipantMap(room);
+  } catch (err: any) {
+    console.error("[Voice] failed to join voice channel:", err);
+
+    // If the backend already registered the voice join, clean it up so the user
+    // doesn't get stuck in a ghost voice state.
+    if (joinedServerSide) {
+      try {
+        await api.post("/voice/leave");
+      } catch {
+        // ignore cleanup errors
+      }
+    }
+
+    inVoice.set(false);
+    currentVoiceChannelId.set(null);
+    voiceE2EEActive.set(false);
+    videoTracks.set(new Map());
+    livekitParticipants.set(new Map());
+    activeRoom = null;
+    activeRoomStore.set(null);
+    alert(err?.message ?? "Failed to join voice channel");
+    throw err;
+  }
 }
 
 export async function leaveVoice(): Promise<void> {
