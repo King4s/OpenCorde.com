@@ -41,14 +41,17 @@
 	}
 </script>
 
-<div class="fixed inset-0 z-50 bg-black/60 flex items-start justify-center pt-24" onclick={onClose}>
-	<div
-		class="w-full max-w-lg bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-4"
-		onclick={(e) => e.stopPropagation()}
-	>
+<div class="fixed inset-0 z-50 flex items-start justify-center pt-24">
+	<button
+		type="button"
+		class="absolute inset-0 bg-black/60"
+		aria-label="Close quick switcher"
+		onclick={onClose}
+	></button>
+	<div class="relative z-10 w-full max-w-lg bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-4">
 		<div class="flex items-center justify-between gap-3 mb-3">
 			<h2 class="text-sm font-semibold text-white">Quick Switcher</h2>
-			<button class="text-gray-400 hover:text-white text-sm" onclick={onClose}>✕</button>
+			<button type="button" class="text-gray-400 hover:text-white text-sm" onclick={onClose}>✕</button>
 		</div>
 
 		<input
@@ -65,6 +68,7 @@
 			{:else}
 				{#each results as channel (channel.id)}
 					<button
+						type="button"
 						onclick={() => openChannel(channel.id)}
 						class="w-full text-left px-3 py-2 rounded hover:bg-gray-700 flex items-center justify-between gap-3"
 					>

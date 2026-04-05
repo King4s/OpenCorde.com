@@ -15,9 +15,9 @@
 // ---------------------------------------------------------------------------
 
 export interface SwRegistrationResult {
-	ok: boolean;
-	registration?: ServiceWorkerRegistration;
-	error?: string;
+  ok: boolean;
+  registration?: ServiceWorkerRegistration;
+  error?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -33,19 +33,21 @@ export interface SwRegistrationResult {
  * @returns Object with `ok` flag and the registration or error message.
  */
 export async function registerServiceWorker(): Promise<SwRegistrationResult> {
-	if (!('serviceWorker' in navigator)) {
-		return { ok: false, error: 'Service workers not supported' };
-	}
+  if (!("serviceWorker" in navigator)) {
+    return { ok: false, error: "Service workers not supported" };
+  }
 
-	try {
-		const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-		console.info('[sw] Service worker registered', registration.scope);
-		return { ok: true, registration };
-	} catch (err) {
-		const message = err instanceof Error ? err.message : String(err);
-		console.error('[sw] Service worker registration failed', message);
-		return { ok: false, error: message };
-	}
+  try {
+    const registration = await navigator.serviceWorker.register("/sw.js", {
+      scope: "/",
+    });
+    console.info("[sw] Service worker registered", registration.scope);
+    return { ok: true, registration };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[sw] Service worker registration failed", message);
+    return { ok: false, error: message };
+  }
 }
 
 /**
@@ -54,5 +56,7 @@ export async function registerServiceWorker(): Promise<SwRegistrationResult> {
  * @returns true if an active controller exists for this page.
  */
 export function isServiceWorkerActive(): boolean {
-	return 'serviceWorker' in navigator && navigator.serviceWorker.controller !== null;
+  return (
+    "serviceWorker" in navigator && navigator.serviceWorker.controller !== null
+  );
 }

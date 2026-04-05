@@ -3,10 +3,10 @@
  * @purpose Track unread message counts per channel, auto-ack on view
  * @depends api/client, api/websocket, stores/messages
  */
-import { writable, derived } from 'svelte/store';
-import { channelServerIndex } from './channels';
-import api from '$lib/api/client';
-import { gateway } from '$lib/api/websocket';
+import { writable, derived } from "svelte/store";
+import { channelServerIndex } from "./channels";
+import api from "$lib/api/client";
+import { gateway } from "$lib/api/websocket";
 
 interface ReadState {
   channel_id: string;
@@ -27,17 +27,17 @@ export function initUnreadListener(): void {
   initialized = true;
 
   // When a message arrives, check if we need to increment unread
-  gateway.on('MessageCreate', (data: unknown) => {
+  gateway.on("MessageCreate", (data: unknown) => {
     const evt = data as { message: { channel_id: string; id: string } };
     const channelId = evt.message.channel_id;
 
-    readStates.update(states => {
+    readStates.update((states) => {
       const state = states.get(channelId);
-      const lastReadId = state?.last_read_id ?? '0';
+      const lastReadId = state?.last_read_id ?? "0";
 
       // If message is newer than last read, increment unread count
       if (BigInt(evt.message.id) > BigInt(lastReadId)) {
-        unreadCounts.update(counts => {
+        unreadCounts.update((counts) => {
           const newCounts = new Map(counts);
           newCounts.set(channelId, (newCounts.get(channelId) ?? 0) + 1);
           return newCounts;
@@ -49,7 +49,7 @@ export function initUnreadListener(): void {
   });
 
   // Handle ack events from other sessions
-  gateway.on('ChannelAck', (data: unknown) => {
+  gateway.on("ChannelAck", (data: unknown) => {
     const evt = data as { channel_id: string; last_read_id: string };
     markChannelRead(evt.channel_id, evt.last_read_id);
   });
@@ -57,7 +57,7 @@ export function initUnreadListener(): void {
 
 export async function loadReadStates(): Promise<void> {
   try {
-    const states = await api.get<ReadState[]>('/users/@me/read-states');
+    const states = await api.get<ReadState[]>("/users/@me/read-states");
     readStates.update(() => {
       const map = new Map<string, ReadState>();
       for (const s of states) {
@@ -67,13 +67,13 @@ export async function loadReadStates(): Promise<void> {
     });
   } catch (e) {
     // Non-fatal if not authenticated yet
-    console.warn('Failed to load read states:', e);
+    console.warn("Failed to load read states:", e);
   }
 }
 
 export async function ackChannel(
   channelId: string,
-  lastMessageId: string
+  lastMessageId: string,
 ): Promise<void> {
   try {
     await api.post(`/channels/${channelId}/ack`, { message_id: lastMessageId });
@@ -85,39 +85,35 @@ export async function ackChannel(
 }
 
 function markChannelRead(channelId: string, lastReadId: string): void {
-  readStates.update(states => {
+  readStates.update((states) => {
     const newStates = new Map(states);
     newStates.set(channelId, {
       channel_id: channelId,
       last_read_id: lastReadId,
-      mention_count: 0
+      mention_count: 0,
     });
     return newStates;
   });
 
-  unreadCounts.update(counts => {
+  unreadCounts.update((counts) => {
     const newCounts = new Map(counts);
     newCounts.delete(channelId);
     return newCounts;
   });
 }
 
-export const hasAnyUnread = derived(
-  unreadCounts,
-  $counts => Array.from($counts.values()).some(c => c > 0)
+export const hasAnyUnread = derived(unreadCounts, ($counts) =>
+  Array.from($counts.values()).some((c) => c > 0),
 );
 
 /** Map of channel_id → last_read_id (for NEW MESSAGES divider placement). */
-export const lastReadIds = derived(
-  readStates,
-  $states => {
-    const map = new Map<string, string>();
-    for (const [id, s] of $states) {
-      if (s.last_read_id) map.set(id, s.last_read_id);
-    }
-    return map;
+export const lastReadIds = derived(readStates, ($states) => {
+  const map = new Map<string, string>();
+  for (const [id, s] of $states) {
+    if (s.last_read_id) map.set(id, s.last_read_id);
   }
-);
+  return map;
+});
 
 /** Set of server IDs that have at least one channel with unread messages. */
 export const serverHasUnread = derived(
@@ -131,5 +127,5 @@ export const serverHasUnread = derived(
       }
     }
     return set;
-  }
+  },
 );

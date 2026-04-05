@@ -156,14 +156,13 @@ impl IntoResponse for ApiError {
         let mut resp = (status, axum::Json(error_response)).into_response();
 
         // Add Retry-After header for rate-limited responses
-        if let ApiError::RateLimited { retry_after } = &self {
-            if let Ok(val) = axum::http::HeaderValue::from_str(&retry_after.to_string()) {
+        if let ApiError::RateLimited { retry_after } = &self
+            && let Ok(val) = axum::http::HeaderValue::from_str(&retry_after.to_string()) {
                 resp.headers_mut().insert(
                     axum::http::header::RETRY_AFTER,
                     val,
                 );
             }
-        }
 
         resp
     }

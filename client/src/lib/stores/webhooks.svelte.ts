@@ -1,7 +1,7 @@
 /**
  * @file Webhook store — manages webhook CRUD and display
  */
-import api from '$lib/api/client';
+import api from "$lib/api/client";
 
 export interface Webhook {
   id: string;
@@ -35,14 +35,16 @@ export const webhookStore = {
     try {
       webhooks = await api.get<Webhook[]>(`/channels/${channelId}/webhooks`);
     } catch (e: unknown) {
-      error = (e as { message?: string }).message ?? 'Failed to load webhooks';
+      error = (e as { message?: string }).message ?? "Failed to load webhooks";
     } finally {
       loading = false;
     }
   },
 
   async create(channelId: string, name?: string): Promise<Webhook> {
-    const wh = await api.post<Webhook>(`/channels/${channelId}/webhooks`, { name });
+    const wh = await api.post<Webhook>(`/channels/${channelId}/webhooks`, {
+      name,
+    });
     webhooks = [...webhooks, wh];
     return wh;
   },
@@ -54,5 +56,5 @@ export const webhookStore = {
 
   clear() {
     webhooks = [];
-  }
+  },
 };

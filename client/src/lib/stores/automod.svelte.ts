@@ -1,6 +1,6 @@
 //! @file AutoMod store — manages keyword filter rules
 
-import api from '$lib/api/client';
+import api from "$lib/api/client";
 
 export interface AutomodRule {
   id: string;
@@ -27,12 +27,12 @@ export const automodStore = {
     spaceId: string,
     keywords: string[],
     name?: string,
-    action?: string
+    action?: string,
   ) {
     const rule = await api.post<AutomodRule>(`/servers/${spaceId}/automod`, {
-      name: name ?? 'Keyword Filter',
+      name: name ?? "Keyword Filter",
       keywords,
-      action: action ?? 'delete',
+      action: action ?? "delete",
     });
     rules = [...rules, rule];
     return rule;
@@ -45,12 +45,10 @@ export const automodStore = {
       keywords: string[];
       enabled: boolean;
       action: string;
-    }>
+    }>,
   ) {
     await api.patch(`/automod/${ruleId}`, patch);
-    rules = rules.map((r) =>
-      r.id === ruleId ? { ...r, ...patch } : r
-    );
+    rules = rules.map((r) => (r.id === ruleId ? { ...r, ...patch } : r));
   },
 
   async remove(ruleId: string) {

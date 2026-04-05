@@ -1,6 +1,6 @@
 // @file Forum store — manages forum post state and API calls
 
-import api from '$lib/api/client';
+import api from "$lib/api/client";
 
 export interface ForumPost {
   id: string;
@@ -37,7 +37,7 @@ let state = $state<ForumStore>({
   currentPost: null,
   replies: [],
   loading: false,
-  error: null
+  error: null,
 });
 
 export const forumStore = {
@@ -62,11 +62,12 @@ export const forumStore = {
     state.error = null;
     try {
       const posts = await api.get<ForumPost[]>(
-        `/channels/${channelId}/posts?limit=${limit}`
+        `/channels/${channelId}/posts?limit=${limit}`,
       );
       state.posts = posts;
     } catch (e: unknown) {
-      state.error = (e as { message?: string }).message ?? 'Failed to load posts';
+      state.error =
+        (e as { message?: string }).message ?? "Failed to load posts";
     } finally {
       state.loading = false;
     }
@@ -75,19 +76,19 @@ export const forumStore = {
   async createPost(
     channelId: string,
     title: string,
-    content: string
+    content: string,
   ): Promise<ForumPost> {
-    const post = await api.post<ForumPost>(
-      `/channels/${channelId}/posts`,
-      { title, content }
-    );
+    const post = await api.post<ForumPost>(`/channels/${channelId}/posts`, {
+      title,
+      content,
+    });
     state.posts = [post, ...state.posts];
     return post;
   },
 
   async deletePost(postId: string) {
     await api.delete(`/posts/${postId}`);
-    state.posts = state.posts.filter(p => p.id !== postId);
+    state.posts = state.posts.filter((p) => p.id !== postId);
     if (state.currentPost?.id === postId) {
       state.currentPost = null;
       state.replies = [];
@@ -98,23 +99,24 @@ export const forumStore = {
     state.loading = true;
     state.error = null;
     try {
-      const response = await api.get<{ post: ForumPost; replies: ForumReply[] }>(
-        `/posts/${postId}`
-      );
+      const response = await api.get<{
+        post: ForumPost;
+        replies: ForumReply[];
+      }>(`/posts/${postId}`);
       state.currentPost = response.post;
       state.replies = response.replies;
     } catch (e: unknown) {
-      state.error = (e as { message?: string }).message ?? 'Failed to load post';
+      state.error =
+        (e as { message?: string }).message ?? "Failed to load post";
     } finally {
       state.loading = false;
     }
   },
 
   async createReply(postId: string, content: string): Promise<ForumReply> {
-    const reply = await api.post<ForumReply>(
-      `/posts/${postId}/replies`,
-      { content }
-    );
+    const reply = await api.post<ForumReply>(`/posts/${postId}/replies`, {
+      content,
+    });
     state.replies = [...state.replies, reply];
     if (state.currentPost) {
       state.currentPost.reply_count += 1;
@@ -125,9 +127,12 @@ export const forumStore = {
 
   async deleteReply(replyId: string) {
     await api.delete(`/replies/${replyId}`);
-    state.replies = state.replies.filter(r => r.id !== replyId);
+    state.replies = state.replies.filter((r) => r.id !== replyId);
     if (state.currentPost) {
-      state.currentPost.reply_count = Math.max(0, state.currentPost.reply_count - 1);
+      state.currentPost.reply_count = Math.max(
+        0,
+        state.currentPost.reply_count - 1,
+      );
     }
   },
 
@@ -136,5 +141,5 @@ export const forumStore = {
     state.currentPost = null;
     state.replies = [];
     state.error = null;
-  }
+  },
 };

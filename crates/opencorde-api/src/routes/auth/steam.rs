@@ -68,14 +68,12 @@ pub async fn steam_login(State(state): State<AppState>) -> Redirect {
     let return_to = format!("{}/api/v1/auth/steam/callback", state.config.base_url);
     let realm = state.config.base_url.clone();
 
-    let params = vec![
-        ("openid.ns", "http://specs.openid.net/auth/2.0"),
+    let params = [("openid.ns", "http://specs.openid.net/auth/2.0"),
         ("openid.mode", "checkid_setup"),
         ("openid.return_to", &return_to),
         ("openid.realm", &realm),
         ("openid.identity", "http://specs.openid.net/auth/2.0/identifier_select"),
-        ("openid.claimed_id", "http://specs.openid.net/auth/2.0/identifier_select"),
-    ];
+        ("openid.claimed_id", "http://specs.openid.net/auth/2.0/identifier_select")];
 
     let query_string = params
         .iter()

@@ -1,6 +1,6 @@
 //! @file Slash Commands store — manages slash command registrations
 
-import api from '$lib/api/client';
+import api from "$lib/api/client";
 
 export interface SlashCommand {
   id: string;
@@ -14,7 +14,7 @@ export interface SlashCommand {
 
 let commands = $state<SlashCommand[]>([]);
 let loading = $state(false);
-let error = $state('');
+let error = $state("");
 
 export const slashCommandsStore = {
   get commands() {
@@ -29,11 +29,11 @@ export const slashCommandsStore = {
 
   async fetchCommands(spaceId: string) {
     loading = true;
-    error = '';
+    error = "";
     try {
       commands = await api.get<SlashCommand[]>(`/servers/${spaceId}/commands`);
     } catch (e: any) {
-      error = e.message ?? 'Failed to load commands';
+      error = e.message ?? "Failed to load commands";
       commands = [];
     } finally {
       loading = false;
@@ -44,13 +44,16 @@ export const slashCommandsStore = {
     spaceId: string,
     name: string,
     description: string,
-    handler_url: string
+    handler_url: string,
   ) {
-    const command = await api.post<SlashCommand>(`/servers/${spaceId}/commands`, {
-      name,
-      description,
-      handler_url,
-    });
+    const command = await api.post<SlashCommand>(
+      `/servers/${spaceId}/commands`,
+      {
+        name,
+        description,
+        handler_url,
+      },
+    );
     commands = [...commands, command];
     return command;
   },
@@ -60,7 +63,11 @@ export const slashCommandsStore = {
     commands = commands.filter((c) => c.id !== commandId);
   },
 
-  async dispatchCommand(channelId: string, commandText: string, args?: string[]) {
+  async dispatchCommand(
+    channelId: string,
+    commandText: string,
+    args?: string[],
+  ) {
     return await api.post<any>(`/channels/${channelId}/interact`, {
       command: commandText,
       args: args || [],

@@ -84,11 +84,10 @@ pub async fn unfurl(
     // Check cache
     {
         let cache = state.unfurl_cache.lock().await;
-        if let Some((data, fetched_at)) = cache.get(&cache_key) {
-            if fetched_at.elapsed() < CACHE_TTL {
+        if let Some((data, fetched_at)) = cache.get(&cache_key)
+            && fetched_at.elapsed() < CACHE_TTL {
                 return Ok(axum::Json(data.clone()));
             }
-        }
     }
 
     // SSRF protection: resolve host and block private ranges
@@ -159,11 +158,10 @@ fn guard_url(raw: &str) -> Result<(), String> {
     let host = parsed.host_str().ok_or("URL has no host")?;
 
     // Try to parse as an IP directly
-    if let Ok(ip) = host.parse::<IpAddr>() {
-        if is_blocked_ip(ip) {
+    if let Ok(ip) = host.parse::<IpAddr>()
+        && is_blocked_ip(ip) {
             return Err("private/loopback addresses are not allowed".to_string());
         }
-    }
     // Note: hostname-based SSRF (e.g., evil.internal) requires DNS resolution,
     // which we skip here for latency. The reqwest timeout and User-Agent serve
     // as secondary mitigations in a trusted-server context.

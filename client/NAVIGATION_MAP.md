@@ -22,6 +22,7 @@ This document maps the app shell, route hierarchy, and the major drawers/panels 
 ## 3) Authenticated app shell
 
 ### `/servers`
+
 `src/routes/servers/+layout.svelte`
 
 Primary chrome for authenticated users:
@@ -31,6 +32,7 @@ Primary chrome for authenticated users:
 - Global helpers: unread indicators, presence, DM entry points
 
 ### `/servers/[serverId]`
+
 `src/routes/servers/[serverId]/+layout.svelte`
 
 Server workspace shell:
@@ -44,6 +46,7 @@ Server workspace shell:
   - quick switcher
 
 ### `/servers/[serverId]/channels/[channelId]`
+
 `src/routes/servers/[serverId]/channels/[channelId]/+page.svelte`
 
 Channel conversation workspace:
@@ -55,12 +58,15 @@ Channel conversation workspace:
   - channel settings modal
 
 ### `/servers/[serverId]/forum/[channelId]`
+
 Forum channel list view.
 
 ### `/servers/[serverId]/forum/[channelId]/[postId]`
+
 Forum post detail view.
 
 ### `/servers/[serverId]/settings`
+
 `src/routes/servers/[serverId]/settings/+page.svelte`
 
 Server administration shell:
@@ -83,6 +89,7 @@ Server administration shell:
 ## 4) DM shell
 
 ### `/@me`
+
 `src/routes/@me/+layout.svelte`
 
 Direct-message workspace shell:
@@ -92,6 +99,7 @@ Direct-message workspace shell:
 - Shared presence / unread / navigation behavior
 
 ### `/@me/dms/[dmId]`
+
 DM conversation view.
 
 ## 5) Major drawers, modals, and floating panels

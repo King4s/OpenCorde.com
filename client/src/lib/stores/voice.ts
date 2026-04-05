@@ -4,20 +4,20 @@
  *          Enables E2EE for channels that have an active MLS group state.
  * @depends api/client, livekit-client, stores/e2ee, @tauri-apps/api/core
  */
-import { writable, get } from 'svelte/store';
-import api from '$lib/api/client';
-import type { VoiceState } from '$lib/api/types';
+import { writable, get } from "svelte/store";
+import api from "$lib/api/client";
+import type { VoiceState } from "$lib/api/types";
 import {
-	Room,
-	RoomEvent,
-	type RemoteParticipant,
-	type Track,
-	ExternalE2EEKeyProvider,
-	isE2EESupported,
-	type RoomOptions
-} from 'livekit-client';
-import { invoke } from '@tauri-apps/api/core';
-import { getGroupState, hexToBytes } from './e2ee';
+  Room,
+  RoomEvent,
+  type RemoteParticipant,
+  type Track,
+  ExternalE2EEKeyProvider,
+  isE2EESupported,
+  type RoomOptions,
+} from "livekit-client";
+import { invoke } from "@tauri-apps/api/core";
+import { getGroupState, hexToBytes } from "./e2ee";
 
 export const inVoice = writable(false);
 export const currentVoiceChannelId = writable<string | null>(null);
@@ -28,7 +28,9 @@ export const participants = writable<VoiceState[]>([]);
 export const voiceE2EEActive = writable(false);
 
 /** LiveKit participants (includes remote speakers) */
-export const livekitParticipants = writable<Map<string, { identity: string; speaking: boolean; muted: boolean }>>(new Map());
+export const livekitParticipants = writable<
+  Map<string, { identity: string; speaking: boolean; muted: boolean }>
+>(new Map());
 
 /** Video tracks: participant identity → Track (updated on TrackSubscribed/Unsubscribed). */
 export const videoTracks = writable<Map<string, Track>>(new Map());
@@ -38,26 +40,37 @@ export const activeRoomStore = writable<Room | null>(null);
 
 /** Selected microphone device ID (persisted to localStorage). */
 export const selectedMicId = writable<string | null>(
-  typeof localStorage !== 'undefined' ? localStorage.getItem('oc_mic') : null
+  typeof localStorage !== "undefined" ? localStorage.getItem("oc_mic") : null,
 );
 
 /** Selected camera device ID (persisted to localStorage). */
 export const selectedCamId = writable<string | null>(
-  typeof localStorage !== 'undefined' ? localStorage.getItem('oc_cam') : null
+  typeof localStorage !== "undefined" ? localStorage.getItem("oc_cam") : null,
 );
 
 // Persist device selections to localStorage
-if (typeof localStorage !== 'undefined') {
-  selectedMicId.subscribe(v => v ? localStorage.setItem('oc_mic', v) : localStorage.removeItem('oc_mic'));
-  selectedCamId.subscribe(v => v ? localStorage.setItem('oc_cam', v) : localStorage.removeItem('oc_cam'));
+if (typeof localStorage !== "undefined") {
+  selectedMicId.subscribe((v) =>
+    v ? localStorage.setItem("oc_mic", v) : localStorage.removeItem("oc_mic"),
+  );
+  selectedCamId.subscribe((v) =>
+    v ? localStorage.setItem("oc_cam", v) : localStorage.removeItem("oc_cam"),
+  );
 }
 
 let activeRoom: Room | null = null;
 
-interface JoinResponse { voice_state: VoiceState; livekit_token: string; livekit_url: string; }
+interface JoinResponse {
+  voice_state: VoiceState;
+  livekit_token: string;
+  livekit_url: string;
+}
 
 function updateParticipantMap(room: Room) {
-  const map = new Map<string, { identity: string; speaking: boolean; muted: boolean }>();
+  const map = new Map<
+    string,
+    { identity: string; speaking: boolean; muted: boolean }
+  >();
   // Add local participant
   if (room.localParticipant) {
     const lp = room.localParticipant;
@@ -85,7 +98,9 @@ export async function joinVoice(channelId: string): Promise<void> {
     activeRoom = null;
   }
 
-  const res = await api.post<JoinResponse>('/voice/join', { channel_id: channelId });
+  const res = await api.post<JoinResponse>("/voice/join", {
+    channel_id: channelId,
+  });
   inVoice.set(true);
   currentVoiceChannelId.set(channelId);
   selfMute.set(res.voice_state.self_mute);
@@ -94,7 +109,11 @@ export async function joinVoice(channelId: string): Promise<void> {
 
   // Build room options, enabling E2EE if an MLS group state exists for this channel
   const roomOptions: RoomOptions = {
-    audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    audioCaptureDefaults: {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+    },
     adaptiveStream: true,
     dynacast: true,
   };
@@ -102,26 +121,29 @@ export async function joinVoice(channelId: string): Promise<void> {
   const groupState = getGroupState(channelId);
   if (groupState && isE2EESupported()) {
     try {
-      const keyHex = await invoke<string>('crypto_export_voice_key', {
-        group_state_hex: groupState
+      const keyHex = await invoke<string>("crypto_export_voice_key", {
+        group_state_hex: groupState,
       });
       const keyBytes = hexToBytes(keyHex);
       // Uint8Array.buffer is ArrayBufferLike; slice to get a plain ArrayBuffer
       const keyBuffer: ArrayBuffer = keyBytes.buffer.slice(
         keyBytes.byteOffset,
-        keyBytes.byteOffset + keyBytes.byteLength
+        keyBytes.byteOffset + keyBytes.byteLength,
       ) as ArrayBuffer;
       const keyProvider = new ExternalE2EEKeyProvider();
       // Worker required by E2EEManagerOptions — use livekit's pre-built worker
       const worker = new Worker(
-        new URL('livekit-client/e2ee-worker', import.meta.url),
-        { type: 'module' }
+        new URL("livekit-client/e2ee-worker", import.meta.url),
+        { type: "module" },
       );
       roomOptions.e2ee = { keyProvider, worker };
       await keyProvider.setKey(keyBuffer);
       voiceE2EEActive.set(true);
     } catch (err) {
-      console.warn('[E2EE] Voice key export failed, joining without E2EE:', err);
+      console.warn(
+        "[E2EE] Voice key export failed, joining without E2EE:",
+        err,
+      );
     }
   }
 
@@ -136,16 +158,30 @@ export async function joinVoice(channelId: string): Promise<void> {
     .on(RoomEvent.ActiveSpeakersChanged, () => updateParticipantMap(room))
     .on(RoomEvent.TrackMuted, () => updateParticipantMap(room))
     .on(RoomEvent.TrackUnmuted, () => updateParticipantMap(room))
-    .on(RoomEvent.TrackSubscribed, (track: Track, _pub: unknown, participant: RemoteParticipant) => {
-      if (track.kind === 'video') {
-        videoTracks.update(m => { const n = new Map(m); n.set(participant.identity, track); return n; });
-      }
-    })
-    .on(RoomEvent.TrackUnsubscribed, (track: Track, _pub: unknown, participant: RemoteParticipant) => {
-      if (track.kind === 'video') {
-        videoTracks.update(m => { const n = new Map(m); n.delete(participant.identity); return n; });
-      }
-    })
+    .on(
+      RoomEvent.TrackSubscribed,
+      (track: Track, _pub: unknown, participant: RemoteParticipant) => {
+        if (track.kind === "video") {
+          videoTracks.update((m) => {
+            const n = new Map(m);
+            n.set(participant.identity, track);
+            return n;
+          });
+        }
+      },
+    )
+    .on(
+      RoomEvent.TrackUnsubscribed,
+      (track: Track, _pub: unknown, participant: RemoteParticipant) => {
+        if (track.kind === "video") {
+          videoTracks.update((m) => {
+            const n = new Map(m);
+            n.delete(participant.identity);
+            return n;
+          });
+        }
+      },
+    )
     .on(RoomEvent.Disconnected, () => {
       inVoice.set(false);
       currentVoiceChannelId.set(null);
@@ -166,7 +202,7 @@ export async function leaveVoice(): Promise<void> {
     await activeRoom.disconnect();
     activeRoom = null;
   }
-  await api.post('/voice/leave');
+  await api.post("/voice/leave");
   inVoice.set(false);
   currentVoiceChannelId.set(null);
   voiceE2EEActive.set(false);
@@ -182,7 +218,10 @@ export async function toggleMute(): Promise<void> {
   if (activeRoom) {
     await activeRoom.localParticipant.setMicrophoneEnabled(!muted);
   }
-  await api.patch('/voice/state', { self_mute: muted, self_deaf: get(selfDeaf) });
+  await api.patch("/voice/state", {
+    self_mute: muted,
+    self_deaf: get(selfDeaf),
+  });
 }
 
 export async function toggleDeaf(): Promise<void> {
@@ -196,7 +235,10 @@ export async function toggleDeaf(): Promise<void> {
       });
     });
   }
-  await api.patch('/voice/state', { self_mute: get(selfMute), self_deaf: deafened });
+  await api.patch("/voice/state", {
+    self_mute: get(selfMute),
+    self_deaf: deafened,
+  });
 }
 
 export async function fetchParticipants(channelId: string): Promise<void> {

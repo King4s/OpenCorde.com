@@ -182,7 +182,6 @@ pub async fn find_by_remote_peer(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_federated_dm_constants() {

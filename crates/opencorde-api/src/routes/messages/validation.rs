@@ -70,11 +70,10 @@ pub fn extract_mention_ids(content: &str) -> Vec<i64> {
         let after = &remaining[start + 2..];
         if let Some(end) = after.find('>') {
             let id_str = &after[..end];
-            if let Ok(id) = id_str.trim().parse::<i64>() {
-                if !ids.contains(&id) {
+            if let Ok(id) = id_str.trim().parse::<i64>()
+                && !ids.contains(&id) {
                     ids.push(id);
                 }
-            }
         }
         remaining = &remaining[start + 2..];
     }

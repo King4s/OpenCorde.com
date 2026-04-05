@@ -108,11 +108,10 @@ async fn create_event(
     }
 
     // Validate ends_at is after starts_at if provided
-    if let Some(ends_at) = req.ends_at {
-        if ends_at < req.starts_at {
+    if let Some(ends_at) = req.ends_at
+        && ends_at < req.starts_at {
             return Err(ApiError::BadRequest("Event end time must be after start time".to_string()));
         }
-    }
 
     // Parse channel_id if provided
     let channel_id = if let Some(ch_str) = &req.channel_id {

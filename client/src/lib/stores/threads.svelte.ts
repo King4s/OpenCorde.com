@@ -1,5 +1,5 @@
 // @file Thread store — manages thread state and API calls
-import api from '$lib/api/client';
+import api from "$lib/api/client";
 
 export interface Thread {
   id: string;
@@ -34,7 +34,7 @@ let state = $state<ThreadStore>({
   activeThread: null,
   messages: [],
   loading: false,
-  error: null
+  error: null,
 });
 
 export const threadStore = {
@@ -57,12 +57,13 @@ export const threadStore = {
     try {
       const [thread, messages] = await Promise.all([
         api.get<Thread>(`/threads/${threadId}`),
-        api.get<ThreadMessage[]>(`/threads/${threadId}/messages`)
+        api.get<ThreadMessage[]>(`/threads/${threadId}/messages`),
       ]);
       state.activeThread = thread;
       state.messages = messages;
     } catch (e: unknown) {
-      state.error = (e as { message?: string }).message ?? 'Failed to load thread';
+      state.error =
+        (e as { message?: string }).message ?? "Failed to load thread";
     } finally {
       state.loading = false;
     }
@@ -71,11 +72,11 @@ export const threadStore = {
   async createThread(
     channelId: string,
     messageId: string,
-    name?: string
+    name?: string,
   ): Promise<Thread> {
     const thread = await api.post<Thread>(
       `/channels/${channelId}/messages/${messageId}/thread`,
-      { name: name ?? 'Thread' }
+      { name: name ?? "Thread" },
     );
     state.activeThread = thread;
     state.messages = [];
@@ -83,10 +84,9 @@ export const threadStore = {
   },
 
   async sendMessage(threadId: string, content: string) {
-    const msg = await api.post<ThreadMessage>(
-      `/threads/${threadId}/messages`,
-      { content }
-    );
+    const msg = await api.post<ThreadMessage>(`/threads/${threadId}/messages`, {
+      content,
+    });
     state.messages = [...state.messages, msg];
     return msg;
   },
@@ -95,5 +95,5 @@ export const threadStore = {
     state.activeThread = null;
     state.messages = [];
     state.error = null;
-  }
+  },
 };

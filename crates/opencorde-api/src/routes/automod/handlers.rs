@@ -47,7 +47,7 @@ async fn create_rule(
     tracing::info!("creating automod rule");
 
     req.validate()
-        .map_err(|e| ApiError::BadRequest(e))?;
+        .map_err(ApiError::BadRequest)?;
 
     // Parse server ID
     let server_id_sf = parse_snowflake(&server_id)?;
@@ -156,7 +156,7 @@ async fn update_rule(
     tracing::info!("updating automod rule");
 
     req.validate_keywords()
-        .map_err(|e| ApiError::BadRequest(e))?;
+        .map_err(ApiError::BadRequest)?;
 
     // Parse rule ID
     let rule_id_sf = parse_snowflake(&rule_id)?;

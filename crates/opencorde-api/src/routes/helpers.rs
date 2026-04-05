@@ -73,8 +73,8 @@ pub async fn check_verification_level(
         }
     }
 
-    if level >= 3 && include_member_tenure {
-        if let Some(member) = member_repo::get_member(pool, user_id, server_id)
+    if level >= 3 && include_member_tenure
+        && let Some(member) = member_repo::get_member(pool, user_id, server_id)
             .await
             .map_err(ApiError::Database)?
         {
@@ -86,7 +86,6 @@ pub async fn check_verification_level(
                 return Err(ApiError::Forbidden);
             }
         }
-    }
 
     if level >= 4 && !user.totp_enabled {
         tracing::warn!(user_id = user_id.as_i64(), "user 2FA not enabled");

@@ -3,10 +3,10 @@
  * @purpose Fetch and cache server members
  * @depends api/client, api/types
  */
-import { writable } from 'svelte/store';
-import api from '$lib/api/client';
-import { gateway } from '$lib/api/websocket';
-import type { Member } from '$lib/api/types';
+import { writable } from "svelte/store";
+import api from "$lib/api/client";
+import { gateway } from "$lib/api/websocket";
+import type { Member } from "$lib/api/types";
 
 let activeSpaceId: string | null = null;
 
@@ -25,7 +25,7 @@ export async function fetchMembers(spaceId: string): Promise<void> {
 }
 
 export function initMemberListeners(): void {
-  gateway.on('MemberUpdate', (data: unknown) => {
+  gateway.on("MemberUpdate", (data: unknown) => {
     const event = data as { server_id: string };
     if (event.server_id === activeSpaceId && activeSpaceId) {
       fetchMembers(activeSpaceId).catch(() => {});

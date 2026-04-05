@@ -63,7 +63,6 @@ pub async fn security_headers(req: Request<Body>, next: Next) -> Response {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     // Verify that the static header values parse without panic.
     // (The real test is that the server starts without panic, but we can verify the values are valid.)

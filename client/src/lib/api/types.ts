@@ -144,7 +144,7 @@ export interface StageParticipant {
   id: string;
   user_id: string;
   username: string;
-  role: 'speaker' | 'audience';
+  role: "speaker" | "audience";
   hand_raised: boolean;
   joined_at: string;
 }
