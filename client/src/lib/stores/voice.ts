@@ -202,8 +202,20 @@ export async function joinVoice(channelId: string): Promise<void> {
       });
 
     await room.connect(res.livekit_url, res.livekit_token);
-    // Enable microphone by default (respecting self_mute)
-    await room.localParticipant.setMicrophoneEnabled(!res.voice_state.self_mute);
+    // Enable microphone by default (respecting self_mute). If the device is
+    // unavailable or permission is denied, keep the room connected so the user
+    // still joins the channel instead of bouncing back out.
+    try {
+      await room.localParticipant.setMicrophoneEnabled(!res.voice_state.self_mute);
+    } catch (micErr) {
+      console.warn("[Voice] microphone setup failed; staying connected:", micErr);
+      selfMute.set(true);
+      try {
+        await room.localParticipant.setMicrophoneEnabled(false);
+      } catch {
+        // ignore secondary failures
+      }
+    }
     updateParticipantMap(room);
   } catch (err: any) {
     console.error("[Voice] failed to join voice channel:", err);

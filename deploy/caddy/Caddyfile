@@ -24,6 +24,11 @@ opencorde.com {
         }
     }
 
+    # LiveKit WebSocket endpoint (strip /livekit prefix before proxying)
+    handle_path /livekit* {
+        reverse_proxy localhost:7880
+    }
+
     # MinIO file storage
     handle /files/* {
         reverse_proxy localhost:9010
