@@ -5,7 +5,7 @@
 	 */
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { goto, afterNavigate } from '$app/navigation';
 	import { get } from 'svelte/store';
 	import {
 		fetchChannels,
@@ -53,12 +53,16 @@
 	let showOnboarding = $state(false);
 	let onboardingData = $state<{ welcome_message: string | null; prompts: unknown[] } | null>(null);
 	let voicePopout = $state(false);
+	let showSidebarDrawer = $state(false);
+	let showMembersDrawer = $state(false);
+	let isCompactShell = $state(false);
 
 	if (browser) {
 		const match = window.location.pathname.match(/\/servers\/([^/]+)/);
 		const sid = match?.[1] ?? '';
 		spaceId = sid;
 		voicePopout = new URLSearchParams(window.location.search).get('voicePopout') === '1';
+		isCompactShell = window.matchMedia('(max-width: 1024px)').matches;
 		if (sid) {
 			initializeSpace(sid);
 		}
@@ -97,6 +101,21 @@
 
 
 	onMount(() => {
+		const media = window.matchMedia('(max-width: 1024px)');
+		const updateCompact = () => {
+			isCompactShell = media.matches;
+			if (!media.matches) {
+				showSidebarDrawer = false;
+				showMembersDrawer = false;
+			}
+		};
+		updateCompact();
+		media.addEventListener('change', updateCompact);
+		afterNavigate(() => {
+			showSidebarDrawer = false;
+			showMembersDrawer = false;
+		});
+
 		function handleKeydown(e: KeyboardEvent) {
 			// Ctrl+K — Quick switcher
 			if (e.ctrlKey && e.key === 'k') {
@@ -124,7 +143,10 @@
 			}
 		}
 		window.addEventListener('keydown', handleKeydown);
-		return () => window.removeEventListener('keydown', handleKeydown);
+		return () => {
+			window.removeEventListener('keydown', handleKeydown);
+			media.removeEventListener('change', updateCompact);
+		};
 	});
 
 	async function handleCreateInvite() {
@@ -146,97 +168,184 @@
 
 </script>
 
-<div class="flex flex-1 {voicePopout ? 'bg-black' : ''}">
-	{#if !voicePopout}
-	<div use:edgeResize={{ handles: ['right'], minWidth: 224, maxWidth: 384 }} class="w-60 bg-gray-800 flex flex-col flex-shrink-0 overflow-auto" style="min-width: 14rem; max-width: 24rem;">
-		<!-- Space header with actions -->
-		<div class="h-12 px-3 flex items-center justify-between border-b border-gray-900">
-			<h2 class="font-semibold text-white truncate text-sm">
-				{$currentSpace?.name ?? 'Space'}
-			</h2>
-			<div class="flex gap-1">
-				<button
-					onclick={() => { showInvite = !showInvite; showCreateChannel = false; }}
-					class="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 text-xs"
-					title="Create Invite"
-				>+&#x1F517;</button>
-				<button
-					onclick={() => { showCreateChannel = !showCreateChannel; showInvite = false; }}
-					class="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 text-xs"
-					title="Create Channel"
-				>+#</button>
-				{#if $currentUser?.id === $currentSpace?.owner_id}
+<div class="flex flex-1 min-h-0 {voicePopout ? 'bg-black' : 'bg-gray-900'}">
+	{#if !voicePopout && !isCompactShell}
+		<div use:edgeResize={{ handles: ['right'], minWidth: 224, maxWidth: 384 }} class="flex min-h-0 flex-shrink-0 flex-col overflow-auto bg-gray-800" style="width: var(--shell-sidebar-width);">
+			<!-- Space header with actions -->
+			<div class="h-12 px-3 flex items-center justify-between border-b border-gray-900">
+				<h2 class="font-semibold text-white truncate text-sm">
+					{$currentSpace?.name ?? 'Space'}
+				</h2>
+				<div class="flex gap-1">
 					<button
-						onclick={() => { window.location.href = `/servers/${spaceId}/settings`; }}
+						onclick={() => { showInvite = !showInvite; showCreateChannel = false; }}
 						class="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 text-xs"
-						title="Space Settings"
-					>⚙</button>
-				{/if}
+						title="Create Invite"
+					>+&#x1F517;</button>
+					<button
+						onclick={() => { showCreateChannel = !showCreateChannel; showInvite = false; }}
+						class="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 text-xs"
+						title="Create Channel"
+					>+#</button>
+					{#if $currentUser?.id === $currentSpace?.owner_id}
+						<button
+							onclick={() => { window.location.href = `/servers/${spaceId}/settings`; }}
+							class="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 text-xs"
+							title="Space Settings"
+						>⚙</button>
+					{/if}
+				</div>
 			</div>
+
+			<!-- Invite form -->
+			{#if showInvite}
+				<div class="p-2 bg-gray-750 border-b border-gray-900">
+					{#if inviteCode}
+						<div class="flex gap-1">
+							<input type="text" value={inviteCode} readonly
+								class="flex-1 px-2 py-1 bg-gray-900 border border-gray-700 rounded text-white text-xs" />
+							<button onclick={copyInvite}
+								class="px-2 py-1 bg-gray-600 text-white text-xs rounded">Copy</button>
+						</div>
+					{:else}
+						<button onclick={handleCreateInvite} disabled={inviteLoading}
+							class="w-full text-xs py-1 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white rounded">
+							{inviteLoading ? 'Creating...' : 'Generate Invite Link'}
+						</button>
+					{/if}
+				</div>
+			{/if}
+
+			<!-- Channel sidebar -->
+			<ChannelSidebar
+				spaceId={spaceId}
+				{showCreateChannel}
+				onCreateChannelToggle={() => showCreateChannel = false}
+				onWebhookOpen={(channelId) => webhookChannelId = channelId}
+			/>
+
+			<VoicePanel canRecord={$currentUser?.id === $currentSpace?.owner_id} />
+			{#if $currentVoiceChannelId && spaceId}
+				<SoundboardPanel
+					spaceId={spaceId}
+					isOwner={$currentUser?.id === $currentSpace?.owner_id}
+				/>
+			{/if}
+			{#if $currentChannel?.channel_type === 3}
+				<StagePanel
+					channelId={$currentChannelId || ''}
+					spaceId={spaceId}
+					isOwner={$currentUser?.id === $currentSpace?.owner_id}
+				/>
+			{/if}
+			<UserPanel />
 		</div>
-
-		<!-- Invite form -->
-		{#if showInvite}
-			<div class="p-2 bg-gray-750 border-b border-gray-900">
-				{#if inviteCode}
-					<div class="flex gap-1">
-						<input type="text" value={inviteCode} readonly
-							class="flex-1 px-2 py-1 bg-gray-900 border border-gray-700 rounded text-white text-xs" />
-						<button onclick={copyInvite}
-							class="px-2 py-1 bg-gray-600 text-white text-xs rounded">Copy</button>
-					</div>
-				{:else}
-					<button onclick={handleCreateInvite} disabled={inviteLoading}
-						class="w-full text-xs py-1 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white rounded">
-						{inviteLoading ? 'Creating...' : 'Generate Invite Link'}
-					</button>
-				{/if}
-			</div>
-		{/if}
-
-		<!-- Channel sidebar -->
-		<ChannelSidebar
-			spaceId={spaceId}
-			{showCreateChannel}
-			onCreateChannelToggle={() => showCreateChannel = false}
-			onWebhookOpen={(channelId) => webhookChannelId = channelId}
-		/>
-
-		<VoicePanel canRecord={$currentUser?.id === $currentSpace?.owner_id} />
-		{#if $currentVoiceChannelId && spaceId}
-			<SoundboardPanel
-				spaceId={spaceId}
-				isOwner={$currentUser?.id === $currentSpace?.owner_id}
-			/>
-		{/if}
-		{#if $currentChannel?.channel_type === 3}
-			<StagePanel
-				channelId={$currentChannelId || ''}
-				spaceId={spaceId}
-				isOwner={$currentUser?.id === $currentSpace?.owner_id}
-			/>
-		{/if}
-		<UserPanel />
-	</div>
 	{/if}
 
-	<div class="flex-1 flex flex-col">
+	<div class="flex min-w-0 flex-1 flex-col">
+		{#if !voicePopout && isCompactShell}
+			<div class="flex items-center gap-2 border-b border-gray-900 bg-gray-800 px-3 py-2 lg:hidden">
+				<button
+					onclick={() => { showSidebarDrawer = true; showMembersDrawer = false; }}
+					class="rounded-lg border border-gray-700 bg-gray-900 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-gray-300"
+				>
+					Channels
+				</button>
+				<div class="min-w-0 flex-1">
+					<p class="truncate text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">{$currentSpace?.name ?? 'Space'}</p>
+					<p class="truncate text-sm text-gray-200">{$currentChannel?.name ?? 'Choose a channel'}</p>
+				</div>
+				<button
+					onclick={() => { showMembersDrawer = true; showSidebarDrawer = false; }}
+					class="rounded-lg border border-gray-700 bg-gray-900 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-gray-300"
+				>
+					Members
+				</button>
+			</div>
+		{/if}
 		<VoiceStage />
 		{#if !voicePopout}
-			{@render children()}
+			<div class="min-h-0 min-w-0 flex-1">
+				{@render children()}
+			</div>
 		{/if}
 	</div>
 
-	{#if !voicePopout}
-	<MemberList
-		members={$members}
-		loading={$membersLoading}
-		spaceId={spaceId}
-		isOwner={$currentUser?.id === $currentSpace?.owner_id}
-		onlineUserIds={new Set($presenceMap.keys())}
-	/>
+	{#if !voicePopout && !isCompactShell}
+		<div class="flex min-h-0 flex-shrink-0" style="width: var(--shell-member-width);">
+			<MemberList
+				members={$members}
+				loading={$membersLoading}
+				spaceId={spaceId}
+				isOwner={$currentUser?.id === $currentSpace?.owner_id}
+				onlineUserIds={new Set($presenceMap.keys())}
+			/>
+		</div>
 	{/if}
 </div>
+
+{#if !voicePopout && isCompactShell && showSidebarDrawer}
+	<div class="fixed inset-0 z-40 lg:hidden">
+		<button type="button" class="absolute inset-0 bg-black/60" aria-label="Close channels drawer" onclick={() => { showSidebarDrawer = false; }}></button>
+		<div class="relative z-10 h-full w-[min(90vw,22rem)] overflow-hidden bg-gray-800 shadow-2xl">
+			<div class="flex h-full min-h-0 flex-col">
+				<div class="flex items-center justify-between border-b border-gray-900 px-3 py-2">
+					<p class="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Channels</p>
+					<button type="button" class="rounded p-1 text-gray-400 hover:bg-gray-700 hover:text-white" onclick={() => { showSidebarDrawer = false; }}>✕</button>
+				</div>
+				<div class="min-h-0 flex-1 overflow-auto">
+					<div class="flex h-full min-h-0 flex-col overflow-auto bg-gray-800" style="width: 100%;">
+						<div class="h-12 px-3 flex items-center justify-between border-b border-gray-900">
+							<h2 class="font-semibold text-white truncate text-sm">{$currentSpace?.name ?? 'Space'}</h2>
+							<div class="flex gap-1">
+								<button type="button" onclick={() => { showInvite = !showInvite; showCreateChannel = false; }} class="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 text-xs" title="Create Invite">+&#x1F517;</button>
+								<button type="button" onclick={() => { showCreateChannel = !showCreateChannel; showInvite = false; }} class="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 text-xs" title="Create Channel">+#</button>
+							</div>
+						</div>
+						{#if showInvite}
+							<div class="p-2 bg-gray-750 border-b border-gray-900">
+								{#if inviteCode}
+									<div class="flex gap-1">
+										<input type="text" value={inviteCode} readonly class="flex-1 min-w-0 px-2 py-1 bg-gray-900 border border-gray-700 rounded text-white text-xs" />
+										<button type="button" onclick={copyInvite} class="px-2 py-1 bg-gray-600 text-white text-xs rounded">Copy</button>
+									</div>
+								{:else}
+									<button type="button" onclick={handleCreateInvite} disabled={inviteLoading} class="w-full text-xs py-1 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white rounded">{inviteLoading ? 'Creating...' : 'Generate Invite Link'}</button>
+								{/if}
+							</div>
+						{/if}
+						<ChannelSidebar spaceId={spaceId} {showCreateChannel} onCreateChannelToggle={() => showCreateChannel = false} onWebhookOpen={(channelId) => webhookChannelId = channelId} />
+						<VoicePanel canRecord={$currentUser?.id === $currentSpace?.owner_id} />
+						{#if $currentVoiceChannelId && spaceId}
+							<SoundboardPanel spaceId={spaceId} isOwner={$currentUser?.id === $currentSpace?.owner_id} />
+						{/if}
+						{#if $currentChannel?.channel_type === 3}
+							<StagePanel channelId={$currentChannelId || ''} spaceId={spaceId} isOwner={$currentUser?.id === $currentSpace?.owner_id} />
+						{/if}
+						<UserPanel />
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if !voicePopout && isCompactShell && showMembersDrawer}
+	<div class="fixed inset-0 z-40 lg:hidden">
+		<button type="button" class="absolute inset-0 bg-black/60" aria-label="Close members drawer" onclick={() => { showMembersDrawer = false; }}></button>
+		<div class="relative z-10 ml-auto h-full w-[min(88vw,20rem)] overflow-hidden bg-gray-800 shadow-2xl">
+			<div class="flex h-full min-h-0 flex-col">
+				<div class="flex items-center justify-between border-b border-gray-900 px-3 py-2">
+					<p class="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Members</p>
+					<button type="button" class="rounded p-1 text-gray-400 hover:bg-gray-700 hover:text-white" onclick={() => { showMembersDrawer = false; }}>✕</button>
+				</div>
+				<div class="min-h-0 flex-1 overflow-auto">
+					<MemberList members={$members} loading={$membersLoading} spaceId={spaceId} isOwner={$currentUser?.id === $currentSpace?.owner_id} onlineUserIds={new Set($presenceMap.keys())} />
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
 
 
 {#if webhookChannelId}

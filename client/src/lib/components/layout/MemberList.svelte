@@ -62,7 +62,7 @@
 	let offlineMembers = $derived(members.filter(m => !onlineUserIds.has(m.user_id)));
 </script>
 
-<div class="w-48 bg-gray-800 flex flex-col flex-shrink-0 overflow-auto border-l border-gray-900" style="min-width: 12rem; max-width: 22rem;">
+<div class="w-full min-w-0 bg-gray-800 flex flex-col flex-shrink-0 overflow-auto border-l border-gray-900" style="min-width: 12rem; max-width: var(--shell-member-width);">
 	<div class="h-12 px-3 flex items-center border-b border-gray-900">
 		<h3 class="text-xs font-semibold text-gray-400 uppercase">Members — {members.length}</h3>
 	</div>

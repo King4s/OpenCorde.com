@@ -216,7 +216,7 @@
 	);
 </script>
 
-<div bind:this={scrollContainer} class="flex-1 overflow-y-auto px-4 pt-4 pb-2 flex flex-col gap-0">
+<div bind:this={scrollContainer} class="flex-1 overflow-y-auto px-3 sm:px-4 pt-3 sm:pt-4 pb-2 flex flex-col gap-0">
 	{#if hasMore && !loading}
 		<button class="text-gray-400 text-sm hover:underline py-2 self-center" onclick={onLoadMore}>
 			Load older messages
@@ -332,7 +332,7 @@
 									<img
 										src={att.url}
 										alt={att.filename}
-										class="max-h-64 max-w-sm rounded border border-gray-600 hover:border-gray-400 transition-colors object-contain"
+										class="max-h-64 max-w-full sm:max-w-sm rounded border border-gray-600 hover:border-gray-400 transition-colors object-contain"
 										loading="lazy"
 									/>
 								</a>
@@ -340,7 +340,7 @@
 								<video
 									src={att.url}
 									controls
-									class="max-h-64 max-w-sm rounded border border-gray-600"
+									class="max-h-64 max-w-full sm:max-w-sm rounded border border-gray-600"
 									preload="metadata"
 									aria-label={att.filename}
 								>
@@ -349,7 +349,7 @@
 								</video>
 							{:else if att.content_type?.startsWith('audio/')}
 								<div class="flex flex-col gap-1">
-									<audio src={att.url} controls class="max-w-sm rounded"></audio>
+									<audio src={att.url} controls class="max-w-full sm:max-w-sm rounded"></audio>
 									<span class="text-xs text-gray-500">{att.filename} · {formatFileSize(att.size)}</span>
 								</div>
 							{:else}

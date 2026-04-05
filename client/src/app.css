@@ -14,6 +14,44 @@
   --channel-bg: #2b2d31;
   --input-bg: #383a40;
   --accent: #e5e7eb;
+  --shell-sidebar-width: clamp(16rem, 20vw, 18rem);
+  --shell-member-width: clamp(15rem, 16vw, 17rem);
+  --shell-max-content-width: 100vw;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--bg-tertiary);
+}
+
+@media (max-width: 1024px) {
+  :root,
+  [data-theme="dark"],
+  [data-theme="light"] {
+    --shell-sidebar-width: clamp(15rem, 40vw, 17rem);
+    --shell-member-width: clamp(14rem, 34vw, 16rem);
+  }
+}
+
+@media (max-width: 744px) {
+  :root,
+  [data-theme="dark"],
+  [data-theme="light"] {
+    --shell-sidebar-width: 100vw;
+    --shell-member-width: 100vw;
+    --shell-max-content-width: 100vw;
+  }
+}
+
+@media (max-width: 430px) {
+  body {
+    overscroll-behavior: none;
+  }
 }
 
 /* Light theme */

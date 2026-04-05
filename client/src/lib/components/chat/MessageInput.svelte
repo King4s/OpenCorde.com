@@ -187,7 +187,7 @@
 	}
 </script>
 
-<div class="px-4 pb-3">
+<div class="px-3 sm:px-4 pb-3 sm:pb-3">
 	<!-- Reply indicator -->
 	{#if replyTo}
 		<div class="flex items-center justify-between px-3 py-1.5 mb-1 bg-gray-700/50 rounded-t-lg border-b border-gray-600/30 text-xs text-gray-400">
@@ -218,7 +218,7 @@
 	{/if}
 
 	<form onsubmit={handleSubmit}>
-		<div class="flex items-center bg-gray-700 {replyTo || pendingAttachments.length > 0 || showCommandAutocomplete ? 'rounded-b-lg' : 'rounded-lg'} px-2 py-2">
+		<div class="flex items-center bg-gray-700 {replyTo || pendingAttachments.length > 0 || showCommandAutocomplete ? 'rounded-b-lg' : 'rounded-lg'} px-2 sm:px-2 py-2">
 			<!-- File upload button -->
 			<button
 				type="button"
