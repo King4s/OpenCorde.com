@@ -4,7 +4,9 @@ rtc:
   port_range_start: 50000
   port_range_end: 50100
   tcp_port: 7881
-  use_external_ip: false
+  # Advertise the public host IP instead of the container/private IP so
+  # browsers outside the Docker bridge can actually complete ICE/DTLS.
+  use_external_ip: true
 
 keys:
   devkey: secret-change-me-in-production
