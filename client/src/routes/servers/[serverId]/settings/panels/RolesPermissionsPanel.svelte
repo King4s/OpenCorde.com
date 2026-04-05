@@ -20,7 +20,7 @@
   ];
 </script>
 
-<div class="p-8 max-w-4xl space-y-6">
+<div class="w-full max-w-4xl px-4 py-4 sm:p-8 space-y-6">
   <div>
     <h1 class="text-xl font-semibold text-white mb-2">Roles & Permissions</h1>
     <p class="text-gray-400 text-sm max-w-2xl">

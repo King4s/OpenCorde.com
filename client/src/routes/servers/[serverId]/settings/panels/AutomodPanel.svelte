@@ -46,7 +46,7 @@
   }
 </script>
 
-<div class="p-8 max-w-lg">
+<div class="w-full max-w-lg px-4 py-4 sm:p-8">
   <h1 class="text-xl font-semibold text-white mb-6">AutoMod</h1>
 
   <!-- Existing rules -->

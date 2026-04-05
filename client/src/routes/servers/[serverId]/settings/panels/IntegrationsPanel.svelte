@@ -141,7 +141,7 @@
   }
 </script>
 
-<div class="p-8 max-w-2xl space-y-10">
+<div class="w-full max-w-2xl px-4 py-4 sm:p-8 space-y-10">
 
   <!-- ── Discord Bridge ───────────────────────────────────────────────── -->
   <section>
@@ -198,7 +198,7 @@
     <!-- Add mapping form -->
     <div class="bg-gray-900 rounded border border-gray-700 p-4 space-y-3">
       <h3 class="text-sm font-semibold text-gray-300">Add Channel Bridge</h3>
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
 			<label for="discord-guild-id" class="block text-xs text-gray-400 mb-1">Discord Guild ID</label>
 			<input

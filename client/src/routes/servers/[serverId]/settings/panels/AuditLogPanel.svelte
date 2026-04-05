@@ -75,7 +75,7 @@
   }
 </script>
 
-<div class="p-8 max-w-4xl">
+<div class="w-full max-w-4xl px-4 py-4 sm:p-8">
   <h1 class="text-xl font-semibold text-white mb-6">Audit Log</h1>
 
   {#if error}

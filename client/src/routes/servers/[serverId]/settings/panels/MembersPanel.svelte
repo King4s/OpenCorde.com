@@ -82,7 +82,7 @@
   );
 </script>
 
-<div class="p-8 max-w-2xl">
+<div class="w-full max-w-2xl px-4 py-4 sm:p-8">
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-xl font-semibold text-white">Members <span class="text-gray-400 text-base font-normal ml-1">{members.length}</span></h1>
     <input

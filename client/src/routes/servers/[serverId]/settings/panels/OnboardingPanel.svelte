@@ -52,7 +52,7 @@
 	}
 </script>
 
-<div class="p-8 max-w-2xl">
+<div class="w-full max-w-2xl px-4 py-4 sm:p-8">
 	<h2 class="text-xl font-bold text-white mb-1">Space Onboarding</h2>
 	<p class="text-gray-400 text-sm mb-6">
 		Show a welcome screen to new members when they first join your server.

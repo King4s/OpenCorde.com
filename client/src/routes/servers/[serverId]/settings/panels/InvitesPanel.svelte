@@ -61,7 +61,7 @@
   }
 </script>
 
-<div class="p-8 max-w-lg">
+<div class="w-full max-w-lg px-4 py-4 sm:p-8">
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-xl font-semibold text-white">Invites</h1>
     <button
