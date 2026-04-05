@@ -77,8 +77,8 @@
 
 <div class="flex-1 overflow-y-auto bg-gray-900">
 	<!-- Space banner / header -->
-	<div class="bg-gradient-to-b from-gray-900 to-gray-900 px-8 py-10">
-		<div class="flex items-center gap-4 mb-4">
+	<div class="bg-gradient-to-b from-gray-900 to-gray-900 px-4 py-6 sm:px-8 sm:py-10">
+		<div class="flex items-center gap-3 sm:gap-4 mb-4">
 			{#if $currentSpace?.icon_url}
 				<img src={$currentSpace.icon_url} alt="Space icon"
 					class="w-16 h-16 rounded-2xl shadow-lg" />
@@ -96,7 +96,7 @@
 		</div>
 
 		<!-- Stats row -->
-		<div class="flex gap-6 text-sm text-gray-400">
+		<div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-400">
 			<span>
 				<span class="text-white font-semibold">{$members.length}</span>
 				{$members.length === 1 ? 'member' : 'members'}
@@ -120,7 +120,7 @@
 		</div>
 	</div>
 
-	<div class="px-8 py-6 max-w-3xl">
+	<div class="px-4 py-5 sm:px-8 sm:py-6 max-w-3xl">
 		<!-- Welcome / onboarding message -->
 		{#if onboarding?.enabled && onboarding?.welcome_message}
 			<div class="bg-gray-900/40 border border-gray-700/50 rounded-xl p-5 mb-6">
@@ -135,7 +135,7 @@
 		{#if rootText.length > 0}
 			<div class="mb-4">
 				<h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-1 mb-1">Text Channels</h3>
-				<div class="grid grid-cols-2 gap-1">
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
 					{#each rootText as ch (ch.id)}
 						<button
 							class="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-left transition-colors group"
@@ -155,7 +155,7 @@
 		{#if forumChannels.length > 0}
 			<div class="mb-4">
 				<h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-1 mb-1">Forum Channels</h3>
-				<div class="grid grid-cols-2 gap-1">
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
 					{#each forumChannels as ch (ch.id)}
 						<button
 							class="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-left transition-colors group"
@@ -179,7 +179,7 @@
 					{#if children.length > 0}
 						<div>
 							<h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-1 mb-1">{cat.name}</h3>
-							<div class="grid grid-cols-2 gap-1">
+							<div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
 								{#each children as ch (ch.id)}
 									<button
 										class="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-left transition-colors group"

@@ -281,4 +281,42 @@
 		padding: 6px 14px; font-size: 13px; cursor: pointer; transition: background 0.1s;
 	}
 	.visit-btn:hover { background: #e5e7eb; color: white; }
+
+	@media (max-width: 744px) {
+		.discover-page { padding: 20px 16px 24px; }
+		.discover-header { text-align: left; margin-bottom: 20px; }
+		.discover-header h1 { font-size: 24px; }
+		.subtitle { font-size: 14px; margin-bottom: 16px; }
+		.tabs {
+			display: flex;
+			width: 100%;
+			gap: 6px;
+		}
+		.tab-btn {
+			flex: 1 1 0;
+			justify-content: center;
+			padding: 10px 12px;
+			font-size: 13px;
+		}
+		.search-bar { text-align: left; margin-bottom: 18px; }
+		.search-bar input { max-width: none; padding: 11px 14px; font-size: 14px; }
+		.space-grid { grid-template-columns: 1fr; gap: 12px; }
+		.space-card { padding: 14px; }
+		.peer-card {
+			padding: 14px;
+			gap: 12px;
+			align-items: flex-start;
+			flex-direction: column;
+		}
+		.peer-actions { width: 100%; }
+		.visit-btn { width: 100%; }
+	}
+
+	@media (max-width: 430px) {
+		.discover-page { padding: 16px 12px 20px; }
+		.discover-header h1 { font-size: 22px; }
+		.tab-btn { padding: 9px 10px; font-size: 12px; }
+		.space-icon { width: 48px; height: 48px; }
+		.initials { font-size: 16px; }
+	}
 </style>

@@ -104,7 +104,7 @@
 
 <!-- Nav -->
 <nav class="fixed top-0 left-0 right-0 z-50 bg-gray-950/80 backdrop-blur border-b border-white/5">
-	<div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+	<div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
 		<div class="flex items-center gap-2">
 			<span class="text-white font-bold text-lg tracking-tight">OpenCorde</span>
 			<span class="px-1.5 py-0.5 rounded text-xs font-semibold bg-gray-500/20 text-gray-400 border border-gray-500/30 tracking-wide">BETA</span>
@@ -135,11 +135,11 @@
 <main class="bg-gray-950 text-white min-h-screen pt-14">
 
 	<!-- Hero -->
-	<section class="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
-		<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-950 border border-gray-800/50 text-gray-300 text-xs font-medium mb-6">
+	<section class="max-w-6xl mx-auto px-4 sm:px-6 pt-20 sm:pt-24 pb-16 sm:pb-20 text-center">
+		<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-950 border border-gray-800/50 text-gray-300 text-xs font-medium mb-5 sm:mb-6">
 			AGPL-3.0 · Self-hosted · E2EE · Desktop App
 		</div>
-		<h1 class="text-5xl md:text-6xl font-bold tracking-tight mb-5 leading-tight">
+		<h1 class="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-4 sm:mb-5 leading-tight">
 			Team communication<br />
 			<span class="text-gray-400">on your terms</span>
 		</h1>

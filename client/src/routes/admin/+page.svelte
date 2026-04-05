@@ -131,11 +131,11 @@
 	}
 </script>
 
-<div class="min-h-screen bg-gray-900 p-8">
+<div class="min-h-screen bg-gray-900 px-4 py-6 sm:px-6 lg:p-8">
 	<div class="max-w-7xl mx-auto">
-		<div class="flex items-center gap-3 mb-8">
+		<div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
 			<button onclick={() => history.back()} class="text-gray-400 hover:text-white text-sm">← Back</button>
-			<h1 class="text-3xl font-semibold text-white">Admin Dashboard</h1>
+			<h1 class="text-2xl sm:text-3xl font-semibold text-white">Admin Dashboard</h1>
 		</div>
 
 		{#if error}
@@ -144,13 +144,13 @@
 
 		<!-- Stats Cards (2 rows: counts + storage) -->
 		{#if stats}
-			<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
 				<div class="bg-gray-800 rounded-lg p-4"><div class="text-gray-400 text-xs uppercase mb-1">Total Users</div><div class="text-2xl font-bold text-white">{stats.total_users}</div></div>
 				<div class="bg-gray-800 rounded-lg p-4"><div class="text-gray-400 text-xs uppercase mb-1">Total Servers</div><div class="text-2xl font-bold text-white">{stats.total_servers}</div></div>
 				<div class="bg-gray-800 rounded-lg p-4"><div class="text-gray-400 text-xs uppercase mb-1">Total Messages</div><div class="text-2xl font-bold text-white">{stats.total_messages}</div></div>
 				<div class="bg-gray-800 rounded-lg p-4"><div class="text-gray-400 text-xs uppercase mb-1">Voice Sessions</div><div class="text-2xl font-bold text-white">{stats.active_voice_sessions}</div></div>
 			</div>
-			<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-8">
 				<div class="bg-gray-800 rounded-lg p-4"><div class="text-gray-400 text-xs uppercase mb-1">DB Size</div><div class="text-2xl font-bold text-white">{formatBytes(stats.db_size_bytes)}</div></div>
 				<div class="bg-gray-800 rounded-lg p-4"><div class="text-gray-400 text-xs uppercase mb-1">File Storage</div><div class="text-2xl font-bold text-white">{formatBytes(stats.attachment_storage_bytes)}</div></div>
 				<div class="bg-gray-800 rounded-lg p-4"><div class="text-gray-400 text-xs uppercase mb-1">Total Files</div><div class="text-2xl font-bold text-white">{stats.attachment_count}</div></div>
@@ -180,7 +180,7 @@
 		{/if}
 
 		{#if activeTab === 'rate-limits'}
-			<div class="bg-gray-800 rounded-lg p-6 max-w-md">
+			<div class="bg-gray-800 rounded-lg p-4 sm:p-6 max-w-md w-full">
 				<h2 class="text-white font-medium mb-4">Rate Limit Configuration</h2>
 				<p class="text-gray-400 text-sm mb-6">Changes take effect immediately — no restart required.</p>
 				{#if rlError}

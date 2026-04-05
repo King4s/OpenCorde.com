@@ -70,8 +70,8 @@
 	}
 </script>
 
-<div class="flex items-center justify-center min-h-screen bg-gray-900">
-	<div class="w-full max-w-md p-8 bg-gray-800 rounded-lg shadow-xl">
+<div class="flex items-start justify-center min-h-screen bg-gray-900 px-4 py-6 sm:items-center sm:py-8">
+	<div class="w-full max-w-md p-6 sm:p-8 bg-gray-800 rounded-xl shadow-xl">
 		<h1 class="text-2xl font-bold text-white mb-2">Reset Password</h1>
 		<p class="text-gray-400 mb-6">Enter your new password below</p>
 

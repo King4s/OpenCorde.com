@@ -79,7 +79,7 @@
 
 <div class="flex-1 flex flex-col bg-gray-900">
 	<!-- Header with back button -->
-	<div class="h-12 px-6 flex items-center border-b border-gray-800">
+	<div class="h-12 px-4 sm:px-6 flex items-center border-b border-gray-800">
 		<a
 			href={`/servers/${spaceId}/forum/${channelId}`}
 			class="text-gray-400 hover:text-gray-300 text-sm font-medium"
@@ -100,9 +100,9 @@
 	{:else}
 		<div class="flex-1 overflow-y-auto">
 			<!-- Post -->
-			<div class="max-w-4xl mx-auto w-full p-6 border-b border-gray-800">
+			<div class="max-w-4xl mx-auto w-full px-4 py-5 sm:p-6 border-b border-gray-800">
 				<div class="flex items-start justify-between mb-2">
-					<h1 class="text-2xl font-bold text-white">{forumStore.currentPost.title}</h1>
+					<h1 class="text-xl sm:text-2xl font-bold text-white">{forumStore.currentPost.title}</h1>
 					{#if canDeletePost()}
 						<button
 							onclick={handleDeletePost}
@@ -126,9 +126,9 @@
 
 			<!-- Replies -->
 			{#if forumStore.replies.length > 0}
-				<div class="max-w-4xl mx-auto w-full p-6 space-y-4">
+				<div class="max-w-4xl mx-auto w-full px-4 py-5 sm:p-6 space-y-4">
 					{#each forumStore.replies as reply (reply.id)}
-						<div class="p-4 bg-gray-800 rounded border border-gray-700">
+						<div class="p-3 sm:p-4 bg-gray-800 rounded border border-gray-700">
 							<div class="flex items-start justify-between mb-2">
 								<span class="text-sm font-medium text-gray-300">{reply.author_username}</span>
 								{#if canDeleteReply(reply.author_id)}
@@ -149,7 +149,7 @@
 		</div>
 
 		<!-- Reply form -->
-		<div class="max-w-4xl mx-auto w-full px-6 py-4 border-t border-gray-800 bg-gray-850">
+		<div class="max-w-4xl mx-auto w-full px-4 py-4 sm:px-6 border-t border-gray-800 bg-gray-850">
 			{#if replyError}
 				<p class="text-gray-400 text-sm mb-2">{replyError}</p>
 			{/if}

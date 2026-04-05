@@ -31,8 +31,8 @@
 	}
 </script>
 
-<div class="min-h-screen bg-gray-900 flex items-center justify-center px-4">
-	<div class="max-w-md w-full bg-gray-800 rounded-xl p-8 shadow-xl text-center">
+<div class="min-h-screen bg-gray-900 flex items-start justify-center px-4 py-6 sm:items-center sm:py-8">
+	<div class="max-w-md w-full bg-gray-800 rounded-xl p-6 sm:p-8 shadow-xl text-center">
 		<!-- Logo -->
 		<div class="w-16 h-16 bg-gray-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
 			<span class="text-white text-3xl font-bold">O</span>

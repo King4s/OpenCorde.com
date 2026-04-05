@@ -42,13 +42,13 @@
 	const statusLabel: Record<number, string> = { 0: 'Offline', 1: 'Online', 2: 'Idle', 3: 'Do Not Disturb' };
 </script>
 
-<div class="min-h-screen bg-gray-900 flex items-center justify-center p-8">
+<div class="min-h-screen bg-gray-900 flex items-start justify-center px-4 py-6 sm:items-center sm:py-8">
 	{#if loading}
 		<p class="text-gray-400">Loading…</p>
 	{:else if error}
 		<p class="text-gray-400">{error}</p>
 	{:else if profile}
-		<div class="bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
+		<div class="bg-gray-800 rounded-xl shadow-xl w-full max-w-sm sm:max-w-md overflow-hidden">
 			<!-- Banner -->
 			<div class="h-24 bg-gradient-to-r from-gray-800 to-gray-800"></div>
 			<!-- Avatar -->

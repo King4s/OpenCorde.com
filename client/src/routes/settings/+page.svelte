@@ -158,8 +158,8 @@
 	}
 </script>
 
-<div class="min-h-screen bg-gray-900 px-4 py-6 lg:px-8">
-	<div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6">
+<div class="min-h-screen bg-gray-900 px-3 py-4 sm:px-4 sm:py-6 lg:px-8">
+	<div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 sm:gap-6">
 		<aside class="lg:sticky lg:top-6 h-fit bg-gray-800 rounded-xl border border-gray-700 p-3">
 			<div class="flex items-center justify-between mb-4">
 				<h1 class="text-lg font-semibold text-white">Settings</h1>
@@ -184,7 +184,7 @@
 		{/if}
 
 		<!-- Avatar -->
-		<div id="profile" class="bg-gray-800 rounded-lg p-4 mb-4">
+		<div id="profile" class="bg-gray-800 rounded-lg p-3 sm:p-4 mb-4">
 			<h2 class="text-sm font-semibold text-gray-400 uppercase mb-3">Profile</h2>
 			<div class="flex items-center gap-4">
 				{#if $currentUser?.avatar_url}
@@ -206,7 +206,7 @@
 		</div>
 
 		<!-- Account info -->
-		<div class="bg-gray-800 rounded-lg p-4 space-y-4 mb-4">
+		<div id="account" class="bg-gray-800 rounded-lg p-3 sm:p-4 mb-4">
 			<h2 class="text-sm font-semibold text-gray-400 uppercase">Account</h2>
 			<div>
 				<label class="block text-xs text-gray-400 mb-1" for="settings-username">Username</label>
@@ -335,7 +335,7 @@
 		</div>
 
 		<!-- Admin Dashboard Link -->
-		<div id="admin" class="bg-gray-800 rounded-lg p-4 mt-4">
+		<div id="admin" class="bg-gray-800 rounded-lg p-3 sm:p-4 mb-4">
 			<h2 class="text-sm font-semibold text-gray-400 uppercase mb-3">Administration</h2>
 			<a href="/admin"
 				class="inline-block px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded transition-colors">
