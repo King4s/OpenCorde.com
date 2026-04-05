@@ -216,7 +216,7 @@
 	);
 </script>
 
-<div bind:this={scrollContainer} class="flex-1 overflow-y-auto px-3 sm:px-4 pt-3 sm:pt-4 pb-2 flex flex-col gap-0">
+<div bind:this={scrollContainer} class="flex-1 overflow-y-auto px-2.5 sm:px-4 pt-2.5 sm:pt-4 pb-2 flex flex-col gap-0">
 	{#if hasMore && !loading}
 		<button class="text-gray-400 text-sm hover:underline py-2 self-center" onclick={onLoadMore}>
 			Load older messages
@@ -227,7 +227,7 @@
 
 	{#each displayMessages as { msg, compact } (msg.id)}
 		{#if dividerBeforeId === msg.id}
-			<div class="flex items-center gap-3 px-4 py-1 select-none" aria-label="New messages divider">
+			<div class="flex items-center gap-2 px-2.5 sm:px-4 py-1 select-none" aria-label="New messages divider">
 				<div class="flex-1 h-px bg-gray-500/60"></div>
 				<span class="text-gray-400 text-xs font-semibold whitespace-nowrap px-1">NEW MESSAGES</span>
 				<div class="flex-1 h-px bg-gray-500/60"></div>
@@ -244,7 +244,7 @@
 				</div>
 			{:else if compact}
 				<!-- Cozy grouped: no avatar, show time on hover -->
-				<div class="w-10 flex-shrink-0 flex items-center justify-end">
+				<div class="w-9 flex-shrink-0 flex items-center justify-end sm:w-10">
 					<span class="text-xs text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity pr-1 select-none">
 						{formatShortTime(msg.created_at)}
 					</span>
@@ -306,7 +306,7 @@
 						<span class="text-gray-600">Enter to save · Esc to cancel</span>
 					</div>
 				{:else}
-					<div class="text-gray-300 text-sm break-words leading-relaxed prose-sm">
+					<div class="text-gray-300 text-[14px] sm:text-sm break-words leading-relaxed prose-sm">
 						<MarkdownContent content={msg.content} />
 					</div>
 				{/if}

@@ -244,20 +244,20 @@
 
 	<div class="flex min-w-0 flex-1 flex-col">
 		{#if !voicePopout && isCompactShell}
-			<div class="flex items-center gap-2 border-b border-gray-900 bg-gray-800 px-3 py-2 lg:hidden">
+			<div class="flex items-center gap-2 border-b border-gray-900 bg-gray-800 px-2 py-1.5 sm:px-3 sm:py-2 lg:hidden">
 				<button
 					onclick={() => { showSidebarDrawer = true; showMembersDrawer = false; }}
-					class="rounded-lg border border-gray-700 bg-gray-900 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-gray-300"
+					class="rounded-lg border border-gray-700 bg-gray-900 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.10em] text-gray-300 sm:px-3 sm:py-1.5 sm:text-xs"
 				>
 					Channels
 				</button>
 				<div class="min-w-0 flex-1">
-					<p class="truncate text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">{$currentSpace?.name ?? 'Space'}</p>
-					<p class="truncate text-sm text-gray-200">{$currentChannel?.name ?? 'Choose a channel'}</p>
+					<p class="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-500 sm:text-xs">{$currentSpace?.name ?? 'Space'}</p>
+					<p class="truncate text-[13px] text-gray-200 sm:text-sm">{$currentChannel?.name ?? 'Choose a channel'}</p>
 				</div>
 				<button
 					onclick={() => { showMembersDrawer = true; showSidebarDrawer = false; }}
-					class="rounded-lg border border-gray-700 bg-gray-900 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-gray-300"
+					class="rounded-lg border border-gray-700 bg-gray-900 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.10em] text-gray-300 sm:px-3 sm:py-1.5 sm:text-xs"
 				>
 					Members
 				</button>
@@ -285,23 +285,23 @@
 </div>
 
 {#if !voicePopout && isCompactShell && showSidebarDrawer}
-	<div class="fixed inset-0 z-40 lg:hidden">
-		<button type="button" class="absolute inset-0 bg-black/60" aria-label="Close channels drawer" onclick={() => { showSidebarDrawer = false; }}></button>
-		<div class="relative z-10 h-full w-[min(90vw,22rem)] overflow-hidden bg-gray-800 shadow-2xl">
-			<div class="flex h-full min-h-0 flex-col">
-				<div class="flex items-center justify-between border-b border-gray-900 px-3 py-2">
-					<p class="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Channels</p>
-					<button type="button" class="rounded p-1 text-gray-400 hover:bg-gray-700 hover:text-white" onclick={() => { showSidebarDrawer = false; }}>✕</button>
-				</div>
-				<div class="min-h-0 flex-1 overflow-auto">
-					<div class="flex h-full min-h-0 flex-col overflow-auto bg-gray-800" style="width: 100%;">
-						<div class="h-12 px-3 flex items-center justify-between border-b border-gray-900">
-							<h2 class="font-semibold text-white truncate text-sm">{$currentSpace?.name ?? 'Space'}</h2>
-							<div class="flex gap-1">
-								<button type="button" onclick={() => { showInvite = !showInvite; showCreateChannel = false; }} class="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 text-xs" title="Create Invite">+&#x1F517;</button>
-								<button type="button" onclick={() => { showCreateChannel = !showCreateChannel; showInvite = false; }} class="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 text-xs" title="Create Channel">+#</button>
-							</div>
+			<div class="fixed inset-0 z-40 lg:hidden">
+				<button type="button" class="absolute inset-0 bg-black/60" aria-label="Close channels drawer" onclick={() => { showSidebarDrawer = false; }}></button>
+				<div class="relative z-10 h-full w-[min(90vw,22rem)] overflow-hidden bg-gray-800 shadow-2xl">
+					<div class="flex h-full min-h-0 flex-col">
+						<div class="flex items-center justify-between border-b border-gray-900 px-2 py-1.5 sm:px-3 sm:py-2">
+							<p class="text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-500 sm:text-xs">Channels</p>
+							<button type="button" class="rounded p-1 text-gray-400 hover:bg-gray-700 hover:text-white" onclick={() => { showSidebarDrawer = false; }}>✕</button>
 						</div>
+						<div class="min-h-0 flex-1 overflow-auto">
+							<div class="flex h-full min-h-0 flex-col overflow-auto bg-gray-800" style="width: 100%;">
+								<div class="flex items-center justify-between border-b border-gray-900 px-2 py-1.5 sm:h-12 sm:px-3">
+									<h2 class="max-w-[60%] truncate text-[13px] font-semibold text-white sm:text-sm">{$currentSpace?.name ?? 'Space'}</h2>
+									<div class="flex gap-1">
+										<button type="button" onclick={() => { showInvite = !showInvite; showCreateChannel = false; }} class="flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:bg-gray-700 hover:text-white sm:h-6 sm:w-6 text-[11px]" title="Create Invite">+🔗</button>
+										<button type="button" onclick={() => { showCreateChannel = !showCreateChannel; showInvite = false; }} class="flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:bg-gray-700 hover:text-white sm:h-6 sm:w-6 text-[11px]" title="Create Channel">+#</button>
+									</div>
+								</div>
 						{#if showInvite}
 							<div class="p-2 bg-gray-750 border-b border-gray-900">
 								{#if inviteCode}
@@ -335,8 +335,8 @@
 		<button type="button" class="absolute inset-0 bg-black/60" aria-label="Close members drawer" onclick={() => { showMembersDrawer = false; }}></button>
 		<div class="relative z-10 ml-auto h-full w-[min(88vw,20rem)] overflow-hidden bg-gray-800 shadow-2xl">
 			<div class="flex h-full min-h-0 flex-col">
-				<div class="flex items-center justify-between border-b border-gray-900 px-3 py-2">
-					<p class="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">Members</p>
+				<div class="flex items-center justify-between border-b border-gray-900 px-2 py-1.5 sm:px-3 sm:py-2">
+					<p class="text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-500 sm:text-xs">Members</p>
 					<button type="button" class="rounded p-1 text-gray-400 hover:bg-gray-700 hover:text-white" onclick={() => { showMembersDrawer = false; }}>✕</button>
 				</div>
 				<div class="min-h-0 flex-1 overflow-auto">

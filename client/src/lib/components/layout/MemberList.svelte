@@ -63,11 +63,11 @@
 </script>
 
 <div class="w-full min-w-0 bg-gray-800 flex flex-col flex-shrink-0 overflow-auto border-l border-gray-900" style="min-width: 12rem; max-width: var(--shell-member-width);">
-	<div class="h-12 px-3 flex items-center border-b border-gray-900">
-		<h3 class="text-xs font-semibold text-gray-400 uppercase">Members — {members.length}</h3>
+	<div class="h-10 px-2.5 sm:h-12 sm:px-3 flex items-center border-b border-gray-900">
+		<h3 class="text-[10px] font-semibold text-gray-400 uppercase sm:text-xs">Members — {members.length}</h3>
 	</div>
 
-	<div class="flex-1 overflow-y-auto p-2 space-y-0.5">
+	<div class="flex-1 overflow-y-auto p-1.5 sm:p-2 space-y-0.5">
 		{#if loading}
 			<p class="text-gray-500 text-xs px-2">Loading...</p>
 		{:else if members.length === 0}
@@ -79,17 +79,17 @@
 					<div
 						role="button"
 						tabindex="0"
-						class="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-700/50 group cursor-context-menu"
+						class="flex items-center gap-2 px-1.5 py-1 rounded hover:bg-gray-700/50 group cursor-context-menu sm:px-2"
 						oncontextmenu={(e) => handleMemberContextMenu(e, member)}
 					>
 						<div class="relative flex-shrink-0">
-							<div class="w-7 h-7 rounded-full {getAvatarColor(member.user_id)} flex items-center justify-center text-white text-xs font-semibold">
+							<div class="h-6 w-6 rounded-full {getAvatarColor(member.user_id)} flex items-center justify-center text-white text-[10px] font-semibold sm:h-7 sm:w-7 sm:text-xs">
 								{getInitials(member.nickname ?? member.username)}
 							</div>
 							<!-- Online indicator dot -->
 							<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-gray-500 border-2 border-gray-800"></span>
 						</div>
-						<span class="text-gray-200 text-sm truncate group-hover:text-white transition-colors">
+						<span class="min-w-0 text-gray-200 text-[13px] truncate group-hover:text-white transition-colors sm:text-sm">
 							{member.nickname ?? member.username}
 						</span>
 					</div>
@@ -106,11 +106,11 @@
 						oncontextmenu={(e) => handleMemberContextMenu(e, member)}
 					>
 						<div class="relative flex-shrink-0">
-							<div class="w-7 h-7 rounded-full {getAvatarColor(member.user_id)} flex items-center justify-center text-white text-xs font-semibold">
+							<div class="h-6 w-6 rounded-full {getAvatarColor(member.user_id)} flex items-center justify-center text-white text-[10px] font-semibold sm:h-7 sm:w-7 sm:text-xs">
 								{getInitials(member.nickname ?? member.username)}
 							</div>
 						</div>
-						<span class="text-gray-400 text-sm truncate group-hover:text-gray-200 transition-colors">
+						<span class="min-w-0 text-gray-400 text-[13px] truncate group-hover:text-gray-200 transition-colors sm:text-sm">
 							{member.nickname ?? member.username}
 						</span>
 					</div>

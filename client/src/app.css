@@ -49,8 +49,14 @@ body {
 }
 
 @media (max-width: 430px) {
+  html {
+    font-size: 15px;
+  }
+
   body {
     overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 }
 

@@ -187,7 +187,7 @@
 	}
 </script>
 
-<div class="px-3 sm:px-4 pb-3 sm:pb-3">
+<div class="px-2.5 sm:px-4 pb-2.5 sm:pb-3">
 	<!-- Reply indicator -->
 	{#if replyTo}
 		<div class="flex items-center justify-between px-3 py-1.5 mb-1 bg-gray-700/50 rounded-t-lg border-b border-gray-600/30 text-xs text-gray-400">
@@ -218,13 +218,13 @@
 	{/if}
 
 	<form onsubmit={handleSubmit}>
-		<div class="flex items-center bg-gray-700 {replyTo || pendingAttachments.length > 0 || showCommandAutocomplete ? 'rounded-b-lg' : 'rounded-lg'} px-2 sm:px-2 py-2">
+		<div class="flex items-center bg-gray-700 {replyTo || pendingAttachments.length > 0 || showCommandAutocomplete ? 'rounded-b-lg' : 'rounded-lg'} px-1.5 sm:px-2 py-1.5 sm:py-2">
 			<!-- File upload button -->
 			<button
 				type="button"
 				onclick={() => fileInputElement?.click()}
 				disabled={uploading || dispatchingCommand}
-				class="mr-1 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-200 disabled:text-gray-600 transition-colors rounded hover:bg-gray-600/50 flex-shrink-0"
+				class="mr-1 h-7 w-7 flex-shrink-0 rounded hover:bg-gray-600/50 flex items-center justify-center text-gray-400 hover:text-gray-200 disabled:text-gray-600 transition-colors sm:h-8 sm:w-8"
 				title="Attach file"
 				aria-label="Attach file"
 			>
@@ -239,7 +239,7 @@
 			<button
 				type="button"
 				onclick={() => (showEmojiPicker = !showEmojiPicker)}
-				class="mr-1 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-200 transition-colors rounded hover:bg-gray-600/50 flex-shrink-0"
+				class="mr-1 h-7 w-7 flex-shrink-0 rounded hover:bg-gray-600/50 flex items-center justify-center text-gray-400 hover:text-gray-200 transition-colors sm:h-8 sm:w-8"
 				title="Add emoji"
 				aria-label="Add emoji"
 			>
@@ -252,12 +252,12 @@
 				bind:this={inputElement}
 				onkeydown={handleKeydown}
 				placeholder="Message #{channelName}"
-				class="flex-1 py-2 bg-transparent text-white placeholder-gray-400 focus:outline-none text-sm"
+				class="min-w-0 flex-1 py-2 bg-transparent text-[15px] sm:text-sm text-white placeholder-gray-400 focus:outline-none"
 			/>
 			<button
 				type="submit"
 				disabled={(!content.trim() && pendingAttachments.length === 0) || dispatchingCommand}
-				class="ml-2 text-gray-400 hover:text-gray-300 disabled:text-gray-600 transition-colors text-sm font-medium"
+				class="ml-2 text-gray-400 hover:text-gray-300 disabled:text-gray-600 transition-colors text-[13px] sm:text-sm font-medium"
 			>
 				{dispatchingCommand ? 'Executing...' : 'Send'}
 			</button>
