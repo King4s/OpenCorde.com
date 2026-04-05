@@ -6,12 +6,18 @@
 -->
 <script lang="ts">
 	import { livekitParticipants, videoTracks } from '$lib/stores/voice';
+	import { members } from '$lib/stores/members';
 
 	interface Participant {
 		identity: string;
 		speaking: boolean;
 		muted: boolean;
 		videoTrack?: MediaStreamTrack | null;
+	}
+
+	function displayName(userId: string): string {
+		const member = $members.find((m) => m.user_id === userId);
+		return member?.nickname ?? member?.username ?? userId;
 	}
 
 	// Determine grid columns based on participant count
@@ -40,11 +46,11 @@
 	}
 </script>
 
-{#if $livekitParticipants.size > 0}
+{#if [...$livekitParticipants.values()].some((p) => $videoTracks.has(p.identity))}
 	<div class="p-2 bg-gray-900 border-t border-gray-700">
 		<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Video</p>
-		<div class="grid gap-1.5 {gridCols($livekitParticipants.size)}">
-			{#each [...$livekitParticipants.values()] as p (p.identity)}
+		<div class="grid gap-1.5 {gridCols([...$livekitParticipants.values()].filter((p) => $videoTracks.has(p.identity)).length)}">
+			{#each [...$livekitParticipants.values()].filter((p) => $videoTracks.has(p.identity)) as p (p.identity)}
 				<div class="relative bg-gray-800 rounded-lg overflow-hidden aspect-video flex items-center justify-center
 					{p.speaking ? 'ring-2 ring-gray-400' : ''}">
 
@@ -59,14 +65,14 @@
 					<!-- Avatar placeholder when no video -->
 					<div class="absolute inset-0 flex items-center justify-center {$videoTracks.has(p.identity) ? 'hidden' : ''}">
 						<div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold text-sm">
-							{p.identity[0]?.toUpperCase() ?? '?'}
+							{displayName(p.identity).slice(0, 1).toUpperCase()}
 						</div>
 					</div>
 
 					<!-- Name + status overlay -->
 					<div class="absolute bottom-0 left-0 right-0 flex items-center gap-1 bg-black/50 px-1.5 py-0.5">
 						<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {p.speaking ? 'bg-gray-400' : 'bg-gray-500'}"></span>
-						<span class="text-white text-xs truncate flex-1">{p.identity}</span>
+						<span class="text-white text-xs truncate flex-1">{displayName(p.identity)}</span>
 						{#if p.muted}<span class="text-xs">🔇</span>{/if}
 					</div>
 

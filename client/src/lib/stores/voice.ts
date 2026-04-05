@@ -91,7 +91,30 @@ function updateParticipantMap(room: Room) {
   livekitParticipants.set(map);
 }
 
+async function prewarmMicrophonePermission(): Promise<void> {
+  if (
+    typeof navigator === "undefined" ||
+    !navigator.mediaDevices?.getUserMedia
+  ) {
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach((track) => track.stop());
+  } catch (err) {
+    console.warn("[Voice] microphone permission preflight failed:", err);
+  }
+}
+
 export async function joinVoice(channelId: string): Promise<void> {
+  // On mobile browsers, microphone permission prompts are more reliable when
+  // requested immediately from the user gesture, before any awaited network
+  // calls can break activation context.
+  if (!get(selfMute)) {
+    await prewarmMicrophonePermission();
+  }
+
   // Leave current room if in one. If the LiveKit connection is stale, don't
   // block joining a new channel — just log and continue.
   if (activeRoom) {
@@ -248,18 +271,29 @@ export async function joinVoice(channelId: string): Promise<void> {
 }
 
 export async function leaveVoice(): Promise<void> {
-  if (activeRoom) {
-    await activeRoom.disconnect();
+  try {
+    if (activeRoom) {
+      await activeRoom.disconnect();
+    }
+
+    try {
+      await api.post("/voice/leave");
+    } catch (err: any) {
+      // Leaving voice should never log the user out. If the backend rejects the
+      // cleanup request (expired token, already cleaned up, temporary auth
+      // hiccup), keep the client session intact and just clear local voice state.
+      console.warn("[Voice] backend leave cleanup failed:", err);
+    }
+  } finally {
     activeRoom = null;
+    inVoice.set(false);
+    currentVoiceChannelId.set(null);
+    voiceE2EEActive.set(false);
+    participants.set([]);
+    videoTracks.set(new Map());
+    activeRoomStore.set(null);
+    livekitParticipants.set(new Map());
   }
-  await api.post("/voice/leave");
-  inVoice.set(false);
-  currentVoiceChannelId.set(null);
-  voiceE2EEActive.set(false);
-  participants.set([]);
-  videoTracks.set(new Map());
-  activeRoomStore.set(null);
-  livekitParticipants.set(new Map());
 }
 
 export async function toggleMute(): Promise<void> {

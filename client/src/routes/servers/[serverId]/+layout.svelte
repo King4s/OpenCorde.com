@@ -20,6 +20,7 @@
 	import { presenceMap, initPresenceListener } from '$lib/stores/presence';
 	import api from '$lib/api/client';
 	import VoicePanel from '$lib/components/voice/VoicePanel.svelte';
+	import VoiceStage from '$lib/components/voice/VoiceStage.svelte';
 	import SoundboardPanel from '$lib/components/voice/SoundboardPanel.svelte';
 	import StagePanel from '$lib/components/voice/StagePanel.svelte';
 	import OnboardingModal from '$lib/components/modals/OnboardingModal.svelte';
@@ -51,11 +52,13 @@
 	// Onboarding
 	let showOnboarding = $state(false);
 	let onboardingData = $state<{ welcome_message: string | null; prompts: unknown[] } | null>(null);
+	let voicePopout = $state(false);
 
 	if (browser) {
 		const match = window.location.pathname.match(/\/servers\/([^/]+)/);
 		const sid = match?.[1] ?? '';
 		spaceId = sid;
+		voicePopout = new URLSearchParams(window.location.search).get('voicePopout') === '1';
 		if (sid) {
 			initializeSpace(sid);
 		}
@@ -143,7 +146,8 @@
 
 </script>
 
-<div class="flex flex-1">
+<div class="flex flex-1 {voicePopout ? 'bg-black' : ''}">
+	{#if !voicePopout}
 	<div use:edgeResize={{ handles: ['right'], minWidth: 224, maxWidth: 384 }} class="w-60 bg-gray-800 flex flex-col flex-shrink-0 overflow-auto" style="min-width: 14rem; max-width: 24rem;">
 		<!-- Space header with actions -->
 		<div class="h-12 px-3 flex items-center justify-between border-b border-gray-900">
@@ -214,11 +218,16 @@
 		{/if}
 		<UserPanel />
 	</div>
+	{/if}
 
 	<div class="flex-1 flex flex-col">
-		{@render children()}
+		<VoiceStage />
+		{#if !voicePopout}
+			{@render children()}
+		{/if}
 	</div>
 
+	{#if !voicePopout}
 	<MemberList
 		members={$members}
 		loading={$membersLoading}
@@ -226,6 +235,7 @@
 		isOwner={$currentUser?.id === $currentSpace?.owner_id}
 		onlineUserIds={new Set($presenceMap.keys())}
 	/>
+	{/if}
 </div>
 
 

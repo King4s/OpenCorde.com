@@ -18,6 +18,7 @@
 		currentVoiceChannelId
 	} from '$lib/stores/voice';
 	import api from '$lib/api/client';
+	import { members } from '$lib/stores/members';
 	import VideoGrid from './VideoGrid.svelte';
 	import VoiceSettings from './VoiceSettings.svelte';
 
@@ -29,6 +30,11 @@
 
 	let recording = $state(false);
 	let showSettings = $state(false);
+
+	function displayName(userId: string): string {
+		const member = $members.find((m) => m.user_id === userId);
+		return member?.nickname ?? member?.username ?? userId;
+	}
 
 	async function toggleRecording() {
 		const channelId = $currentVoiceChannelId;
@@ -99,18 +105,18 @@
 			</div>
 
 			<!-- Participant list -->
-			{#if $livekitParticipants.size > 0}
-				<div class="space-y-1">
-					{#each [...$livekitParticipants.values()] as p (p.identity)}
-						<div class="flex items-center gap-1.5 text-xs">
-							<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {p.speaking ? 'bg-gray-400' : 'bg-gray-600'}"></span>
-							<span class="text-gray-300 truncate flex-1">{p.identity}</span>
-							{#if p.muted}<span class="text-gray-500 text-xs">🔇</span>{/if}
-						</div>
-					{/each}
-				</div>
-			{/if}
-		</div>
+				{#if $livekitParticipants.size > 0}
+					<div class="space-y-1">
+						{#each [...$livekitParticipants.values()] as p (p.identity)}
+							<div class="flex items-center gap-1.5 text-xs">
+								<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {p.speaking ? 'bg-gray-400' : 'bg-gray-600'}"></span>
+								<span class="text-gray-300 truncate flex-1">{displayName(p.identity)}</span>
+								{#if p.muted}<span class="text-gray-500 text-xs">🔇</span>{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
+</div>
 
 		<!-- Video grid -->
 		<VideoGrid />
