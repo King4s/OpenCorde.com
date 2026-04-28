@@ -64,6 +64,11 @@
       "note": "Read-only foundation audit covering messaging, permissions, onboarding, voice/stage, apps/webhooks, and friends/DMs."
     },
     {
+      "path": "docs/audits/2026-04-28-permission-route-audit.md",
+      "type": "audit",
+      "note": "Backend permission route audit and first-pass permission hardening."
+    },
+    {
       "path": "tasks-future.md",
       "type": "legacy_claims",
       "note": "Legacy task list marks many Discord-like features complete; now explicitly labeled as an implementation log, not parity proof."
@@ -169,26 +174,31 @@
     {
       "id": "roles_permissions",
       "name": "Roles, Permissions, and Channel Overrides",
-      "status": "shallow_needs_proof",
+      "status": "partial",
       "observed": [
         "Role routes, permission bit definitions, channel override routes, RoleManager, RolePermissionsTab, and ChannelPermissionsTab names exist.",
-        "Several backend routes call server or channel permission checks."
+        "Several backend routes call server or channel permission checks.",
+        "First-pass hardening now blocks non-members from receiving default permissions in permission_check.",
+        "Voice, webhooks, slash commands, onboarding, audit log, and threads received additional permission gates."
       ],
       "gaps": [
         "Effective permission inspector is not proven.",
         "Discord overwrite resolution behavior needs direct comparison tests.",
-        "UI may expose role/override surfaces without proving end-to-end enforcement."
+        "UI may expose role/override surfaces without proving end-to-end enforcement.",
+        "Role hierarchy, moderation hierarchy, search filtering, upload/pin/forum/reaction route gates, and webhook token exposure still need work."
       ],
       "next_todos": [
         "Build effective permission report per user/channel.",
         "Add test matrix for owner/admin/mod/member/muted/banned users.",
         "Add Playwright role and private channel workflow.",
-        "Audit every route for required permission."
+        "Audit every route for required permission.",
+        "Add regression tests for non-member denial and high-risk channel-scoped routes."
       ],
       "proof_required": [
         "Permission matrix report",
         "API denial tests",
-        "Playwright private channel screenshots"
+        "Playwright private channel screenshots",
+        "docs/audits/2026-04-28-permission-route-audit.md"
       ]
     },
     {

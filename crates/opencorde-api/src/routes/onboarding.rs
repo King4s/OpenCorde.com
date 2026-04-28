@@ -17,8 +17,9 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
-use crate::routes::helpers::{check_server_owner, parse_snowflake};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::permission_check};
+use crate::routes::helpers::parse_snowflake;
+use opencorde_core::permissions::Permissions;
 use opencorde_db::repos::server_repo;
 
 #[derive(Debug, Serialize)]
@@ -51,6 +52,7 @@ async fn get_onboarding(
     Path(server_id): Path<String>,
 ) -> Result<Json<OnboardingResponse>, ApiError> {
     let sid = parse_snowflake(&server_id)?;
+    permission_check::require_server_perm(&state.db, auth.user_id, sid, Permissions::VIEW_CHANNEL).await?;
 
     let row: Option<(bool, Option<String>, Value, DateTime<Utc>)> = sqlx::query_as(
         "SELECT enabled, welcome_message, prompts, updated_at \
@@ -87,11 +89,11 @@ async fn update_onboarding(
     Json(req): Json<UpdateOnboardingRequest>,
 ) -> Result<Json<OnboardingResponse>, ApiError> {
     let sid = parse_snowflake(&server_id)?;
-    let server = server_repo::get_by_id(&state.db, sid)
+    let _server = server_repo::get_by_id(&state.db, sid)
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
-    check_server_owner(auth.user_id, server.owner_id)?;
+    permission_check::require_server_perm(&state.db, auth.user_id, sid, Permissions::MANAGE_SERVER).await?;
 
     let enabled = req.enabled.unwrap_or(false);
     let prompts = req.prompts.unwrap_or_else(|| serde_json::json!([]));

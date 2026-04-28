@@ -2,10 +2,11 @@
 
 use axum::{Json, extract::{State, Path}};
 use opencorde_core::snowflake::{Snowflake, SnowflakeGenerator};
+use opencorde_core::permissions::Permissions;
 use opencorde_db::repos::{channel_repo, message_repo, slash_command_repo};
 use tracing::instrument;
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
+use crate::{error::ApiError, middleware::auth::AuthUser, routes::permission_check, AppState};
 use super::helpers::parse_snowflake;
 use super::types::{InteractRequest, CommandHandlerPayload, CommandHandlerResponse};
 
@@ -32,6 +33,21 @@ pub async fn dispatch_command(
         .ok_or(ApiError::NotFound("channel not found".to_string()))?;
 
     let server_id_sf = Snowflake::new(channel.server_id);
+
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::USE_APPLICATION_COMMANDS,
+    )
+    .await?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::SEND_MESSAGES,
+    )
+    .await?;
 
     // Parse command name (strip leading /)
     let command_name = req.command.trim_start_matches('/').to_lowercase();

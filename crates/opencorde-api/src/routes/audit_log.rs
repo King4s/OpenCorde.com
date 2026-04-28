@@ -8,13 +8,14 @@
 //! - opencorde_db::repos::audit_repo
 //! - crate::AppState
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::helpers};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::{helpers, permission_check}};
 use axum::{
     Json, Router,
     extract::{Path, Query, State},
     routing::get,
 };
 use opencorde_db::repos::audit_repo;
+use opencorde_core::permissions::Permissions;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use tracing::instrument;
@@ -65,12 +66,12 @@ async fn list_audit_log(
             .map_err(|_| ApiError::BadRequest("invalid before cursor".into()))
     }).transpose()?;
 
-    let server = opencorde_db::repos::server_repo::get_by_id(&state.db, server_id)
+    let _server = opencorde_db::repos::server_repo::get_by_id(&state.db, server_id)
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
 
-    helpers::check_server_owner(auth.user_id, server.owner_id)?;
+    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::VIEW_AUDIT_LOG).await?;
 
     let entries = audit_repo::list_entries(&state.db, server_id, limit, before_id)
         .await

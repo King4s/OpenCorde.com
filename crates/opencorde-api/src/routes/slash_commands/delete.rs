@@ -5,7 +5,8 @@ use opencorde_core::snowflake::Snowflake;
 use opencorde_db::repos::{server_repo, slash_command_repo};
 use tracing::instrument;
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
+use crate::{error::ApiError, middleware::auth::AuthUser, routes::permission_check, AppState};
+use opencorde_core::permissions::Permissions;
 use super::helpers::parse_snowflake;
 
 /// DELETE /api/v1/commands/{command_id} — Delete a slash command.
@@ -34,8 +35,9 @@ pub async fn delete_command(
 
     let command = rows.pop().ok_or(ApiError::NotFound("command not found".to_string()))?;
 
-    // Verify user is server owner
-    let server = server_repo::get_by_id(&state.db, Snowflake::new(command.server_id))
+    // Verify server exists and caller can manage commands
+    let server_id = Snowflake::new(command.server_id);
+    let _server = server_repo::get_by_id(&state.db, server_id)
         .await
         .map_err(|e| {
             tracing::error!(error = %e, "failed to fetch server");
@@ -43,10 +45,7 @@ pub async fn delete_command(
         })?
         .ok_or(ApiError::NotFound("server not found".to_string()))?;
 
-    if server.owner_id != auth.user_id.as_i64() {
-        tracing::warn!("user is not server owner");
-        return Err(ApiError::Forbidden);
-    }
+    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::MANAGE_SERVER).await?;
 
     // Delete command
     slash_command_repo::delete_command(&state.db, command_id_sf)

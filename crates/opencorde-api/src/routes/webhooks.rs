@@ -14,13 +14,13 @@ use axum::{
     Json, Router,
 };
 use chrono::{DateTime, Utc};
-use opencorde_core::snowflake::SnowflakeGenerator;
+use opencorde_core::{permissions::Permissions, snowflake::SnowflakeGenerator};
 use opencorde_db::repos::{message_repo, webhook_repo};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
-use crate::routes::{helpers::parse_snowflake, moderation::audit_mod::log_mod_action};
+use crate::routes::{helpers::parse_snowflake, moderation::audit_mod::log_mod_action, permission_check};
 
 /// Public response for a webhook (excludes sensitive data).
 #[derive(Debug, Serialize)]
@@ -98,6 +98,14 @@ async fn create_webhook(
 
     let server_id_sf = opencorde_core::snowflake::Snowflake::new(channel_row.0);
 
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::MANAGE_WEBHOOKS,
+    )
+    .await?;
+
     // Generate token and ID
     let token = Uuid::new_v4().to_string().replace('-', "");
     let mut generator = SnowflakeGenerator::new(1, 1);
@@ -140,6 +148,14 @@ async fn list_webhooks(
     let channel_id_sf = parse_snowflake(&channel_id)?;
     tracing::debug!(channel_id = channel_id_sf.as_i64(), "listing webhooks");
 
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::MANAGE_WEBHOOKS,
+    )
+    .await?;
+
     let webhooks = webhook_repo::list_by_channel(&state.db, channel_id_sf)
         .await
         .map_err(ApiError::Database)?;
@@ -165,15 +181,14 @@ async fn delete_webhook(
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("webhook not found".into()))?;
 
-    // Verify ownership
-    if webhook.created_by != auth.user_id.as_i64() {
-        tracing::warn!(
-            webhook_id = webhook_id_sf.as_i64(),
-            user_id = auth.user_id.as_i64(),
-            "user does not own webhook"
-        );
-        return Err(ApiError::Forbidden);
-    }
+    let channel_id_sf = opencorde_core::Snowflake::new(webhook.channel_id);
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::MANAGE_WEBHOOKS,
+    )
+    .await?;
 
     webhook_repo::delete_webhook(&state.db, webhook_id_sf)
         .await

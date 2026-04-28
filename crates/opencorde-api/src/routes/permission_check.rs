@@ -148,6 +148,15 @@ async fn compute_base_perms(
     user_id: Snowflake,
     server_id: Snowflake,
 ) -> Result<Permissions, ApiError> {
+    let membership = member_repo::get_member(pool, user_id, server_id)
+        .await
+        .map_err(ApiError::Database)?;
+
+    if membership.is_none() {
+        tracing::warn!("server permission denied: user is not a member");
+        return Err(ApiError::Forbidden);
+    }
+
     let member_roles = member_repo::list_member_roles(pool, user_id, server_id)
         .await
         .map_err(ApiError::Database)?;

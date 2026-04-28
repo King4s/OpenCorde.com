@@ -6,13 +6,14 @@
 
 use axum::Json;
 use axum::extract::{Path, State};
+use opencorde_core::permissions::Permissions;
 use opencorde_db::repos::voice_state_repo;
 use uuid::Uuid;
 
 use crate::AppState;
 use crate::error::ApiError;
 use crate::middleware::auth::AuthUser;
-use crate::routes::helpers::parse_snowflake;
+use crate::routes::{helpers::parse_snowflake, permission_check};
 
 use super::livekit;
 use super::types::*;
@@ -69,6 +70,14 @@ pub async fn join_voice(
             "channel is not a voice channel".into(),
         ));
     }
+
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id,
+        Permissions::CONNECT,
+    )
+    .await?;
 
     // Create session ID (UUID)
     let session_id = Uuid::new_v4().to_string();
@@ -185,6 +194,14 @@ pub async fn get_participants(
 
     let channel_id = parse_snowflake(&channel_id)?;
 
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id,
+        Permissions::CONNECT,
+    )
+    .await?;
+
     // Validate channel exists
     sqlx::query("SELECT id FROM channels WHERE id = $1")
         .bind(channel_id.as_i64())
@@ -265,6 +282,14 @@ pub async fn get_livekit_token(
         );
         return Err(ApiError::Forbidden);
     }
+
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id,
+        Permissions::CONNECT,
+    )
+    .await?;
 
     // Generate token
     let token = livekit::create_livekit_token(

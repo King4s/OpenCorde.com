@@ -13,10 +13,11 @@ use axum::{
     http::StatusCode,
 };
 use opencorde_core::snowflake::SnowflakeGenerator;
+use opencorde_core::permissions::Permissions;
 use opencorde_db::repos::{message_repo, thread_repo};
 use tracing::instrument;
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::permission_check};
 use crate::routes::helpers::parse_snowflake;
 use crate::routes::messages::{message_row_to_response, MessageResponse};
 use super::types::{CreateThreadRequest, SendThreadMessageRequest, ThreadResponse};
@@ -74,6 +75,13 @@ async fn create_thread(
     tracing::debug!(channel_id = channel_id_sf.as_i64(), message_id = message_id_sf.as_i64(), "parsed IDs");
 
     let name = req.name.unwrap_or_else(|| "Thread".to_string());
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::CREATE_PUBLIC_THREADS,
+    )
+    .await?;
 
     let mut generator = SnowflakeGenerator::new(1, 1);
     let thread_id = generator.next_id();
@@ -109,6 +117,13 @@ async fn list_threads(
     tracing::info!("listing channel threads");
 
     let channel_id_sf = parse_snowflake(&channel_id)?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
     tracing::debug!(channel_id = channel_id_sf.as_i64(), "parsed channel id");
 
     let rows = thread_repo::list_by_channel(&state.db, channel_id_sf)
@@ -143,6 +158,14 @@ async fn get_thread(
             ApiError::Database(e)
         })?
         .ok_or(ApiError::NotFound("Thread not found".to_string()))?;
+    let channel_id_sf = opencorde_core::snowflake::Snowflake::new(row.channel_id);
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
 
     tracing::info!(thread_id = row.id, "thread fetched successfully");
 
@@ -160,6 +183,22 @@ async fn list_thread_messages(
 
     let thread_id_sf = parse_snowflake(&thread_id)?;
     tracing::debug!(thread_id = thread_id_sf.as_i64(), "parsed thread id");
+
+    let thread_row = thread_repo::get_by_id(&state.db, thread_id_sf)
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, "failed to get thread");
+            ApiError::Database(e)
+        })?
+        .ok_or(ApiError::NotFound("Thread not found".to_string()))?;
+    let channel_id_sf = opencorde_core::snowflake::Snowflake::new(thread_row.channel_id);
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::VIEW_CHANNEL | Permissions::READ_MESSAGE_HISTORY,
+    )
+    .await?;
 
     let rows = message_repo::list_by_thread(&state.db, thread_id_sf, 50)
         .await
@@ -197,6 +236,13 @@ async fn send_thread_message(
         .ok_or(ApiError::NotFound("Thread not found".to_string()))?;
 
     let channel_id_sf = opencorde_core::snowflake::Snowflake::new(thread_row.channel_id);
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::SEND_MESSAGES_IN_THREADS,
+    )
+    .await?;
 
     // Generate message ID
     let mut generator = SnowflakeGenerator::new(3, 0);
