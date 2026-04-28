@@ -184,7 +184,7 @@
         "Role routes, permission bit definitions, channel override routes, RoleManager, RolePermissionsTab, and ChannelPermissionsTab names exist.",
         "Several backend routes call server or channel permission checks.",
         "First-pass hardening now blocks non-members from receiving default permissions in permission_check.",
-        "Voice, webhooks, slash commands, onboarding, audit log, threads, uploads, pins, reactions, search, forum, soundboard, recordings, E2EE groups, read-state, and events received additional permission gates."
+        "Voice, webhooks, slash commands, onboarding, audit log, threads, uploads, pins, reactions, search, forum, soundboard, recordings, E2EE groups, read-state, events, and role-listing received additional permission gates."
       ],
       "gaps": [
         "Effective permission inspector is not proven.",

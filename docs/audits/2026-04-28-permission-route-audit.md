@@ -89,6 +89,9 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - Reading, RSVP, and un-RSVP now require event visibility.
   - Updating/deleting events now require creator status or server `MANAGE_EVENTS`.
 
+- `roles`
+  - Listing server roles and member roles now requires server membership through `VIEW_CHANNEL`.
+
 ## Still Open
 
 - Channel overwrite computation still needs closer Discord parity:
@@ -139,6 +142,7 @@ Permission smoke coverage:
 - non-member cannot ack channel read state: 403
 - non-member cannot initialize/fetch/update E2EE group state: 403
 - non-member cannot list/create server events: 403
+- non-member cannot list server roles: 403
 
 ## Next Recommended Fixes
 

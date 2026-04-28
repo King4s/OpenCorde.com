@@ -1,7 +1,11 @@
 //! # Route: Roles - Server role management
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::{helpers, moderation::audit_mod::log_mod_action, permission_check}};
-use opencorde_core::permissions::Permissions;
+use crate::{
+    AppState,
+    error::ApiError,
+    middleware::auth::AuthUser,
+    routes::{helpers, moderation::audit_mod::log_mod_action, permission_check},
+};
 use axum::{
     Json, Router,
     extract::{Path, State},
@@ -9,6 +13,7 @@ use axum::{
     routing::{get, patch, post, put},
 };
 use chrono::{DateTime, Utc};
+use opencorde_core::permissions::Permissions;
 use opencorde_core::snowflake::SnowflakeGenerator;
 use opencorde_db::repos::{member_repo, role_repo};
 use serde::{Deserialize, Serialize};
@@ -46,7 +51,10 @@ pub struct UpdateRoleRequest {
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/api/v1/servers/{server_id}/roles", post(create_role).get(list_roles))
+        .route(
+            "/api/v1/servers/{server_id}/roles",
+            post(create_role).get(list_roles),
+        )
         .route(
             "/api/v1/servers/{server_id}/roles/{role_id}",
             patch(update_role).delete(delete_role),
@@ -91,6 +99,13 @@ async fn list_roles(
 ) -> Result<Json<Vec<RoleResponse>>, ApiError> {
     tracing::info!("listing roles for server");
     let server_id_sf = helpers::parse_snowflake(&server_id)?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id_sf,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
     let roles = role_repo::list_by_server(&state.db, server_id_sf)
         .await
         .map_err(ApiError::Database)?;
@@ -109,7 +124,13 @@ async fn get_member_roles(
     tracing::info!(target_user_id = %target_user_id, "listing member roles");
     let server_id_sf = helpers::parse_snowflake(&server_id)?;
     let target_id = helpers::parse_snowflake(&target_user_id)?;
-    let _ = auth; // authentication only — no special permission required to view member roles
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id_sf,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
     let roles = role_repo::list_by_member(&state.db, target_id, server_id_sf)
         .await
         .map_err(ApiError::Database)?;
@@ -125,7 +146,13 @@ async fn create_role(
 ) -> Result<(StatusCode, Json<RoleResponse>), ApiError> {
     tracing::info!(name = %req.name, "creating role");
     let server_id = helpers::parse_snowflake(&server_id)?;
-    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::MANAGE_ROLES).await?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::MANAGE_ROLES,
+    )
+    .await?;
     validate_role_name(&req.name)?;
     let mut role_gen = SnowflakeGenerator::new(2, 0);
     let role_id = role_gen.next_id();
@@ -160,7 +187,13 @@ async fn update_role(
     tracing::debug!("updating role");
     let server_id = helpers::parse_snowflake(&server_id)?;
     let role_id = helpers::parse_snowflake(&role_id)?;
-    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::MANAGE_ROLES).await?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::MANAGE_ROLES,
+    )
+    .await?;
     let role = role_repo::get_by_id(&state.db, role_id)
         .await
         .map_err(ApiError::Database)?
@@ -191,7 +224,14 @@ async fn update_role(
     .await
     .map_err(ApiError::Database)?;
     tracing::info!(role_id = role.id, name = %new_name, "role updated");
-    log_mod_action(&state, server_id, auth.user_id, "role.update", role_id.as_i64()).await;
+    log_mod_action(
+        &state,
+        server_id,
+        auth.user_id,
+        "role.update",
+        role_id.as_i64(),
+    )
+    .await;
     let updated = role_repo::get_by_id(&state.db, role_id)
         .await
         .map_err(ApiError::Database)?
@@ -213,7 +253,13 @@ async fn delete_role(
     tracing::debug!("deleting role");
     let server_id = helpers::parse_snowflake(&server_id)?;
     let role_id = helpers::parse_snowflake(&role_id)?;
-    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::MANAGE_ROLES).await?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::MANAGE_ROLES,
+    )
+    .await?;
     let role = role_repo::get_by_id(&state.db, role_id)
         .await
         .map_err(ApiError::Database)?
@@ -225,7 +271,14 @@ async fn delete_role(
         .await
         .map_err(ApiError::Database)?;
     tracing::info!(role_id = role.id, "role deleted");
-    log_mod_action(&state, server_id, auth.user_id, "role.delete", role_id.as_i64()).await;
+    log_mod_action(
+        &state,
+        server_id,
+        auth.user_id,
+        "role.delete",
+        role_id.as_i64(),
+    )
+    .await;
     let event = json!({"type":"RoleDelete","data":{"server_id":server_id.as_i64().to_string(),"role_id":role_id.as_i64().to_string()}});
     if state.event_tx.send(event).is_err() {
         tracing::debug!("no WebSocket subscribers for RoleDelete event");
@@ -243,7 +296,13 @@ async fn assign_role(
     let server_id = helpers::parse_snowflake(&server_id)?;
     let user_id = helpers::parse_snowflake(&user_id)?;
     let role_id = helpers::parse_snowflake(&role_id)?;
-    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::MANAGE_ROLES).await?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::MANAGE_ROLES,
+    )
+    .await?;
     member_repo::get_member(&state.db, user_id, server_id)
         .await
         .map_err(ApiError::Database)?
@@ -269,7 +328,14 @@ async fn assign_role(
         role_id = role.id,
         "role assigned"
     );
-    log_mod_action(&state, server_id, auth.user_id, "member.role_assign", user_id.as_i64()).await;
+    log_mod_action(
+        &state,
+        server_id,
+        auth.user_id,
+        "member.role_assign",
+        user_id.as_i64(),
+    )
+    .await;
     let event = json!({"type":"MemberUpdate","data":{"server_id":server_id.as_i64().to_string(),"member":{"user_id":user_id.as_i64().to_string()}}});
     if state.event_tx.send(event).is_err() {
         tracing::debug!("no WebSocket subscribers for MemberUpdate event");
@@ -287,7 +353,13 @@ async fn unassign_role(
     let server_id = helpers::parse_snowflake(&server_id)?;
     let user_id = helpers::parse_snowflake(&user_id)?;
     let role_id = helpers::parse_snowflake(&role_id)?;
-    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::MANAGE_ROLES).await?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::MANAGE_ROLES,
+    )
+    .await?;
     member_repo::remove_role(&state.db, user_id, server_id, role_id)
         .await
         .map_err(ApiError::Database)?;
@@ -296,7 +368,14 @@ async fn unassign_role(
         role_id = role_id.as_i64(),
         "role removed"
     );
-    log_mod_action(&state, server_id, auth.user_id, "member.role_remove", user_id.as_i64()).await;
+    log_mod_action(
+        &state,
+        server_id,
+        auth.user_id,
+        "member.role_remove",
+        user_id.as_i64(),
+    )
+    .await;
     let event = json!({"type":"MemberUpdate","data":{"server_id":server_id.as_i64().to_string(),"member":{"user_id":user_id.as_i64().to_string()}}});
     if state.event_tx.send(event).is_err() {
         tracing::debug!("no WebSocket subscribers for MemberUpdate event");

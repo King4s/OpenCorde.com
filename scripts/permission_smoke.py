@@ -136,6 +136,12 @@ async def main() -> int:
                 "expect": 403,
             },
             {
+                "name": "nonmember cannot list server roles",
+                "method": "GET",
+                "url": f"{API}/servers/{server_id}/roles",
+                "expect": 403,
+            },
+            {
                 "name": "nonmember cannot list server events",
                 "method": "GET",
                 "url": f"{API}/servers/{server_id}/events",
