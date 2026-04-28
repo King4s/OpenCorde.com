@@ -5,7 +5,7 @@
 	 */
 	import { browser } from '$app/environment';
 
-	const GITHUB_URL = 'https://github.com/opencorde/opencorde';
+	const GITHUB_URL = 'https://github.com/King4s/OpenCorde.com';
 
 	if (browser && window.location.pathname === '/' && localStorage.getItem('opencorde_token')) {
 		window.location.replace('/servers');
@@ -60,7 +60,7 @@
 		{
 			n: '1',
 			title: 'Clone & configure',
-			code: `git clone https://github.com/opencorde/opencorde\ncp .env.example .env\n# Edit .env — set JWT_SECRET, database credentials, SMTP`
+			code: `git clone https://github.com/King4s/OpenCorde.com\ncp .env.example .env\n# Edit .env — set JWT_SECRET, database credentials, SMTP`
 		},
 		{
 			n: '2',
@@ -81,22 +81,22 @@
 </script>
 
 <svelte:head>
-	<title>OpenCorde — Self-hosted Discord alternative with E2EE</title>
-	<meta name="description" content="OpenCorde is a feature-complete, self-hosted Discord alternative. Servers, channels, voice, video, threads, forums, end-to-end encryption, and a Discord bridge — on infrastructure you own." />
+	<title>OpenCorde — Self-hosted Discord alternative in progress</title>
+	<meta name="description" content="OpenCorde is a self-hosted Discord-style communication platform in active development. Servers, channels, voice, video, threads, forums, end-to-end encryption, and a Discord bridge — on infrastructure you own." />
 	<meta name="keywords" content="self-hosted chat, discord alternative, open source, E2EE, voice chat, team communication, AGPL" />
 	<link rel="canonical" href="https://opencorde.com/" />
 
 	<!-- Open Graph -->
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="https://opencorde.com/" />
-	<meta property="og:title" content="OpenCorde — Self-hosted Discord alternative with E2EE" />
-	<meta property="og:description" content="Feature-complete Discord alternative you run yourself. Servers, voice, video, E2EE, Discord bridge — on infrastructure you own. AGPL-3.0." />
+	<meta property="og:title" content="OpenCorde — Self-hosted Discord alternative in progress" />
+	<meta property="og:description" content="Self-hosted Discord-style communication platform in active development. Servers, voice, video, E2EE, Discord bridge — on infrastructure you own. AGPL-3.0." />
 	<meta property="og:site_name" content="OpenCorde" />
 
 	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary" />
-	<meta name="twitter:title" content="OpenCorde — Self-hosted Discord alternative" />
-	<meta name="twitter:description" content="Feature-complete Discord alternative you run yourself. Voice, video, E2EE, Discord bridge — AGPL-3.0." />
+	<meta name="twitter:title" content="OpenCorde — Self-hosted Discord alternative in progress" />
+	<meta name="twitter:description" content="Self-hosted Discord-style communication platform in active development. Voice, video, E2EE, Discord bridge — AGPL-3.0." />
 
 	<!-- Crawling -->
 	<meta name="robots" content="index, follow" />
@@ -174,7 +174,7 @@
 
 	<!-- Features -->
 	<section class="max-w-6xl mx-auto px-6 pb-20">
-		<h2 class="text-2xl font-bold text-center mb-10">Everything your team needs</h2>
+		<h2 class="text-2xl font-bold text-center mb-10">Core communication tools, actively improving</h2>
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 			{#each features as f}
 				<div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition-colors flex flex-col">

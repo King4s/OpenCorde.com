@@ -20,6 +20,12 @@
 	}
 
 	async function loadInvite() {
+		if (!/^[A-Z0-9]{8}$/.test(code)) {
+			error = 'Invalid or expired invite';
+			loading = false;
+			return;
+		}
+
 		try {
 			const info = await api.get<{ server_name: string }>(`/invites/${code}`);
 			serverName = info.server_name;

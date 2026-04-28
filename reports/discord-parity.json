@@ -1,0 +1,295 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-28",
+  "repo": {
+    "name": "King4s/OpenCorde.com",
+    "url": "https://github.com/King4s/OpenCorde.com",
+    "branch": "main"
+  },
+  "posture": {
+    "default_status": "shallow_needs_proof",
+    "rule": "No feature is complete until a live user workflow has UI, API, realtime, permissions, mobile, Playwright/API evidence, and Emma Bot dogfooding where applicable.",
+    "blocked_claims": [
+      "feature-complete Discord alternative",
+      "Everything your team needs"
+    ]
+  },
+  "status_legend": {
+    "proven": "Complete end-to-end, dogfooded, tested, and evidence attached.",
+    "partial": "Meaningful workflow exists but is incomplete or missing polish, permissions, realtime, mobile, or tests.",
+    "shallow_needs_proof": "Schema, route, store, or UI exists, but the full workflow has not been proven.",
+    "missing": "No meaningful implementation found yet.",
+    "unknown": "Needs audit."
+  },
+  "reference_baseline": [
+    {
+      "name": "Discord permissions and channel overwrites",
+      "url": "https://docs.discord.com/developers/topics/permissions"
+    },
+    {
+      "name": "Discord application commands",
+      "url": "https://docs.discord.com/developers/docs/interactions/slash-commands"
+    },
+    {
+      "name": "Discord interactions model",
+      "url": "https://docs.discord.com/developers/platform/interactions"
+    },
+    {
+      "name": "Discord forum channels",
+      "url": "https://support.discord.com/hc/en-us/articles/6208479917079-Forum-Channels-FAQ"
+    },
+    {
+      "name": "Discord stage channels",
+      "url": "https://support.discord.com/hc/en-us/articles/1500005513722-Stage-Channels-FAQ"
+    },
+    {
+      "name": "Discord server guide and onboarding",
+      "url": "https://support.discord.com/hc/en-us/articles/13497665141655-Server-Guide-Beta"
+    }
+  ],
+  "evidence_sources": [
+    {
+      "path": "docs/plans/2026-04-28-discord-parity-master-plan.md",
+      "type": "plan",
+      "note": "Master TODO plan with hard proof criteria."
+    },
+    {
+      "path": "reports/raw/public-qa.json",
+      "type": "qa",
+      "note": "Public Playwright QA found mobile horizontal overflow and invite route module loading errors."
+    },
+    {
+      "path": "tasks-future.md",
+      "type": "legacy_claims",
+      "note": "Legacy task list marks many Discord-like features complete; those claims need re-audit."
+    }
+  ],
+  "github_issues": [
+    {
+      "number": 1,
+      "title": "Discord parity master plan",
+      "url": "https://github.com/King4s/OpenCorde.com/issues/1"
+    },
+    {
+      "number": 2,
+      "title": "Milestone -1: brutal audit and claim demotion",
+      "url": "https://github.com/King4s/OpenCorde.com/issues/2"
+    },
+    {
+      "number": 3,
+      "title": "Fix public QA failures and overclaimed landing copy",
+      "url": "https://github.com/King4s/OpenCorde.com/issues/3"
+    },
+    {
+      "number": 4,
+      "title": "Messaging parity: prove and complete daily chat workflows",
+      "url": "https://github.com/King4s/OpenCorde.com/issues/4"
+    },
+    {
+      "number": 5,
+      "title": "Roles and permissions parity: effective permissions, hierarchy, overwrites",
+      "url": "https://github.com/King4s/OpenCorde.com/issues/5"
+    },
+    {
+      "number": 6,
+      "title": "Onboarding and server guide parity",
+      "url": "https://github.com/King4s/OpenCorde.com/issues/6"
+    },
+    {
+      "number": 7,
+      "title": "Voice, video, and stage parity",
+      "url": "https://github.com/King4s/OpenCorde.com/issues/7"
+    },
+    {
+      "number": 8,
+      "title": "Apps, slash commands, bots, and webhooks parity",
+      "url": "https://github.com/King4s/OpenCorde.com/issues/8"
+    },
+    {
+      "number": 9,
+      "title": "Friends and DMs parity",
+      "url": "https://github.com/King4s/OpenCorde.com/issues/9"
+    }
+  ],
+  "areas": [
+    {
+      "id": "marketing_truthfulness",
+      "name": "Marketing and Product Claims",
+      "status": "partial",
+      "observed": [
+        "Landing page and metadata currently use feature-complete language.",
+        "Public QA captured mobile horizontal overflow on public routes.",
+        "Public QA captured dynamic module MIME errors for an invalid invite route."
+      ],
+      "gaps": [
+        "Product copy overstates parity.",
+        "Public unauthenticated routes are not clean across tested viewports.",
+        "Invite preview/error route is not production-polished."
+      ],
+      "next_todos": [
+        "Replace feature-complete claims with in-progress parity language.",
+        "Fix mobile horizontal overflow on public pages.",
+        "Fix invite route asset loading for nested SPA routes.",
+        "Add no-overclaim check to QA."
+      ],
+      "proof_required": [
+        "Playwright screenshots for mobile/tablet/desktop public pages",
+        "No console/page errors on invite routes",
+        "Copy audit result"
+      ]
+    },
+    {
+      "id": "messaging",
+      "name": "Messaging",
+      "status": "shallow_needs_proof",
+      "observed": [
+        "Message routes, stores, MessageList, MessageInput, replies, reactions, pins, attachments, search, link preview, and thread UI names exist."
+      ],
+      "gaps": [
+        "Discord-grade message context actions are not proven.",
+        "Jump-to-message, grouping, date separators, local drafts, upload progress, mention behavior, and permission denial UX need proof or implementation.",
+        "Realtime multi-client behavior needs regression coverage."
+      ],
+      "next_todos": [
+        "Add Playwright chat suite for send/edit/delete/reply/react/pin/upload.",
+        "Implement or prove message grouping and jump-to-message.",
+        "Add denied SEND_MESSAGES and VIEW_CHANNEL tests.",
+        "Add Emma Bot chat script."
+      ],
+      "proof_required": [
+        "Playwright chat trace",
+        "API smoke for message endpoints",
+        "Permission denial tests",
+        "Emma Bot transcript"
+      ]
+    },
+    {
+      "id": "roles_permissions",
+      "name": "Roles, Permissions, and Channel Overrides",
+      "status": "shallow_needs_proof",
+      "observed": [
+        "Role routes, permission bit definitions, channel override routes, RoleManager, RolePermissionsTab, and ChannelPermissionsTab names exist.",
+        "Several backend routes call server or channel permission checks."
+      ],
+      "gaps": [
+        "Effective permission inspector is not proven.",
+        "Discord overwrite resolution behavior needs direct comparison tests.",
+        "UI may expose role/override surfaces without proving end-to-end enforcement."
+      ],
+      "next_todos": [
+        "Build effective permission report per user/channel.",
+        "Add test matrix for owner/admin/mod/member/muted/banned users.",
+        "Add Playwright role and private channel workflow.",
+        "Audit every route for required permission."
+      ],
+      "proof_required": [
+        "Permission matrix report",
+        "API denial tests",
+        "Playwright private channel screenshots"
+      ]
+    },
+    {
+      "id": "onboarding_server_guide",
+      "name": "Onboarding and Server Guide",
+      "status": "shallow_needs_proof",
+      "observed": [
+        "Onboarding API, modal, and server guide surface names exist.",
+        "A missing server_onboarding table was recently repaired manually on production."
+      ],
+      "gaps": [
+        "Default channel selection, questions, role/channel assignment, resource pages, rules screening, and audit trail are not proven.",
+        "Migration integrity must catch missing table drift automatically."
+      ],
+      "next_todos": [
+        "Add migration/table integrity smoke test.",
+        "Implement invite-to-onboarding-to-channel Playwright flow.",
+        "Add onboarding question role/channel assignment.",
+        "Add Emma Bot onboarding script."
+      ],
+      "proof_required": [
+        "Migration integrity report",
+        "New-user onboarding Playwright trace",
+        "Emma Bot onboarding result"
+      ]
+    },
+    {
+      "id": "voice_stage",
+      "name": "Voice, Video, and Stage",
+      "status": "shallow_needs_proof",
+      "observed": [
+        "LiveKit, voice state, device settings, video grid, recordings, soundboard, and stage panel names exist."
+      ],
+      "gaps": [
+        "Two-client join/leave/mute/deafen/screen-share workflow is not proven.",
+        "Server mute/deafen, stage speaker lifecycle, RTC reconnect, and mobile controls need proof.",
+        "LiveKit operational health is not in parity reporting."
+      ],
+      "next_todos": [
+        "Add LiveKit health check to instance report.",
+        "Create two-client voice Playwright/manual checklist.",
+        "Prove stage audience-to-speaker flow.",
+        "Add voice permission denial tests."
+      ],
+      "proof_required": [
+        "LiveKit health output",
+        "Two-client voice evidence",
+        "Stage lifecycle evidence"
+      ]
+    },
+    {
+      "id": "apps_bots_webhooks",
+      "name": "Apps, Bots, Slash Commands, and Webhooks",
+      "status": "shallow_needs_proof",
+      "observed": [
+        "Slash command manager/store/form names exist.",
+        "Webhook routes and manager names exist.",
+        "Discord bridge routes exist."
+      ],
+      "gaps": [
+        "Discord-like interaction response lifecycle is not proven.",
+        "Buttons, modals, context commands, permission-scoped installs, and bot management need implementation or proof.",
+        "Emma Bot integration path is not documented yet."
+      ],
+      "next_todos": [
+        "Define Emma Bot account/token strategy.",
+        "Add slash command execution and response proof.",
+        "Add webhook create/execute/delete Playwright/API tests.",
+        "Design app install and authorized apps surfaces."
+      ],
+      "proof_required": [
+        "Slash command transcript",
+        "Webhook API smoke result",
+        "Emma Bot run"
+      ]
+    },
+    {
+      "id": "friends_dms",
+      "name": "Friends and DMs",
+      "status": "shallow_needs_proof",
+      "observed": [
+        "Friends routes/stores/page and DM channel schema/routes names exist."
+      ],
+      "gaps": [
+        "Group DMs, calls, message requests, blocked users UX, mutual servers/friends, and per-DM notification overrides are not proven.",
+        "Privacy semantics and spam boundaries need tests."
+      ],
+      "next_todos": [
+        "Add friends request/accept/block Playwright suite.",
+        "Prove one-to-one DM send/realtime flow.",
+        "Design group DM model and UI.",
+        "Add message request/spam inbox plan."
+      ],
+      "proof_required": [
+        "Friends Playwright trace",
+        "DM realtime evidence",
+        "Privacy denial tests"
+      ]
+    }
+  ],
+  "next_session_focus": [
+    "Turn this report into GitHub issues or a project board.",
+    "Fix public overclaims and invite route errors.",
+    "Start the Playwright parity harness for messaging and roles.",
+    "Document Emma Bot credentials and test protocol without exposing secrets."
+  ]
+}
