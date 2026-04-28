@@ -57,6 +57,10 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - Remove reaction now requires `VIEW_CHANNEL`.
   - List reactions now requires `VIEW_CHANNEL`.
 
+- `search`
+  - Message search now filters every hit through channel `VIEW_CHANNEL` before returning content.
+  - Search over-fetches before filtering so authorized users still receive useful result counts.
+
 ## Still Open
 
 - Channel overwrite computation still needs closer Discord parity:
@@ -70,8 +74,6 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - deleting roles
   - moderation targets
   - self-escalation through powerful roles
-
-- Search still needs authorization filtering before returning results.
 
 - More channel-scoped routes still need audit/fixes:
   - forum
@@ -110,13 +112,11 @@ Permission smoke coverage:
 - non-member cannot list channel pins: 403
 - non-member cannot pin channel message: 403
 - non-member cannot list message reactions: 403
+- non-member search cannot see private server messages: 200 with empty results
 
 ## Next Recommended Fixes
 
 - Add permission regression tests for non-member denial on invite/list/webhook/thread/voice routes.
 - Add route inventory JSON generated from Axum route declarations and permission annotations.
 - Add `MANAGE_MESSAGES` support for moderator message delete.
-- Add `ATTACH_FILES` and `SEND_MESSAGES` checks to uploads.
-- Add `PIN_MESSAGES` or `MANAGE_MESSAGES` checks to pins.
-- Add search result filtering by effective channel visibility.
 - Implement role hierarchy and protected target rules.

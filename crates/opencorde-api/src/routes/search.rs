@@ -28,6 +28,8 @@ use tracing::instrument;
 use crate::AppState;
 use crate::error::ApiError;
 use crate::middleware::auth::AuthUser;
+use crate::routes::permission_check;
+use opencorde_core::{Snowflake, permissions::Permissions};
 
 /// Search query parameters.
 #[derive(Debug, Deserialize)]
@@ -123,32 +125,65 @@ async fn search_messages(
         }
     };
 
-    // Execute search
+    // Execute search. Fetch extra hits because inaccessible channels are filtered below.
+    let search_limit = limit.saturating_mul(5).clamp(limit, 100);
     let results = search_engine
-        .search(&params.q, params.server_id, params.channel_id, limit)
+        .search(&params.q, params.server_id, params.channel_id, search_limit)
         .map_err(|e| {
             tracing::error!(error = %e, "search execution failed");
             ApiError::InternalServerError(format!("search failed: {}", e))
         })?;
 
-    let count = results.len();
+    let mut filtered = Vec::with_capacity(limit.min(results.len()));
+    for r in results {
+        let Ok(channel_id) = i64::try_from(r.channel_id) else {
+            tracing::warn!(
+                channel_id = r.channel_id,
+                "search result has invalid channel id"
+            );
+            continue;
+        };
 
-    // Convert from opencorde_search::SearchResult to our SearchResult type
-    let results = results
-        .into_iter()
-        .map(|r| SearchResult {
-            message_id: r.message_id,
-            channel_id: r.channel_id,
-            server_id: r.server_id,
-            author_id: r.author_id,
-            content: r.content,
-            score: r.score,
-        })
-        .collect();
+        match permission_check::require_channel_perm(
+            &state.db,
+            auth.user_id,
+            Snowflake::new(channel_id),
+            Permissions::VIEW_CHANNEL,
+        )
+        .await
+        {
+            Ok(()) => {
+                filtered.push(SearchResult {
+                    message_id: r.message_id,
+                    channel_id: r.channel_id,
+                    server_id: r.server_id,
+                    author_id: r.author_id,
+                    content: r.content,
+                    score: r.score,
+                });
+                if filtered.len() >= limit {
+                    break;
+                }
+            }
+            Err(ApiError::Forbidden | ApiError::NotFound(_)) => {
+                tracing::debug!(
+                    channel_id = r.channel_id,
+                    message_id = r.message_id,
+                    "filtered unauthorized search result"
+                );
+            }
+            Err(err) => return Err(err),
+        }
+    }
+
+    let count = filtered.len();
 
     tracing::info!(results = count, "search completed successfully");
 
-    Ok(Json(SearchResponse { results, count }))
+    Ok(Json(SearchResponse {
+        results: filtered,
+        count,
+    }))
 }
 
 #[cfg(test)]

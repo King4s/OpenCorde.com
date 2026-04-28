@@ -6,7 +6,10 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
+import time
 from pathlib import Path
+from urllib.parse import quote
 
 import aiohttp
 
@@ -83,6 +86,7 @@ async def main() -> int:
         )
         channel_id = None
         message_id = None
+        search_term = None
         if status == 200 and channels:
             channel_id = channels[0]["id"]
             status, messages = await request_json(
@@ -93,6 +97,22 @@ async def main() -> int:
             )
             if status == 200 and messages:
                 message_id = messages[0]["id"]
+                words = re.findall(r"[A-Za-z0-9]{2,}", messages[0].get("content") or "")
+                search_term = words[0] if words else None
+
+        if channel_id:
+            search_term = f"permsearch{int(time.time())}"
+            status, message = await request_json(
+                session,
+                "POST",
+                f"{API}/channels/{channel_id}/messages",
+                headers=member_headers,
+                json={"content": f"{search_term} permission smoke baseline"},
+            )
+            if status in (200, 201) and isinstance(message, dict):
+                message_id = message.get("id", message_id)
+            else:
+                search_term = None
 
         checks = [
             {
@@ -158,12 +178,38 @@ async def main() -> int:
                 ]
             )
 
+        if search_term:
+            query = quote(search_term)
+            member_search = None
+            for _ in range(5):
+                status, member_search = await request_json(
+                    session,
+                    "GET",
+                    f"{API}/search?q={query}&server_id={server_id}&limit=10",
+                    headers=member_headers,
+                )
+                if status == 200 and member_search and member_search.get("count", 0) > 0:
+                    break
+                await asyncio.sleep(0.5)
+            if status == 200 and member_search and member_search.get("count", 0) > 0:
+                checks.append(
+                    {
+                        "name": "nonmember search cannot see private server messages",
+                        "method": "GET",
+                        "url": f"{API}/search?q={query}&server_id={server_id}&limit=10",
+                        "expect": 200,
+                        "expect_empty_results": True,
+                    }
+                )
+
         for check in checks:
             kwargs = {"headers": nonmember_headers}
             if "json" in check:
                 kwargs["json"] = check["json"]
             status, data = await request_json(session, check["method"], check["url"], **kwargs)
             ok = status == check["expect"]
+            if ok and check.get("expect_empty_results"):
+                ok = isinstance(data, dict) and data.get("count") == 0 and data.get("results") == []
             result = {
                 "name": check["name"],
                 "method": check["method"],
