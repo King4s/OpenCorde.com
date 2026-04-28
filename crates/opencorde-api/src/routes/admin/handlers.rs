@@ -73,7 +73,7 @@ pub async fn get_stats(
 
     // Attachment storage (sum of file sizes + count)
     let attach_row = sqlx::query(
-        "SELECT COALESCE(SUM(size), 0) as total_size, COUNT(*) as total_count FROM files",
+        "SELECT COALESCE(SUM(size), 0)::BIGINT as total_size, COUNT(*)::BIGINT as total_count FROM files",
     )
     .fetch_one(&state.db)
     .await?;

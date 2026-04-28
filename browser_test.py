@@ -120,7 +120,7 @@ async def run_tests():
 
         # 2. Forgot-password toggle
         await page.wait_for_timeout(200)
-        forgot_btn = page.locator("button:has-text('Forgot')")
+        forgot_btn = page.locator("a:has-text('Forgot password?'), button:has-text('Forgot')")
         n_forgot = await forgot_btn.count()
         if n_forgot > 0:
             try:
