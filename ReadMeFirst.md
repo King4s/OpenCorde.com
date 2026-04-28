@@ -4,7 +4,15 @@
 
 ## Project Purpose
 
-OpenCorde is a **self-hosted Discord alternative** built with Rust (Axum backend), SvelteKit + Tauri 2.0 frontend, PostgreSQL, Redis, MinIO, and LiveKit. It enables organizations to run feature-complete team communication—servers, channels, messaging, voice/video, file sharing, and E2EE—on their own infrastructure with zero proprietary dependency.
+OpenCorde is a **self-hosted Discord-style communication platform in active development** built with Rust (Axum backend), SvelteKit + Tauri 2.0 frontend, PostgreSQL, Redis, MinIO, and LiveKit. It is intended to let organizations run servers, channels, messaging, voice/video, file sharing, and E2EE on their own infrastructure with zero proprietary dependency.
+
+Current parity source of truth:
+
+- `docs/plans/2026-04-28-discord-parity-master-plan.md`
+- `docs/audits/2026-04-28-discord-foundation-audit.md`
+- `reports/discord-parity.json`
+
+Do not treat historical checked task items as Discord parity proof. A feature is only parity-proven when it has current UI, API, permission, realtime, mobile, Playwright/API, and Emma Bot evidence where applicable.
 
 ## Architecture
 
@@ -104,9 +112,9 @@ OpenCorde is a **self-hosted Discord alternative** built with Rust (Axum backend
 
 ## Current Project State
 
-**Phases 1–3 + Sprint 0 Security: COMPLETE. 26/26 browser tests passing. 42 migrations applied.**
+**Legacy implementation baseline:** Phases 1–3 + Sprint 0 Security had a passing smoke baseline. 42 migrations are applied.
 
-All features implemented and deployed at opencorde.com:
+The codebase contains implementations or surfaces for:
 - Auth (register/login/JWT/refresh/password-reset UI), user profiles, settings, avatar upload
 - Servers, channels (text/voice/stage/forum), messages, reactions, replies, threads, pins
 - File attachments (MinIO), WebSocket gateway (real-time messages, typing, presence, unread)
@@ -118,6 +126,8 @@ All features implemented and deployed at opencorde.com:
 - Emoji picker, custom server emojis, markdown rendering, message grouping
 - Light/dark theme, cozy/compact display, admin dashboard, data export
 - Push notifications (VAPID/FCM), channel permission overrides UI
+
+These are not automatically Discord-parity complete. Treat them as shallow or partial until proven by the current parity plan and report.
 - SMTP email integration (lettre) for password reset + verification
 - **Security hardening (Sprint 0):**
   - Permission enforcement on all routes (compute_effective_permissions wired)

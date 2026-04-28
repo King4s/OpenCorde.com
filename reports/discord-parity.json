@@ -56,12 +56,17 @@
     {
       "path": "reports/raw/public-qa.json",
       "type": "qa",
-      "note": "Public Playwright QA found mobile horizontal overflow and invite route module loading errors."
+      "note": "Public Playwright QA now passes for /, /login, /register, /servers, and invalid invite routes across mobile/tablet/desktop."
+    },
+    {
+      "path": "docs/audits/2026-04-28-discord-foundation-audit.md",
+      "type": "audit",
+      "note": "Read-only foundation audit covering messaging, permissions, onboarding, voice/stage, apps/webhooks, and friends/DMs."
     },
     {
       "path": "tasks-future.md",
       "type": "legacy_claims",
-      "note": "Legacy task list marks many Discord-like features complete; those claims need re-audit."
+      "note": "Legacy task list marks many Discord-like features complete; now explicitly labeled as an implementation log, not parity proof."
     }
   ],
   "github_issues": [
@@ -117,25 +122,23 @@
       "name": "Marketing and Product Claims",
       "status": "partial",
       "observed": [
-        "Landing page and metadata currently use feature-complete language.",
-        "Public QA captured mobile horizontal overflow on public routes.",
-        "Public QA captured dynamic module MIME errors for an invalid invite route."
+        "Landing page and metadata now use in-progress parity language.",
+        "Public QA passes for unauthenticated routes across mobile/tablet/desktop.",
+        "Invalid invite route no longer triggers nested /invite/_app module loading errors."
       ],
       "gaps": [
-        "Product copy overstates parity.",
-        "Public unauthenticated routes are not clean across tested viewports.",
-        "Invite preview/error route is not production-polished."
+        "Legacy task files still contain historical checked items and must not be treated as parity proof.",
+        "Broader docs and generated reference pages still need a full no-overclaim sweep."
       ],
       "next_todos": [
-        "Replace feature-complete claims with in-progress parity language.",
-        "Fix mobile horizontal overflow on public pages.",
-        "Fix invite route asset loading for nested SPA routes.",
-        "Add no-overclaim check to QA."
+        "Add a no-overclaim check to QA.",
+        "Audit generated docs and package metadata for stale parity claims.",
+        "Keep public QA report current after every landing/app shell change."
       ],
       "proof_required": [
-        "Playwright screenshots for mobile/tablet/desktop public pages",
-        "No console/page errors on invite routes",
-        "Copy audit result"
+        "reports/raw/public-qa.json",
+        "Issue #3 closure",
+        "Docs claim audit result"
       ]
     },
     {
@@ -287,8 +290,8 @@
     }
   ],
   "next_session_focus": [
-    "Turn this report into GitHub issues or a project board.",
-    "Fix public overclaims and invite route errors.",
+    "Start the permissions route audit and effective-permission report.",
+    "Add no-overclaim QA check for docs and public copy.",
     "Start the Playwright parity harness for messaging and roles.",
     "Document Emma Bot credentials and test protocol without exposing secrets."
   ]

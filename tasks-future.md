@@ -1,6 +1,14 @@
 # OpenCorde — Phase 4+ Tasks
 
-Phases 1, 2, and 3 are complete as of 2026-03-22 (26/26 browser tests, 30 migrations).
+> Legacy implementation log, not Discord parity proof.
+>
+> Checked items in this file mean the historical task was implemented or claimed at the time.
+> They do not mean the feature is complete, polished, permission-safe, realtime-safe, mobile-safe,
+> or Discord-parity proven. Use `docs/plans/2026-04-28-discord-parity-master-plan.md` and
+> `reports/discord-parity.json` as the current source of truth.
+
+Phases 1, 2, and 3 had a passing historical smoke baseline as of 2026-03-22
+(26/26 browser tests, 30 migrations). That is not a current Discord-parity claim.
 
 ## Phase 4: Differentiators
 
@@ -55,7 +63,7 @@ Phases 1, 2, and 3 are complete as of 2026-03-22 (26/26 browser tests, 30 migrat
 
 ---
 
-## Phase 6: Security Hardening & UX Polish (completed 2026-04-01)
+## Phase 6: Security Hardening & UX Polish (legacy status from 2026-04-01)
 
 ### Security
 - [x] Permission enforcement — `require_channel_perm` / `require_server_perm` wired to all relevant routes
@@ -81,4 +89,4 @@ Phases 1, 2, and 3 are complete as of 2026-03-22 (26/26 browser tests, 30 migrat
 
 **Note:** Federation via Matrix protocol is explicitly excluded per user decision.
 
-**Last updated:** 2026-04-01 (Phase 6 complete — security hardening, video grid, device selection, audit log, 26/26 browser tests)
+**Last updated:** 2026-04-01 legacy log. Current parity status is tracked in `reports/discord-parity.json`.

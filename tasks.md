@@ -1,5 +1,12 @@
 # OpenCorde Task Tracker
 
+> Legacy implementation log, not Discord parity proof.
+>
+> Checked items in this file mean the historical task was implemented or claimed at the time.
+> They do not mean the feature is complete, polished, permission-safe, realtime-safe, mobile-safe,
+> or Discord-parity proven. Use `docs/plans/2026-04-28-discord-parity-master-plan.md` and
+> `reports/discord-parity.json` as the current source of truth.
+
 Organized by phase and week. Check items off as they complete.
 
 **Split files** (to stay under 300 lines per file):
@@ -102,10 +109,11 @@ Organized by phase and week. Check items off as they complete.
 
 ---
 
-## Phase 1-3 Summary (Complete as of 2026-03-22)
+## Phase 1-3 Summary (Legacy Implementation Status as of 2026-03-22)
 
-All 26/26 browser tests passing. 30 migrations applied. Full feature set deployed at opencorde.com.
-See ReadMeFirst.md for complete feature list.
+At the time, 26/26 browser smoke tests passed and 30 migrations were applied. This does not prove
+Discord parity. Treat historical feature wording below as context only until each workflow
+has current Playwright/API/permission/mobile/Emma evidence.
 
 ### Sprint 2026-03-22: SMTP + Docs
 - [x] Fix validation test bug (validate_channel_type type 3 = Stage is valid; test type 4)
