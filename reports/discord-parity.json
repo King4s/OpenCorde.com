@@ -69,6 +69,11 @@
       "note": "Backend permission route audit and first-pass permission hardening."
     },
     {
+      "path": "reports/raw/permission-smoke.json",
+      "type": "qa",
+      "note": "Live API smoke proving selected non-member denial paths return 403."
+    },
+    {
       "path": "tasks-future.md",
       "type": "legacy_claims",
       "note": "Legacy task list marks many Discord-like features complete; now explicitly labeled as an implementation log, not parity proof."

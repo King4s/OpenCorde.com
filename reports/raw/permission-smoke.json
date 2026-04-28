@@ -1,0 +1,62 @@
+[
+  {
+    "name": "nonmember cannot create server invite",
+    "method": "POST",
+    "url": "/api/v1/servers/293907048062648321/invites",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "nonmember cannot list server invites",
+    "method": "GET",
+    "url": "/api/v1/servers/293907048062648321/invites",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "nonmember cannot read onboarding",
+    "method": "GET",
+    "url": "/api/v1/servers/293907048062648321/onboarding",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "nonmember cannot list channel threads",
+    "method": "GET",
+    "url": "/api/v1/channels/293907048134082561/threads",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "nonmember cannot list channel webhooks",
+    "method": "GET",
+    "url": "/api/v1/channels/293907048134082561/webhooks",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  }
+]

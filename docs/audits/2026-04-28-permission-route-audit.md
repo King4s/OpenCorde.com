@@ -89,6 +89,15 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 - `https://opencorde.com/api/v1/health`: OK.
 - `python3 browser_test.py`: 26 passed, 0 failed.
 - `scripts/public_qa.py --fail-on-issues`: passed.
+- `scripts/permission_smoke.py`: passed against live API.
+
+Permission smoke coverage:
+
+- non-member cannot create server invite: 403
+- non-member cannot list server invites: 403
+- non-member cannot read onboarding: 403
+- non-member cannot list channel threads: 403
+- non-member cannot list channel webhooks: 403
 
 ## Next Recommended Fixes
 
