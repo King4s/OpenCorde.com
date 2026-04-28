@@ -134,6 +134,31 @@ async def main() -> int:
                 "url": f"{API}/servers/{server_id}/onboarding",
                 "expect": 403,
             },
+            {
+                "name": "nonmember cannot list soundboard",
+                "method": "GET",
+                "url": f"{API}/servers/{server_id}/soundboard",
+                "expect": 403,
+            },
+            {
+                "name": "nonmember cannot create soundboard sound",
+                "method": "POST",
+                "url": f"{API}/servers/{server_id}/soundboard",
+                "json": {"name": "smoke", "file_key": "smoke.wav"},
+                "expect": 403,
+            },
+            {
+                "name": "nonmember cannot delete soundboard sound",
+                "method": "DELETE",
+                "url": f"{API}/servers/{server_id}/soundboard/1",
+                "expect": 403,
+            },
+            {
+                "name": "nonmember cannot play soundboard sound",
+                "method": "POST",
+                "url": f"{API}/servers/{server_id}/soundboard/1/play",
+                "expect": 403,
+            },
         ]
 
         if channel_id:
@@ -155,6 +180,39 @@ async def main() -> int:
                         "name": "nonmember cannot list channel pins",
                         "method": "GET",
                         "url": f"{API}/channels/{channel_id}/pins",
+                        "expect": 403,
+                    },
+                    {
+                        "name": "nonmember cannot list channel recordings",
+                        "method": "GET",
+                        "url": f"{API}/channels/{channel_id}/recordings",
+                        "expect": 403,
+                    },
+                    {
+                        "name": "nonmember cannot ack channel read state",
+                        "method": "POST",
+                        "url": f"{API}/channels/{channel_id}/ack",
+                        "json": {"message_id": message_id or "1"},
+                        "expect": 403,
+                    },
+                    {
+                        "name": "nonmember cannot initialize e2ee group",
+                        "method": "POST",
+                        "url": f"{API}/channels/{channel_id}/e2ee/init",
+                        "json": {"group_state": "AQ", "member_welcomes": []},
+                        "expect": 403,
+                    },
+                    {
+                        "name": "nonmember cannot fetch e2ee welcome",
+                        "method": "GET",
+                        "url": f"{API}/channels/{channel_id}/e2ee/welcome",
+                        "expect": 403,
+                    },
+                    {
+                        "name": "nonmember cannot update e2ee state",
+                        "method": "PUT",
+                        "url": f"{API}/channels/{channel_id}/e2ee/state",
+                        "json": {"group_state": "AQ"},
                         "expect": 403,
                     },
                 ]

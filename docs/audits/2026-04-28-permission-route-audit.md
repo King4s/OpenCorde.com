@@ -61,6 +61,27 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - Message search now filters every hit through channel `VIEW_CHANNEL` before returning content.
   - Search over-fetches before filtering so authorized users still receive useful result counts.
 
+- `forum`
+  - Listing posts and post detail now require channel `VIEW_CHANNEL`.
+  - Creating posts/replies now requires channel `VIEW_CHANNEL` plus `SEND_MESSAGES`.
+  - Deleting posts/replies now requires channel visibility before author/owner checks.
+
+- `soundboard`
+  - Listing and playing sounds now require server `VIEW_CHANNEL`.
+  - Creating/deleting sounds now require `MANAGE_GUILD_EXPRESSIONS` instead of owner-only.
+
+- `recordings`
+  - Listing recordings now requires channel `VIEW_CHANNEL`.
+  - Start/stop recording now require channel `VIEW_CHANNEL` plus `MANAGE_CHANNELS` instead of owner-only.
+
+- `E2EE groups`
+  - Init/update now require channel `VIEW_CHANNEL` plus `SEND_MESSAGES`.
+  - Welcome fetch now requires channel `VIEW_CHANNEL`.
+
+- `read_state`
+  - Channel ack now requires `VIEW_CHANNEL`.
+  - Read-state list filters stale or unauthorized channel entries before returning them.
+
 ## Still Open
 
 - Channel overwrite computation still needs closer Discord parity:
@@ -76,11 +97,8 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - self-escalation through powerful roles
 
 - More channel-scoped routes still need audit/fixes:
-  - forum
-  - recordings
-  - soundboard
-  - E2EE/read-state
   - events
+  - E2EE key-package consumption needs a channel/member-scoped design before hardening.
 
 - Webhook response shape still exposes token in list responses. This is now restricted to `MANAGE_WEBHOOKS`, but token exposure should still be hardened so tokens are only shown on creation/regeneration.
 
@@ -113,6 +131,10 @@ Permission smoke coverage:
 - non-member cannot pin channel message: 403
 - non-member cannot list message reactions: 403
 - non-member search cannot see private server messages: 200 with empty results
+- non-member cannot list/create/delete/play soundboard entries: 403
+- non-member cannot list channel recordings: 403
+- non-member cannot ack channel read state: 403
+- non-member cannot initialize/fetch/update E2EE group state: 403
 
 ## Next Recommended Fixes
 

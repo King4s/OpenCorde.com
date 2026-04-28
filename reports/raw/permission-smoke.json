@@ -36,6 +36,54 @@
     }
   },
   {
+    "name": "nonmember cannot list soundboard",
+    "method": "GET",
+    "url": "/api/v1/servers/293907048062648321/soundboard",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "nonmember cannot create soundboard sound",
+    "method": "POST",
+    "url": "/api/v1/servers/293907048062648321/soundboard",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "nonmember cannot delete soundboard sound",
+    "method": "DELETE",
+    "url": "/api/v1/servers/293907048062648321/soundboard/1",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "nonmember cannot play soundboard sound",
+    "method": "POST",
+    "url": "/api/v1/servers/293907048062648321/soundboard/1/play",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
     "name": "nonmember cannot list channel threads",
     "method": "GET",
     "url": "/api/v1/channels/293907048134082561/threads",
@@ -72,9 +120,69 @@
     }
   },
   {
+    "name": "nonmember cannot list channel recordings",
+    "method": "GET",
+    "url": "/api/v1/channels/293907048134082561/recordings",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "nonmember cannot ack channel read state",
+    "method": "POST",
+    "url": "/api/v1/channels/293907048134082561/ack",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "nonmember cannot initialize e2ee group",
+    "method": "POST",
+    "url": "/api/v1/channels/293907048134082561/e2ee/init",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "nonmember cannot fetch e2ee welcome",
+    "method": "GET",
+    "url": "/api/v1/channels/293907048134082561/e2ee/welcome",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "nonmember cannot update e2ee state",
+    "method": "PUT",
+    "url": "/api/v1/channels/293907048134082561/e2ee/state",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
     "name": "nonmember cannot pin channel message",
     "method": "PUT",
-    "url": "/api/v1/channels/293907048134082561/pins/307630191449341953",
+    "url": "/api/v1/channels/293907048134082561/pins/307632494772355073",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -86,7 +194,7 @@
   {
     "name": "nonmember cannot list message reactions",
     "method": "GET",
-    "url": "/api/v1/messages/307630191449341953/reactions",
+    "url": "/api/v1/messages/307632494772355073/reactions",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -98,7 +206,7 @@
   {
     "name": "nonmember search cannot see private server messages",
     "method": "GET",
-    "url": "/api/v1/search?q=permsearch1777411953&server_id=293907048062648321&limit=10",
+    "url": "/api/v1/search?q=permsearch1777412502&server_id=293907048062648321&limit=10",
     "expectedStatus": 200,
     "actualStatus": 200,
     "ok": true,

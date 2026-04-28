@@ -2,19 +2,23 @@
 //! HTTP request handlers for forum endpoints.
 
 use axum::{
+    Json,
     extract::{Path, Query, State},
     http::StatusCode,
-    Json,
 };
-use opencorde_core::snowflake::SnowflakeGenerator;
+use opencorde_core::{Snowflake, permissions::Permissions, snowflake::SnowflakeGenerator};
 use opencorde_db::repos::forum_repo;
 use tracing::instrument;
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
 use crate::routes::helpers;
+use crate::routes::permission_check;
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
-use super::types::{CreatePostRequest, CreateReplyRequest, ListPostsQuery, PostDetailResponse, PostResponse, ReplyResponse};
 use super::auth_check;
+use super::types::{
+    CreatePostRequest, CreateReplyRequest, ListPostsQuery, PostDetailResponse, PostResponse,
+    ReplyResponse,
+};
 
 /// Create a forum post in a channel. Verifies channel exists and is forum type (5).
 #[instrument(skip(state, auth, body), fields(user_id = %auth.user_id))]
@@ -27,7 +31,9 @@ pub async fn create_post(
     tracing::info!(channel_id = %channel_id, "creating forum post");
 
     if body.title.is_empty() || body.title.len() > 200 {
-        return Err(ApiError::BadRequest("title must be 1-200 characters".into()));
+        return Err(ApiError::BadRequest(
+            "title must be 1-200 characters".into(),
+        ));
     }
     if body.content.is_empty() {
         return Err(ApiError::BadRequest("content cannot be empty".into()));
@@ -44,8 +50,18 @@ pub async fn create_post(
         .ok_or_else(|| ApiError::NotFound("channel not found".into()))?;
 
     if channel_type.0 != 5 {
-        return Err(ApiError::BadRequest("channel is not a forum channel".into()));
+        return Err(ApiError::BadRequest(
+            "channel is not a forum channel".into(),
+        ));
     }
+
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::VIEW_CHANNEL | Permissions::SEND_MESSAGES,
+    )
+    .await?;
 
     let mut generator = SnowflakeGenerator::new(3, 0);
     let post_id = generator.next_id();
@@ -89,6 +105,14 @@ pub async fn list_posts(
     let channel_id_sf = helpers::parse_snowflake(&channel_id)?;
     let limit = params.limit.clamp(1, 100);
 
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
+
     let rows = forum_repo::list_posts(&state.db, channel_id_sf, limit)
         .await
         .map_err(ApiError::Database)?;
@@ -127,6 +151,14 @@ pub async fn get_post(
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("post not found".into()))?;
+
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        Snowflake::new(post.channel_id),
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
 
     let replies = forum_repo::list_replies(&state.db, post_id_sf)
         .await
@@ -178,6 +210,14 @@ pub async fn delete_post(
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("post not found".into()))?;
 
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        Snowflake::new(post.channel_id),
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
+
     auth_check::check_post_author_or_owner(&state, &post, &auth).await?;
 
     forum_repo::delete_post(&state.db, post_id_sf)
@@ -203,22 +243,25 @@ pub async fn create_reply(
 
     let post_id_sf = helpers::parse_snowflake(&post_id)?;
 
-    forum_repo::get_post(&state.db, post_id_sf)
+    let post = forum_repo::get_post(&state.db, post_id_sf)
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("post not found".into()))?;
 
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        Snowflake::new(post.channel_id),
+        Permissions::VIEW_CHANNEL | Permissions::SEND_MESSAGES,
+    )
+    .await?;
+
     let mut generator = SnowflakeGenerator::new(3, 0);
     let reply_id = generator.next_id();
-    let row = forum_repo::create_reply(
-        &state.db,
-        reply_id,
-        post_id_sf,
-        auth.user_id,
-        &body.content,
-    )
-    .await
-    .map_err(ApiError::Database)?;
+    let row =
+        forum_repo::create_reply(&state.db, reply_id, post_id_sf, auth.user_id, &body.content)
+            .await
+            .map_err(ApiError::Database)?;
 
     let response = ReplyResponse {
         id: row.id.to_string(),
@@ -243,13 +286,29 @@ pub async fn delete_reply(
 
     let reply_id_sf = helpers::parse_snowflake(&reply_id)?;
 
-    let reply: Option<(i64, i64)> = sqlx::query_as("SELECT author_id, post_id FROM forum_replies WHERE id = $1")
-        .bind(reply_id_sf.as_i64())
-        .fetch_optional(&state.db)
-        .await
-        .map_err(ApiError::Database)?;
+    let reply: Option<(i64, i64)> =
+        sqlx::query_as("SELECT author_id, post_id FROM forum_replies WHERE id = $1")
+            .bind(reply_id_sf.as_i64())
+            .fetch_optional(&state.db)
+            .await
+            .map_err(ApiError::Database)?;
 
     let (author_id, post_id) = reply.ok_or_else(|| ApiError::NotFound("reply not found".into()))?;
+
+    let channel_id: (i64,) = sqlx::query_as("SELECT channel_id FROM forum_posts WHERE id = $1")
+        .bind(post_id)
+        .fetch_optional(&state.db)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("post not found".into()))?;
+
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        Snowflake::new(channel_id.0),
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
 
     auth_check::check_reply_author_or_owner(&state, author_id, post_id, &auth).await?;
 

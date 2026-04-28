@@ -16,13 +16,19 @@
 //! - crate::middleware::auth::AuthUser (authentication)
 //! - crate::AppState (application state)
 
-use crate::{error::ApiError, middleware::auth::AuthUser, routes::helpers, AppState};
+use crate::{
+    AppState,
+    error::ApiError,
+    middleware::auth::AuthUser,
+    routes::{helpers, permission_check},
+};
 use axum::{
+    Json, Router,
     extract::{Path, State},
     http::StatusCode,
     routing::{get, post, put},
-    Json, Router,
 };
+use opencorde_core::permissions::Permissions;
 use serde::{Deserialize, Serialize};
 use sqlx::Row;
 use tracing::instrument;
@@ -61,10 +67,7 @@ pub struct UpdateStateRequest {
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route(
-            "/api/v1/channels/{channel_id}/e2ee/init",
-            post(init_group),
-        )
+        .route("/api/v1/channels/{channel_id}/e2ee/init", post(init_group))
         .route(
             "/api/v1/channels/{channel_id}/e2ee/welcome",
             get(get_welcome),
@@ -88,6 +91,14 @@ pub async fn init_group(
 ) -> Result<StatusCode, ApiError> {
     let channel_id = helpers::parse_snowflake(&channel_id_str)?;
     let creator_state = base64_decode(&payload.group_state)?;
+
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id,
+        Permissions::VIEW_CHANNEL | Permissions::SEND_MESSAGES,
+    )
+    .await?;
 
     // Upsert creator's own group state (no welcome needed for creator)
     sqlx::query(
@@ -148,6 +159,14 @@ pub async fn get_welcome(
 ) -> Result<Json<WelcomeResponse>, ApiError> {
     let channel_id = helpers::parse_snowflake(&channel_id_str)?;
 
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
+
     // Atomically fetch and clear the welcome message
     let row = sqlx::query(
         r#"
@@ -191,6 +210,14 @@ pub async fn update_state(
 ) -> Result<StatusCode, ApiError> {
     let channel_id = helpers::parse_snowflake(&channel_id_str)?;
     let new_state = base64_decode(&payload.group_state)?;
+
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id,
+        Permissions::VIEW_CHANNEL | Permissions::SEND_MESSAGES,
+    )
+    .await?;
 
     let result = sqlx::query(
         r#"

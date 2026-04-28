@@ -16,6 +16,7 @@ use axum::{
     http::StatusCode,
     routing::{get, post},
 };
+use opencorde_core::{Snowflake, permissions::Permissions};
 use opencorde_db::repos::read_state_repo;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
@@ -23,6 +24,7 @@ use tracing::instrument;
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
 use super::helpers;
+use super::permission_check;
 
 /// Request body for marking a channel as read.
 #[derive(Debug, Deserialize)]
@@ -67,7 +69,19 @@ async fn mark_channel_read(
         .parse::<i64>()
         .map_err(|_| ApiError::BadRequest("invalid message_id format".into()))?;
 
-    tracing::debug!(channel_id = channel_id_sf.as_i64(), message_id, "parsed ids");
+    tracing::debug!(
+        channel_id = channel_id_sf.as_i64(),
+        message_id,
+        "parsed ids"
+    );
+
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
 
     // Mark as read in database
     read_state_repo::mark_read(&state.db, auth.user_id, channel_id_sf, message_id)
@@ -113,14 +127,27 @@ async fn get_user_read_states(
 
     tracing::info!(count = rows.len(), "read states fetched");
 
-    let responses = rows
-        .into_iter()
-        .map(|row| ReadStateResponse {
-            channel_id: row.channel_id.to_string(),
-            last_read_id: row.last_read_id.to_string(),
-            mention_count: row.mention_count,
-        })
-        .collect();
+    let mut responses = Vec::with_capacity(rows.len());
+    for row in rows {
+        match permission_check::require_channel_perm(
+            &state.db,
+            auth.user_id,
+            Snowflake::new(row.channel_id),
+            Permissions::VIEW_CHANNEL,
+        )
+        .await
+        {
+            Ok(()) => responses.push(ReadStateResponse {
+                channel_id: row.channel_id.to_string(),
+                last_read_id: row.last_read_id.to_string(),
+                mention_count: row.mention_count,
+            }),
+            Err(ApiError::Forbidden | ApiError::NotFound(_)) => {
+                tracing::debug!(channel_id = row.channel_id, "filtered read state");
+            }
+            Err(err) => return Err(err),
+        }
+    }
 
     Ok(Json(responses))
 }

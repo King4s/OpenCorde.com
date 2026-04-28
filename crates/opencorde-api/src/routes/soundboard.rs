@@ -20,9 +20,10 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::Row;
 
+use crate::routes::helpers::parse_snowflake;
+use crate::routes::permission_check;
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
-use crate::routes::helpers::{check_server_owner, parse_snowflake};
-use opencorde_db::repos::server_repo;
+use opencorde_core::permissions::Permissions;
 
 #[derive(Debug, Serialize)]
 pub struct SoundResponse {
@@ -65,7 +66,10 @@ async fn list_sounds(
     Path(server_id): Path<String>,
 ) -> Result<Json<Vec<SoundResponse>>, ApiError> {
     let sid = parse_snowflake(&server_id)?;
-    // Must be a member
+
+    permission_check::require_server_perm(&state.db, auth.user_id, sid, Permissions::VIEW_CHANNEL)
+        .await?;
+
     let rows = sqlx::query(
         "SELECT id, server_id, name, file_key, uploader_id, volume, created_at \
          FROM soundboard_sounds WHERE server_id = $1 ORDER BY name ASC",
@@ -75,15 +79,18 @@ async fn list_sounds(
     .await
     .map_err(|e| ApiError::Internal(e.into()))?;
 
-    let sounds = rows.iter().map(|r| SoundResponse {
-        id: r.get::<i64, _>("id").to_string(),
-        server_id: r.get::<i64, _>("server_id").to_string(),
-        name: r.get("name"),
-        file_key: r.get("file_key"),
-        uploader_id: r.get::<i64, _>("uploader_id").to_string(),
-        volume: r.get("volume"),
-        created_at: r.get("created_at"),
-    }).collect();
+    let sounds = rows
+        .iter()
+        .map(|r| SoundResponse {
+            id: r.get::<i64, _>("id").to_string(),
+            server_id: r.get::<i64, _>("server_id").to_string(),
+            name: r.get("name"),
+            file_key: r.get("file_key"),
+            uploader_id: r.get::<i64, _>("uploader_id").to_string(),
+            volume: r.get("volume"),
+            created_at: r.get("created_at"),
+        })
+        .collect();
 
     Ok(Json(sounds))
 }
@@ -96,11 +103,13 @@ async fn create_sound(
     Json(req): Json<CreateSoundRequest>,
 ) -> Result<(StatusCode, Json<SoundResponse>), ApiError> {
     let sid = parse_snowflake(&server_id)?;
-    let server = server_repo::get_by_id(&state.db, sid)
-        .await
-        .map_err(ApiError::Database)?
-        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
-    check_server_owner(auth.user_id, server.owner_id)?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        sid,
+        Permissions::MANAGE_GUILD_EXPRESSIONS,
+    )
+    .await?;
 
     if req.name.is_empty() || req.name.len() > 32 {
         return Err(ApiError::BadRequest("name must be 1-32 characters".into()));
@@ -132,15 +141,18 @@ async fn create_sound(
 
     tracing::info!(server_id = sid.as_i64(), name = %req.name, "soundboard sound created");
 
-    Ok((StatusCode::CREATED, Json(SoundResponse {
-        id: row.get::<i64, _>("id").to_string(),
-        server_id: row.get::<i64, _>("server_id").to_string(),
-        name: row.get("name"),
-        file_key: row.get("file_key"),
-        uploader_id: row.get::<i64, _>("uploader_id").to_string(),
-        volume: row.get("volume"),
-        created_at: row.get("created_at"),
-    })))
+    Ok((
+        StatusCode::CREATED,
+        Json(SoundResponse {
+            id: row.get::<i64, _>("id").to_string(),
+            server_id: row.get::<i64, _>("server_id").to_string(),
+            name: row.get("name"),
+            file_key: row.get("file_key"),
+            uploader_id: row.get::<i64, _>("uploader_id").to_string(),
+            volume: row.get("volume"),
+            created_at: row.get("created_at"),
+        }),
+    ))
 }
 
 #[tracing::instrument(skip(state, auth), fields(user_id = %auth.user_id))]
@@ -150,26 +162,30 @@ async fn delete_sound(
     Path((server_id, sound_id)): Path<(String, i64)>,
 ) -> Result<StatusCode, ApiError> {
     let sid = parse_snowflake(&server_id)?;
-    let server = server_repo::get_by_id(&state.db, sid)
-        .await
-        .map_err(ApiError::Database)?
-        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
-    check_server_owner(auth.user_id, server.owner_id)?;
-
-    let result = sqlx::query(
-        "DELETE FROM soundboard_sounds WHERE id = $1 AND server_id = $2",
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        sid,
+        Permissions::MANAGE_GUILD_EXPRESSIONS,
     )
-    .bind(sound_id)
-    .bind(sid.as_i64())
-    .execute(&state.db)
-    .await
-    .map_err(|e| ApiError::Internal(e.into()))?;
+    .await?;
+
+    let result = sqlx::query("DELETE FROM soundboard_sounds WHERE id = $1 AND server_id = $2")
+        .bind(sound_id)
+        .bind(sid.as_i64())
+        .execute(&state.db)
+        .await
+        .map_err(|e| ApiError::Internal(e.into()))?;
 
     if result.rows_affected() == 0 {
         return Err(ApiError::NotFound("sound not found".into()));
     }
 
-    tracing::info!(sound_id, server_id = sid.as_i64(), "soundboard sound deleted");
+    tracing::info!(
+        sound_id,
+        server_id = sid.as_i64(),
+        "soundboard sound deleted"
+    );
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -180,6 +196,9 @@ async fn play_sound(
     Path((server_id, sound_id)): Path<(String, i64)>,
 ) -> Result<StatusCode, ApiError> {
     let sid = parse_snowflake(&server_id)?;
+
+    permission_check::require_server_perm(&state.db, auth.user_id, sid, Permissions::VIEW_CHANNEL)
+        .await?;
 
     // Fetch sound to verify it exists
     let row = sqlx::query(
@@ -210,6 +229,10 @@ async fn play_sound(
     // Send to all subscribers of this server's event channel
     let _ = state.event_tx.send(event);
 
-    tracing::info!(sound_id, server_id = sid.as_i64(), "soundboard sound played");
+    tracing::info!(
+        sound_id,
+        server_id = sid.as_i64(),
+        "soundboard sound played"
+    );
     Ok(StatusCode::NO_CONTENT)
 }

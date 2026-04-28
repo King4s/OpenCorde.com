@@ -10,20 +10,22 @@
 //! - crate::routes::voice::livekit::create_livekit_token
 //! - super::types (wire types + DB row)
 
+use axum::Json;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
-use axum::Json;
 use chrono::Utc;
+use opencorde_core::permissions::Permissions;
 
 use crate::AppState;
 use crate::error::ApiError;
 use crate::middleware::auth::AuthUser;
-use crate::routes::helpers::{check_server_owner, parse_snowflake};
+use crate::routes::helpers::parse_snowflake;
+use crate::routes::permission_check;
 use crate::routes::voice::livekit::create_livekit_token;
 
 use super::types::{
-    EgressFileOutput, EgressS3Config, EgressStartRequest, EgressStartResponse,
-    EgressStopRequest, RecordingResponse, RecordingRow, StartRecordingResponse, row_to_response,
+    EgressFileOutput, EgressS3Config, EgressStartRequest, EgressStartResponse, EgressStopRequest,
+    RecordingResponse, RecordingRow, StartRecordingResponse, row_to_response,
 };
 
 const EGRESS_TOKEN_EXPIRY: u64 = 60;
@@ -33,7 +35,10 @@ const EGRESS_TOKEN_EXPIRY: u64 = 60;
 /// Resolve server_id and owner_id for a channel.
 async fn get_channel_server(state: &AppState, channel_id: i64) -> Result<(i64, i64), ApiError> {
     #[derive(sqlx::FromRow)]
-    struct Row { server_id: i64, owner_id: i64 }
+    struct Row {
+        server_id: i64,
+        owner_id: i64,
+    }
 
     sqlx::query_as::<_, Row>(
         "SELECT c.server_id, s.owner_id \
@@ -50,11 +55,17 @@ async fn get_channel_server(state: &AppState, channel_id: i64) -> Result<(i64, i
 
 /// Build a short-lived admin JWT for the LiveKit Egress API.
 fn egress_token(api_key: &str, api_secret: &str, room_name: &str) -> Result<String, ApiError> {
-    create_livekit_token(api_key, api_secret, "egress-bot", room_name, EGRESS_TOKEN_EXPIRY)
-        .map_err(|e| {
-            tracing::error!(error = %e, "egress token generation failed");
-            ApiError::Internal(anyhow::anyhow!("token generation failed"))
-        })
+    create_livekit_token(
+        api_key,
+        api_secret,
+        "egress-bot",
+        room_name,
+        EGRESS_TOKEN_EXPIRY,
+    )
+    .map_err(|e| {
+        tracing::error!(error = %e, "egress token generation failed");
+        ApiError::Internal(anyhow::anyhow!("token generation failed"))
+    })
 }
 
 // ─── Handlers ─────────────────────────────────────────────────────────────────
@@ -67,8 +78,14 @@ pub async fn start_recording(
     Path(channel_id_str): Path<String>,
 ) -> Result<(StatusCode, Json<StartRecordingResponse>), ApiError> {
     let channel_id = parse_snowflake(&channel_id_str)?;
-    let (server_id, owner_id) = get_channel_server(&state, channel_id.as_i64()).await?;
-    check_server_owner(auth.user_id, owner_id)?;
+    let (server_id, _owner_id) = get_channel_server(&state, channel_id.as_i64()).await?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id,
+        Permissions::VIEW_CHANNEL | Permissions::MANAGE_CHANNELS,
+    )
+    .await?;
 
     let timestamp = Utc::now().timestamp();
     let file_path = format!("recordings/{}/{}.mp4", channel_id.as_i64(), timestamp);
@@ -78,7 +95,10 @@ pub async fn start_recording(
         &state.config.livekit_api_secret,
         &room_name,
     )?;
-    let egress_url = format!("{}/egress/room", state.config.livekit_url.trim_end_matches('/'));
+    let egress_url = format!(
+        "{}/egress/room",
+        state.config.livekit_url.trim_end_matches('/')
+    );
 
     let body = EgressStartRequest {
         room_name: room_name.clone(),
@@ -160,8 +180,14 @@ pub async fn stop_recording(
     Path(channel_id_str): Path<String>,
 ) -> Result<Json<RecordingResponse>, ApiError> {
     let channel_id = parse_snowflake(&channel_id_str)?;
-    let (_server_id, owner_id) = get_channel_server(&state, channel_id.as_i64()).await?;
-    check_server_owner(auth.user_id, owner_id)?;
+    let (_server_id, _owner_id) = get_channel_server(&state, channel_id.as_i64()).await?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id,
+        Permissions::VIEW_CHANNEL | Permissions::MANAGE_CHANNELS,
+    )
+    .await?;
 
     let row = sqlx::query_as::<_, RecordingRow>(
         "SELECT * FROM recordings \
@@ -180,7 +206,10 @@ pub async fn stop_recording(
         &state.config.livekit_api_secret,
         &room_name,
     )?;
-    let stop_url = format!("{}/egress/stop", state.config.livekit_url.trim_end_matches('/'));
+    let stop_url = format!(
+        "{}/egress/stop",
+        state.config.livekit_url.trim_end_matches('/')
+    );
 
     tracing::info!(egress_id = %row.egress_id, stop_url = %stop_url, "stopping Egress");
 
@@ -188,7 +217,9 @@ pub async fn stop_recording(
     let resp = http
         .post(&stop_url)
         .bearer_auth(&token)
-        .json(&EgressStopRequest { egress_id: row.egress_id.clone() })
+        .json(&EgressStopRequest {
+            egress_id: row.egress_id.clone(),
+        })
         .send()
         .await
         .map_err(|e| {
@@ -231,17 +262,14 @@ pub async fn list_recordings(
 ) -> Result<Json<Vec<RecordingResponse>>, ApiError> {
     let channel_id = parse_snowflake(&channel_id_str)?;
 
-    let exists: Option<i64> = sqlx::query_scalar("SELECT id FROM channels WHERE id = $1")
-        .bind(channel_id.as_i64())
-        .fetch_optional(&state.db)
-        .await
-        .map_err(ApiError::Database)?;
-
-    if exists.is_none() {
-        return Err(ApiError::NotFound("channel not found".into()));
-    }
-
-    let _ = auth; // authenticated; future: add membership gate
+    get_channel_server(&state, channel_id.as_i64()).await?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
 
     let rows = sqlx::query_as::<_, RecordingRow>(
         "SELECT * FROM recordings WHERE channel_id = $1 ORDER BY started_at DESC",
@@ -251,7 +279,11 @@ pub async fn list_recordings(
     .await
     .map_err(ApiError::Database)?;
 
-    tracing::info!(channel_id = channel_id.as_i64(), count = rows.len(), "recordings listed");
+    tracing::info!(
+        channel_id = channel_id.as_i64(),
+        count = rows.len(),
+        "recordings listed"
+    );
 
     Ok(Json(rows.into_iter().map(row_to_response).collect()))
 }
