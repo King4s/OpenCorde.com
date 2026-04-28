@@ -26,7 +26,8 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
-use crate::routes::{helpers::parse_snowflake, upload_validation};
+use crate::routes::{helpers::parse_snowflake, permission_check, upload_validation};
+use opencorde_core::permissions::Permissions;
 
 /// Response body for successful file upload.
 #[derive(Debug, Serialize, Deserialize)]
@@ -68,7 +69,14 @@ async fn upload_attachment(
     tracing::info!(channel_id = %channel_id, "uploading attachment");
 
     // Parse channel ID
-    let _channel_id_sf = parse_snowflake(&channel_id)?;
+    let channel_id_sf = parse_snowflake(&channel_id)?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::VIEW_CHANNEL | Permissions::SEND_MESSAGES | Permissions::ATTACH_FILES,
+    )
+    .await?;
 
     // Process multipart form
     let (filename, content_type, bytes) = extract_file_from_multipart(multipart).await?;

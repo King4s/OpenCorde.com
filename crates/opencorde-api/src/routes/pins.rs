@@ -16,12 +16,13 @@ use axum::{
     Json, Router,
 };
 use chrono::{DateTime, Utc};
+use opencorde_core::permissions::Permissions;
 use opencorde_db::repos::pin_repo;
 use serde::Serialize;
 use tracing::instrument;
 
 use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
-use crate::routes::helpers;
+use crate::routes::{helpers, permission_check};
 
 #[derive(Debug, Serialize, Clone)]
 pub struct PinnedMessageResponse {
@@ -54,6 +55,13 @@ async fn list_pins(
 ) -> Result<Json<Vec<PinnedMessageResponse>>, ApiError> {
     tracing::info!(channel_id = %channel_id, "listing pinned messages");
     let channel_id_sf = helpers::parse_snowflake(&channel_id)?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
     let rows = pin_repo::list_pinned(&state.db, channel_id_sf)
         .await
         .map_err(ApiError::Database)?;
@@ -84,6 +92,13 @@ async fn pin_message(
     tracing::info!(channel_id = %channel_id, message_id = %message_id, "pinning message");
     let channel_id_sf = helpers::parse_snowflake(&channel_id)?;
     let message_id_sf = helpers::parse_snowflake(&message_id)?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::PIN_MESSAGES,
+    )
+    .await?;
     pin_repo::pin_message(&state.db, channel_id_sf, message_id_sf, auth.user_id)
         .await
         .map_err(ApiError::Database)?;
@@ -99,6 +114,13 @@ async fn unpin_message(
     tracing::info!(channel_id = %channel_id, message_id = %message_id, "unpinning message");
     let channel_id_sf = helpers::parse_snowflake(&channel_id)?;
     let message_id_sf = helpers::parse_snowflake(&message_id)?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::PIN_MESSAGES,
+    )
+    .await?;
     let existed = pin_repo::unpin_message(&state.db, channel_id_sf, message_id_sf)
         .await
         .map_err(ApiError::Database)?;

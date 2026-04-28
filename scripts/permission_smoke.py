@@ -82,8 +82,17 @@ async def main() -> int:
             headers=member_headers,
         )
         channel_id = None
+        message_id = None
         if status == 200 and channels:
             channel_id = channels[0]["id"]
+            status, messages = await request_json(
+                session,
+                "GET",
+                f"{API}/channels/{channel_id}/messages",
+                headers=member_headers,
+            )
+            if status == 200 and messages:
+                message_id = messages[0]["id"]
 
         checks = [
             {
@@ -120,6 +129,30 @@ async def main() -> int:
                         "name": "nonmember cannot list channel webhooks",
                         "method": "GET",
                         "url": f"{API}/channels/{channel_id}/webhooks",
+                        "expect": 403,
+                    },
+                    {
+                        "name": "nonmember cannot list channel pins",
+                        "method": "GET",
+                        "url": f"{API}/channels/{channel_id}/pins",
+                        "expect": 403,
+                    },
+                ]
+            )
+
+        if channel_id and message_id:
+            checks.extend(
+                [
+                    {
+                        "name": "nonmember cannot pin channel message",
+                        "method": "PUT",
+                        "url": f"{API}/channels/{channel_id}/pins/{message_id}",
+                        "expect": 403,
+                    },
+                    {
+                        "name": "nonmember cannot list message reactions",
+                        "method": "GET",
+                        "url": f"{API}/messages/{message_id}/reactions",
                         "expect": 403,
                     },
                 ]

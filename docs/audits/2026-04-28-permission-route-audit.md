@@ -45,6 +45,18 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - List messages now requires `VIEW_CHANNEL` plus `READ_MESSAGE_HISTORY`.
   - Send in thread now requires `SEND_MESSAGES_IN_THREADS`.
 
+- `uploads`
+  - Attachment upload now requires `VIEW_CHANNEL`, `SEND_MESSAGES`, and `ATTACH_FILES`.
+
+- `pins`
+  - Listing pins now requires `VIEW_CHANNEL`.
+  - Pin/unpin now requires `PIN_MESSAGES`.
+
+- `reactions`
+  - Add reaction now requires `VIEW_CHANNEL` plus `ADD_REACTIONS`.
+  - Remove reaction now requires `VIEW_CHANNEL`.
+  - List reactions now requires `VIEW_CHANNEL`.
+
 ## Still Open
 
 - Channel overwrite computation still needs closer Discord parity:
@@ -63,9 +75,6 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 
 - More channel-scoped routes still need audit/fixes:
   - forum
-  - pins
-  - reactions list/remove
-  - uploads
   - recordings
   - soundboard
   - E2EE/read-state
@@ -98,6 +107,9 @@ Permission smoke coverage:
 - non-member cannot read onboarding: 403
 - non-member cannot list channel threads: 403
 - non-member cannot list channel webhooks: 403
+- non-member cannot list channel pins: 403
+- non-member cannot pin channel message: 403
+- non-member cannot list message reactions: 403
 
 ## Next Recommended Fixes
 

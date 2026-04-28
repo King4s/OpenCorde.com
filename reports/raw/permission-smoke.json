@@ -58,5 +58,41 @@
       "code": "FORBIDDEN",
       "message": "forbidden"
     }
+  },
+  {
+    "name": "nonmember cannot list channel pins",
+    "method": "GET",
+    "url": "/api/v1/channels/293907048134082561/pins",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "nonmember cannot pin channel message",
+    "method": "PUT",
+    "url": "/api/v1/channels/293907048134082561/pins/293907048343928833",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "nonmember cannot list message reactions",
+    "method": "GET",
+    "url": "/api/v1/messages/293907048343928833/reactions",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
   }
 ]

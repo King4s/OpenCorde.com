@@ -91,6 +91,13 @@ async fn add_reaction(
         &state.db,
         auth.user_id,
         Snowflake::new(msg.channel_id),
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        Snowflake::new(msg.channel_id),
         Permissions::ADD_REACTIONS,
     )
     .await?;
@@ -173,6 +180,14 @@ async fn remove_reaction(
     let channel_id_str = msg.channel_id.to_string();
     tracing::debug!("message verified");
 
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        Snowflake::new(msg.channel_id),
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
+
     // Remove reaction from database
     let was_removed = reaction_repo::remove_reaction(
         &state.db,
@@ -225,11 +240,19 @@ async fn list_reactions(
     tracing::debug!(message_id = message_id_sf.as_i64(), "parsed message id");
 
     // Verify message exists
-    message_repo::get_by_id(&state.db, message_id_sf)
+    let msg = message_repo::get_by_id(&state.db, message_id_sf)
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("message not found".into()))?;
     tracing::debug!("message verified");
+
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        Snowflake::new(msg.channel_id),
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
 
     // Fetch reaction counts
     let reactions = reaction_repo::count_by_emoji(&state.db, message_id_sf, auth.user_id)

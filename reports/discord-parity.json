@@ -184,13 +184,13 @@
         "Role routes, permission bit definitions, channel override routes, RoleManager, RolePermissionsTab, and ChannelPermissionsTab names exist.",
         "Several backend routes call server or channel permission checks.",
         "First-pass hardening now blocks non-members from receiving default permissions in permission_check.",
-        "Voice, webhooks, slash commands, onboarding, audit log, and threads received additional permission gates."
+        "Voice, webhooks, slash commands, onboarding, audit log, threads, uploads, pins, and reactions received additional permission gates."
       ],
       "gaps": [
         "Effective permission inspector is not proven.",
         "Discord overwrite resolution behavior needs direct comparison tests.",
         "UI may expose role/override surfaces without proving end-to-end enforcement.",
-        "Role hierarchy, moderation hierarchy, search filtering, upload/pin/forum/reaction route gates, and webhook token exposure still need work."
+        "Role hierarchy, moderation hierarchy, search filtering, forum/recording/soundboard/e2ee/read-state route gates, and webhook token exposure still need work."
       ],
       "next_todos": [
         "Build effective permission report per user/channel.",
