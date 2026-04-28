@@ -8,10 +8,10 @@
 //! - POST /api/v1/webhooks/{token}/execute — Execute webhook (no auth, token-based)
 
 use axum::{
+    Json, Router,
     extract::{Path, State},
     http::StatusCode,
     routing::{delete, post},
-    Json, Router,
 };
 use chrono::{DateTime, Utc};
 use opencorde_core::{permissions::Permissions, snowflake::SnowflakeGenerator};
@@ -19,10 +19,12 @@ use opencorde_db::repos::{message_repo, webhook_repo};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
-use crate::routes::{helpers::parse_snowflake, moderation::audit_mod::log_mod_action, permission_check};
+use crate::routes::{
+    helpers::parse_snowflake, moderation::audit_mod::log_mod_action, permission_check,
+};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
-/// Public response for a webhook (excludes sensitive data).
+/// Creation response for a webhook. This is the only response that exposes the execution token.
 #[derive(Debug, Serialize)]
 pub struct WebhookResponse {
     pub id: String,
@@ -31,6 +33,17 @@ pub struct WebhookResponse {
     pub name: String,
     pub token: String,
     pub url: String,
+    pub created_by: String,
+    pub created_at: DateTime<Utc>,
+}
+
+/// List response for webhooks. Tokens are only returned at creation time.
+#[derive(Debug, Serialize)]
+pub struct WebhookListResponse {
+    pub id: String,
+    pub channel_id: String,
+    pub server_id: String,
+    pub name: String,
     pub created_by: String,
     pub created_at: DateTime<Utc>,
 }
@@ -73,6 +86,18 @@ fn webhook_row_to_response(row: webhook_repo::WebhookRow) -> WebhookResponse {
     }
 }
 
+/// Convert WebhookRow to a token-free list response.
+fn webhook_row_to_list_response(row: webhook_repo::WebhookRow) -> WebhookListResponse {
+    WebhookListResponse {
+        id: row.id.to_string(),
+        channel_id: row.channel_id.to_string(),
+        server_id: row.server_id.to_string(),
+        name: row.name,
+        created_by: row.created_by.to_string(),
+        created_at: row.created_at,
+    }
+}
+
 /// POST /api/v1/channels/{channel_id}/webhooks — Create a new webhook.
 ///
 /// Requires authentication. Returns 201 with the created webhook.
@@ -87,14 +112,12 @@ async fn create_webhook(
     tracing::debug!(channel_id = channel_id_sf.as_i64(), "parsed channel id");
 
     // Verify channel exists and get server_id
-    let channel_row: (i64,) = sqlx::query_as(
-        "SELECT server_id FROM channels WHERE id = $1"
-    )
-    .bind(channel_id_sf.as_i64())
-    .fetch_optional(&state.db)
-    .await
-    .map_err(ApiError::Database)?
-    .ok_or_else(|| ApiError::NotFound("channel not found".into()))?;
+    let channel_row: (i64,) = sqlx::query_as("SELECT server_id FROM channels WHERE id = $1")
+        .bind(channel_id_sf.as_i64())
+        .fetch_optional(&state.db)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("channel not found".into()))?;
 
     let server_id_sf = opencorde_core::snowflake::Snowflake::new(channel_row.0);
 
@@ -144,7 +167,7 @@ async fn list_webhooks(
     State(state): State<AppState>,
     auth: AuthUser,
     Path(channel_id): Path<String>,
-) -> Result<Json<Vec<WebhookResponse>>, ApiError> {
+) -> Result<Json<Vec<WebhookListResponse>>, ApiError> {
     let channel_id_sf = parse_snowflake(&channel_id)?;
     tracing::debug!(channel_id = channel_id_sf.as_i64(), "listing webhooks");
 
@@ -160,7 +183,10 @@ async fn list_webhooks(
         .await
         .map_err(ApiError::Database)?;
 
-    let responses = webhooks.into_iter().map(webhook_row_to_response).collect();
+    let responses = webhooks
+        .into_iter()
+        .map(webhook_row_to_list_response)
+        .collect();
     Ok(Json(responses))
 }
 
@@ -196,7 +222,14 @@ async fn delete_webhook(
 
     tracing::info!(webhook_id = webhook_id_sf.as_i64(), "webhook deleted");
     let server_id_sf = opencorde_core::Snowflake::new(webhook.server_id);
-    log_mod_action(&state, server_id_sf, auth.user_id, "webhook.delete", webhook_id_sf.as_i64()).await;
+    log_mod_action(
+        &state,
+        server_id_sf,
+        auth.user_id,
+        "webhook.delete",
+        webhook_id_sf.as_i64(),
+    )
+    .await;
     Ok(StatusCode::NO_CONTENT)
 }
 

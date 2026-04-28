@@ -190,7 +190,7 @@
         "Effective permission inspector is not proven.",
         "Discord overwrite resolution behavior needs direct comparison tests.",
         "UI may expose role/override surfaces without proving end-to-end enforcement.",
-        "Role hierarchy, moderation hierarchy, events route gates, E2EE key-package consumption design, and webhook token exposure still need work."
+        "Role hierarchy, moderation hierarchy, events route gates, and E2EE key-package consumption design still need work."
       ],
       "next_todos": [
         "Build effective permission report per user/channel.",

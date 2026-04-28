@@ -26,6 +26,7 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 - `webhooks`
   - Create/list/delete now require channel `MANAGE_WEBHOOKS`.
   - Delete is no longer limited to creator-only; authorized webhook managers can delete.
+  - List responses no longer expose webhook execution tokens; tokens are returned only at creation time.
 
 - `slash_commands`
   - Create/delete now require server `MANAGE_SERVER` instead of owner-only.
@@ -99,8 +100,6 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 - More channel-scoped routes still need audit/fixes:
   - events
   - E2EE key-package consumption needs a channel/member-scoped design before hardening.
-
-- Webhook response shape still exposes token in list responses. This is now restricted to `MANAGE_WEBHOOKS`, but token exposure should still be hardened so tokens are only shown on creation/regeneration.
 
 - Stage permissions still need a deeper model:
   - `CONNECT`
