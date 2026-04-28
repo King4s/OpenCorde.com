@@ -9,12 +9,15 @@
 //! - opencorde_db::repos::event_repo
 //! - crate::middleware::auth::AuthUser
 
-use axum::{extract::{Path, State}, http::StatusCode};
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+};
 use opencorde_db::repos::event_repo;
 use tracing::instrument;
 
+use super::handlers::{parse_snowflake_id, require_event_visible};
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
-use super::handlers::parse_snowflake_id;
 
 /// POST /api/v1/events/{event_id}/rsvp — RSVP to an event.
 #[instrument(skip(state, auth), fields(user_id = %auth.user_id))]
@@ -26,6 +29,11 @@ pub(super) async fn rsvp(
     tracing::info!("adding rsvp");
 
     let event_id_sf = parse_snowflake_id(&event_id)?;
+    let event = event_repo::get_by_id(&state.db, event_id_sf)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("Event not found".into()))?;
+    require_event_visible(&state, &auth, &event).await?;
 
     event_repo::rsvp(&state.db, event_id_sf, auth.user_id)
         .await
@@ -45,6 +53,11 @@ pub(super) async fn un_rsvp(
     tracing::info!("removing rsvp");
 
     let event_id_sf = parse_snowflake_id(&event_id)?;
+    let event = event_repo::get_by_id(&state.db, event_id_sf)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("Event not found".into()))?;
+    require_event_visible(&state, &auth, &event).await?;
 
     event_repo::un_rsvp(&state.db, event_id_sf, auth.user_id)
         .await

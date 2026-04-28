@@ -36,6 +36,30 @@
     }
   },
   {
+    "name": "nonmember cannot list server events",
+    "method": "GET",
+    "url": "/api/v1/servers/293907048062648321/events",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "nonmember cannot create server event",
+    "method": "POST",
+    "url": "/api/v1/servers/293907048062648321/events",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
     "name": "nonmember cannot list soundboard",
     "method": "GET",
     "url": "/api/v1/servers/293907048062648321/soundboard",
@@ -182,7 +206,7 @@
   {
     "name": "nonmember cannot pin channel message",
     "method": "PUT",
-    "url": "/api/v1/channels/293907048134082561/pins/307633846353264641",
+    "url": "/api/v1/channels/293907048134082561/pins/307635178241916929",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -194,7 +218,7 @@
   {
     "name": "nonmember cannot list message reactions",
     "method": "GET",
-    "url": "/api/v1/messages/307633846353264641/reactions",
+    "url": "/api/v1/messages/307635178241916929/reactions",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -206,7 +230,7 @@
   {
     "name": "nonmember search cannot see private server messages",
     "method": "GET",
-    "url": "/api/v1/search?q=permsearch1777412824&server_id=293907048062648321&limit=10",
+    "url": "/api/v1/search?q=permsearch1777413142&server_id=293907048062648321&limit=10",
     "expectedStatus": 200,
     "actualStatus": 200,
     "ok": true,

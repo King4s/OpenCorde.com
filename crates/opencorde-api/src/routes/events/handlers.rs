@@ -19,18 +19,20 @@
 
 use axum::{
     Json, Router,
-    extract::{Path, State, Query},
+    extract::{Path, Query, State},
     http::StatusCode,
     routing::{get, post},
 };
 use chrono::Utc;
+use opencorde_core::permissions::Permissions;
 use opencorde_db::repos::event_repo;
 use std::collections::HashMap;
 use tracing::instrument;
 
+use crate::routes::permission_check;
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
-use super::types::{EventResponse, CreateEventRequest, UpdateEventRequest};
+use super::types::{CreateEventRequest, EventResponse, UpdateEventRequest};
 
 /// Parse a Snowflake ID from a string path parameter.
 pub(super) fn parse_snowflake_id(id_str: &str) -> Result<opencorde_core::Snowflake, ApiError> {
@@ -84,6 +86,49 @@ fn event_row_to_response(row: event_repo::EventRow) -> EventResponse {
     }
 }
 
+pub(super) async fn require_event_visible(
+    state: &AppState,
+    auth: &AuthUser,
+    event: &event_repo::EventRow,
+) -> Result<(), ApiError> {
+    if let Some(channel_id) = event.channel_id {
+        permission_check::require_channel_perm(
+            &state.db,
+            auth.user_id,
+            opencorde_core::Snowflake::new(channel_id),
+            Permissions::VIEW_CHANNEL,
+        )
+        .await
+    } else {
+        permission_check::require_server_perm(
+            &state.db,
+            auth.user_id,
+            opencorde_core::Snowflake::new(event.server_id),
+            Permissions::VIEW_CHANNEL,
+        )
+        .await
+    }
+}
+
+async fn require_event_manager_or_creator(
+    state: &AppState,
+    auth: &AuthUser,
+    event: &event_repo::EventRow,
+) -> Result<(), ApiError> {
+    require_event_visible(state, auth, event).await?;
+    if event.creator_id == auth.user_id.as_i64() {
+        return Ok(());
+    }
+
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        opencorde_core::Snowflake::new(event.server_id),
+        Permissions::MANAGE_EVENTS,
+    )
+    .await
+}
+
 /// POST /api/v1/servers/{server_id}/events — Create a new event.
 #[instrument(skip(state, auth), fields(user_id = %auth.user_id))]
 async fn create_event(
@@ -97,25 +142,59 @@ async fn create_event(
     // Parse server ID
     let server_id_sf = parse_snowflake_id(&server_id)?;
 
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id_sf,
+        Permissions::CREATE_EVENTS,
+    )
+    .await?;
+
     // Validate title
     if req.title.is_empty() || req.title.len() > 100 {
-        return Err(ApiError::BadRequest("Title must be 1-100 characters".to_string()));
+        return Err(ApiError::BadRequest(
+            "Title must be 1-100 characters".to_string(),
+        ));
     }
 
     // Validate starts_at is in the future
     if req.starts_at < Utc::now() {
-        return Err(ApiError::BadRequest("Event start time must be in the future".to_string()));
+        return Err(ApiError::BadRequest(
+            "Event start time must be in the future".to_string(),
+        ));
     }
 
     // Validate ends_at is after starts_at if provided
     if let Some(ends_at) = req.ends_at
-        && ends_at < req.starts_at {
-            return Err(ApiError::BadRequest("Event end time must be after start time".to_string()));
-        }
+        && ends_at < req.starts_at
+    {
+        return Err(ApiError::BadRequest(
+            "Event end time must be after start time".to_string(),
+        ));
+    }
 
     // Parse channel_id if provided
     let channel_id = if let Some(ch_str) = &req.channel_id {
-        Some(parse_snowflake_id(ch_str)?)
+        let channel_id = parse_snowflake_id(ch_str)?;
+        permission_check::require_channel_perm(
+            &state.db,
+            auth.user_id,
+            channel_id,
+            Permissions::VIEW_CHANNEL,
+        )
+        .await?;
+        let channel_server_id: Option<i64> =
+            sqlx::query_scalar("SELECT server_id FROM channels WHERE id = $1")
+                .bind(channel_id.as_i64())
+                .fetch_optional(&state.db)
+                .await
+                .map_err(ApiError::Database)?;
+        if channel_server_id != Some(server_id_sf.as_i64()) {
+            return Err(ApiError::BadRequest(
+                "channel does not belong to server".to_string(),
+            ));
+        }
+        Some(channel_id)
     } else {
         None
     };
@@ -172,14 +251,30 @@ async fn list_events(
     let include_past = params.get("past").map(|v| v == "true").unwrap_or(false);
     tracing::debug!(include_past = include_past, "parsed query params");
 
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id_sf,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
+
     let events = event_repo::list_by_server(&state.db, server_id_sf, include_past)
         .await
         .map_err(ApiError::Database)?;
 
     tracing::info!(count = events.len(), "events fetched");
 
-    let responses: Vec<EventResponse> =
-        events.into_iter().map(event_row_to_response).collect();
+    let mut responses = Vec::with_capacity(events.len());
+    for event in events {
+        match require_event_visible(&state, &auth, &event).await {
+            Ok(()) => responses.push(event_row_to_response(event)),
+            Err(ApiError::Forbidden | ApiError::NotFound(_)) => {
+                tracing::debug!(event_id = event.id, "filtered unauthorized event");
+            }
+            Err(err) => return Err(err),
+        }
+    }
 
     Ok(Json(responses))
 }
@@ -199,6 +294,8 @@ async fn get_event(
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("Event not found".to_string()))?;
+
+    require_event_visible(&state, &auth, &event).await?;
 
     let response = event_row_to_response(event);
     Ok(Json(response))
@@ -227,9 +324,7 @@ async fn update_event(
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("Event not found".to_string()))?;
 
-    if event.creator_id != auth.user_id.as_i64() {
-        return Err(ApiError::Forbidden);
-    }
+    require_event_manager_or_creator(&state, &auth, &event).await?;
 
     event_repo::update_status(&state.db, event_id_sf, &req.status)
         .await
@@ -256,9 +351,7 @@ async fn delete_event(
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("Event not found".to_string()))?;
 
-    if event.creator_id != auth.user_id.as_i64() {
-        return Err(ApiError::Forbidden);
-    }
+    require_event_manager_or_creator(&state, &auth, &event).await?;
 
     event_repo::delete_event(&state.db, event_id_sf)
         .await
@@ -267,4 +360,3 @@ async fn delete_event(
     tracing::info!(event_id = event_id_sf.as_i64(), "event deleted");
     Ok(StatusCode::NO_CONTENT)
 }
-

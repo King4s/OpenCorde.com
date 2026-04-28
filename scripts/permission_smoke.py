@@ -8,6 +8,7 @@ import json
 import os
 import re
 import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote
 
@@ -132,6 +133,24 @@ async def main() -> int:
                 "name": "nonmember cannot read onboarding",
                 "method": "GET",
                 "url": f"{API}/servers/{server_id}/onboarding",
+                "expect": 403,
+            },
+            {
+                "name": "nonmember cannot list server events",
+                "method": "GET",
+                "url": f"{API}/servers/{server_id}/events",
+                "expect": 403,
+            },
+            {
+                "name": "nonmember cannot create server event",
+                "method": "POST",
+                "url": f"{API}/servers/{server_id}/events",
+                "json": {
+                    "title": "permission smoke event",
+                    "starts_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+                    "location_type": "external",
+                    "location_name": "online",
+                },
                 "expect": 403,
             },
             {
