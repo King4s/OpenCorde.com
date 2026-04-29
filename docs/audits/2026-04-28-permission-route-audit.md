@@ -58,6 +58,10 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - Remove reaction now requires `VIEW_CHANNEL`.
   - List reactions now requires `VIEW_CHANNEL`.
 
+- `messages`
+  - Message authors can still delete their own messages.
+  - Non-author message deletion now requires channel `VIEW_CHANNEL` plus `MANAGE_MESSAGES`.
+
 - `search`
   - Message search now filters every hit through channel `VIEW_CHANNEL` before returning content.
   - Search over-fetches before filtering so authorized users still receive useful result counts.
@@ -187,6 +191,7 @@ Permission smoke coverage:
 - role batch reorder cannot move a role to the actor's own position: 403
 - server effective permission inspector returns owner permissions: 200
 - channel effective permission inspector returns channel permissions: 200
+- moderator can delete another user's message: 204
 - role hierarchy smoke: manager cannot create/edit roles with unheld permission bits, move a lower role to equal position, or delete own top role: 403
 - moderation hierarchy smoke: moderator cannot ban, timeout, or kick a same-position target: 403
 
@@ -194,5 +199,4 @@ Permission smoke coverage:
 
 - Add permission regression tests for non-member denial on invite/list/webhook/thread/voice routes.
 - Add route inventory JSON generated from Axum route declarations and permission annotations.
-- Add `MANAGE_MESSAGES` support for moderator message delete.
 - Implement role hierarchy and protected target rules.

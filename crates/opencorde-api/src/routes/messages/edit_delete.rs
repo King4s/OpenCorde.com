@@ -17,10 +17,11 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
 };
+use opencorde_core::permissions::Permissions;
 use opencorde_db::repos::message_repo;
 use tracing::instrument;
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::permission_check};
 
 use super::send_list::message_row_to_response;
 use super::types::{EditMessageRequest, MessageResponse};
@@ -115,7 +116,8 @@ pub async fn edit_message(
 
 /// DELETE /api/v1/messages/{id} — Delete a message.
 ///
-/// Requires authentication. Only the message author can delete their own messages.
+/// Requires authentication. Authors can delete their own messages; moderators
+/// with MANAGE_MESSAGES can delete messages from other users.
 ///
 /// Returns 204 No Content on success.
 #[instrument(skip(state, auth), fields(user_id = %auth.user_id))]
@@ -142,14 +144,15 @@ pub async fn delete_message(
             ApiError::NotFound("message not found".to_string())
         })?;
 
-    // Check ownership
+    // Check ownership or moderation permission.
     if message.author_id != auth.user_id.as_i64() {
-        tracing::warn!(
-            message_author = message.author_id,
-            user_id = auth.user_id.as_i64(),
-            "user is not message author"
-        );
-        return Err(ApiError::Forbidden);
+        permission_check::require_channel_perm(
+            &state.db,
+            auth.user_id,
+            opencorde_core::Snowflake::new(message.channel_id),
+            Permissions::VIEW_CHANNEL | Permissions::MANAGE_MESSAGES,
+        )
+        .await?;
     }
 
     // Delete message

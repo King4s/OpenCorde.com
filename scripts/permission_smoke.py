@@ -176,6 +176,20 @@ def cleanup_role_reorder_fixture(
     )
 
 
+def cleanup_moderated_message_fixture(
+    *,
+    message_id: int,
+    server_id: str,
+    limited_user_id: str,
+) -> None:
+    psql(
+        f"""
+        DELETE FROM messages WHERE id = {message_id};
+        DELETE FROM server_members WHERE user_id = {limited_user_id} AND server_id = {server_id};
+        """
+    )
+
+
 def decode_jwt_payload(token: str) -> dict:
     payload = token.split(".")[1]
     payload += "=" * (-len(payload) % 4)
@@ -688,6 +702,52 @@ async def main() -> int:
             print(
                 f"[{'PASS' if ok else 'FAIL'}] channel effective permission inspector returns channel permissions expected=200 actual={status}"
             )
+
+        if channel_id:
+            moderated_message_id = now_ms * 1000 + 501
+            cleanup_moderated_message_fixture(
+                message_id=moderated_message_id,
+                server_id=server_id,
+                limited_user_id=limited_user_id,
+            )
+            psql(
+                f"""
+                INSERT INTO server_members (user_id, server_id)
+                VALUES ({limited_user_id}, {server_id})
+                ON CONFLICT DO NOTHING;
+
+                INSERT INTO messages (id, channel_id, author_id, content)
+                VALUES ({moderated_message_id}, {channel_id}, {limited_user_id}, 'permission smoke moderated delete');
+                """
+            )
+            try:
+                status, data = await request_json(
+                    session,
+                    "DELETE",
+                    f"{API}/messages/{moderated_message_id}",
+                    headers=member_headers,
+                )
+                ok = status == 204
+                results.append(
+                    {
+                        "name": "moderator can delete another user's message",
+                        "method": "DELETE",
+                        "url": f"/api/v1/messages/{moderated_message_id}",
+                        "expectedStatus": 204,
+                        "actualStatus": status,
+                        "ok": ok,
+                        "response": data,
+                    }
+                )
+                print(
+                    f"[{'PASS' if ok else 'FAIL'}] moderator can delete another user's message expected=204 actual={status}"
+                )
+            finally:
+                cleanup_moderated_message_fixture(
+                    message_id=moderated_message_id,
+                    server_id=server_id,
+                    limited_user_id=limited_user_id,
+                )
 
         checks = [
             {
