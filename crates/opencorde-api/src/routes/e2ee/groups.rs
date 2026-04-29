@@ -100,6 +100,28 @@ pub async fn init_group(
     )
     .await?;
 
+    let mut member_welcomes = Vec::with_capacity(payload.member_welcomes.len());
+    for member in &payload.member_welcomes {
+        let member_id = helpers::parse_snowflake(&member.user_id)?;
+        permission_check::require_channel_perm(
+            &state.db,
+            member_id,
+            channel_id,
+            Permissions::VIEW_CHANNEL,
+        )
+        .await
+        .map_err(|_| {
+            tracing::warn!(
+                creator = auth.user_id.as_i64(),
+                member_id = member_id.as_i64(),
+                channel_id = channel_id.as_i64(),
+                "E2EE group init denied: welcome target cannot view channel"
+            );
+            ApiError::Forbidden
+        })?;
+        member_welcomes.push((member_id, base64_decode(&member.welcome_message)?));
+    }
+
     // Upsert creator's own group state (no welcome needed for creator)
     sqlx::query(
         r#"
@@ -117,10 +139,7 @@ pub async fn init_group(
     .map_err(ApiError::Database)?;
 
     // Insert welcome messages for each member
-    for member in &payload.member_welcomes {
-        let member_id = helpers::parse_snowflake(&member.user_id)?;
-        let welcome_bytes = base64_decode(&member.welcome_message)?;
-
+    for (member_id, welcome_bytes) in &member_welcomes {
         sqlx::query(
             r#"
             INSERT INTO e2ee_groups (channel_id, user_id, group_state, welcome_message)
@@ -132,7 +151,7 @@ pub async fn init_group(
         .bind(channel_id.as_i64())
         .bind(member_id.as_i64())
         .bind(&creator_state) // members receive current epoch state as placeholder
-        .bind(&welcome_bytes)
+        .bind(welcome_bytes)
         .execute(&state.db)
         .await
         .map_err(ApiError::Database)?;

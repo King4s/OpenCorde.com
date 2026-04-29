@@ -186,7 +186,7 @@
         "Role routes, permission bit definitions, channel override routes, RoleManager, RolePermissionsTab, and ChannelPermissionsTab names exist.",
         "Several backend routes call server or channel permission checks.",
         "First-pass hardening now blocks non-members from receiving default permissions in permission_check.",
-        "Voice, webhooks, slash commands, onboarding, audit log, threads, uploads, pins, reactions, search, forum, soundboard, recordings, E2EE groups, E2EE key packages, read-state, events, role-listing, role hierarchy, role permission subset checks, moderation target hierarchy, Discord-layered channel overwrite computation, channel list filtering, and channel override route gating received additional permission gates.",
+        "Voice, webhooks, slash commands, onboarding, audit log, threads, uploads, pins, reactions, search, forum, soundboard, recordings, E2EE groups, channel-scoped E2EE key packages, read-state, events, role-listing, role hierarchy, role permission subset checks, moderation target hierarchy, Discord-layered channel overwrite computation, channel list filtering, and channel override route gating received additional permission gates.",
         "Live API smoke now proves a private channel is hidden and denied without the allowed role, then visible and readable after the allowed role is assigned.",
         "Batch role reorder API now exists and validates role hierarchy before changing positions.",
         "Manager-gated server and channel effective permission inspector endpoints now return bitfields and permission names."
@@ -194,7 +194,7 @@
       "gaps": [
         "Discord overwrite resolution behavior has core precedence tests and live API private-channel proof, but still needs Playwright UI proof.",
         "UI may expose role/override surfaces without proving end-to-end enforcement.",
-        "Remaining self-escalation edge cases, UI proof for batch role reordering/effective permission inspection, and fully channel/group-scoped E2EE key-package consumption design still need work."
+        "Remaining self-escalation edge cases, UI proof for batch role reordering/effective permission inspection, and full MLS lifecycle proof still need work."
       ],
       "next_todos": [
         "Add test matrix for owner/admin/mod/member/muted/banned users.",

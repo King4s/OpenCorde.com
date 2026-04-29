@@ -83,13 +83,15 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 - `E2EE groups`
   - Init/update now require channel `VIEW_CHANNEL` plus `SEND_MESSAGES`.
   - Welcome fetch now requires channel `VIEW_CHANNEL`.
+  - Init now validates every welcome recipient against channel `VIEW_CHANNEL` before writing group state or welcome rows.
 
 - `read_state`
   - Channel ack now requires `VIEW_CHANNEL`.
   - Read-state list filters stale or unauthorized channel entries before returning them.
 
 - `E2EE key packages`
-  - Consuming another user's key package now requires the requester to share at least one server with the target user.
+  - Consuming another user's key package now requires a `channel_id` scope.
+  - The requester and target user must both have channel `VIEW_CHANNEL` for that scoped channel.
   - Users may still consume their own available package.
 
 - `events`
@@ -146,8 +148,6 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - self-escalation through powerful roles
   - UI proof for batch role reordering and effective permission inspector
 
-- E2EE key-package consumption is now server-co-membership gated, but a more precise channel/group-scoped design is still needed for full MLS parity.
-
 - Stage permissions still need a deeper model:
   - `MOVE_MEMBERS`
   - realtime/client proof that promoted or demoted stage users refresh RTC grants correctly
@@ -180,9 +180,11 @@ Permission smoke coverage:
 - non-member cannot send typing indicator: 403
 - non-member cannot list/create server events: 403
 - non-member cannot list server roles: 403
-- non-member cannot consume unrelated user key package: 403
+- non-member cannot consume channel-scoped user key package: 403
 - private channel hidden from member without allowed role: 200 without channel in list
 - private channel messages denied without allowed role: 403
+- private channel scoped key package denied without view: 403
+- private channel E2EE init denies welcome for hidden member: 403
 - private channel visible with allowed role: 200 with channel in list
 - private channel messages allowed with allowed role: 200
 - voice member with `CONNECT` but denied `SPEAK` receives join LiveKit token with `canPublish=false`

@@ -10,13 +10,19 @@
 //! - crate::middleware::auth::AuthUser (authentication)
 //! - crate::AppState (application state)
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::helpers};
+use crate::{
+    AppState,
+    error::ApiError,
+    middleware::auth::AuthUser,
+    routes::{helpers, permission_check},
+};
 use axum::{
     Json, Router,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     routing::{get, post},
 };
+use opencorde_core::permissions::Permissions;
 use serde::{Deserialize, Serialize};
 use sqlx::Row;
 use tracing::instrument;
@@ -35,6 +41,12 @@ pub struct KeyPackageResponse {
     pub id: i64,
     /// Base64-encoded TLS-serialized OpenMLS KeyPackage
     pub key_package: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ConsumeKeyPackageQuery {
+    /// Channel where the target user is being added to an E2EE group.
+    pub channel_id: Option<String>,
 }
 
 pub fn router() -> Router<AppState> {
@@ -82,28 +94,45 @@ pub async fn consume_key_package(
     State(state): State<AppState>,
     auth: AuthUser,
     Path(user_id_str): Path<String>,
+    Query(query): Query<ConsumeKeyPackageQuery>,
 ) -> Result<Json<KeyPackageResponse>, ApiError> {
     let target_id = helpers::parse_snowflake(&user_id_str)?;
     if target_id != auth.user_id {
-        let shared_server: Option<i64> = sqlx::query_scalar(
-            "SELECT 1 FROM server_members requester \
-             INNER JOIN server_members target ON target.server_id = requester.server_id \
-             WHERE requester.user_id = $1 AND target.user_id = $2 LIMIT 1",
-        )
-        .bind(auth.user_id.as_i64())
-        .bind(target_id.as_i64())
-        .fetch_optional(&state.db)
-        .await
-        .map_err(ApiError::Database)?;
+        let channel_id = query
+            .channel_id
+            .as_deref()
+            .ok_or_else(|| {
+                ApiError::BadRequest(
+                    "channel_id query parameter is required when consuming another user's key package"
+                        .into(),
+                )
+            })
+            .and_then(helpers::parse_snowflake)?;
 
-        if shared_server.is_none() {
+        permission_check::require_channel_perm(
+            &state.db,
+            auth.user_id,
+            channel_id,
+            Permissions::VIEW_CHANNEL,
+        )
+        .await?;
+
+        permission_check::require_channel_perm(
+            &state.db,
+            target_id,
+            channel_id,
+            Permissions::VIEW_CHANNEL,
+        )
+        .await
+        .map_err(|_| {
             tracing::warn!(
                 requester = auth.user_id.as_i64(),
                 target_user = target_id.as_i64(),
-                "key package consume denied: users share no server"
+                channel_id = channel_id.as_i64(),
+                "key package consume denied: target cannot view scoped channel"
             );
-            return Err(ApiError::Forbidden);
-        }
+            ApiError::Forbidden
+        })?;
     }
 
     // Atomically select and mark one available package as consumed

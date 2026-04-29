@@ -320,6 +320,56 @@ async def main() -> int:
                 f"[{'PASS' if denied_messages else 'FAIL'}] private channel messages denied without allowed role expected=403 actual={status}"
             )
 
+            status, data = await request_json(
+                session,
+                "GET",
+                f"{API}/users/{member_id}/key-packages/one?channel_id={private_channel_id}",
+                headers=limited_headers,
+            )
+            key_package_denied = status == 403
+            results.append(
+                {
+                    "name": "private channel scoped key package denied without view",
+                    "method": "GET",
+                    "url": f"/api/v1/users/{member_id}/key-packages/one?channel_id={private_channel_id}",
+                    "expectedStatus": 403,
+                    "actualStatus": status,
+                    "ok": key_package_denied,
+                    "response": data,
+                }
+            )
+            print(
+                f"[{'PASS' if key_package_denied else 'FAIL'}] private channel scoped key package denied without view expected=403 actual={status}"
+            )
+
+            status, data = await request_json(
+                session,
+                "POST",
+                f"{API}/channels/{private_channel_id}/e2ee/init",
+                headers=member_headers,
+                json={
+                    "group_state": "AQ",
+                    "member_welcomes": [
+                        {"user_id": limited_user_id, "welcome_message": "AQ"},
+                    ],
+                },
+            )
+            welcome_denied = status == 403
+            results.append(
+                {
+                    "name": "private channel e2ee init denies welcome for hidden member",
+                    "method": "POST",
+                    "url": f"/api/v1/channels/{private_channel_id}/e2ee/init",
+                    "expectedStatus": 403,
+                    "actualStatus": status,
+                    "ok": welcome_denied,
+                    "response": data,
+                }
+            )
+            print(
+                f"[{'PASS' if welcome_denied else 'FAIL'}] private channel e2ee init denies welcome for hidden member expected=403 actual={status}"
+            )
+
             psql(
                 f"""
                 INSERT INTO member_roles (user_id, server_id, role_id)
@@ -908,12 +958,6 @@ async def main() -> int:
                 "expect": 403,
             },
             {
-                "name": "nonmember cannot consume unrelated user key package",
-                "method": "GET",
-                "url": f"{API}/users/{member_id}/key-packages/one",
-                "expect": 403,
-            },
-            {
                 "name": "nonmember cannot list server events",
                 "method": "GET",
                 "url": f"{API}/servers/{server_id}/events",
@@ -961,6 +1005,12 @@ async def main() -> int:
         if channel_id:
             checks.extend(
                 [
+                    {
+                        "name": "nonmember cannot consume channel scoped user key package",
+                        "method": "GET",
+                        "url": f"{API}/users/{member_id}/key-packages/one?channel_id={channel_id}",
+                        "expect": 403,
+                    },
                     {
                         "name": "nonmember cannot list channel threads",
                         "method": "GET",

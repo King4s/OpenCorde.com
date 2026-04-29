@@ -82,7 +82,9 @@ import ChannelPermissionsTab from './ChannelPermissionsTab.svelte';
 				const kpMap = new Map<string, string>();
 				for (const m of members) {
 					try {
-						const kpRes = await api.get<{ key_package: string }>(`/users/${m.id}/key-packages/one`);
+						const kpRes = await api.get<{ key_package: string }>(
+							`/users/${m.id}/key-packages/one?channel_id=${encodeURIComponent(channelId)}`
+						);
 						kpMap.set(m.id, kpRes.key_package);
 					} catch { /* member has no key package */ }
 				}
