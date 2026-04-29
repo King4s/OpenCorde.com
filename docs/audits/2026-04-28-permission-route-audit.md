@@ -106,11 +106,19 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - Channel overwrites now follow Discord precedence layers: `@everyone` first, aggregate matching role denies/allows next, member overwrite last.
   - Added core tests for aggregate role overwrite behavior and `@everyone` precedence.
 
+- `channels`
+  - Server channel listing now requires server membership through `VIEW_CHANNEL`.
+  - Channel listing filters every returned channel through channel `VIEW_CHANNEL`, so private channels are hidden from members denied by overwrites.
+
+- `channel_overrides`
+  - Listing permission overrides now requires channel `VIEW_CHANNEL`, preventing private-channel override metadata leaks to ordinary server members.
+  - Upsert/delete now require channel `MANAGE_CHANNELS`, so channel overwrites affect override management consistently.
+
 ## Still Open
 
 - Channel overwrite computation still needs closer Discord parity:
   - member overwrite precedence tests
-  - API smoke proving private-channel deny/allow workflows with real users
+  - Playwright UI proof for private-channel deny/allow workflows
 
 - Role hierarchy still needs deeper Discord parity:
   - role reordering batch semantics
@@ -154,6 +162,10 @@ Permission smoke coverage:
 - non-member cannot list/create server events: 403
 - non-member cannot list server roles: 403
 - non-member cannot consume unrelated user key package: 403
+- private channel hidden from member without allowed role: 200 without channel in list
+- private channel messages denied without allowed role: 403
+- private channel visible with allowed role: 200 with channel in list
+- private channel messages allowed with allowed role: 200
 - role hierarchy smoke: manager cannot create/edit roles with unheld permission bits, move a lower role to equal position, or delete own top role: 403
 - moderation hierarchy smoke: moderator cannot ban, timeout, or kick a same-position target: 403
 

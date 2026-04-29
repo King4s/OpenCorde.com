@@ -1,5 +1,111 @@
 [
   {
+    "name": "private channel hidden from member without allowed role",
+    "method": "GET",
+    "url": "/api/v1/servers/293907048062648321/channels",
+    "expectedStatus": 200,
+    "actualStatus": 200,
+    "ok": true,
+    "response": [
+      {
+        "id": "293907048134082561",
+        "server_id": "293907048062648321",
+        "name": "general",
+        "channel_type": 0,
+        "topic": null,
+        "position": 0,
+        "parent_id": null,
+        "nsfw": false,
+        "slowmode_delay": 0,
+        "e2ee_enabled": false,
+        "created_at": "2026-03-22T00:41:40.805730Z"
+      },
+      {
+        "id": "294171116551933953",
+        "server_id": "293907048062648321",
+        "name": "General Voice",
+        "channel_type": 1,
+        "topic": null,
+        "position": 0,
+        "parent_id": null,
+        "nsfw": false,
+        "slowmode_delay": 0,
+        "e2ee_enabled": false,
+        "created_at": "2026-03-22T18:10:59.621735Z"
+      }
+    ]
+  },
+  {
+    "name": "private channel messages denied without allowed role",
+    "method": "GET",
+    "url": "/api/v1/channels/1777475732956101/messages",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "private channel visible with allowed role",
+    "method": "GET",
+    "url": "/api/v1/servers/293907048062648321/channels",
+    "expectedStatus": 200,
+    "actualStatus": 200,
+    "ok": true,
+    "response": [
+      {
+        "id": "293907048134082561",
+        "server_id": "293907048062648321",
+        "name": "general",
+        "channel_type": 0,
+        "topic": null,
+        "position": 0,
+        "parent_id": null,
+        "nsfw": false,
+        "slowmode_delay": 0,
+        "e2ee_enabled": false,
+        "created_at": "2026-03-22T00:41:40.805730Z"
+      },
+      {
+        "id": "294171116551933953",
+        "server_id": "293907048062648321",
+        "name": "General Voice",
+        "channel_type": 1,
+        "topic": null,
+        "position": 0,
+        "parent_id": null,
+        "nsfw": false,
+        "slowmode_delay": 0,
+        "e2ee_enabled": false,
+        "created_at": "2026-03-22T18:10:59.621735Z"
+      },
+      {
+        "id": "1777475732956101",
+        "server_id": "293907048062648321",
+        "name": "permission-private-smoke",
+        "channel_type": 0,
+        "topic": null,
+        "position": 9999,
+        "parent_id": null,
+        "nsfw": false,
+        "slowmode_delay": 0,
+        "e2ee_enabled": false,
+        "created_at": "2026-04-29T15:15:33.184297Z"
+      }
+    ]
+  },
+  {
+    "name": "private channel messages allowed with allowed role",
+    "method": "GET",
+    "url": "/api/v1/channels/1777475732956101/messages",
+    "expectedStatus": 200,
+    "actualStatus": 200,
+    "ok": true,
+    "response": []
+  },
+  {
     "name": "nonmember cannot create server invite",
     "method": "POST",
     "url": "/api/v1/servers/293907048062648321/invites",
@@ -230,7 +336,7 @@
   {
     "name": "nonmember cannot pin channel message",
     "method": "PUT",
-    "url": "/api/v1/channels/293907048134082561/pins/307818025590325249",
+    "url": "/api/v1/channels/293907048134082561/pins/307897705660022785",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -242,7 +348,7 @@
   {
     "name": "nonmember cannot list message reactions",
     "method": "GET",
-    "url": "/api/v1/messages/307818025590325249/reactions",
+    "url": "/api/v1/messages/307897705660022785/reactions",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -254,7 +360,7 @@
   {
     "name": "nonmember search cannot see private server messages",
     "method": "GET",
-    "url": "/api/v1/search?q=permsearch1777456736&server_id=293907048062648321&limit=10",
+    "url": "/api/v1/search?q=permsearch1777475733&server_id=293907048062648321&limit=10",
     "expectedStatus": 200,
     "actualStatus": 200,
     "ok": true,

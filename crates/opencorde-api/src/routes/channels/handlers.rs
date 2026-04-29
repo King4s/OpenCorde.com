@@ -24,8 +24,13 @@ use opencorde_core::permissions::Permissions;
 use opencorde_db::repos::channel_repo;
 use tracing::instrument;
 
+use crate::{
+    AppState,
+    error::ApiError,
+    middleware::auth::AuthUser,
+    routes::{moderation::audit_mod::log_mod_action, permission_check},
+};
 use opencorde_core::Snowflake;
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::{moderation::audit_mod::log_mod_action, permission_check}};
 use serde_json::json;
 
 use super::{
@@ -124,17 +129,30 @@ async fn create_channel(
     let nsfw = req.nsfw.unwrap_or(false);
 
     // Create channel in database
-    let channel_row =
-        channel_repo::create_channel(&state.db, channel_id, server_id_sf, &req.name, channel_type, nsfw)
-            .await
-            .map_err(ApiError::Database)?;
+    let channel_row = channel_repo::create_channel(
+        &state.db,
+        channel_id,
+        server_id_sf,
+        &req.name,
+        channel_type,
+        nsfw,
+    )
+    .await
+    .map_err(ApiError::Database)?;
 
     tracing::info!(
         channel_id = channel_row.id,
         server_id = channel_row.server_id,
         "channel created"
     );
-    log_mod_action(&state, server_id_sf, auth.user_id, "channel.create", channel_row.id).await;
+    log_mod_action(
+        &state,
+        server_id_sf,
+        auth.user_id,
+        "channel.create",
+        channel_row.id,
+    )
+    .await;
 
     let response = channel_row_to_response(channel_row);
     let event = json!({"type":"ChannelCreate","data":{"channel":&response}});
@@ -159,14 +177,35 @@ async fn list_channels(
     let server_id_sf = parse_snowflake_id(&server_id)?;
     tracing::debug!(server_id = server_id_sf.as_i64(), "parsed server id");
 
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id_sf,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
+
     let channels = channel_repo::list_by_server(&state.db, server_id_sf)
         .await
         .map_err(ApiError::Database)?;
 
     tracing::info!(count = channels.len(), "channels fetched");
 
-    let responses: Vec<ChannelResponse> =
-        channels.into_iter().map(channel_row_to_response).collect();
+    let mut responses = Vec::new();
+    for channel in channels {
+        let channel_id = Snowflake::new(channel.id);
+        if permission_check::require_channel_perm(
+            &state.db,
+            auth.user_id,
+            channel_id,
+            Permissions::VIEW_CHANNEL,
+        )
+        .await
+        .is_ok()
+        {
+            responses.push(channel_row_to_response(channel));
+        }
+    }
 
     Ok(Json(responses))
 }
@@ -244,7 +283,14 @@ async fn update_channel(
     .map_err(ApiError::Database)?;
 
     tracing::info!(channel_id = channel.id, "channel updated");
-    log_mod_action(&state, Snowflake::new(channel.server_id), auth.user_id, "channel.update", channel_id.as_i64()).await;
+    log_mod_action(
+        &state,
+        Snowflake::new(channel.server_id),
+        auth.user_id,
+        "channel.update",
+        channel_id.as_i64(),
+    )
+    .await;
 
     // Update position if provided
     if let Some(position) = req.position {
@@ -321,7 +367,14 @@ async fn delete_channel(
         .map_err(ApiError::Database)?;
 
     tracing::info!(channel_id = channel.id, "channel deleted");
-    log_mod_action(&state, Snowflake::new(channel.server_id), auth.user_id, "channel.delete", channel_id.as_i64()).await;
+    log_mod_action(
+        &state,
+        Snowflake::new(channel.server_id),
+        auth.user_id,
+        "channel.delete",
+        channel_id.as_i64(),
+    )
+    .await;
     let event = json!({"type":"ChannelDelete","data":{"server_id":channel.server_id.to_string(),"channel_id":channel_id.as_i64().to_string()}});
     if state.event_tx.send(event).is_err() {
         tracing::debug!("no WebSocket subscribers for ChannelDelete event");

@@ -14,19 +14,20 @@
 //! - opencorde_db::repos::{channel_override_repo, channel_repo, member_repo, role_repo}
 //! - crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::helpers}
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::helpers};
+use crate::{
+    AppState, error::ApiError, middleware::auth::AuthUser, routes::helpers,
+    routes::permission_check,
+};
 use axum::{
     Json, Router,
     extract::{Path, State},
     http::StatusCode,
     routing::{get, put},
 };
-use opencorde_db::repos::{channel_override_repo, channel_repo, member_repo, role_repo};
+use opencorde_core::permissions::Permissions;
+use opencorde_db::repos::{channel_override_repo, channel_repo};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
-
-const PERM_ADMINISTRATOR: i64 = 0x08;
-const PERM_MANAGE_CHANNELS: i64 = 0x10;
 
 /// Response shape for a single permission override.
 #[derive(Debug, Serialize)]
@@ -92,50 +93,6 @@ async fn get_server_id_for_channel(
     Ok(opencorde_core::Snowflake::new(channel.server_id))
 }
 
-/// Check that the calling user is a member of `server_id`.
-async fn require_member(
-    state: &AppState,
-    user_id: opencorde_core::Snowflake,
-    server_id: opencorde_core::Snowflake,
-) -> Result<(), ApiError> {
-    member_repo::get_member(&state.db, user_id, server_id)
-        .await
-        .map_err(ApiError::Database)?
-        .ok_or_else(|| ApiError::Forbidden)?;
-    Ok(())
-}
-
-/// Check that the calling user has MANAGE_CHANNELS or ADMINISTRATOR on the server.
-async fn require_manage_channels(
-    state: &AppState,
-    user_id: opencorde_core::Snowflake,
-    server_id: opencorde_core::Snowflake,
-) -> Result<(), ApiError> {
-    let member_roles = member_repo::list_member_roles(&state.db, user_id, server_id)
-        .await
-        .map_err(ApiError::Database)?;
-
-    for mr in &member_roles {
-        let role_sf = opencorde_core::Snowflake::new(mr.role_id);
-        if let Some(role) = role_repo::get_by_id(&state.db, role_sf)
-            .await
-            .map_err(ApiError::Database)?
-        {
-            let p = role.permissions;
-            if (p & PERM_ADMINISTRATOR) != 0 || (p & PERM_MANAGE_CHANNELS) != 0 {
-                return Ok(());
-            }
-        }
-    }
-
-    tracing::warn!(
-        user_id = user_id.as_i64(),
-        server_id = server_id.as_i64(),
-        "user lacks MANAGE_CHANNELS permission"
-    );
-    Err(ApiError::Forbidden)
-}
-
 /// GET /api/v1/channels/{channel_id}/permissions
 #[instrument(skip(state, auth), fields(user_id = %auth.user_id))]
 async fn list_overrides(
@@ -145,8 +102,14 @@ async fn list_overrides(
 ) -> Result<Json<Vec<OverrideResponse>>, ApiError> {
     tracing::info!("listing channel permission overrides");
     let channel_sf = helpers::parse_snowflake(&channel_id)?;
-    let server_sf = get_server_id_for_channel(&state, channel_sf).await?;
-    require_member(&state, auth.user_id, server_sf).await?;
+    get_server_id_for_channel(&state, channel_sf).await?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_sf,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
 
     let rows = channel_override_repo::list_for_channel(&state.db, channel_sf.as_i64())
         .await
@@ -168,8 +131,14 @@ async fn upsert_override(
     validate_target_type(&target_type)?;
     let channel_sf = helpers::parse_snowflake(&channel_id)?;
     let target_sf = helpers::parse_snowflake(&target_id)?;
-    let server_sf = get_server_id_for_channel(&state, channel_sf).await?;
-    require_manage_channels(&state, auth.user_id, server_sf).await?;
+    get_server_id_for_channel(&state, channel_sf).await?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_sf,
+        Permissions::MANAGE_CHANNELS,
+    )
+    .await?;
 
     let row = channel_override_repo::upsert(
         &state.db,
@@ -197,8 +166,14 @@ async fn delete_override(
     validate_target_type(&target_type)?;
     let channel_sf = helpers::parse_snowflake(&channel_id)?;
     let target_sf = helpers::parse_snowflake(&target_id)?;
-    let server_sf = get_server_id_for_channel(&state, channel_sf).await?;
-    require_manage_channels(&state, auth.user_id, server_sf).await?;
+    get_server_id_for_channel(&state, channel_sf).await?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_sf,
+        Permissions::MANAGE_CHANNELS,
+    )
+    .await?;
 
     channel_override_repo::delete(
         &state.db,

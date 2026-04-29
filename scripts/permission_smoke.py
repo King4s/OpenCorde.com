@@ -7,6 +7,7 @@ import asyncio
 import json
 import os
 import re
+import subprocess
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -24,6 +25,9 @@ MEMBER_PASSWORD = os.environ.get("OC_MEMBER_PASSWORD", "BrowserTest@99")
 NONMEMBER_USERNAME = os.environ.get("OC_NONMEMBER_USERNAME", "permission_nonmember")
 NONMEMBER_EMAIL = os.environ.get("OC_NONMEMBER_EMAIL", "permission-nonmember@opencorde.local")
 NONMEMBER_PASSWORD = os.environ.get("OC_NONMEMBER_PASSWORD", "PermissionSmoke@99")
+LIMITED_USERNAME = os.environ.get("OC_LIMITED_USERNAME", "permission_limited")
+LIMITED_EMAIL = os.environ.get("OC_LIMITED_EMAIL", "permission-limited@opencorde.local")
+LIMITED_PASSWORD = os.environ.get("OC_LIMITED_PASSWORD", "PermissionSmoke@99")
 
 
 async def request_json(session: aiohttp.ClientSession, method: str, url: str, **kwargs):
@@ -64,15 +68,73 @@ async def ensure_nonmember(session: aiohttp.ClientSession) -> str:
     return await login(session, NONMEMBER_EMAIL, NONMEMBER_PASSWORD)
 
 
+async def ensure_limited_user(session: aiohttp.ClientSession) -> str:
+    status, _data = await request_json(
+        session,
+        "POST",
+        f"{API}/auth/register",
+        json={
+            "username": LIMITED_USERNAME,
+            "email": LIMITED_EMAIL,
+            "password": LIMITED_PASSWORD,
+        },
+    )
+    if status not in (200, 201, 409):
+        raise RuntimeError(f"limited register failed: {status}")
+    return await login(session, LIMITED_EMAIL, LIMITED_PASSWORD)
+
+
+def psql(sql: str) -> None:
+    subprocess.run(
+        [
+            "docker",
+            "exec",
+            "opencorde-postgres",
+            "psql",
+            "-U",
+            "opencorde",
+            "-d",
+            "opencorde",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            sql,
+        ],
+        check=True,
+        stdout=subprocess.DEVNULL,
+    )
+
+
+def cleanup_private_channel_fixture(
+    *,
+    channel_id: int,
+    role_id: int,
+    server_id: str,
+    limited_user_id: str,
+) -> None:
+    psql(
+        f"""
+        DELETE FROM channel_permission_overrides WHERE channel_id = {channel_id};
+        DELETE FROM channels WHERE id = {channel_id};
+        DELETE FROM member_roles WHERE role_id = {role_id}
+           OR (user_id = {limited_user_id} AND server_id = {server_id});
+        DELETE FROM roles WHERE id = {role_id};
+        DELETE FROM server_members WHERE user_id = {limited_user_id} AND server_id = {server_id};
+        """
+    )
+
+
 async def main() -> int:
     results: list[dict] = []
 
     async with aiohttp.ClientSession() as session:
         member_token = await login(session, MEMBER_EMAIL, MEMBER_PASSWORD)
         nonmember_token = await ensure_nonmember(session)
+        limited_token = await ensure_limited_user(session)
 
         member_headers = {"Authorization": f"Bearer {member_token}"}
         nonmember_headers = {"Authorization": f"Bearer {nonmember_token}"}
+        limited_headers = {"Authorization": f"Bearer {limited_token}"}
 
         status, member_profile = await request_json(
             session,
@@ -96,6 +158,156 @@ async def main() -> int:
         if status != 200 or not servers:
             raise RuntimeError(f"member has no server baseline: {status} {servers}")
         server_id = servers[0]["id"]
+
+        status, limited_profile = await request_json(
+            session,
+            "GET",
+            f"{API}/users/@me",
+            headers=limited_headers,
+        )
+        if status != 200 or not limited_profile:
+            raise RuntimeError(f"limited profile baseline failed: {status} {limited_profile}")
+        limited_user_id = limited_profile["id"]
+
+        now_ms = int(time.time() * 1000)
+        private_channel_id = now_ms * 1000 + 101
+        allowed_role_id = now_ms * 1000 + 102
+        cleanup_private_channel_fixture(
+            channel_id=private_channel_id,
+            role_id=allowed_role_id,
+            server_id=server_id,
+            limited_user_id=limited_user_id,
+        )
+        psql(
+            f"""
+            INSERT INTO server_members (user_id, server_id)
+            VALUES ({limited_user_id}, {server_id})
+            ON CONFLICT DO NOTHING;
+
+            INSERT INTO channels (id, server_id, name, channel_type, position)
+            VALUES ({private_channel_id}, {server_id}, 'permission-private-smoke', 0, 9999);
+
+            INSERT INTO roles (id, server_id, name, permissions, position)
+            VALUES ({allowed_role_id}, {server_id}, 'permission-private-allow', {1 << 10}, 10);
+
+            INSERT INTO channel_permission_overrides (channel_id, target_type, target_id, allow_bits, deny_bits)
+            VALUES
+              ({private_channel_id}, 'role', {server_id}, 0, {1 << 10}),
+              ({private_channel_id}, 'role', {allowed_role_id}, {1 << 10}, 0);
+            """
+        )
+
+        try:
+            status, limited_channels = await request_json(
+                session,
+                "GET",
+                f"{API}/servers/{server_id}/channels",
+                headers=limited_headers,
+            )
+            hidden_from_list = (
+                status == 200
+                and isinstance(limited_channels, list)
+                and str(private_channel_id) not in {c.get("id") for c in limited_channels if isinstance(c, dict)}
+            )
+            results.append(
+                {
+                    "name": "private channel hidden from member without allowed role",
+                    "method": "GET",
+                    "url": f"/api/v1/servers/{server_id}/channels",
+                    "expectedStatus": 200,
+                    "actualStatus": status,
+                    "ok": hidden_from_list,
+                    "response": limited_channels,
+                }
+            )
+            print(
+                f"[{'PASS' if hidden_from_list else 'FAIL'}] private channel hidden from member without allowed role expected=200 actual={status}"
+            )
+
+            status, data = await request_json(
+                session,
+                "GET",
+                f"{API}/channels/{private_channel_id}/messages",
+                headers=limited_headers,
+            )
+            denied_messages = status == 403
+            results.append(
+                {
+                    "name": "private channel messages denied without allowed role",
+                    "method": "GET",
+                    "url": f"/api/v1/channels/{private_channel_id}/messages",
+                    "expectedStatus": 403,
+                    "actualStatus": status,
+                    "ok": denied_messages,
+                    "response": data,
+                }
+            )
+            print(
+                f"[{'PASS' if denied_messages else 'FAIL'}] private channel messages denied without allowed role expected=403 actual={status}"
+            )
+
+            psql(
+                f"""
+                INSERT INTO member_roles (user_id, server_id, role_id)
+                VALUES ({limited_user_id}, {server_id}, {allowed_role_id})
+                ON CONFLICT DO NOTHING;
+                """
+            )
+
+            status, limited_channels = await request_json(
+                session,
+                "GET",
+                f"{API}/servers/{server_id}/channels",
+                headers=limited_headers,
+            )
+            visible_in_list = (
+                status == 200
+                and isinstance(limited_channels, list)
+                and str(private_channel_id) in {c.get("id") for c in limited_channels if isinstance(c, dict)}
+            )
+            results.append(
+                {
+                    "name": "private channel visible with allowed role",
+                    "method": "GET",
+                    "url": f"/api/v1/servers/{server_id}/channels",
+                    "expectedStatus": 200,
+                    "actualStatus": status,
+                    "ok": visible_in_list,
+                    "response": limited_channels,
+                }
+            )
+            print(
+                f"[{'PASS' if visible_in_list else 'FAIL'}] private channel visible with allowed role expected=200 actual={status}"
+            )
+
+            status, data = await request_json(
+                session,
+                "GET",
+                f"{API}/channels/{private_channel_id}/messages",
+                headers=limited_headers,
+            )
+            allowed_messages = status == 200
+            results.append(
+                {
+                    "name": "private channel messages allowed with allowed role",
+                    "method": "GET",
+                    "url": f"/api/v1/channels/{private_channel_id}/messages",
+                    "expectedStatus": 200,
+                    "actualStatus": status,
+                    "ok": allowed_messages,
+                    "response": data,
+                }
+            )
+            print(
+                f"[{'PASS' if allowed_messages else 'FAIL'}] private channel messages allowed with allowed role expected=200 actual={status}"
+            )
+        finally:
+            cleanup_private_channel_fixture(
+                channel_id=private_channel_id,
+                role_id=allowed_role_id,
+                server_id=server_id,
+                limited_user_id=limited_user_id,
+            )
 
         status, channels = await request_json(
             session,
