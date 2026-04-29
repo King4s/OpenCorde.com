@@ -99,33 +99,42 @@ pub async fn require_channel_perm(
     channel_id: Snowflake,
     required: Permissions,
 ) -> Result<(), ApiError> {
-    // Resolve channel → server_id
-    let row: Option<(i64,)> = sqlx::query_as("SELECT server_id FROM channels WHERE id = $1")
-        .bind(channel_id.as_i64())
-        .fetch_optional(pool)
-        .await
-        .map_err(ApiError::Database)?;
+    let effective = effective_channel_perms(pool, user_id, channel_id).await?;
 
-    let (server_id_raw,) = row.ok_or_else(|| ApiError::NotFound("channel not found".into()))?;
-    let server_id = Snowflake::new(server_id_raw);
+    if effective.contains(required) {
+        return Ok(());
+    }
 
-    // Owner bypass
+    tracing::warn!(required = ?required, "channel permission denied");
+    Err(ApiError::Forbidden)
+}
+
+/// Compute effective channel-level permissions for a user.
+///
+/// Resolves server membership and role base permissions, then applies channel
+/// overwrites using the same Discord-compatible precedence as route checks.
+pub async fn effective_channel_perms(
+    pool: &PgPool,
+    user_id: Snowflake,
+    channel_id: Snowflake,
+) -> Result<Permissions, ApiError> {
+    let server_id = resolve_channel_server(pool, channel_id).await?;
+
     let server = server_repo::get_by_id(pool, server_id)
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
 
     if server.owner_id == user_id.as_i64() {
-        return Ok(());
+        return Ok(Permissions::all());
     }
 
     let base = compute_base_perms(pool, user_id, server_id).await?;
 
     if base.contains(Permissions::ADMINISTRATOR) {
-        return Ok(());
+        return Ok(Permissions::all());
     }
 
-    // Get user's role IDs for overwrite matching
     let member_roles = member_repo::list_member_roles(pool, user_id, server_id)
         .await
         .map_err(ApiError::Database)?;
@@ -134,7 +143,6 @@ pub async fn require_channel_perm(
         .map(|r| Snowflake::new(r.role_id))
         .collect();
 
-    // Load and convert channel permission overrides
     let raw = channel_override_repo::list_for_channel(pool, channel_id.as_i64())
         .await
         .map_err(ApiError::Database)?;
@@ -153,14 +161,27 @@ pub async fn require_channel_perm(
         })
         .collect();
 
-    let effective = compute_permissions(base, &overwrites, user_id, &role_ids, Some(server_id));
+    Ok(compute_permissions(
+        base,
+        &overwrites,
+        user_id,
+        &role_ids,
+        Some(server_id),
+    ))
+}
 
-    if effective.contains(required) {
-        return Ok(());
-    }
+pub async fn resolve_channel_server(
+    pool: &PgPool,
+    channel_id: Snowflake,
+) -> Result<Snowflake, ApiError> {
+    let row: Option<(i64,)> = sqlx::query_as("SELECT server_id FROM channels WHERE id = $1")
+        .bind(channel_id.as_i64())
+        .fetch_optional(pool)
+        .await
+        .map_err(ApiError::Database)?;
 
-    tracing::warn!(required = ?required, "channel permission denied");
-    Err(ApiError::Forbidden)
+    let (server_id_raw,) = row.ok_or_else(|| ApiError::NotFound("channel not found".into()))?;
+    Ok(Snowflake::new(server_id_raw))
 }
 
 /// Compute a user's server-level permissions by OR-ing all their role bits.

@@ -46,6 +46,7 @@ pub mod moderation;
 pub mod notification_settings;
 pub mod onboarding;
 pub mod permission_check;
+pub mod permissions;
 pub mod pins;
 pub mod reactions;
 pub mod read_state;
@@ -88,6 +89,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(mesh::router())
         .merge(federation::router())
         .merge(onboarding::router())
+        .merge(permissions::router())
         .merge(roles::router())
         .merge(messages::router())
         .merge(threads::router())

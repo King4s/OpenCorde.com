@@ -639,6 +639,56 @@ async def main() -> int:
             else:
                 search_term = None
 
+        status, data = await request_json(
+            session,
+            "GET",
+            f"{API}/servers/{server_id}/permissions/{member_id}/effective",
+            headers=member_headers,
+        )
+        ok = status == 200 and isinstance(data, dict) and "ADMINISTRATOR" in data.get("names", [])
+        results.append(
+            {
+                "name": "server effective permission inspector returns owner permissions",
+                "method": "GET",
+                "url": f"/api/v1/servers/{server_id}/permissions/{member_id}/effective",
+                "expectedStatus": 200,
+                "actualStatus": status,
+                "ok": ok,
+                "response": data,
+            }
+        )
+        print(
+            f"[{'PASS' if ok else 'FAIL'}] server effective permission inspector returns owner permissions expected=200 actual={status}"
+        )
+
+        if channel_id:
+            status, data = await request_json(
+                session,
+                "GET",
+                f"{API}/channels/{channel_id}/permissions/{member_id}/effective",
+                headers=member_headers,
+            )
+            ok = (
+                status == 200
+                and isinstance(data, dict)
+                and data.get("channel_id") == channel_id
+                and "VIEW_CHANNEL" in data.get("names", [])
+            )
+            results.append(
+                {
+                    "name": "channel effective permission inspector returns channel permissions",
+                    "method": "GET",
+                    "url": f"/api/v1/channels/{channel_id}/permissions/{member_id}/effective",
+                    "expectedStatus": 200,
+                    "actualStatus": status,
+                    "ok": ok,
+                    "response": data,
+                }
+            )
+            print(
+                f"[{'PASS' if ok else 'FAIL'}] channel effective permission inspector returns channel permissions expected=200 actual={status}"
+            )
+
         checks = [
             {
                 "name": "nonmember cannot create server invite",

@@ -106,6 +106,7 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 - `permission_compute`
   - Channel overwrites now follow Discord precedence layers: `@everyone` first, aggregate matching role denies/allows next, member overwrite last.
   - Added core tests for aggregate role overwrite behavior and `@everyone` precedence.
+  - Added member-specific deny precedence regression coverage.
 
 - `channels`
   - Server channel listing now requires server membership through `VIEW_CHANNEL`.
@@ -126,15 +127,18 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - Raising hand requires an active session, existing participant row, channel `CONNECT`, and `REQUEST_TO_SPEAK`.
   - Speaker promotion/demotion requires the starter or channel `MUTE_MEMBERS`; promotion also verifies the target has channel `SPEAK`.
 
+- `effective permissions`
+  - Added manager-gated server and channel effective permission inspector endpoints.
+  - Server inspector returns role-derived effective permissions with owner/administrator resolving to all known bits.
+  - Channel inspector applies the same overwrite computation used by route enforcement and returns both bitfield and permission names.
+
 ## Still Open
 
-- Channel overwrite computation still needs closer Discord parity:
-  - member overwrite precedence tests
-  - Playwright UI proof for private-channel deny/allow workflows
+- Channel overwrite computation still needs Playwright UI proof for private-channel deny/allow workflows.
 
 - Role hierarchy still needs deeper Discord parity:
   - self-escalation through powerful roles
-  - UI proof for batch role reordering
+  - UI proof for batch role reordering and effective permission inspector
 
 - E2EE key-package consumption is now server-co-membership gated, but a more precise channel/group-scoped design is still needed for full MLS parity.
 
@@ -181,6 +185,8 @@ Permission smoke coverage:
 - stage hand raise denied without `REQUEST_TO_SPEAK`: 403
 - stage speaker promotion denied when target lacks `SPEAK`: 403
 - role batch reorder cannot move a role to the actor's own position: 403
+- server effective permission inspector returns owner permissions: 200
+- channel effective permission inspector returns channel permissions: 200
 - role hierarchy smoke: manager cannot create/edit roles with unheld permission bits, move a lower role to equal position, or delete own top role: 403
 - moderation hierarchy smoke: moderator cannot ban, timeout, or kick a same-position target: 403
 
