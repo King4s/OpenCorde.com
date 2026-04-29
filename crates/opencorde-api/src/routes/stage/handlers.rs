@@ -4,10 +4,61 @@
 //! ## Depends On
 //! - axum, opencorde_db::repos::stage_repo, crate::AppState, super::types
 
-use axum::{extract::{Path, State}, Json};
+use axum::{
+    Json,
+    extract::{Path, State},
+};
+use opencorde_core::{Snowflake, permissions::Permissions};
 use opencorde_db::repos::stage_repo;
-use crate::{error::ApiError, middleware::auth::AuthUser, routes::helpers::parse_snowflake, AppState};
+
 use super::types::*;
+use crate::{
+    AppState, error::ApiError, middleware::auth::AuthUser, routes::helpers::parse_snowflake,
+    routes::permission_check,
+};
+
+#[derive(sqlx::FromRow)]
+struct ChannelCheck {
+    channel_type: i16,
+}
+
+async fn require_stage_channel(state: &AppState, channel_id: Snowflake) -> Result<(), ApiError> {
+    let ch = sqlx::query_as::<_, ChannelCheck>("SELECT channel_type FROM channels WHERE id = $1")
+        .bind(channel_id.as_i64())
+        .fetch_optional(&state.db)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("channel not found".into()))?;
+
+    if ch.channel_type != 3 {
+        return Err(ApiError::BadRequest(
+            "channel is not a stage channel".into(),
+        ));
+    }
+
+    Ok(())
+}
+
+async fn require_stage_participant(
+    state: &AppState,
+    channel_id: Snowflake,
+    user_id: Snowflake,
+) -> Result<(), ApiError> {
+    let exists = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(SELECT 1 FROM stage_participants WHERE channel_id = $1 AND user_id = $2)",
+    )
+    .bind(channel_id.as_i64())
+    .bind(user_id.as_i64())
+    .fetch_one(&state.db)
+    .await
+    .map_err(ApiError::Database)?;
+
+    if !exists {
+        return Err(ApiError::Forbidden);
+    }
+
+    Ok(())
+}
 
 /// POST /api/v1/channels/{channel_id}/stage/start — Start a stage session (server owner only).
 #[tracing::instrument(skip(state, auth))]
@@ -19,39 +70,27 @@ pub async fn start_stage(
 ) -> Result<Json<StageSessionResponse>, ApiError> {
     tracing::info!(channel_id = %channel_id, "starting stage session");
     let channel_id_sf = parse_snowflake(&channel_id)?;
+    require_stage_channel(&state, channel_id_sf).await?;
 
-    #[derive(sqlx::FromRow)]
-    struct ChannelCheck { server_id: i64, channel_type: i16 }
-
-    let ch = sqlx::query_as::<_, ChannelCheck>(
-        "SELECT server_id, channel_type FROM channels WHERE id = $1"
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::CONNECT | Permissions::SPEAK | Permissions::MUTE_MEMBERS,
     )
-    .bind(channel_id_sf.as_i64())
-    .fetch_optional(&state.db)
-    .await
-    .map_err(ApiError::Database)?
-    .ok_or_else(|| ApiError::NotFound("channel not found".into()))?;
-
-    if ch.channel_type != 3 {
-        return Err(ApiError::BadRequest("channel is not a stage channel".into()));
-    }
-
-    let owner_id = sqlx::query_scalar::<_, i64>("SELECT owner_id FROM servers WHERE id = $1")
-        .bind(ch.server_id)
-        .fetch_optional(&state.db)
-        .await
-        .map_err(ApiError::Database)?
-        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
-
-    if auth.user_id.as_i64() != owner_id {
-        return Err(ApiError::Forbidden);
-    }
+    .await?;
 
     let mut sg = opencorde_core::snowflake::SnowflakeGenerator::new(1, 1);
     let session_id = sg.next_id();
-    let session = stage_repo::start_session(&state.db, session_id, channel_id_sf, req.topic.as_deref(), auth.user_id)
-        .await
-        .map_err(ApiError::Database)?;
+    let session = stage_repo::start_session(
+        &state.db,
+        session_id,
+        channel_id_sf,
+        req.topic.as_deref(),
+        auth.user_id,
+    )
+    .await
+    .map_err(ApiError::Database)?;
 
     tracing::info!(session_id = session.id, "stage session started");
     Ok(Json(StageSessionResponse {
@@ -72,13 +111,23 @@ pub async fn end_stage(
 ) -> Result<(), ApiError> {
     tracing::info!(channel_id = %channel_id, "ending stage session");
     let channel_id_sf = parse_snowflake(&channel_id)?;
+    require_stage_channel(&state, channel_id_sf).await?;
 
     let session = stage_repo::get_session(&state.db, channel_id_sf)
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("no active stage session".into()))?;
 
-    if session.started_by != auth.user_id.as_i64() {
+    if session.started_by != auth.user_id.as_i64()
+        && permission_check::require_channel_perm(
+            &state.db,
+            auth.user_id,
+            channel_id_sf,
+            Permissions::MUTE_MEMBERS,
+        )
+        .await
+        .is_err()
+    {
         return Err(ApiError::Forbidden);
     }
 
@@ -97,8 +146,15 @@ pub async fn get_stage(
     auth: AuthUser,
     Path(channel_id): Path<String>,
 ) -> Result<Json<StageDetailResponse>, ApiError> {
-    let _ = auth;
     let channel_id_sf = parse_snowflake(&channel_id)?;
+    require_stage_channel(&state, channel_id_sf).await?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::CONNECT,
+    )
+    .await?;
 
     let session = stage_repo::get_session(&state.db, channel_id_sf)
         .await
@@ -117,14 +173,17 @@ pub async fn get_stage(
             started_by: session.started_by.to_string(),
             started_at: session.started_at,
         },
-        participants: participants.into_iter().map(|p| StageParticipantResponse {
-            id: p.id.to_string(),
-            user_id: p.user_id.to_string(),
-            username: p.username,
-            role: p.role,
-            hand_raised: p.hand_raised,
-            joined_at: p.joined_at,
-        }).collect(),
+        participants: participants
+            .into_iter()
+            .map(|p| StageParticipantResponse {
+                id: p.id.to_string(),
+                user_id: p.user_id.to_string(),
+                username: p.username,
+                role: p.role,
+                hand_raised: p.hand_raised,
+                joined_at: p.joined_at,
+            })
+            .collect(),
     }))
 }
 
@@ -137,6 +196,14 @@ pub async fn join_stage(
 ) -> Result<Json<StageParticipantResponse>, ApiError> {
     tracing::info!(channel_id = %channel_id, "user joining stage");
     let channel_id_sf = parse_snowflake(&channel_id)?;
+    require_stage_channel(&state, channel_id_sf).await?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::CONNECT,
+    )
+    .await?;
 
     stage_repo::get_session(&state.db, channel_id_sf)
         .await
@@ -150,8 +217,12 @@ pub async fn join_stage(
 
     tracing::info!(channel_id = %channel_id, "user joined stage");
     Ok(Json(StageParticipantResponse {
-        id: p.id.to_string(), user_id: p.user_id.to_string(), username: p.username,
-        role: p.role, hand_raised: p.hand_raised, joined_at: p.joined_at,
+        id: p.id.to_string(),
+        user_id: p.user_id.to_string(),
+        username: p.username,
+        role: p.role,
+        hand_raised: p.hand_raised,
+        joined_at: p.joined_at,
     }))
 }
 
@@ -163,6 +234,7 @@ pub async fn leave_stage(
     Path(channel_id): Path<String>,
 ) -> Result<(), ApiError> {
     let channel_id_sf = parse_snowflake(&channel_id)?;
+    require_stage_channel(&state, channel_id_sf).await?;
     stage_repo::leave_stage(&state.db, channel_id_sf, auth.user_id)
         .await
         .map_err(ApiError::Database)?;
@@ -179,6 +251,32 @@ pub async fn toggle_hand(
     Json(req): Json<HandRequest>,
 ) -> Result<(), ApiError> {
     let channel_id_sf = parse_snowflake(&channel_id)?;
+    require_stage_channel(&state, channel_id_sf).await?;
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::CONNECT,
+    )
+    .await?;
+
+    stage_repo::get_session(&state.db, channel_id_sf)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("no active stage session".into()))?;
+
+    require_stage_participant(&state, channel_id_sf, auth.user_id).await?;
+
+    if req.raised {
+        permission_check::require_channel_perm(
+            &state.db,
+            auth.user_id,
+            channel_id_sf,
+            Permissions::REQUEST_TO_SPEAK,
+        )
+        .await?;
+    }
+
     if req.raised {
         stage_repo::raise_hand(&state.db, channel_id_sf, auth.user_id).await
     } else {
@@ -200,14 +298,36 @@ pub async fn set_speaker(
     tracing::info!(channel_id = %channel_id, target = %target_user_id, "changing speaker role");
     let channel_id_sf = parse_snowflake(&channel_id)?;
     let target_sf = parse_snowflake(&target_user_id)?;
+    require_stage_channel(&state, channel_id_sf).await?;
 
     let session = stage_repo::get_session(&state.db, channel_id_sf)
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("no active stage session".into()))?;
 
-    if session.started_by != auth.user_id.as_i64() {
+    if session.started_by != auth.user_id.as_i64()
+        && permission_check::require_channel_perm(
+            &state.db,
+            auth.user_id,
+            channel_id_sf,
+            Permissions::MUTE_MEMBERS,
+        )
+        .await
+        .is_err()
+    {
         return Err(ApiError::Forbidden);
+    }
+
+    require_stage_participant(&state, channel_id_sf, target_sf).await?;
+
+    if req.speaker {
+        permission_check::require_channel_perm(
+            &state.db,
+            target_sf,
+            channel_id_sf,
+            Permissions::SPEAK,
+        )
+        .await?;
     }
 
     if req.speaker {

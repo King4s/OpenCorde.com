@@ -118,6 +118,13 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - Voice join and fresh LiveKit token routes still require channel `CONNECT`.
   - LiveKit publish grants now depend on effective channel `SPEAK`; users with `CONNECT` but denied `SPEAK` receive subscribe-only tokens.
 
+- `stage`
+  - Stage detail and join now require channel `CONNECT`.
+  - Starting a stage requires channel `CONNECT`, `SPEAK`, and `MUTE_MEMBERS`.
+  - Ending a stage allows the starter or users with channel `MUTE_MEMBERS`.
+  - Raising hand requires an active session, existing participant row, channel `CONNECT`, and `REQUEST_TO_SPEAK`.
+  - Speaker promotion/demotion requires the starter or channel `MUTE_MEMBERS`; promotion also verifies the target has channel `SPEAK`.
+
 ## Still Open
 
 - Channel overwrite computation still needs closer Discord parity:
@@ -131,13 +138,9 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 - E2EE key-package consumption is now server-co-membership gated, but a more precise channel/group-scoped design is still needed for full MLS parity.
 
 - Stage permissions still need a deeper model:
-  - `CONNECT`
-  - `SPEAK`
-  - `REQUEST_TO_SPEAK`
-  - `MUTE_MEMBERS`
   - `MOVE_MEMBERS`
   - stage speaker/audience alignment with LiveKit publish grants
-  - stage routes still need explicit permission checks and moderator handling beyond the voice token grant fix
+  - stage LiveKit grants still need to account for stage speaker/audience role, not only channel `SPEAK`
 
 ## Verification
 
@@ -173,6 +176,9 @@ Permission smoke coverage:
 - private channel messages allowed with allowed role: 200
 - voice member with `CONNECT` but denied `SPEAK` receives join LiveKit token with `canPublish=false`
 - voice member with `CONNECT` but denied `SPEAK` receives fresh LiveKit token with `canPublish=false`
+- stage detail and join denied without `CONNECT`: 403
+- stage hand raise denied without `REQUEST_TO_SPEAK`: 403
+- stage speaker promotion denied when target lacks `SPEAK`: 403
 - role hierarchy smoke: manager cannot create/edit roles with unheld permission bits, move a lower role to equal position, or delete own top role: 403
 - moderation hierarchy smoke: moderator cannot ban, timeout, or kick a same-position target: 403
 

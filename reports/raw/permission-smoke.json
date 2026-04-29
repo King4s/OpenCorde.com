@@ -38,7 +38,7 @@
   {
     "name": "private channel messages denied without allowed role",
     "method": "GET",
-    "url": "/api/v1/channels/1777476141823101/messages",
+    "url": "/api/v1/channels/1777476470486101/messages",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -82,7 +82,7 @@
         "created_at": "2026-03-22T18:10:59.621735Z"
       },
       {
-        "id": "1777476141823101",
+        "id": "1777476470486101",
         "server_id": "293907048062648321",
         "name": "permission-private-smoke",
         "channel_type": 0,
@@ -92,14 +92,14 @@
         "nsfw": false,
         "slowmode_delay": 0,
         "e2ee_enabled": false,
-        "created_at": "2026-04-29T15:22:22.091239Z"
+        "created_at": "2026-04-29T15:27:50.717912Z"
       }
     ]
   },
   {
     "name": "private channel messages allowed with allowed role",
     "method": "GET",
-    "url": "/api/v1/channels/1777476141823101/messages",
+    "url": "/api/v1/channels/1777476470486101/messages",
     "expectedStatus": 200,
     "actualStatus": 200,
     "ok": true,
@@ -125,6 +125,54 @@
     "ok": true,
     "response": {
       "canPublish": false
+    }
+  },
+  {
+    "name": "stage detail denied without CONNECT",
+    "method": "GET",
+    "url": "/api/v1/channels/1777476470486301/stage",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "stage join denied without CONNECT",
+    "method": "POST",
+    "url": "/api/v1/channels/1777476470486301/stage/join",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "stage hand raise denied without REQUEST_TO_SPEAK",
+    "method": "POST",
+    "url": "/api/v1/channels/1777476470486302/stage/hand",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
+    }
+  },
+  {
+    "name": "stage speaker promotion denied when target lacks SPEAK",
+    "method": "PATCH",
+    "url": "/api/v1/channels/1777476470486302/stage/speakers/307896655582068737",
+    "expectedStatus": 403,
+    "actualStatus": 403,
+    "ok": true,
+    "response": {
+      "code": "FORBIDDEN",
+      "message": "forbidden"
     }
   },
   {
@@ -358,7 +406,7 @@
   {
     "name": "nonmember cannot pin channel message",
     "method": "PUT",
-    "url": "/api/v1/channels/293907048134082561/pins/307899422464147457",
+    "url": "/api/v1/channels/293907048134082561/pins/307900802687959041",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -370,7 +418,7 @@
   {
     "name": "nonmember cannot list message reactions",
     "method": "GET",
-    "url": "/api/v1/messages/307899422464147457/reactions",
+    "url": "/api/v1/messages/307900802687959041/reactions",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -382,7 +430,7 @@
   {
     "name": "nonmember search cannot see private server messages",
     "method": "GET",
-    "url": "/api/v1/search?q=permsearch1777476142&server_id=293907048062648321&limit=10",
+    "url": "/api/v1/search?q=permsearch1777476471&server_id=293907048062648321&limit=10",
     "expectedStatus": 200,
     "actualStatus": 200,
     "ok": true,

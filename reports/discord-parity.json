@@ -238,12 +238,13 @@
       "status": "shallow_needs_proof",
       "observed": [
         "LiveKit, voice state, device settings, video grid, recordings, soundboard, and stage panel names exist.",
-        "Voice LiveKit tokens now keep `CONNECT` and `SPEAK` separate: users denied `SPEAK` receive subscribe-only tokens with `canPublish=false`."
+        "Voice LiveKit tokens now keep `CONNECT` and `SPEAK` separate: users denied `SPEAK` receive subscribe-only tokens with `canPublish=false`.",
+        "Stage detail/join/hand/speaker routes now enforce channel `CONNECT`, `REQUEST_TO_SPEAK`, `SPEAK`, and `MUTE_MEMBERS` on the API path."
       ],
       "gaps": [
         "Two-client join/leave/mute/deafen/screen-share workflow is not proven.",
         "Server mute/deafen, stage speaker lifecycle, RTC reconnect, and mobile controls need proof.",
-        "Stage routes still need explicit `CONNECT`, `REQUEST_TO_SPEAK`, `SPEAK`, `MUTE_MEMBERS`, and speaker/audience LiveKit alignment beyond basic voice token grants.",
+        "Stage LiveKit grants still need to account for stage speaker/audience role, not only channel `SPEAK`.",
         "LiveKit operational health is not in parity reporting."
       ],
       "next_todos": [
@@ -251,7 +252,7 @@
         "Create two-client voice Playwright/manual checklist.",
         "Prove stage audience-to-speaker flow.",
         "Add voice permission denial tests.",
-        "Gate stage REST routes and stage LiveKit grants by Discord-like permissions."
+        "Align stage LiveKit publish grants with speaker/audience role."
       ],
       "proof_required": [
         "LiveKit health output",

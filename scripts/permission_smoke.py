@@ -141,6 +141,24 @@ def cleanup_voice_fixture(
     )
 
 
+def cleanup_stage_fixture(
+    *,
+    channel_ids: list[int],
+    server_id: str,
+    limited_user_id: str,
+) -> None:
+    channel_list = ",".join(str(channel_id) for channel_id in channel_ids)
+    psql(
+        f"""
+        DELETE FROM stage_participants WHERE channel_id IN ({channel_list});
+        DELETE FROM stage_sessions WHERE channel_id IN ({channel_list});
+        DELETE FROM channel_permission_overrides WHERE channel_id IN ({channel_list});
+        DELETE FROM channels WHERE id IN ({channel_list});
+        DELETE FROM server_members WHERE user_id = {limited_user_id} AND server_id = {server_id};
+        """
+    )
+
+
 def decode_jwt_payload(token: str) -> dict:
     payload = token.split(".")[1]
     payload += "=" * (-len(payload) % 4)
@@ -411,6 +429,104 @@ async def main() -> int:
         finally:
             cleanup_voice_fixture(
                 channel_id=voice_channel_id,
+                server_id=server_id,
+                limited_user_id=limited_user_id,
+            )
+
+        denied_stage_channel_id = now_ms * 1000 + 301
+        limited_stage_channel_id = now_ms * 1000 + 302
+        denied_stage_session_id = now_ms * 1000 + 303
+        limited_stage_session_id = now_ms * 1000 + 304
+        limited_stage_participant_id = now_ms * 1000 + 305
+        stage_channel_ids = [denied_stage_channel_id, limited_stage_channel_id]
+        cleanup_stage_fixture(
+            channel_ids=stage_channel_ids,
+            server_id=server_id,
+            limited_user_id=limited_user_id,
+        )
+        psql(
+            f"""
+            INSERT INTO server_members (user_id, server_id)
+            VALUES ({limited_user_id}, {server_id})
+            ON CONFLICT DO NOTHING;
+
+            INSERT INTO channels (id, server_id, name, channel_type, position)
+            VALUES
+              ({denied_stage_channel_id}, {server_id}, 'permission-stage-no-connect', 3, 9999),
+              ({limited_stage_channel_id}, {server_id}, 'permission-stage-limited', 3, 9999);
+
+            INSERT INTO stage_sessions (id, channel_id, topic, started_by)
+            VALUES
+              ({denied_stage_session_id}, {denied_stage_channel_id}, 'permission smoke', {member_id}),
+              ({limited_stage_session_id}, {limited_stage_channel_id}, 'permission smoke', {member_id});
+
+            INSERT INTO stage_participants (id, channel_id, user_id, role)
+            VALUES ({limited_stage_participant_id}, {limited_stage_channel_id}, {limited_user_id}, 'audience');
+
+            INSERT INTO channel_permission_overrides (channel_id, target_type, target_id, allow_bits, deny_bits)
+            VALUES
+              ({denied_stage_channel_id}, 'role', {server_id}, 0, {1 << 20}),
+              ({limited_stage_channel_id}, 'role', {server_id}, 0, {(1 << 21) | (1 << 32)});
+            """
+        )
+
+        try:
+            stage_checks = [
+                {
+                    "name": "stage detail denied without CONNECT",
+                    "method": "GET",
+                    "url": f"{API}/channels/{denied_stage_channel_id}/stage",
+                    "headers": limited_headers,
+                    "expect": 403,
+                },
+                {
+                    "name": "stage join denied without CONNECT",
+                    "method": "POST",
+                    "url": f"{API}/channels/{denied_stage_channel_id}/stage/join",
+                    "headers": limited_headers,
+                    "expect": 403,
+                },
+                {
+                    "name": "stage hand raise denied without REQUEST_TO_SPEAK",
+                    "method": "POST",
+                    "url": f"{API}/channels/{limited_stage_channel_id}/stage/hand",
+                    "headers": limited_headers,
+                    "json": {"raised": True},
+                    "expect": 403,
+                },
+                {
+                    "name": "stage speaker promotion denied when target lacks SPEAK",
+                    "method": "PATCH",
+                    "url": f"{API}/channels/{limited_stage_channel_id}/stage/speakers/{limited_user_id}",
+                    "headers": member_headers,
+                    "json": {"speaker": True},
+                    "expect": 403,
+                },
+            ]
+
+            for check in stage_checks:
+                kwargs = {"headers": check["headers"]}
+                if "json" in check:
+                    kwargs["json"] = check["json"]
+                status, data = await request_json(session, check["method"], check["url"], **kwargs)
+                ok = status == check["expect"]
+                results.append(
+                    {
+                        "name": check["name"],
+                        "method": check["method"],
+                        "url": check["url"].replace(API, "/api/v1"),
+                        "expectedStatus": check["expect"],
+                        "actualStatus": status,
+                        "ok": ok,
+                        "response": data,
+                    }
+                )
+                print(
+                    f"[{'PASS' if ok else 'FAIL'}] {check['name']} expected={check['expect']} actual={status}"
+                )
+        finally:
+            cleanup_stage_fixture(
+                channel_ids=stage_channel_ids,
                 server_id=server_id,
                 limited_user_id=limited_user_id,
             )
