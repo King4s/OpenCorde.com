@@ -38,7 +38,7 @@
   {
     "name": "private channel messages denied without allowed role",
     "method": "GET",
-    "url": "/api/v1/channels/1777504797072101/messages",
+    "url": "/api/v1/channels/1777505567520101/messages",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -50,7 +50,7 @@
   {
     "name": "private channel scoped key package denied without view",
     "method": "GET",
-    "url": "/api/v1/users/293898541565214721/key-packages/one?channel_id=1777504797072101",
+    "url": "/api/v1/users/293898541565214721/key-packages/one?channel_id=1777505567520101",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -62,7 +62,7 @@
   {
     "name": "private channel e2ee init denies welcome for hidden member",
     "method": "POST",
-    "url": "/api/v1/channels/1777504797072101/e2ee/init",
+    "url": "/api/v1/channels/1777505567520101/e2ee/init",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -106,7 +106,7 @@
         "created_at": "2026-03-22T18:10:59.621735Z"
       },
       {
-        "id": "1777504797072101",
+        "id": "1777505567520101",
         "server_id": "293907048062648321",
         "name": "permission-private-smoke",
         "channel_type": 0,
@@ -116,14 +116,14 @@
         "nsfw": false,
         "slowmode_delay": 0,
         "e2ee_enabled": false,
-        "created_at": "2026-04-29T23:19:57.261952Z"
+        "created_at": "2026-04-29T23:32:47.770903Z"
       }
     ]
   },
   {
     "name": "private channel messages allowed with allowed role",
     "method": "GET",
-    "url": "/api/v1/channels/1777504797072101/messages",
+    "url": "/api/v1/channels/1777505567520101/messages",
     "expectedStatus": 200,
     "actualStatus": 200,
     "ok": true,
@@ -154,7 +154,7 @@
   {
     "name": "stage detail denied without CONNECT",
     "method": "GET",
-    "url": "/api/v1/channels/1777504797072301/stage",
+    "url": "/api/v1/channels/1777505567520301/stage",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -166,7 +166,7 @@
   {
     "name": "stage join denied without CONNECT",
     "method": "POST",
-    "url": "/api/v1/channels/1777504797072301/stage/join",
+    "url": "/api/v1/channels/1777505567520301/stage/join",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -178,7 +178,7 @@
   {
     "name": "stage hand raise denied without REQUEST_TO_SPEAK",
     "method": "POST",
-    "url": "/api/v1/channels/1777504797072302/stage/hand",
+    "url": "/api/v1/channels/1777505567520302/stage/hand",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -190,7 +190,7 @@
   {
     "name": "stage speaker promotion denied when target lacks SPEAK",
     "method": "PATCH",
-    "url": "/api/v1/channels/1777504797072302/stage/speakers/307896655582068737",
+    "url": "/api/v1/channels/1777505567520302/stage/speakers/307896655582068737",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -247,7 +247,7 @@
   {
     "name": "role manager cannot assign role to same-position target",
     "method": "PUT",
-    "url": "/api/v1/servers/293907048062648321/members/307626269678239745/roles/1777504797072402",
+    "url": "/api/v1/servers/293907048062648321/members/307626269678239745/roles/1777505567520402",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -259,7 +259,7 @@
   {
     "name": "role manager cannot remove role from same-position target",
     "method": "DELETE",
-    "url": "/api/v1/servers/293907048062648321/members/307626269678239745/roles/1777504797072402",
+    "url": "/api/v1/servers/293907048062648321/members/307626269678239745/roles/1777505567520402",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -393,7 +393,7 @@
   {
     "name": "moderator can delete another user's message",
     "method": "DELETE",
-    "url": "/api/v1/messages/1777504797072501",
+    "url": "/api/v1/messages/1777505567520501",
     "expectedStatus": 204,
     "actualStatus": 204,
     "ok": true,
@@ -642,7 +642,7 @@
   {
     "name": "nonmember cannot pin channel message",
     "method": "PUT",
-    "url": "/api/v1/channels/293907048134082561/pins/308019616767410177",
+    "url": "/api/v1/channels/293907048134082561/pins/308022847853690881",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -654,7 +654,7 @@
   {
     "name": "nonmember cannot list message reactions",
     "method": "GET",
-    "url": "/api/v1/messages/308019616767410177/reactions",
+    "url": "/api/v1/messages/308022847853690881/reactions",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -666,7 +666,7 @@
   {
     "name": "nonmember search cannot see private server messages",
     "method": "GET",
-    "url": "/api/v1/search?q=permsearch1777504799&server_id=293907048062648321&limit=10",
+    "url": "/api/v1/search?q=permsearch1777505569&server_id=293907048062648321&limit=10",
     "expectedStatus": 200,
     "actualStatus": 200,
     "ok": true,

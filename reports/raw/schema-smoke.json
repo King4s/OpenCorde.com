@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "expectedTableCount": 45,
+  "expectedColumnCount": 314,
+  "appliedMigrationCount": 51,
+  "missingTables": [],
+  "missingColumns": [],
+  "missingMigrations": [],
+  "failedMigrations": []
+}

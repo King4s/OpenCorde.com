@@ -160,6 +160,7 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 - `python3 browser_test.py`: 26 passed, 0 failed.
 - `scripts/public_qa.py --fail-on-issues`: passed.
 - `scripts/permission_smoke.py`: passed against live API.
+- `scripts/schema_smoke.py`: passed against live DB; 45 expected tables, 314 expected columns, and 51 applied migrations.
 
 Permission smoke coverage:
 
@@ -205,6 +206,6 @@ Permission smoke coverage:
 
 ## Next Recommended Fixes
 
-- Add permission regression tests for non-member denial on invite/list/webhook/thread/voice routes.
+- Add Playwright UI proof for private-channel and role-management workflows.
 - Add route inventory JSON generated from Axum route declarations and permission annotations.
-- Implement role hierarchy and protected target rules.
+- Add LiveKit operational health to instance reporting.

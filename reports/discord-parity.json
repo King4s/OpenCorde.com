@@ -74,6 +74,11 @@
       "note": "Live API smoke proving selected non-member denial paths plus private-channel deny/allow overwrite workflows."
     },
     {
+      "path": "reports/raw/schema-smoke.json",
+      "type": "qa",
+      "note": "Live database schema smoke comparing migrations against applied migrations, tables, and columns."
+    },
+    {
       "path": "tasks-future.md",
       "type": "legacy_claims",
       "note": "Legacy task list marks many Discord-like features complete; now explicitly labeled as an implementation log, not parity proof."
@@ -216,14 +221,13 @@
       "status": "shallow_needs_proof",
       "observed": [
         "Onboarding API, modal, and server guide surface names exist.",
-        "A missing server_onboarding table was recently repaired manually on production."
+        "A missing server_onboarding table was recently repaired manually on production.",
+        "Schema smoke now checks live migrations, required tables, and required columns; it also repaired missing soundboard_sounds drift through migration 051."
       ],
       "gaps": [
-        "Default channel selection, questions, role/channel assignment, resource pages, rules screening, and audit trail are not proven.",
-        "Migration integrity must catch missing table drift automatically."
+        "Default channel selection, questions, role/channel assignment, resource pages, rules screening, and audit trail are not proven."
       ],
       "next_todos": [
-        "Add migration/table integrity smoke test.",
         "Implement invite-to-onboarding-to-channel Playwright flow.",
         "Add onboarding question role/channel assignment.",
         "Add Emma Bot onboarding script."
