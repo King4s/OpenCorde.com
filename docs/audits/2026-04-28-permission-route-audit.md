@@ -102,12 +102,15 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - Ban, timeout, timeout removal, and kick now enforce target hierarchy.
   - Non-owner moderators cannot target the server owner or members with equal/higher top role position.
 
+- `permission_compute`
+  - Channel overwrites now follow Discord precedence layers: `@everyone` first, aggregate matching role denies/allows next, member overwrite last.
+  - Added core tests for aggregate role overwrite behavior and `@everyone` precedence.
+
 ## Still Open
 
 - Channel overwrite computation still needs closer Discord parity:
-  - first-class `@everyone` overwrite behavior
-  - aggregate role deny/allow precedence
   - member overwrite precedence tests
+  - API smoke proving private-channel deny/allow workflows with real users
 
 - Role hierarchy still needs deeper Discord parity:
   - role reordering batch semantics

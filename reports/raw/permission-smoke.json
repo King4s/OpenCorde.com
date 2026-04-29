@@ -230,7 +230,7 @@
   {
     "name": "nonmember cannot pin channel message",
     "method": "PUT",
-    "url": "/api/v1/channels/293907048134082561/pins/307816371965001729",
+    "url": "/api/v1/channels/293907048134082561/pins/307818025590325249",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -242,7 +242,7 @@
   {
     "name": "nonmember cannot list message reactions",
     "method": "GET",
-    "url": "/api/v1/messages/307816371965001729/reactions",
+    "url": "/api/v1/messages/307818025590325249/reactions",
     "expectedStatus": 403,
     "actualStatus": 403,
     "ok": true,
@@ -254,7 +254,7 @@
   {
     "name": "nonmember search cannot see private server messages",
     "method": "GET",
-    "url": "/api/v1/search?q=permsearch1777456342&server_id=293907048062648321&limit=10",
+    "url": "/api/v1/search?q=permsearch1777456736&server_id=293907048062648321&limit=10",
     "expectedStatus": 200,
     "actualStatus": 200,
     "ok": true,

@@ -153,7 +153,7 @@ pub async fn require_channel_perm(
         })
         .collect();
 
-    let effective = compute_permissions(base, &overwrites, user_id, &role_ids);
+    let effective = compute_permissions(base, &overwrites, user_id, &role_ids, Some(server_id));
 
     if effective.contains(required) {
         return Ok(());
