@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import os
 import re
@@ -122,6 +123,28 @@ def cleanup_private_channel_fixture(
         DELETE FROM server_members WHERE user_id = {limited_user_id} AND server_id = {server_id};
         """
     )
+
+
+def cleanup_voice_fixture(
+    *,
+    channel_id: int,
+    server_id: str,
+    limited_user_id: str,
+) -> None:
+    psql(
+        f"""
+        DELETE FROM voice_states WHERE user_id = {limited_user_id};
+        DELETE FROM channel_permission_overrides WHERE channel_id = {channel_id};
+        DELETE FROM channels WHERE id = {channel_id};
+        DELETE FROM server_members WHERE user_id = {limited_user_id} AND server_id = {server_id};
+        """
+    )
+
+
+def decode_jwt_payload(token: str) -> dict:
+    payload = token.split(".")[1]
+    payload += "=" * (-len(payload) % 4)
+    return json.loads(base64.urlsafe_b64decode(payload.encode("ascii")))
 
 
 async def main() -> int:
@@ -305,6 +328,89 @@ async def main() -> int:
             cleanup_private_channel_fixture(
                 channel_id=private_channel_id,
                 role_id=allowed_role_id,
+                server_id=server_id,
+                limited_user_id=limited_user_id,
+            )
+
+        voice_channel_id = now_ms * 1000 + 201
+        cleanup_voice_fixture(
+            channel_id=voice_channel_id,
+            server_id=server_id,
+            limited_user_id=limited_user_id,
+        )
+        psql(
+            f"""
+            INSERT INTO server_members (user_id, server_id)
+            VALUES ({limited_user_id}, {server_id})
+            ON CONFLICT DO NOTHING;
+
+            INSERT INTO channels (id, server_id, name, channel_type, position)
+            VALUES ({voice_channel_id}, {server_id}, 'permission-voice-smoke', 1, 9999);
+
+            INSERT INTO channel_permission_overrides (channel_id, target_type, target_id, allow_bits, deny_bits)
+            VALUES ({voice_channel_id}, 'role', {server_id}, 0, {1 << 21});
+            """
+        )
+
+        try:
+            status, data = await request_json(
+                session,
+                "POST",
+                f"{API}/voice/join",
+                headers=limited_headers,
+                json={"channel_id": str(voice_channel_id)},
+            )
+            can_publish = None
+            if status == 200 and isinstance(data, dict):
+                token = data.get("livekit_token")
+                if token:
+                    can_publish = decode_jwt_payload(token).get("video", {}).get("canPublish")
+            ok = status == 200 and can_publish is False
+            results.append(
+                {
+                    "name": "voice CONNECT without SPEAK gets subscribe-only token",
+                    "method": "POST",
+                    "url": "/api/v1/voice/join",
+                    "expectedStatus": 200,
+                    "actualStatus": status,
+                    "ok": ok,
+                    "response": {"canPublish": can_publish},
+                }
+            )
+            print(
+                f"[{'PASS' if ok else 'FAIL'}] voice CONNECT without SPEAK gets subscribe-only token expected=200 actual={status}"
+            )
+
+            status, data = await request_json(
+                session,
+                "POST",
+                f"{API}/livekit/token",
+                headers=limited_headers,
+                json={"channel_id": str(voice_channel_id)},
+            )
+            can_publish = None
+            if status == 200 and isinstance(data, dict):
+                token = data.get("token")
+                if token:
+                    can_publish = decode_jwt_payload(token).get("video", {}).get("canPublish")
+            ok = status == 200 and can_publish is False
+            results.append(
+                {
+                    "name": "fresh LiveKit token without SPEAK stays subscribe-only",
+                    "method": "POST",
+                    "url": "/api/v1/livekit/token",
+                    "expectedStatus": 200,
+                    "actualStatus": status,
+                    "ok": ok,
+                    "response": {"canPublish": can_publish},
+                }
+            )
+            print(
+                f"[{'PASS' if ok else 'FAIL'}] fresh LiveKit token without SPEAK stays subscribe-only expected=200 actual={status}"
+            )
+        finally:
+            cleanup_voice_fixture(
+                channel_id=voice_channel_id,
                 server_id=server_id,
                 limited_user_id=limited_user_id,
             )

@@ -61,6 +61,7 @@ fn egress_token(api_key: &str, api_secret: &str, room_name: &str) -> Result<Stri
         "egress-bot",
         room_name,
         EGRESS_TOKEN_EXPIRY,
+        true,
     )
     .map_err(|e| {
         tracing::error!(error = %e, "egress token generation failed");

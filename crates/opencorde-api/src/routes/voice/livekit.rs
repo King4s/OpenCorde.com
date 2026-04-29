@@ -67,6 +67,7 @@ pub struct LiveKitClaims {
 /// * `user_id` - User identity (Snowflake ID as string)
 /// * `room_name` - Room name (channel ID as string)
 /// * `expiry_seconds` - Token expiry duration in seconds (default: 3600)
+/// * `can_publish` - Whether the user may publish media to the room
 ///
 /// # Returns
 /// JWT token string or error if signing fails.
@@ -80,12 +81,14 @@ pub fn create_livekit_token(
     user_id: &str,
     room_name: &str,
     expiry_seconds: u64,
+    can_publish: bool,
 ) -> Result<String, jsonwebtoken::errors::Error> {
     tracing::info!(
         api_key_hint = api_key.chars().take(6).collect::<String>(),
         user_id = %user_id,
         room_name = %room_name,
         expiry_seconds = expiry_seconds,
+        can_publish = can_publish,
         "generating LiveKit token"
     );
 
@@ -102,7 +105,7 @@ pub fn create_livekit_token(
         video: LiveKitVideoGrant {
             room: room_name.to_string(),
             room_join: true,
-            can_publish: true,
+            can_publish,
             can_subscribe: true,
         },
     };
@@ -171,6 +174,7 @@ mod tests {
             "user-123",
             "room-456",
             3600,
+            true,
         );
 
         assert!(result.is_ok());
@@ -184,11 +188,13 @@ mod tests {
     fn test_create_livekit_token_different_expiry() {
         let token1 = create_livekit_token(
             "key", "secret", "user-1", "room-1", 1800, // 30 min
+            true,
         )
         .unwrap();
 
         let token2 = create_livekit_token(
             "key", "secret", "user-1", "room-1", 7200, // 2 hours
+            true,
         )
         .unwrap();
 

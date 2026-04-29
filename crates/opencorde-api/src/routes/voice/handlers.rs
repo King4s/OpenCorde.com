@@ -79,6 +79,15 @@ pub async fn join_voice(
     )
     .await?;
 
+    let can_publish = permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id,
+        Permissions::SPEAK,
+    )
+    .await
+    .is_ok();
+
     // Create session ID (UUID)
     let session_id = Uuid::new_v4().to_string();
 
@@ -95,6 +104,7 @@ pub async fn join_voice(
         &auth.user_id.as_i64().to_string(),
         &channel_id.as_i64().to_string(),
         LIVEKIT_TOKEN_EXPIRY,
+        can_publish,
     )
     .map_err(|e| {
         tracing::error!(error = %e, "failed to generate LiveKit token");
@@ -291,6 +301,15 @@ pub async fn get_livekit_token(
     )
     .await?;
 
+    let can_publish = permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id,
+        Permissions::SPEAK,
+    )
+    .await
+    .is_ok();
+
     // Generate token
     let token = livekit::create_livekit_token(
         &state.config.livekit_api_key,
@@ -298,6 +317,7 @@ pub async fn get_livekit_token(
         &auth.user_id.as_i64().to_string(),
         &channel_id.as_i64().to_string(),
         LIVEKIT_TOKEN_EXPIRY,
+        can_publish,
     )
     .map_err(|e| {
         tracing::error!(error = %e, "failed to generate LiveKit token");

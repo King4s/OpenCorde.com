@@ -114,6 +114,10 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - Listing permission overrides now requires channel `VIEW_CHANNEL`, preventing private-channel override metadata leaks to ordinary server members.
   - Upsert/delete now require channel `MANAGE_CHANNELS`, so channel overwrites affect override management consistently.
 
+- `voice / LiveKit`
+  - Voice join and fresh LiveKit token routes still require channel `CONNECT`.
+  - LiveKit publish grants now depend on effective channel `SPEAK`; users with `CONNECT` but denied `SPEAK` receive subscribe-only tokens.
+
 ## Still Open
 
 - Channel overwrite computation still needs closer Discord parity:
@@ -133,6 +137,7 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - `MUTE_MEMBERS`
   - `MOVE_MEMBERS`
   - stage speaker/audience alignment with LiveKit publish grants
+  - stage routes still need explicit permission checks and moderator handling beyond the voice token grant fix
 
 ## Verification
 
@@ -166,6 +171,8 @@ Permission smoke coverage:
 - private channel messages denied without allowed role: 403
 - private channel visible with allowed role: 200 with channel in list
 - private channel messages allowed with allowed role: 200
+- voice member with `CONNECT` but denied `SPEAK` receives join LiveKit token with `canPublish=false`
+- voice member with `CONNECT` but denied `SPEAK` receives fresh LiveKit token with `canPublish=false`
 - role hierarchy smoke: manager cannot create/edit roles with unheld permission bits, move a lower role to equal position, or delete own top role: 403
 - moderation hierarchy smoke: moderator cannot ban, timeout, or kick a same-position target: 403
 
