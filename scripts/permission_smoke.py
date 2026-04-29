@@ -166,14 +166,21 @@ def cleanup_role_reorder_fixture(
     role_ids: list[int],
     server_id: str,
     limited_user_id: str,
+    target_user_id: str | None = None,
 ) -> None:
     role_list = ",".join(str(role_id) for role_id in role_ids)
+    target_cleanup = (
+        f"DELETE FROM server_members WHERE user_id = {target_user_id} AND server_id = {server_id};"
+        if target_user_id
+        else ""
+    )
     psql(
         f"""
         DELETE FROM member_roles WHERE role_id IN ({role_list})
            OR (user_id = {limited_user_id} AND server_id = {server_id});
         DELETE FROM roles WHERE id IN ({role_list});
         DELETE FROM server_members WHERE user_id = {limited_user_id} AND server_id = {server_id};
+        {target_cleanup}
         """
     )
 
@@ -242,6 +249,16 @@ async def main() -> int:
         if status != 200 or not limited_profile:
             raise RuntimeError(f"limited profile baseline failed: {status} {limited_profile}")
         limited_user_id = limited_profile["id"]
+
+        status, nonmember_profile = await request_json(
+            session,
+            "GET",
+            f"{API}/users/@me",
+            headers=nonmember_headers,
+        )
+        if status != 200 or not nonmember_profile:
+            raise RuntimeError(f"nonmember profile baseline failed: {status} {nonmember_profile}")
+        nonmember_user_id = nonmember_profile["id"]
 
         now_ms = int(time.time() * 1000)
         private_channel_id = now_ms * 1000 + 101
@@ -746,25 +763,33 @@ async def main() -> int:
 
         manager_role_id = now_ms * 1000 + 401
         target_role_id = now_ms * 1000 + 402
-        role_reorder_ids = [manager_role_id, target_role_id]
+        peer_role_id = now_ms * 1000 + 403
+        role_reorder_ids = [manager_role_id, target_role_id, peer_role_id]
         cleanup_role_reorder_fixture(
             role_ids=role_reorder_ids,
             server_id=server_id,
             limited_user_id=limited_user_id,
+            target_user_id=nonmember_user_id,
         )
         psql(
             f"""
             INSERT INTO server_members (user_id, server_id)
-            VALUES ({limited_user_id}, {server_id})
+            VALUES
+              ({limited_user_id}, {server_id}),
+              ({nonmember_user_id}, {server_id})
             ON CONFLICT DO NOTHING;
 
             INSERT INTO roles (id, server_id, name, permissions, position)
             VALUES
               ({manager_role_id}, {server_id}, 'permission-reorder-manager', {1 << 28}, 10),
-              ({target_role_id}, {server_id}, 'permission-reorder-target', 0, 1);
+              ({target_role_id}, {server_id}, 'permission-reorder-target', 0, 1),
+              ({peer_role_id}, {server_id}, 'permission-reorder-peer', 0, 10);
 
             INSERT INTO member_roles (user_id, server_id, role_id)
-            VALUES ({limited_user_id}, {server_id}, {manager_role_id})
+            VALUES
+              ({limited_user_id}, {server_id}, {manager_role_id}),
+              ({nonmember_user_id}, {server_id}, {peer_role_id}),
+              ({nonmember_user_id}, {server_id}, {target_role_id})
             ON CONFLICT DO NOTHING;
             """
         )
@@ -792,11 +817,56 @@ async def main() -> int:
             print(
                 f"[{'PASS' if ok else 'FAIL'}] role batch reorder cannot move role to actor position expected=403 actual={status}"
             )
+
+            status, data = await request_json(
+                session,
+                "PUT",
+                f"{API}/servers/{server_id}/members/{nonmember_user_id}/roles/{target_role_id}",
+                headers=limited_headers,
+            )
+            ok = status == 403
+            results.append(
+                {
+                    "name": "role manager cannot assign role to same-position target",
+                    "method": "PUT",
+                    "url": f"/api/v1/servers/{server_id}/members/{nonmember_user_id}/roles/{target_role_id}",
+                    "expectedStatus": 403,
+                    "actualStatus": status,
+                    "ok": ok,
+                    "response": data,
+                }
+            )
+            print(
+                f"[{'PASS' if ok else 'FAIL'}] role manager cannot assign role to same-position target expected=403 actual={status}"
+            )
+
+            status, data = await request_json(
+                session,
+                "DELETE",
+                f"{API}/servers/{server_id}/members/{nonmember_user_id}/roles/{target_role_id}",
+                headers=limited_headers,
+            )
+            ok = status == 403
+            results.append(
+                {
+                    "name": "role manager cannot remove role from same-position target",
+                    "method": "DELETE",
+                    "url": f"/api/v1/servers/{server_id}/members/{nonmember_user_id}/roles/{target_role_id}",
+                    "expectedStatus": 403,
+                    "actualStatus": status,
+                    "ok": ok,
+                    "response": data,
+                }
+            )
+            print(
+                f"[{'PASS' if ok else 'FAIL'}] role manager cannot remove role from same-position target expected=403 actual={status}"
+            )
         finally:
             cleanup_role_reorder_fixture(
                 role_ids=role_reorder_ids,
                 server_id=server_id,
                 limited_user_id=limited_user_id,
+                target_user_id=nonmember_user_id,
             )
 
         status, channels = await request_json(

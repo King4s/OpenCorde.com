@@ -102,7 +102,7 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 
 - `roles`
   - Listing server roles and member roles now requires server membership through `VIEW_CHANNEL`.
-  - Role update/delete/assign/unassign now enforce hierarchy: non-owner actors can only manage roles below their highest role, and cannot move roles to their own or higher position.
+  - Role update/delete/assign/unassign now enforce hierarchy: non-owner actors can only manage roles below their highest role, can only change members below their highest role, and cannot move roles to their own or higher position.
   - Role create/update now rejects permission bits the actor does not effectively hold, with owner/administrator resolving to all known bits.
   - Added batch role reorder endpoint (`PATCH /servers/{server_id}/roles`) with hierarchy validation before applying position changes.
 
@@ -145,7 +145,6 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 - Channel overwrite computation still needs Playwright UI proof for private-channel deny/allow workflows.
 
 - Role hierarchy still needs deeper Discord parity:
-  - self-escalation through powerful roles
   - UI proof for batch role reordering and effective permission inspector
 
 - Stage permissions still need a deeper model:
@@ -196,10 +195,12 @@ Permission smoke coverage:
 - stage speaker with `SPEAK` receives publish RTC token with `canPublish=true`
 - demoted stage audience receives refreshed subscribe-only RTC token with `canPublish=false`
 - role batch reorder cannot move a role to the actor's own position: 403
+- role manager cannot assign a role to a same-position target: 403
+- role manager cannot remove a role from a same-position target: 403
 - server effective permission inspector returns owner permissions: 200
 - channel effective permission inspector returns channel permissions: 200
 - moderator can delete another user's message: 204
-- role hierarchy smoke: manager cannot create/edit roles with unheld permission bits, move a lower role to equal position, or delete own top role: 403
+- role hierarchy smoke: manager cannot create/edit roles with unheld permission bits, move a lower role to equal position, change roles on same-position targets, or delete own top role: 403
 - moderation hierarchy smoke: moderator cannot ban, timeout, or kick a same-position target: 403
 
 ## Next Recommended Fixes

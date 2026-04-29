@@ -149,6 +149,33 @@ async fn require_position_below_actor(
     Ok(())
 }
 
+async fn require_member_below_actor(
+    state: &AppState,
+    server_id: Snowflake,
+    actor_id: Snowflake,
+    target_id: Snowflake,
+) -> Result<(), ApiError> {
+    let server = server_repo::get_by_id(&state.db, server_id)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
+
+    if server.owner_id == actor_id.as_i64() {
+        return Ok(());
+    }
+    if server.owner_id == target_id.as_i64() {
+        return Err(ApiError::Forbidden);
+    }
+
+    let actor_position = highest_role_position(state, server_id, actor_id).await?;
+    let target_position = highest_role_position(state, server_id, target_id).await?;
+    if target_position >= actor_position {
+        return Err(ApiError::Forbidden);
+    }
+
+    Ok(())
+}
+
 async fn require_actor_can_set_permissions(
     state: &AppState,
     server_id: Snowflake,
@@ -479,6 +506,7 @@ async fn assign_role(
         return Err(ApiError::NotFound("role not found".into()));
     }
     require_role_below_actor(&state, server_id, auth.user_id, &role).await?;
+    require_member_below_actor(&state, server_id, auth.user_id, user_id).await?;
     member_repo::add_role(&state.db, user_id, server_id, role_id)
         .await
         .map_err(|e| {
@@ -525,6 +553,10 @@ async fn unassign_role(
         Permissions::MANAGE_ROLES,
     )
     .await?;
+    member_repo::get_member(&state.db, user_id, server_id)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("member not found".into()))?;
     let role = role_repo::get_by_id(&state.db, role_id)
         .await
         .map_err(ApiError::Database)?
@@ -533,6 +565,7 @@ async fn unassign_role(
         return Err(ApiError::NotFound("role not found".into()));
     }
     require_role_below_actor(&state, server_id, auth.user_id, &role).await?;
+    require_member_below_actor(&state, server_id, auth.user_id, user_id).await?;
     member_repo::remove_role(&state.db, user_id, server_id, role_id)
         .await
         .map_err(ApiError::Database)?;
