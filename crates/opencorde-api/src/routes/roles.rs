@@ -13,9 +13,10 @@ use axum::{
     routing::{get, patch, post, put},
 };
 use chrono::{DateTime, Utc};
+use opencorde_core::Snowflake;
 use opencorde_core::permissions::Permissions;
 use opencorde_core::snowflake::SnowflakeGenerator;
-use opencorde_db::repos::{member_repo, role_repo};
+use opencorde_db::repos::{member_repo, role_repo, server_repo};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tracing::instrument;
@@ -89,6 +90,56 @@ fn role_row_to_response(row: role_repo::RoleRow) -> RoleResponse {
         mentionable: row.mentionable,
         created_at: row.created_at,
     }
+}
+
+async fn highest_role_position(
+    state: &AppState,
+    server_id: Snowflake,
+    user_id: Snowflake,
+) -> Result<i32, ApiError> {
+    let server = server_repo::get_by_id(&state.db, server_id)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
+
+    if server.owner_id == user_id.as_i64() {
+        return Ok(i32::MAX);
+    }
+
+    let roles = role_repo::list_by_member(&state.db, user_id, server_id)
+        .await
+        .map_err(ApiError::Database)?;
+    Ok(roles
+        .into_iter()
+        .map(|role| role.position)
+        .max()
+        .unwrap_or(0))
+}
+
+async fn require_role_below_actor(
+    state: &AppState,
+    server_id: Snowflake,
+    actor_id: Snowflake,
+    role: &role_repo::RoleRow,
+) -> Result<(), ApiError> {
+    let actor_position = highest_role_position(state, server_id, actor_id).await?;
+    if role.position >= actor_position {
+        return Err(ApiError::Forbidden);
+    }
+    Ok(())
+}
+
+async fn require_position_below_actor(
+    state: &AppState,
+    server_id: Snowflake,
+    actor_id: Snowflake,
+    position: i32,
+) -> Result<(), ApiError> {
+    let actor_position = highest_role_position(state, server_id, actor_id).await?;
+    if position >= actor_position {
+        return Err(ApiError::Forbidden);
+    }
+    Ok(())
 }
 
 #[instrument(skip(state, auth), fields(user_id = %auth.user_id))]
@@ -201,6 +252,7 @@ async fn update_role(
     if role.server_id != server_id.as_i64() {
         return Err(ApiError::NotFound("role not found".into()));
     }
+    require_role_below_actor(&state, server_id, auth.user_id, &role).await?;
     let new_name = req.name.as_deref().unwrap_or(&role.name);
     if let Some(name) = &req.name {
         validate_role_name(name)?;
@@ -211,6 +263,7 @@ async fn update_role(
         .unwrap_or(role.permissions);
     let new_color = req.color.or(role.color);
     let new_position = req.position.unwrap_or(role.position);
+    require_position_below_actor(&state, server_id, auth.user_id, new_position).await?;
     let new_mentionable = req.mentionable.unwrap_or(role.mentionable);
     role_repo::update_role(
         &state.db,
@@ -267,6 +320,7 @@ async fn delete_role(
     if role.server_id != server_id.as_i64() {
         return Err(ApiError::NotFound("role not found".into()));
     }
+    require_role_below_actor(&state, server_id, auth.user_id, &role).await?;
     role_repo::delete_role(&state.db, role_id)
         .await
         .map_err(ApiError::Database)?;
@@ -314,6 +368,7 @@ async fn assign_role(
     if role.server_id != server_id.as_i64() {
         return Err(ApiError::NotFound("role not found".into()));
     }
+    require_role_below_actor(&state, server_id, auth.user_id, &role).await?;
     member_repo::add_role(&state.db, user_id, server_id, role_id)
         .await
         .map_err(|e| {
@@ -360,6 +415,14 @@ async fn unassign_role(
         Permissions::MANAGE_ROLES,
     )
     .await?;
+    let role = role_repo::get_by_id(&state.db, role_id)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("role not found".into()))?;
+    if role.server_id != server_id.as_i64() {
+        return Err(ApiError::NotFound("role not found".into()));
+    }
+    require_role_below_actor(&state, server_id, auth.user_id, &role).await?;
     member_repo::remove_role(&state.db, user_id, server_id, role_id)
         .await
         .map_err(ApiError::Database)?;
