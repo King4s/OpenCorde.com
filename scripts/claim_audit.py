@@ -4,11 +4,14 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import re
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+OUT = Path(os.environ.get("OC_CLAIM_AUDIT_OUT", "reports/raw/claim-audit.json"))
 
 DEFAULT_PATTERNS = [
     r"\bfeature-complete\b",
@@ -78,8 +81,19 @@ def main() -> int:
         print("Overclaim findings:")
         for finding in findings:
             print(f"- {finding}")
+        OUT.parent.mkdir(parents=True, exist_ok=True)
+        OUT.write_text(
+            json.dumps({"ok": False, "findingCount": len(findings), "findings": findings}, indent=2)
+            + "\n",
+            encoding="utf-8",
+        )
         return 1 if args.fail else 0
 
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text(
+        json.dumps({"ok": True, "findingCount": 0, "findings": []}, indent=2) + "\n",
+        encoding="utf-8",
+    )
     print("No public/docs overclaim findings.")
     return 0
 

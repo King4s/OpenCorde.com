@@ -79,6 +79,11 @@
       "note": "Live database schema smoke comparing migrations against applied migrations, tables, and columns."
     },
     {
+      "path": "reports/raw/claim-audit.json",
+      "type": "qa",
+      "note": "No-overclaim QA for public copy, docs, and legacy task files."
+    },
+    {
       "path": "tasks-future.md",
       "type": "legacy_claims",
       "note": "Legacy task list marks many Discord-like features complete; now explicitly labeled as an implementation log, not parity proof."
@@ -139,14 +144,14 @@
       "observed": [
         "Landing page and metadata now use in-progress parity language.",
         "Public QA passes for unauthenticated routes across mobile/tablet/desktop.",
-        "Invalid invite route no longer triggers nested /invite/_app module loading errors."
+        "Invalid invite route no longer triggers nested /invite/_app module loading errors.",
+        "No-overclaim QA now writes a raw report and passes with zero findings."
       ],
       "gaps": [
         "Legacy task files still contain historical checked items and must not be treated as parity proof.",
-        "Broader docs and generated reference pages still need a full no-overclaim sweep."
+        "Generated reference pages still need periodic no-overclaim review."
       ],
       "next_todos": [
-        "Add a no-overclaim check to QA.",
         "Audit generated docs and package metadata for stale parity claims.",
         "Keep public QA report current after every landing/app shell change."
       ],
