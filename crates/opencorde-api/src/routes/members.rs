@@ -1,7 +1,11 @@
 //! # Route: Members - Server membership management
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::{helpers, moderation::audit_mod::log_mod_action, permission_check}};
-use opencorde_core::permissions::Permissions;
+use crate::{
+    AppState,
+    error::ApiError,
+    middleware::auth::AuthUser,
+    routes::{helpers, moderation::audit_mod::log_mod_action, permission_check},
+};
 use axum::{
     Json, Router,
     extract::{Path, State},
@@ -9,7 +13,8 @@ use axum::{
     routing::{delete, get},
 };
 use chrono::{DateTime, Utc};
-use opencorde_db::repos::{member_repo, server_repo, user_repo};
+use opencorde_core::{Snowflake, permissions::Permissions};
+use opencorde_db::repos::{member_repo, role_repo, server_repo, user_repo};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
@@ -44,6 +49,57 @@ fn validate_nickname(nickname: Option<&str>) -> Result<(), ApiError> {
             "nickname must be 1-32 characters".into(),
         ));
     }
+    Ok(())
+}
+
+async fn highest_role_position(
+    state: &AppState,
+    server_id: Snowflake,
+    user_id: Snowflake,
+) -> Result<i32, ApiError> {
+    let server = server_repo::get_by_id(&state.db, server_id)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
+
+    if server.owner_id == user_id.as_i64() {
+        return Ok(i32::MAX);
+    }
+
+    let roles = role_repo::list_by_member(&state.db, user_id, server_id)
+        .await
+        .map_err(ApiError::Database)?;
+    Ok(roles
+        .into_iter()
+        .map(|role| role.position)
+        .max()
+        .unwrap_or(0))
+}
+
+async fn require_can_remove_target(
+    state: &AppState,
+    server_id: Snowflake,
+    actor_id: Snowflake,
+    target_id: Snowflake,
+) -> Result<(), ApiError> {
+    let server = server_repo::get_by_id(&state.db, server_id)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
+
+    if server.owner_id == target_id.as_i64() {
+        return Err(ApiError::Forbidden);
+    }
+    if server.owner_id == actor_id.as_i64() {
+        return Ok(());
+    }
+
+    let actor_position = highest_role_position(state, server_id, actor_id).await?;
+    let target_position = highest_role_position(state, server_id, target_id).await?;
+    if target_position >= actor_position {
+        return Err(ApiError::Forbidden);
+    }
+
     Ok(())
 }
 
@@ -88,19 +144,35 @@ async fn remove_member(
     let target_user_id = helpers::parse_snowflake(&user_id)?;
     // Kicking another user requires KICK_MEMBERS; leaving (self-remove) is always allowed
     if target_user_id != auth.user_id {
-        permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::KICK_MEMBERS).await?;
+        permission_check::require_server_perm(
+            &state.db,
+            auth.user_id,
+            server_id,
+            Permissions::KICK_MEMBERS,
+        )
+        .await?;
     }
     member_repo::get_member(&state.db, target_user_id, server_id)
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("member not found".into()))?;
+    if target_user_id != auth.user_id {
+        require_can_remove_target(&state, server_id, auth.user_id, target_user_id).await?;
+    }
     member_repo::remove_member(&state.db, target_user_id, server_id)
         .await
         .map_err(ApiError::Database)?;
     tracing::info!(target_user_id = target_user_id.as_i64(), "member removed");
     // Audit: log kick (not self-leave)
     if target_user_id != auth.user_id {
-        log_mod_action(&state, server_id, auth.user_id, "member.kick", target_user_id.as_i64()).await;
+        log_mod_action(
+            &state,
+            server_id,
+            auth.user_id,
+            "member.kick",
+            target_user_id.as_i64(),
+        )
+        .await;
     }
     Ok(StatusCode::NO_CONTENT)
 }

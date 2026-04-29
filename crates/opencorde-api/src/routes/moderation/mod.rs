@@ -1,7 +1,11 @@
 //! # Route: Moderation - Ban, kick, and timeout management
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::{helpers, permission_check}};
-use opencorde_core::permissions::Permissions;
+use crate::{
+    AppState,
+    error::ApiError,
+    middleware::auth::AuthUser,
+    routes::{helpers, permission_check},
+};
 use axum::{
     Json, Router,
     extract::{Path, State},
@@ -9,7 +13,8 @@ use axum::{
     routing::{get, put},
 };
 use chrono::Utc;
-use opencorde_db::repos::{ban_repo, member_repo};
+use opencorde_core::{Snowflake, permissions::Permissions};
+use opencorde_db::repos::{ban_repo, member_repo, role_repo, server_repo};
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
@@ -59,15 +64,69 @@ pub fn router() -> Router<AppState> {
 
 fn validate_timeout_duration(duration_seconds: i64) -> Result<(), ApiError> {
     if duration_seconds <= 0 {
-        return Err(ApiError::BadRequest(
-            "duration must be positive".into(),
-        ));
+        return Err(ApiError::BadRequest("duration must be positive".into()));
     }
     if duration_seconds > MAX_TIMEOUT_SECONDS {
-        return Err(ApiError::BadRequest(
-            format!("max timeout duration is {} seconds", MAX_TIMEOUT_SECONDS),
-        ));
+        return Err(ApiError::BadRequest(format!(
+            "max timeout duration is {} seconds",
+            MAX_TIMEOUT_SECONDS
+        )));
     }
+    Ok(())
+}
+
+async fn highest_role_position(
+    state: &AppState,
+    server_id: Snowflake,
+    user_id: Snowflake,
+) -> Result<i32, ApiError> {
+    let server = server_repo::get_by_id(&state.db, server_id)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
+
+    if server.owner_id == user_id.as_i64() {
+        return Ok(i32::MAX);
+    }
+
+    let roles = role_repo::list_by_member(&state.db, user_id, server_id)
+        .await
+        .map_err(ApiError::Database)?;
+    Ok(roles
+        .into_iter()
+        .map(|role| role.position)
+        .max()
+        .unwrap_or(0))
+}
+
+async fn require_can_moderate_target(
+    state: &AppState,
+    server_id: Snowflake,
+    actor_id: Snowflake,
+    target_id: Snowflake,
+) -> Result<(), ApiError> {
+    if actor_id == target_id {
+        return Err(ApiError::Forbidden);
+    }
+
+    let server = server_repo::get_by_id(&state.db, server_id)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
+
+    if server.owner_id == target_id.as_i64() {
+        return Err(ApiError::Forbidden);
+    }
+    if server.owner_id == actor_id.as_i64() {
+        return Ok(());
+    }
+
+    let actor_position = highest_role_position(state, server_id, actor_id).await?;
+    let target_position = highest_role_position(state, server_id, target_id).await?;
+    if target_position >= actor_position {
+        return Err(ApiError::Forbidden);
+    }
+
     Ok(())
 }
 
@@ -83,12 +142,19 @@ async fn ban_user(
     let target_user_id = helpers::parse_snowflake(&user_id)?;
 
     // require_server_perm already verifies server exists and user has BAN_MEMBERS
-    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::BAN_MEMBERS).await?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::BAN_MEMBERS,
+    )
+    .await?;
 
     member_repo::get_member(&state.db, target_user_id, server_id)
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("member not found".into()))?;
+    require_can_moderate_target(&state, server_id, auth.user_id, target_user_id).await?;
 
     ban_repo::ban_user(
         &state.db,
@@ -104,9 +170,19 @@ async fn ban_user(
         .await
         .map_err(ApiError::Database)?;
 
-    log_mod_action(&state, server_id, auth.user_id, "member.ban", target_user_id.as_i64()).await;
+    log_mod_action(
+        &state,
+        server_id,
+        auth.user_id,
+        "member.ban",
+        target_user_id.as_i64(),
+    )
+    .await;
 
-    tracing::info!(target_user_id = target_user_id.as_i64(), "user banned and removed from server");
+    tracing::info!(
+        target_user_id = target_user_id.as_i64(),
+        "user banned and removed from server"
+    );
 
     Ok((
         StatusCode::CREATED,
@@ -128,7 +204,13 @@ async fn unban_user(
     let server_id = helpers::parse_snowflake(&server_id)?;
     let target_user_id = helpers::parse_snowflake(&user_id)?;
 
-    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::BAN_MEMBERS).await?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::BAN_MEMBERS,
+    )
+    .await?;
 
     let ban_existed = ban_repo::unban_user(&state.db, server_id.as_i64(), target_user_id.as_i64())
         .await
@@ -138,7 +220,14 @@ async fn unban_user(
         return Err(ApiError::NotFound("ban not found".into()));
     }
 
-    log_mod_action(&state, server_id, auth.user_id, "member.unban", target_user_id.as_i64()).await;
+    log_mod_action(
+        &state,
+        server_id,
+        auth.user_id,
+        "member.unban",
+        target_user_id.as_i64(),
+    )
+    .await;
 
     tracing::info!(target_user_id = target_user_id.as_i64(), "user unbanned");
     Ok(StatusCode::NO_CONTENT)
@@ -153,7 +242,13 @@ async fn list_bans(
     tracing::info!("listing server bans");
     let server_id = helpers::parse_snowflake(&server_id)?;
 
-    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::BAN_MEMBERS).await?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::BAN_MEMBERS,
+    )
+    .await?;
 
     let bans = ban_repo::list_bans(&state.db, server_id.as_i64())
         .await
@@ -185,12 +280,19 @@ async fn set_timeout(
 
     validate_timeout_duration(req.duration_seconds)?;
 
-    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::MODERATE_MEMBERS).await?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::MODERATE_MEMBERS,
+    )
+    .await?;
 
     member_repo::get_member(&state.db, target_user_id, server_id)
         .await
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::NotFound("member not found".into()))?;
+    require_can_moderate_target(&state, server_id, auth.user_id, target_user_id).await?;
 
     let timeout_until = Utc::now() + chrono::Duration::seconds(req.duration_seconds);
 
@@ -204,7 +306,14 @@ async fn set_timeout(
     .await
     .map_err(ApiError::Database)?;
 
-    log_mod_action(&state, server_id, auth.user_id, "member.timeout", target_user_id.as_i64()).await;
+    log_mod_action(
+        &state,
+        server_id,
+        auth.user_id,
+        "member.timeout",
+        target_user_id.as_i64(),
+    )
+    .await;
 
     tracing::info!(
         target_user_id = target_user_id.as_i64(),
@@ -232,7 +341,13 @@ async fn remove_timeout(
     let server_id = helpers::parse_snowflake(&server_id)?;
     let target_user_id = helpers::parse_snowflake(&user_id)?;
 
-    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::MODERATE_MEMBERS).await?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::MODERATE_MEMBERS,
+    )
+    .await?;
 
     let timeout = ban_repo::get_timeout(&state.db, server_id.as_i64(), target_user_id.as_i64())
         .await
@@ -241,14 +356,25 @@ async fn remove_timeout(
     if timeout.is_none() {
         return Err(ApiError::NotFound("timeout not found".into()));
     }
+    require_can_moderate_target(&state, server_id, auth.user_id, target_user_id).await?;
 
     ban_repo::remove_timeout(&state.db, server_id.as_i64(), target_user_id.as_i64())
         .await
         .map_err(ApiError::Database)?;
 
-    log_mod_action(&state, server_id, auth.user_id, "member.timeout_removed", target_user_id.as_i64()).await;
+    log_mod_action(
+        &state,
+        server_id,
+        auth.user_id,
+        "member.timeout_removed",
+        target_user_id.as_i64(),
+    )
+    .await;
 
-    tracing::info!(target_user_id = target_user_id.as_i64(), "user timeout removed");
+    tracing::info!(
+        target_user_id = target_user_id.as_i64(),
+        "user timeout removed"
+    );
     Ok(StatusCode::NO_CONTENT)
 }
 

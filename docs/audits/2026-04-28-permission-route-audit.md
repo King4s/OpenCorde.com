@@ -94,6 +94,10 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - Role update/delete/assign/unassign now enforce hierarchy: non-owner actors can only manage roles below their highest role, and cannot move roles to their own or higher position.
   - Role create/update now rejects permission bits the actor does not effectively hold, with owner/administrator resolving to all known bits.
 
+- `moderation`
+  - Ban, timeout, timeout removal, and kick now enforce target hierarchy.
+  - Non-owner moderators cannot target the server owner or members with equal/higher top role position.
+
 ## Still Open
 
 - Channel overwrite computation still needs closer Discord parity:
@@ -103,7 +107,6 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 
 - Role hierarchy still needs deeper Discord parity:
   - role reordering batch semantics
-  - moderation targets
   - self-escalation through powerful roles
 
 - E2EE key-package consumption needs a channel/member-scoped design before hardening.
@@ -144,6 +147,7 @@ Permission smoke coverage:
 - non-member cannot list/create server events: 403
 - non-member cannot list server roles: 403
 - role hierarchy smoke: manager cannot create/edit roles with unheld permission bits, move a lower role to equal position, or delete own top role: 403
+- moderation hierarchy smoke: moderator cannot ban, timeout, or kick a same-position target: 403
 
 ## Next Recommended Fixes
 
