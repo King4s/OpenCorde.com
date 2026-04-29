@@ -58,6 +58,31 @@ pub async fn require_server_perm(
     Err(ApiError::Forbidden)
 }
 
+/// Compute effective server-level permissions for a user.
+///
+/// Server owner and ADMINISTRATOR resolve to all known permission bits.
+pub async fn effective_server_perms(
+    pool: &PgPool,
+    user_id: Snowflake,
+    server_id: Snowflake,
+) -> Result<Permissions, ApiError> {
+    let server = server_repo::get_by_id(pool, server_id)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
+
+    if server.owner_id == user_id.as_i64() {
+        return Ok(Permissions::all());
+    }
+
+    let effective = compute_base_perms(pool, user_id, server_id).await?;
+    if effective.contains(Permissions::ADMINISTRATOR) {
+        return Ok(Permissions::all());
+    }
+
+    Ok(effective)
+}
+
 /// Require the calling user to hold `required` in the given channel.
 ///
 /// Resolves the channel's server, then applies channel overrides on top of
@@ -75,15 +100,13 @@ pub async fn require_channel_perm(
     required: Permissions,
 ) -> Result<(), ApiError> {
     // Resolve channel → server_id
-    let row: Option<(i64,)> =
-        sqlx::query_as("SELECT server_id FROM channels WHERE id = $1")
-            .bind(channel_id.as_i64())
-            .fetch_optional(pool)
-            .await
-            .map_err(ApiError::Database)?;
+    let row: Option<(i64,)> = sqlx::query_as("SELECT server_id FROM channels WHERE id = $1")
+        .bind(channel_id.as_i64())
+        .fetch_optional(pool)
+        .await
+        .map_err(ApiError::Database)?;
 
-    let (server_id_raw,) = row
-        .ok_or_else(|| ApiError::NotFound("channel not found".into()))?;
+    let (server_id_raw,) = row.ok_or_else(|| ApiError::NotFound("channel not found".into()))?;
     let server_id = Snowflake::new(server_id_raw);
 
     // Owner bypass

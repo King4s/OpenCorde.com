@@ -92,6 +92,7 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 - `roles`
   - Listing server roles and member roles now requires server membership through `VIEW_CHANNEL`.
   - Role update/delete/assign/unassign now enforce hierarchy: non-owner actors can only manage roles below their highest role, and cannot move roles to their own or higher position.
+  - Role create/update now rejects permission bits the actor does not effectively hold, with owner/administrator resolving to all known bits.
 
 ## Still Open
 
@@ -101,7 +102,6 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - member overwrite precedence tests
 
 - Role hierarchy still needs deeper Discord parity:
-  - permission-bit subset checks when creating/editing roles
   - role reordering batch semantics
   - moderation targets
   - self-escalation through powerful roles
@@ -143,7 +143,7 @@ Permission smoke coverage:
 - non-member cannot initialize/fetch/update E2EE group state: 403
 - non-member cannot list/create server events: 403
 - non-member cannot list server roles: 403
-- role hierarchy smoke: manager cannot move a lower role to equal position and cannot delete own top role: 403
+- role hierarchy smoke: manager cannot create/edit roles with unheld permission bits, move a lower role to equal position, or delete own top role: 403
 
 ## Next Recommended Fixes
 

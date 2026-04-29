@@ -142,6 +142,25 @@ async fn require_position_below_actor(
     Ok(())
 }
 
+async fn require_actor_can_set_permissions(
+    state: &AppState,
+    server_id: Snowflake,
+    actor_id: Snowflake,
+    permissions: u64,
+) -> Result<i64, ApiError> {
+    let requested = Permissions::from_bits(permissions)
+        .ok_or_else(|| ApiError::BadRequest("invalid permission bits".into()))?;
+    let effective =
+        permission_check::effective_server_perms(&state.db, actor_id, server_id).await?;
+
+    if !effective.contains(requested) {
+        return Err(ApiError::Forbidden);
+    }
+
+    i64::try_from(permissions)
+        .map_err(|_| ApiError::BadRequest("permission bits exceed storage range".into()))
+}
+
 #[instrument(skip(state, auth), fields(user_id = %auth.user_id))]
 async fn list_roles(
     State(state): State<AppState>,
@@ -205,6 +224,8 @@ async fn create_role(
     )
     .await?;
     validate_role_name(&req.name)?;
+    let requested_permissions =
+        require_actor_can_set_permissions(&state, server_id, auth.user_id, req.permissions).await?;
     let mut role_gen = SnowflakeGenerator::new(2, 0);
     let role_id = role_gen.next_id();
     let role = role_repo::create_role(
@@ -212,7 +233,7 @@ async fn create_role(
         role_id,
         server_id,
         &req.name,
-        req.permissions as i64,
+        requested_permissions,
         req.color,
         req.mentionable.unwrap_or(false),
     )
@@ -257,10 +278,11 @@ async fn update_role(
     if let Some(name) = &req.name {
         validate_role_name(name)?;
     }
-    let new_perms = req
-        .permissions
-        .map(|p| p as i64)
-        .unwrap_or(role.permissions);
+    let new_perms = if let Some(permissions) = req.permissions {
+        require_actor_can_set_permissions(&state, server_id, auth.user_id, permissions).await?
+    } else {
+        role.permissions
+    };
     let new_color = req.color.or(role.color);
     let new_position = req.position.unwrap_or(role.position);
     require_position_below_actor(&state, server_id, auth.user_id, new_position).await?;
