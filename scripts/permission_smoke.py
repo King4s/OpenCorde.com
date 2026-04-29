@@ -74,6 +74,24 @@ async def main() -> int:
         member_headers = {"Authorization": f"Bearer {member_token}"}
         nonmember_headers = {"Authorization": f"Bearer {nonmember_token}"}
 
+        status, member_profile = await request_json(
+            session,
+            "GET",
+            f"{API}/users/@me",
+            headers=member_headers,
+        )
+        if status != 200 or not member_profile:
+            raise RuntimeError(f"member profile baseline failed: {status} {member_profile}")
+        member_id = member_profile["id"]
+
+        await request_json(
+            session,
+            "POST",
+            f"{API}/users/me/key-packages",
+            headers=member_headers,
+            json={"key_package": "AQ"},
+        )
+
         status, servers = await request_json(session, "GET", f"{API}/servers", headers=member_headers)
         if status != 200 or not servers:
             raise RuntimeError(f"member has no server baseline: {status} {servers}")
@@ -139,6 +157,12 @@ async def main() -> int:
                 "name": "nonmember cannot list server roles",
                 "method": "GET",
                 "url": f"{API}/servers/{server_id}/roles",
+                "expect": 403,
+            },
+            {
+                "name": "nonmember cannot consume unrelated user key package",
+                "method": "GET",
+                "url": f"{API}/users/{member_id}/key-packages/one",
                 "expect": 403,
             },
             {

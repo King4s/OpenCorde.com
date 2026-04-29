@@ -10,12 +10,12 @@
 //! - crate::middleware::auth::AuthUser (authentication)
 //! - crate::AppState (application state)
 
-use crate::{error::ApiError, middleware::auth::AuthUser, routes::helpers, AppState};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::helpers};
 use axum::{
+    Json, Router,
     extract::{Path, State},
     http::StatusCode,
     routing::{get, post},
-    Json, Router,
 };
 use serde::{Deserialize, Serialize};
 use sqlx::Row;
@@ -62,14 +62,12 @@ pub async fn upload_key_package(
     // Decode base64 → raw bytes
     let kp_bytes = base64_decode(&payload.key_package)?;
 
-    sqlx::query(
-        "INSERT INTO e2ee_key_packages (user_id, key_package) VALUES ($1, $2)",
-    )
-    .bind(auth.user_id.as_i64())
-    .bind(&kp_bytes)
-    .execute(&state.db)
-    .await
-    .map_err(ApiError::Database)?;
+    sqlx::query("INSERT INTO e2ee_key_packages (user_id, key_package) VALUES ($1, $2)")
+        .bind(auth.user_id.as_i64())
+        .bind(&kp_bytes)
+        .execute(&state.db)
+        .await
+        .map_err(ApiError::Database)?;
 
     tracing::info!(user_id = %auth.user_id, "key package uploaded");
     Ok(StatusCode::CREATED)
@@ -86,6 +84,27 @@ pub async fn consume_key_package(
     Path(user_id_str): Path<String>,
 ) -> Result<Json<KeyPackageResponse>, ApiError> {
     let target_id = helpers::parse_snowflake(&user_id_str)?;
+    if target_id != auth.user_id {
+        let shared_server: Option<i64> = sqlx::query_scalar(
+            "SELECT 1 FROM server_members requester \
+             INNER JOIN server_members target ON target.server_id = requester.server_id \
+             WHERE requester.user_id = $1 AND target.user_id = $2 LIMIT 1",
+        )
+        .bind(auth.user_id.as_i64())
+        .bind(target_id.as_i64())
+        .fetch_optional(&state.db)
+        .await
+        .map_err(ApiError::Database)?;
+
+        if shared_server.is_none() {
+            tracing::warn!(
+                requester = auth.user_id.as_i64(),
+                target_user = target_id.as_i64(),
+                "key package consume denied: users share no server"
+            );
+            return Err(ApiError::Forbidden);
+        }
+    }
 
     // Atomically select and mark one available package as consumed
     let row = sqlx::query(
@@ -132,14 +151,12 @@ pub async fn delete_all_key_packages(
     State(state): State<AppState>,
     auth: AuthUser,
 ) -> Result<StatusCode, ApiError> {
-    let deleted = sqlx::query(
-        "DELETE FROM e2ee_key_packages WHERE user_id = $1",
-    )
-    .bind(auth.user_id.as_i64())
-    .execute(&state.db)
-    .await
-    .map_err(ApiError::Database)?
-    .rows_affected();
+    let deleted = sqlx::query("DELETE FROM e2ee_key_packages WHERE user_id = $1")
+        .bind(auth.user_id.as_i64())
+        .execute(&state.db)
+        .await
+        .map_err(ApiError::Database)?
+        .rows_affected();
 
     tracing::info!(user_id = %auth.user_id, deleted, "key packages deleted");
     Ok(StatusCode::NO_CONTENT)

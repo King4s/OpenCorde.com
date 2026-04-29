@@ -83,6 +83,10 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - Channel ack now requires `VIEW_CHANNEL`.
   - Read-state list filters stale or unauthorized channel entries before returning them.
 
+- `E2EE key packages`
+  - Consuming another user's key package now requires the requester to share at least one server with the target user.
+  - Users may still consume their own available package.
+
 - `events`
   - Listing server events now requires server `VIEW_CHANNEL` and filters channel-bound events by channel visibility.
   - Creating events now requires `CREATE_EVENTS`; channel-bound events also require channel visibility and same-server validation.
@@ -109,7 +113,7 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - role reordering batch semantics
   - self-escalation through powerful roles
 
-- E2EE key-package consumption needs a channel/member-scoped design before hardening.
+- E2EE key-package consumption is now server-co-membership gated, but a more precise channel/group-scoped design is still needed for full MLS parity.
 
 - Stage permissions still need a deeper model:
   - `CONNECT`
@@ -146,6 +150,7 @@ Permission smoke coverage:
 - non-member cannot initialize/fetch/update E2EE group state: 403
 - non-member cannot list/create server events: 403
 - non-member cannot list server roles: 403
+- non-member cannot consume unrelated user key package: 403
 - role hierarchy smoke: manager cannot create/edit roles with unheld permission bits, move a lower role to equal position, or delete own top role: 403
 - moderation hierarchy smoke: moderator cannot ban, timeout, or kick a same-position target: 403
 
