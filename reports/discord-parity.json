@@ -84,6 +84,11 @@
       "note": "No-overclaim QA for public copy, docs, and legacy task files."
     },
     {
+      "path": "reports/raw/livekit-health.json",
+      "type": "qa",
+      "note": "LiveKit local and public proxy health smoke."
+    },
+    {
       "path": "tasks-future.md",
       "type": "legacy_claims",
       "note": "Legacy task list marks many Discord-like features complete; now explicitly labeled as an implementation log, not parity proof."
@@ -251,16 +256,15 @@
         "LiveKit, voice state, device settings, video grid, recordings, soundboard, and stage panel names exist.",
         "Voice LiveKit tokens now keep `CONNECT` and `SPEAK` separate: users denied `SPEAK` receive subscribe-only tokens with `canPublish=false`.",
         "Stage detail/join/hand/speaker routes now enforce channel `CONNECT`, `REQUEST_TO_SPEAK`, `SPEAK`, and `MUTE_MEMBERS` on the API path.",
-        "Stage RTC publish grants now require both channel `SPEAK` and current stage participant role `speaker`; audience and demoted users get subscribe-only refreshed tokens."
+        "Stage RTC publish grants now require both channel `SPEAK` and current stage participant role `speaker`; audience and demoted users get subscribe-only refreshed tokens.",
+        "LiveKit local service and public proxy health checks pass."
       ],
       "gaps": [
         "Two-client join/leave/mute/deafen/screen-share workflow is not proven.",
         "Server mute/deafen, stage speaker lifecycle, RTC reconnect, and mobile controls need proof.",
-        "Client-side stage promotion/demotion still needs realtime proof that connected users refresh RTC grants.",
-        "LiveKit operational health is not in parity reporting."
+        "Client-side stage promotion/demotion still needs realtime proof that connected users refresh RTC grants."
       ],
       "next_todos": [
-        "Add LiveKit health check to instance report.",
         "Create two-client voice Playwright/manual checklist.",
         "Prove stage audience-to-speaker flow.",
         "Add voice permission denial tests.",

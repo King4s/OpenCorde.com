@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "checks": [
+    {
+      "name": "local",
+      "url": "http://localhost:7880/",
+      "ok": true,
+      "status": 200,
+      "body": "OK",
+      "latencyMs": 3,
+      "error": null
+    },
+    {
+      "name": "public",
+      "url": "https://opencorde.com/livekit",
+      "ok": true,
+      "status": 200,
+      "body": "OK",
+      "latencyMs": 43,
+      "error": null
+    }
+  ]
+}
