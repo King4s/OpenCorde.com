@@ -159,6 +159,23 @@ def cleanup_stage_fixture(
     )
 
 
+def cleanup_role_reorder_fixture(
+    *,
+    role_ids: list[int],
+    server_id: str,
+    limited_user_id: str,
+) -> None:
+    role_list = ",".join(str(role_id) for role_id in role_ids)
+    psql(
+        f"""
+        DELETE FROM member_roles WHERE role_id IN ({role_list})
+           OR (user_id = {limited_user_id} AND server_id = {server_id});
+        DELETE FROM roles WHERE id IN ({role_list});
+        DELETE FROM server_members WHERE user_id = {limited_user_id} AND server_id = {server_id};
+        """
+    )
+
+
 def decode_jwt_payload(token: str) -> dict:
     payload = token.split(".")[1]
     payload += "=" * (-len(payload) % 4)
@@ -527,6 +544,61 @@ async def main() -> int:
         finally:
             cleanup_stage_fixture(
                 channel_ids=stage_channel_ids,
+                server_id=server_id,
+                limited_user_id=limited_user_id,
+            )
+
+        manager_role_id = now_ms * 1000 + 401
+        target_role_id = now_ms * 1000 + 402
+        role_reorder_ids = [manager_role_id, target_role_id]
+        cleanup_role_reorder_fixture(
+            role_ids=role_reorder_ids,
+            server_id=server_id,
+            limited_user_id=limited_user_id,
+        )
+        psql(
+            f"""
+            INSERT INTO server_members (user_id, server_id)
+            VALUES ({limited_user_id}, {server_id})
+            ON CONFLICT DO NOTHING;
+
+            INSERT INTO roles (id, server_id, name, permissions, position)
+            VALUES
+              ({manager_role_id}, {server_id}, 'permission-reorder-manager', {1 << 28}, 10),
+              ({target_role_id}, {server_id}, 'permission-reorder-target', 0, 1);
+
+            INSERT INTO member_roles (user_id, server_id, role_id)
+            VALUES ({limited_user_id}, {server_id}, {manager_role_id})
+            ON CONFLICT DO NOTHING;
+            """
+        )
+
+        try:
+            status, data = await request_json(
+                session,
+                "PATCH",
+                f"{API}/servers/{server_id}/roles",
+                headers=limited_headers,
+                json=[{"id": str(target_role_id), "position": 10}],
+            )
+            ok = status == 403
+            results.append(
+                {
+                    "name": "role batch reorder cannot move role to actor position",
+                    "method": "PATCH",
+                    "url": f"/api/v1/servers/{server_id}/roles",
+                    "expectedStatus": 403,
+                    "actualStatus": status,
+                    "ok": ok,
+                    "response": data,
+                }
+            )
+            print(
+                f"[{'PASS' if ok else 'FAIL'}] role batch reorder cannot move role to actor position expected=403 actual={status}"
+            )
+        finally:
+            cleanup_role_reorder_fixture(
+                role_ids=role_reorder_ids,
                 server_id=server_id,
                 limited_user_id=limited_user_id,
             )

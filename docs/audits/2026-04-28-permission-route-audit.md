@@ -97,6 +97,7 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - Listing server roles and member roles now requires server membership through `VIEW_CHANNEL`.
   - Role update/delete/assign/unassign now enforce hierarchy: non-owner actors can only manage roles below their highest role, and cannot move roles to their own or higher position.
   - Role create/update now rejects permission bits the actor does not effectively hold, with owner/administrator resolving to all known bits.
+  - Added batch role reorder endpoint (`PATCH /servers/{server_id}/roles`) with hierarchy validation before applying position changes.
 
 - `moderation`
   - Ban, timeout, timeout removal, and kick now enforce target hierarchy.
@@ -132,8 +133,8 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
   - Playwright UI proof for private-channel deny/allow workflows
 
 - Role hierarchy still needs deeper Discord parity:
-  - role reordering batch semantics
   - self-escalation through powerful roles
+  - UI proof for batch role reordering
 
 - E2EE key-package consumption is now server-co-membership gated, but a more precise channel/group-scoped design is still needed for full MLS parity.
 
@@ -179,6 +180,7 @@ Permission smoke coverage:
 - stage detail and join denied without `CONNECT`: 403
 - stage hand raise denied without `REQUEST_TO_SPEAK`: 403
 - stage speaker promotion denied when target lacks `SPEAK`: 403
+- role batch reorder cannot move a role to the actor's own position: 403
 - role hierarchy smoke: manager cannot create/edit roles with unheld permission bits, move a lower role to equal position, or delete own top role: 403
 - moderation hierarchy smoke: moderator cannot ban, timeout, or kick a same-position target: 403
 

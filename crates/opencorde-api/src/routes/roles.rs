@@ -19,6 +19,7 @@ use opencorde_core::snowflake::SnowflakeGenerator;
 use opencorde_db::repos::{member_repo, role_repo, server_repo};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::collections::{HashMap, HashSet};
 use tracing::instrument;
 
 #[derive(Debug, Serialize, Clone)]
@@ -50,11 +51,17 @@ pub struct UpdateRoleRequest {
     pub mentionable: Option<bool>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct ReorderRoleRequest {
+    pub id: String,
+    pub position: i32,
+}
+
 pub fn router() -> Router<AppState> {
     Router::new()
         .route(
             "/api/v1/servers/{server_id}/roles",
-            post(create_role).get(list_roles),
+            post(create_role).get(list_roles).patch(reorder_roles),
         )
         .route(
             "/api/v1/servers/{server_id}/roles/{role_id}",
@@ -180,6 +187,87 @@ async fn list_roles(
         .await
         .map_err(ApiError::Database)?;
     Ok(Json(roles.into_iter().map(role_row_to_response).collect()))
+}
+
+#[instrument(skip(state, auth), fields(user_id = %auth.user_id))]
+async fn reorder_roles(
+    State(state): State<AppState>,
+    auth: AuthUser,
+    Path(server_id): Path<String>,
+    Json(req): Json<Vec<ReorderRoleRequest>>,
+) -> Result<Json<Vec<RoleResponse>>, ApiError> {
+    tracing::info!(count = req.len(), "reordering roles for server");
+    let server_id_sf = helpers::parse_snowflake(&server_id)?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id_sf,
+        Permissions::MANAGE_ROLES,
+    )
+    .await?;
+
+    let roles = role_repo::list_by_server(&state.db, server_id_sf)
+        .await
+        .map_err(ApiError::Database)?;
+    let roles_by_id: HashMap<i64, role_repo::RoleRow> =
+        roles.into_iter().map(|role| (role.id, role)).collect();
+
+    let mut seen_roles = HashSet::new();
+    let mut seen_positions = HashSet::new();
+    let mut parsed = Vec::with_capacity(req.len());
+    for item in req {
+        let role_id = helpers::parse_snowflake(&item.id)?;
+        if !seen_roles.insert(role_id.as_i64()) {
+            return Err(ApiError::BadRequest("duplicate role id in reorder".into()));
+        }
+        if !seen_positions.insert(item.position) {
+            return Err(ApiError::BadRequest(
+                "duplicate role position in reorder".into(),
+            ));
+        }
+        let role = roles_by_id
+            .get(&role_id.as_i64())
+            .ok_or_else(|| ApiError::NotFound("role not found".into()))?;
+        require_role_below_actor(&state, server_id_sf, auth.user_id, role).await?;
+        require_position_below_actor(&state, server_id_sf, auth.user_id, item.position).await?;
+        parsed.push((role_id, item.position));
+    }
+
+    for (role_id, position) in parsed {
+        sqlx::query("UPDATE roles SET position = $1 WHERE id = $2 AND server_id = $3")
+            .bind(position)
+            .bind(role_id.as_i64())
+            .bind(server_id_sf.as_i64())
+            .execute(&state.db)
+            .await
+            .map_err(ApiError::Database)?;
+    }
+
+    let updated_roles = role_repo::list_by_server(&state.db, server_id_sf)
+        .await
+        .map_err(ApiError::Database)?;
+    let responses: Vec<RoleResponse> = updated_roles
+        .into_iter()
+        .map(role_row_to_response)
+        .collect();
+
+    for response in &responses {
+        let event = json!({"type":"RoleUpdate","data":{"server_id":response.server_id.clone(),"role":response}});
+        if state.event_tx.send(event).is_err() {
+            tracing::debug!("no WebSocket subscribers for RoleUpdate event");
+        }
+    }
+
+    log_mod_action(
+        &state,
+        server_id_sf,
+        auth.user_id,
+        "role.reorder",
+        server_id_sf.as_i64(),
+    )
+    .await;
+
+    Ok(Json(responses))
 }
 
 /// GET /api/v1/servers/{server_id}/members/{user_id}/roles — Get a member's roles.
