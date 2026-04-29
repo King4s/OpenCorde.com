@@ -150,6 +150,8 @@ def cleanup_stage_fixture(
     channel_list = ",".join(str(channel_id) for channel_id in channel_ids)
     psql(
         f"""
+        DELETE FROM voice_states WHERE channel_id IN ({channel_list})
+           OR user_id = {limited_user_id};
         DELETE FROM stage_participants WHERE channel_id IN ({channel_list});
         DELETE FROM stage_sessions WHERE channel_id IN ({channel_list});
         DELETE FROM channel_permission_overrides WHERE channel_id IN ({channel_list});
@@ -558,6 +560,136 @@ async def main() -> int:
         finally:
             cleanup_stage_fixture(
                 channel_ids=stage_channel_ids,
+                server_id=server_id,
+                limited_user_id=limited_user_id,
+            )
+
+        rtc_stage_channel_id = now_ms * 1000 + 351
+        rtc_stage_session_id = now_ms * 1000 + 352
+        rtc_stage_participant_id = now_ms * 1000 + 353
+        cleanup_stage_fixture(
+            channel_ids=[rtc_stage_channel_id],
+            server_id=server_id,
+            limited_user_id=limited_user_id,
+        )
+        psql(
+            f"""
+            INSERT INTO server_members (user_id, server_id)
+            VALUES ({limited_user_id}, {server_id})
+            ON CONFLICT DO NOTHING;
+
+            INSERT INTO channels (id, server_id, name, channel_type, position)
+            VALUES ({rtc_stage_channel_id}, {server_id}, 'permission-stage-rtc', 3, 9999);
+
+            INSERT INTO stage_sessions (id, channel_id, topic, started_by)
+            VALUES ({rtc_stage_session_id}, {rtc_stage_channel_id}, 'permission smoke rtc', {member_id});
+
+            INSERT INTO stage_participants (id, channel_id, user_id, role)
+            VALUES ({rtc_stage_participant_id}, {rtc_stage_channel_id}, {limited_user_id}, 'audience');
+            """
+        )
+
+        try:
+            status, data = await request_json(
+                session,
+                "POST",
+                f"{API}/voice/join",
+                headers=limited_headers,
+                json={"channel_id": str(rtc_stage_channel_id)},
+            )
+            can_publish = None
+            if status == 200 and isinstance(data, dict):
+                token = data.get("livekit_token")
+                if token:
+                    can_publish = decode_jwt_payload(token).get("video", {}).get("canPublish")
+            ok = status == 200 and can_publish is False
+            results.append(
+                {
+                    "name": "stage audience with SPEAK gets subscribe-only RTC token",
+                    "method": "POST",
+                    "url": "/api/v1/voice/join",
+                    "expectedStatus": 200,
+                    "actualStatus": status,
+                    "ok": ok,
+                    "response": {"canPublish": can_publish},
+                }
+            )
+            print(
+                f"[{'PASS' if ok else 'FAIL'}] stage audience with SPEAK gets subscribe-only RTC token expected=200 actual={status}"
+            )
+
+            psql(
+                f"""
+                UPDATE stage_participants
+                SET role = 'speaker', hand_raised = FALSE
+                WHERE channel_id = {rtc_stage_channel_id} AND user_id = {limited_user_id};
+                """
+            )
+            status, data = await request_json(
+                session,
+                "POST",
+                f"{API}/livekit/token",
+                headers=limited_headers,
+                json={"channel_id": str(rtc_stage_channel_id)},
+            )
+            can_publish = None
+            if status == 200 and isinstance(data, dict):
+                token = data.get("token")
+                if token:
+                    can_publish = decode_jwt_payload(token).get("video", {}).get("canPublish")
+            ok = status == 200 and can_publish is True
+            results.append(
+                {
+                    "name": "stage speaker with SPEAK gets publish RTC token",
+                    "method": "POST",
+                    "url": "/api/v1/livekit/token",
+                    "expectedStatus": 200,
+                    "actualStatus": status,
+                    "ok": ok,
+                    "response": {"canPublish": can_publish},
+                }
+            )
+            print(
+                f"[{'PASS' if ok else 'FAIL'}] stage speaker with SPEAK gets publish RTC token expected=200 actual={status}"
+            )
+
+            psql(
+                f"""
+                UPDATE stage_participants
+                SET role = 'audience'
+                WHERE channel_id = {rtc_stage_channel_id} AND user_id = {limited_user_id};
+                """
+            )
+            status, data = await request_json(
+                session,
+                "POST",
+                f"{API}/livekit/token",
+                headers=limited_headers,
+                json={"channel_id": str(rtc_stage_channel_id)},
+            )
+            can_publish = None
+            if status == 200 and isinstance(data, dict):
+                token = data.get("token")
+                if token:
+                    can_publish = decode_jwt_payload(token).get("video", {}).get("canPublish")
+            ok = status == 200 and can_publish is False
+            results.append(
+                {
+                    "name": "demoted stage audience gets subscribe-only refreshed RTC token",
+                    "method": "POST",
+                    "url": "/api/v1/livekit/token",
+                    "expectedStatus": 200,
+                    "actualStatus": status,
+                    "ok": ok,
+                    "response": {"canPublish": can_publish},
+                }
+            )
+            print(
+                f"[{'PASS' if ok else 'FAIL'}] demoted stage audience gets subscribe-only refreshed RTC token expected=200 actual={status}"
+            )
+        finally:
+            cleanup_stage_fixture(
+                channel_ids=[rtc_stage_channel_id],
                 server_id=server_id,
                 limited_user_id=limited_user_id,
             )

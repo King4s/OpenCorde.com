@@ -124,6 +124,7 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 - `voice / LiveKit`
   - Voice join and fresh LiveKit token routes still require channel `CONNECT`.
   - LiveKit publish grants now depend on effective channel `SPEAK`; users with `CONNECT` but denied `SPEAK` receive subscribe-only tokens.
+  - Stage RTC publish grants now require both effective channel `SPEAK` and current stage participant role `speaker`; `audience` participants receive subscribe-only tokens.
 
 - `stage`
   - Stage detail and join now require channel `CONNECT`.
@@ -149,8 +150,7 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 
 - Stage permissions still need a deeper model:
   - `MOVE_MEMBERS`
-  - stage speaker/audience alignment with LiveKit publish grants
-  - stage LiveKit grants still need to account for stage speaker/audience role, not only channel `SPEAK`
+  - realtime/client proof that promoted or demoted stage users refresh RTC grants correctly
 
 ## Verification
 
@@ -190,6 +190,9 @@ Permission smoke coverage:
 - stage detail and join denied without `CONNECT`: 403
 - stage hand raise denied without `REQUEST_TO_SPEAK`: 403
 - stage speaker promotion denied when target lacks `SPEAK`: 403
+- stage audience with `SPEAK` receives subscribe-only RTC token with `canPublish=false`
+- stage speaker with `SPEAK` receives publish RTC token with `canPublish=true`
+- demoted stage audience receives refreshed subscribe-only RTC token with `canPublish=false`
 - role batch reorder cannot move a role to the actor's own position: 403
 - server effective permission inspector returns owner permissions: 200
 - channel effective permission inspector returns channel permissions: 200

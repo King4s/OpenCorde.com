@@ -20,9 +20,79 @@ use super::types::*;
 
 const LIVEKIT_TOKEN_EXPIRY: u64 = 3600; // 1 hour
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum RtcChannelKind {
+    Voice,
+    Stage,
+}
+
+impl RtcChannelKind {
+    fn from_channel_type(channel_type: i16) -> Option<Self> {
+        match channel_type {
+            1 => Some(Self::Voice),
+            3 => Some(Self::Stage),
+            _ => None,
+        }
+    }
+}
+
+async fn require_stage_participant_role(
+    state: &AppState,
+    channel_id: opencorde_core::Snowflake,
+    user_id: opencorde_core::Snowflake,
+) -> Result<String, ApiError> {
+    let active_session = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(SELECT 1 FROM stage_sessions WHERE channel_id = $1)",
+    )
+    .bind(channel_id.as_i64())
+    .fetch_one(&state.db)
+    .await
+    .map_err(ApiError::Database)?;
+
+    if !active_session {
+        return Err(ApiError::NotFound("no active stage session".into()));
+    }
+
+    let role = sqlx::query_scalar::<_, String>(
+        "SELECT role FROM stage_participants WHERE channel_id = $1 AND user_id = $2",
+    )
+    .bind(channel_id.as_i64())
+    .bind(user_id.as_i64())
+    .fetch_optional(&state.db)
+    .await
+    .map_err(ApiError::Database)?
+    .ok_or_else(|| ApiError::Forbidden)?;
+
+    Ok(role)
+}
+
+async fn can_publish_to_rtc_room(
+    state: &AppState,
+    user_id: opencorde_core::Snowflake,
+    channel_id: opencorde_core::Snowflake,
+    channel_kind: RtcChannelKind,
+) -> Result<bool, ApiError> {
+    let has_speak =
+        permission_check::require_channel_perm(&state.db, user_id, channel_id, Permissions::SPEAK)
+            .await
+            .is_ok();
+
+    if !has_speak {
+        return Ok(false);
+    }
+
+    if channel_kind == RtcChannelKind::Stage {
+        let role = require_stage_participant_role(state, channel_id, user_id).await?;
+        return Ok(role == "speaker");
+    }
+
+    Ok(true)
+}
+
 /// POST /api/v1/voice/join — Join a voice channel and receive LiveKit token.
 ///
-/// Requires authentication. Validates channel exists and is voice type (channel_type=1).
+/// Requires authentication. Validates channel exists and is an RTC-capable
+/// voice or stage channel.
 /// Creates voice state and generates LiveKit access token.
 ///
 /// # Request
@@ -64,11 +134,13 @@ pub async fn join_voice(
             ApiError::NotFound("channel not found".into())
         })?;
 
-    if channel.channel_type != 1 {
-        tracing::warn!(channel_id = %channel_id, channel_type = channel.channel_type, "invalid channel type for voice");
-        return Err(ApiError::BadRequest(
-            "channel is not a voice channel".into(),
-        ));
+    let channel_kind = RtcChannelKind::from_channel_type(channel.channel_type).ok_or_else(|| {
+        tracing::warn!(channel_id = %channel_id, channel_type = channel.channel_type, "invalid channel type for RTC");
+        ApiError::BadRequest("channel is not a voice or stage channel".into())
+    })?;
+
+    if channel_kind == RtcChannelKind::Stage {
+        require_stage_participant_role(&state, channel_id, auth.user_id).await?;
     }
 
     permission_check::require_channel_perm(
@@ -79,14 +151,8 @@ pub async fn join_voice(
     )
     .await?;
 
-    let can_publish = permission_check::require_channel_perm(
-        &state.db,
-        auth.user_id,
-        channel_id,
-        Permissions::SPEAK,
-    )
-    .await
-    .is_ok();
+    let can_publish =
+        can_publish_to_rtc_room(&state, auth.user_id, channel_id, channel_kind).await?;
 
     // Create session ID (UUID)
     let session_id = Uuid::new_v4().to_string();
@@ -293,6 +359,20 @@ pub async fn get_livekit_token(
         return Err(ApiError::Forbidden);
     }
 
+    #[derive(sqlx::FromRow)]
+    struct Channel {
+        channel_type: i16,
+    }
+
+    let channel = sqlx::query_as::<_, Channel>("SELECT channel_type FROM channels WHERE id = $1")
+        .bind(channel_id.as_i64())
+        .fetch_optional(&state.db)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("channel not found".into()))?;
+    let channel_kind = RtcChannelKind::from_channel_type(channel.channel_type)
+        .ok_or_else(|| ApiError::BadRequest("channel is not a voice or stage channel".into()))?;
+
     permission_check::require_channel_perm(
         &state.db,
         auth.user_id,
@@ -301,14 +381,8 @@ pub async fn get_livekit_token(
     )
     .await?;
 
-    let can_publish = permission_check::require_channel_perm(
-        &state.db,
-        auth.user_id,
-        channel_id,
-        Permissions::SPEAK,
-    )
-    .await
-    .is_ok();
+    let can_publish =
+        can_publish_to_rtc_room(&state, auth.user_id, channel_id, channel_kind).await?;
 
     // Generate token
     let token = livekit::create_livekit_token(
