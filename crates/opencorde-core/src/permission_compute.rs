@@ -162,6 +162,32 @@ mod tests {
     }
 
     #[test]
+    fn test_member_deny_overrides_role_allow() {
+        let role_id = Snowflake::new(100);
+        let user_id = Snowflake::new(200);
+        let base = Permissions::VIEW_CHANNEL;
+
+        let overwrites = vec![
+            PermissionOverwrite {
+                id: role_id,
+                target_type: OverwriteType::Role,
+                allow: Permissions::SEND_MESSAGES,
+                deny: Permissions::empty(),
+            },
+            PermissionOverwrite {
+                id: user_id,
+                target_type: OverwriteType::Member,
+                allow: Permissions::empty(),
+                deny: Permissions::SEND_MESSAGES,
+            },
+        ];
+
+        let result = compute_permissions(base, &overwrites, user_id, &[role_id], None);
+        assert!(!result.contains(Permissions::SEND_MESSAGES));
+        assert!(result.contains(Permissions::VIEW_CHANNEL));
+    }
+
+    #[test]
     fn test_role_overwrites_are_aggregated() {
         let deny_role = Snowflake::new(100);
         let allow_role = Snowflake::new(101);
