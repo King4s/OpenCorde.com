@@ -157,7 +157,8 @@
       "status": "shallow_needs_proof",
       "observed": [
         "Message routes, stores, MessageList, MessageInput, replies, reactions, pins, attachments, search, link preview, and thread UI names exist.",
-        "Non-author message delete now respects channel `MANAGE_MESSAGES`, with live API smoke coverage."
+        "Non-author message delete now respects channel `MANAGE_MESSAGES`, with live API smoke coverage.",
+        "Typing indicators now require `VIEW_CHANNEL` and `SEND_MESSAGES` before broadcasting."
       ],
       "gaps": [
         "Discord-grade message context actions are not proven.",

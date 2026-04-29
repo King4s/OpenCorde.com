@@ -61,6 +61,7 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 - `messages`
   - Message authors can still delete their own messages.
   - Non-author message deletion now requires channel `VIEW_CHANNEL` plus `MANAGE_MESSAGES`.
+  - Typing indicators now require channel `VIEW_CHANNEL` plus `SEND_MESSAGES` before broadcasting.
 
 - `search`
   - Message search now filters every hit through channel `VIEW_CHANNEL` before returning content.
@@ -176,6 +177,7 @@ Permission smoke coverage:
 - non-member cannot list channel recordings: 403
 - non-member cannot ack channel read state: 403
 - non-member cannot initialize/fetch/update E2EE group state: 403
+- non-member cannot send typing indicator: 403
 - non-member cannot list/create server events: 403
 - non-member cannot list server roles: 403
 - non-member cannot consume unrelated user key package: 403

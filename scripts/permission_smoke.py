@@ -880,6 +880,12 @@ async def main() -> int:
                         "json": {"group_state": "AQ"},
                         "expect": 403,
                     },
+                    {
+                        "name": "nonmember cannot send typing indicator",
+                        "method": "POST",
+                        "url": f"{API}/channels/{channel_id}/typing",
+                        "expect": 403,
+                    },
                 ]
             )
 

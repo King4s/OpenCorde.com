@@ -200,6 +200,14 @@ pub async fn typing_indicator(
     // Validate channel ID format
     let channel_id_sf = parse_snowflake_id(&channel_id)?;
 
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id_sf,
+        Permissions::VIEW_CHANNEL | Permissions::SEND_MESSAGES,
+    )
+    .await?;
+
     tracing::debug!(
         user_id = auth.user_id.as_i64(),
         channel_id = channel_id_sf.as_i64(),
