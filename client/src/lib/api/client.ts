@@ -56,6 +56,11 @@ class ApiClient {
     });
 
     if (!response.ok) {
+      if (response.status === 401 && typeof localStorage !== "undefined") {
+        localStorage.removeItem("opencorde_token");
+        window.location.href = "/login";
+        throw { code: "UNAUTHORIZED", message: "Session expired" } as ApiError;
+      }
       const text = await response.text();
       const error: ApiError = text
         ? (JSON.parse(text) as ApiError)

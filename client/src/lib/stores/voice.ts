@@ -59,6 +59,7 @@ if (typeof localStorage !== "undefined") {
 }
 
 let activeRoom: Room | null = null;
+let joiningInProgress = false;
 
 interface JoinResponse {
   voice_state: VoiceState;
@@ -108,6 +109,9 @@ async function prewarmMicrophonePermission(): Promise<void> {
 }
 
 export async function joinVoice(channelId: string): Promise<void> {
+  if (joiningInProgress) return;
+  if (get(currentVoiceChannelId) === channelId) return;
+  joiningInProgress = true;
   // On mobile browsers, microphone permission prompts are more reliable when
   // requested immediately from the user gesture, before any awaited network
   // calls can break activation context.
@@ -216,6 +220,7 @@ export async function joinVoice(channelId: string): Promise<void> {
         },
       )
       .on(RoomEvent.Disconnected, () => {
+        if (activeRoom !== room) return;
         inVoice.set(false);
         currentVoiceChannelId.set(null);
         activeRoom = null;
@@ -267,6 +272,8 @@ export async function joinVoice(channelId: string): Promise<void> {
     activeRoomStore.set(null);
     alert(err?.message ?? "Failed to join voice channel");
     throw err;
+  } finally {
+    joiningInProgress = false;
   }
 }
 

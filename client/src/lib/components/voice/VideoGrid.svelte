@@ -52,7 +52,7 @@
 		<div class="grid gap-1.5 {gridCols([...$livekitParticipants.values()].filter((p) => $videoTracks.has(p.identity)).length)}">
 			{#each [...$livekitParticipants.values()].filter((p) => $videoTracks.has(p.identity)) as p (p.identity)}
 				<div class="relative bg-gray-800 rounded-lg overflow-hidden aspect-video flex items-center justify-center
-					{p.speaking ? 'ring-2 ring-gray-400' : ''}">
+					{p.speaking ? 'ring-2 ring-green-400 shadow-[0_0_0_3px_rgba(74,222,128,0.3)]' : ''}">
 
 					<!-- Video element (populated by LiveKit SDK when track is available) -->
 					<video
@@ -71,7 +71,7 @@
 
 					<!-- Name + status overlay -->
 					<div class="absolute bottom-0 left-0 right-0 flex items-center gap-1 bg-black/50 px-1.5 py-0.5">
-						<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {p.speaking ? 'bg-gray-400' : 'bg-gray-500'}"></span>
+						<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {p.speaking ? 'bg-green-400' : 'bg-gray-500'}"></span>
 						<span class="text-white text-xs truncate flex-1">{displayName(p.identity)}</span>
 						{#if p.muted}<span class="text-xs">🔇</span>{/if}
 					</div>

@@ -5,6 +5,7 @@
 //! validation, and LiveKit token generation.
 
 use axum::Json;
+use axum::http::StatusCode;
 use axum::extract::{Path, State};
 use opencorde_core::permissions::Permissions;
 use opencorde_db::repos::voice_state_repo;
@@ -198,7 +199,7 @@ pub async fn join_voice(
 /// Requires authentication. Deletes user's voice state.
 /// Returns 204 No Content on success.
 #[tracing::instrument(skip(state, auth))]
-pub async fn leave_voice(State(state): State<AppState>, auth: AuthUser) -> Result<(), ApiError> {
+pub async fn leave_voice(State(state): State<AppState>, auth: AuthUser) -> Result<StatusCode, ApiError> {
     tracing::info!(user_id = %auth.user_id, "user leaving voice channel");
 
     voice_state_repo::leave_voice(&state.db, auth.user_id)
@@ -206,7 +207,7 @@ pub async fn leave_voice(State(state): State<AppState>, auth: AuthUser) -> Resul
         .map_err(ApiError::Database)?;
 
     tracing::info!(user_id = %auth.user_id, "voice leave successful");
-    Ok(())
+    Ok(StatusCode::NO_CONTENT)
 }
 
 /// PATCH /api/v1/voice/state — Update voice state (mute/deafen).

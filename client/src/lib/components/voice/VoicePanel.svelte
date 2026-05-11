@@ -106,12 +106,17 @@
 
 			<!-- Participant list -->
 				{#if $livekitParticipants.size > 0}
-					<div class="space-y-1">
+					<div class="space-y-0.5">
 						{#each [...$livekitParticipants.values()] as p (p.identity)}
-							<div class="flex items-center gap-1.5 text-xs">
-								<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {p.speaking ? 'bg-gray-400' : 'bg-gray-600'}"></span>
-								<span class="text-gray-300 truncate flex-1">{displayName(p.identity)}</span>
-								{#if p.muted}<span class="text-gray-500 text-xs">🔇</span>{/if}
+							<div class="flex items-center gap-2 text-xs rounded px-1.5 py-1 transition-colors {p.speaking ? 'bg-green-500/10' : ''}">
+								<span class="relative flex-shrink-0">
+									<span class="block w-2 h-2 rounded-full transition-colors {p.speaking ? 'bg-green-400' : 'bg-gray-600'}"></span>
+									{#if p.speaking}
+										<span class="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-75"></span>
+									{/if}
+								</span>
+								<span class="truncate flex-1 transition-colors {p.speaking ? 'text-white font-medium' : 'text-gray-400'}">{displayName(p.identity)}</span>
+								{#if p.muted}<span class="text-gray-500 flex-shrink-0">🔇</span>{/if}
 							</div>
 						{/each}
 					</div>

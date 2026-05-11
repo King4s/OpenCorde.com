@@ -7,8 +7,20 @@
 
 	const GITHUB_URL = 'https://github.com/King4s/OpenCorde.com';
 
-	if (browser && window.location.pathname === '/' && localStorage.getItem('opencorde_token')) {
-		window.location.replace('/servers');
+	if (browser && window.location.pathname === '/') {
+		const token = localStorage.getItem('opencorde_token');
+		if (token) {
+			try {
+				const payload = JSON.parse(atob(token.split('.')[1]));
+				if (payload.exp && payload.exp * 1000 > Date.now()) {
+					window.location.replace('/servers');
+				} else {
+					localStorage.removeItem('opencorde_token');
+				}
+			} catch {
+				localStorage.removeItem('opencorde_token');
+			}
+		}
 	}
 
 	const features = [
