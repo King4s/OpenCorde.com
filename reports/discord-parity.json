@@ -92,6 +92,11 @@
       "path": "tasks-future.md",
       "type": "legacy_claims",
       "note": "Legacy task list marks many Discord-like features complete; now explicitly labeled as an implementation log, not parity proof."
+    },
+    {
+      "path": "docs/handoffs/2026-05-14-ai-parity-handoff.md",
+      "type": "handoff",
+      "note": "Current AI handoff with latest pushed commit, validation commands, GitHub issue map, and exact next tasks."
     }
   ],
   "github_issues": [
@@ -330,6 +335,7 @@
     }
   ],
   "next_session_focus": [
+    "Add Playwright/manual proof that the admin dashboard surfaces LiveKit local and public proxy health.",
     "Add Playwright UI proof for private-channel and role-management workflows.",
     "Add route inventory JSON generated from Axum route declarations and permission annotations.",
     "Start the Playwright parity harness for messaging and roles.",
