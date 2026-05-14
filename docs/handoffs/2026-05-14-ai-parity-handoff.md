@@ -7,41 +7,35 @@ This file is the first context a new AI agent should read before continuing the 
 - Repository: `King4s/OpenCorde.com`
 - Local path: `/home/mb/opencorde`
 - Branch: `main`
-- Last pushed functional commit before this update: `52a9902 feat(permissions): gate the 7 likely-real route-inventory gaps`
-- Earlier relevant commits: `3c7f70a` transitive recognizer resolution, `a4bff96` recognizer hardening, `d1aecc8` initial route inventory, `231d8e8` permissions UI proof.
+- Last pushed functional commit before this update: `ef166ed test(permissions): live API denial smoke for 8 new gates`
+- Earlier relevant commits: `52a9902` 7 permission gates, `3c7f70a` transitive recognizer resolution, `a4bff96` recognizer hardening, `d1aecc8` initial route inventory.
 
-At the time this handoff was updated, the next task was completed locally and should be committed/pushed with this file: live-API denial smoke for the 8 newly added gates.
+At the time this handoff was updated, the next task was completed locally and should be committed/pushed with this file: live Playwright UI proof for the daily messaging workflows (Issue #4), plus a real app bug fix surfaced while building the harness.
 
 ## What Changed Most Recently
 
-The smoke-coverage pass completed after `52a9902`:
+The messaging-parity proof pass completed after `ef166ed`:
 
-- Added 8 nonmember-denial checks to `scripts/permission_smoke.py`:
-  - `GET /api/v1/servers/{server_id}` → 403
-  - `GET /api/v1/servers/{server_id}/members` → 403
-  - `PATCH /api/v1/servers/{server_id}/members/{nonmember_user_id}` → 403 (PATCH-own-nickname on a foreign server)
-  - `GET /api/v1/servers/{server_id}/emojis` → 403
-  - `GET /api/v1/servers/{server_id}/automod` → 403
-  - `PATCH /api/v1/servers/{server_id}/discovery` → 403
-  - `PUT /api/v1/channels/{channel_id}/notification-settings` → 403
-  - `DELETE /api/v1/channels/{channel_id}/notification-settings` → 403
-- Rebuilt `target/release/opencorde-api` and restarted `opencorde-api.service` so the new gates are live.
-- Ran `python3 scripts/permission_smoke.py` against `https://opencorde.com` with `OC_MEMBER_EMAIL=browsertest@opencorde.com OC_NONMEMBER_EMAIL=permission-nonmember@opencorde.com OC_LIMITED_EMAIL=permission-limited@opencorde.com`: **52 checks, 0 failures**.
-- `reports/raw/permission-smoke.json` regenerated with the expanded coverage.
-- `reports/discord-parity.json` evidence_sources updated to record the live proof of all 8 new gates.
+- Added `scripts/messaging_ui_qa.py` — Playwright harness that drives the chat UI as the fixture owner and proves: send, edit (with "edited" indicator), reply (with reply-context bubble), react (badge visible), pin (visible in pinned panel), delete (row removed). Output: `reports/raw/messaging-ui-proof.json`, screenshots `01-send.png … 06-delete.png` under `reports/parity-screenshots/messaging-ui/`. Cleans up its own messages at the end.
+- Fixed an app bug in `client/src/routes/servers/+layout.svelte`: after a full page reload, the in-memory `$currentUser` was never restored from the persisted token, so `isOwn` was false and edit/delete/pin context-menu buttons stayed hidden. The layout now calls `restoreSession()` when it sees a stored token. This is a real product fix — every refresh of `/servers/...` previously dropped the owner-only UI affordances.
+- Rebuilt `client/build` (`pnpm build`) so Caddy serves the patched layout. The release-mode `opencorde-api` binary is unchanged from `ef166ed`.
+- `reports/discord-parity.json` messaging area moved from `shallow_needs_proof` to `partial`, with the new observed proof + the app fix called out. `evidence_sources` registers the new artifact.
 
 Verification:
 
-- `cargo fmt --check` ✓
-- `cargo build --release -p opencorde-api` ✓ (deployed; new build serving traffic at opencorde.com)
-- `cargo test -p opencorde-api --lib` ✓ — 215 passed, 0 failed
-- `python3 scripts/route_inventory.py --fail-on-unresolved` ✓ — 169 routes, 0 unresolved, needs_review 6
-- `python3 scripts/permission_smoke.py` (with email env overrides) ✓ — 52 checks, 0 failures
+- `pnpm check` ✓ — 474 files, 0 errors, 0 warnings.
+- `pnpm build` ✓ — fresh `client/build/`.
+- `python3 -m py_compile scripts/messaging_ui_qa.py` ✓.
+- `python3 -m json.tool reports/discord-parity.json >/dev/null` ✓.
+- `python3 -m json.tool reports/raw/messaging-ui-proof.json >/dev/null` ✓.
+- `OC_MEMBER_EMAIL=browsertest@opencorde.com python3 scripts/messaging_ui_qa.py` ✓ — `ok: true`, all 6 scenarios pass, 1 cleanup message removed, 6 screenshots saved.
 
 ## Operational Notes
 
-- `scripts/permission_smoke.py` default email fixtures use the `@opencorde.local` domain, but the live DB has `@opencorde.com`. Override the email defaults via `OC_MEMBER_EMAIL`, `OC_NONMEMBER_EMAIL`, `OC_LIMITED_EMAIL`. Passwords match the script defaults (`OC_MEMBER_PASSWORD`, `OC_NONMEMBER_PASSWORD`, `OC_LIMITED_PASSWORD`) — set them locally in your environment; do not check fixture passwords into docs.
-- After any handler change that affects gates, regenerate the inventory (`python3 scripts/route_inventory.py`) and re-run the smoke. The smoke needs the new code deployed, so the full cycle is: build release → `sudo systemctl restart opencorde-api.service` → smoke.
+- `scripts/messaging_ui_qa.py` runs against `https://opencorde.com` by default. Override the test fixture email via `OC_MEMBER_EMAIL` and the password via `OC_MEMBER_PASSWORD` — never commit fixture credentials into docs or reports.
+- The script auto-accepts any `window.confirm()` dialogs that pop up during the action sequence. None are currently triggered by the chat UI but stage cleanup or future confirmations would not break the harness.
+- A small set of `net::ERR_ABORTED` failures (SvelteKit prefetch chunks, `/ack` POSTs, pin PUT, delete DELETE) are ignored: the corresponding HTTP responses are received before chromium reports the abort on context teardown. They land in `browser.browser.ignoredFailedRequests` for visibility.
+- If the chat UI is ever changed to require a different message-row anchor than `#msg-{id}`, update `message_row()` in the harness.
 
 ## GitHub Issue Map
 
@@ -49,28 +43,29 @@ Primary source-of-truth issues:
 
 - `#1` Discord parity master plan
 - `#2` Milestone -1: brutal audit and claim demotion
-- `#4` Messaging parity
+- `#4` Messaging parity — daily-chat actions now have first live proof; remaining gaps: attachment upload, jump-to-message, grouping/date separators, two-client realtime, denied SEND_MESSAGES UX.
 - `#5` Roles and permissions parity
 - `#7` Voice, video, and stage parity
 - `#8` Apps, slash commands, bots, and webhooks parity
-
-Issue `#5` should treat the route-inventory needs_review list and the permission-smoke results together as the audit trail: any new endpoint without a recognized gate either lands in needs_review (caught by inventory) or fails non-member denial (caught by smoke).
 
 ## Current Next TODOs
 
 Recommended order for the next agent:
 
-1. Start the Playwright parity harness for messaging and roles (Issue `#4`, `#5`).
-2. Document Emma Bot credentials and test protocol without exposing secrets (Issue `#8`).
-3. Two-client voice Playwright/manual checklist for join/leave/mute/deafen/screen-share (Issue `#7`).
-4. (Optional) Add a `caller_implicit` path_kind classifier in `scripts/route_inventory.py` so the 6 remaining accepted-by-design entries drop out of needs_review.
-5. Broaden the permission matrix to owner/admin/mod/member/muted/banned workflows.
+1. Extend `scripts/messaging_ui_qa.py`:
+   - Attachment upload + display (drag/drop or file input on the message form).
+   - Jump-to-message via the reply-context bubble (`scrollToMessage`).
+   - Denied SEND_MESSAGES: log in as a limited fixture user with no `SEND_MESSAGES` override, assert the input is disabled or the POST fails.
+2. Add a two-client realtime check: one Playwright context sends, another (same channel, different fixture user) observes the WS-driven update without a refresh.
+3. Document Emma Bot credentials and test protocol (Issue `#8`) without exposing secrets.
+4. Two-client voice Playwright/manual checklist (Issue `#7`).
+5. Add owner/admin/mod/member/muted/banned permission matrix in `scripts/permission_smoke.py`.
 
 ## Exact Next Task Candidate
 
 Best immediate task:
 
-Begin the Playwright parity harness for messaging. Suggested first scope: a new `scripts/messaging_ui_qa.py` that proves send/edit/delete/reply/react/pin against a live channel as the `browsertest_user` fixture, mirroring the structure of `scripts/permissions_ui_qa.py`. Write proof to `reports/raw/messaging-ui-proof.json` and screenshots to `reports/parity-screenshots/messaging-ui/`.
+Extend `prove_messaging` with an attachment upload step. The chat input has an `aria-label="Attach file"` button that triggers a hidden file input. Use `page.set_input_files()` on the underlying `input[type="file"]` (find via the form), send a small fixture image, assert the new message row contains an `<img>` with the uploaded URL, screenshot it as `07-attachment.png`.
 
 ## Caution
 
@@ -78,5 +73,5 @@ Begin the Playwright parity harness for messaging. Suggested first scope: a new 
 - Do not expose tokens, admin credentials, or Emma Bot credentials in docs, GitHub comments, or reports.
 - Keep `reports/discord-parity.json` aligned with GitHub issues when status changes.
 - `reports/raw/route-inventory.json` is generated. Re-run `python3 scripts/route_inventory.py` after any router/handler change instead of editing it by hand.
-- The `require_server_perm(.., Permissions::VIEW_CHANNEL)` calls added to get_server / list_emojis / list_members / update_member double as membership checks because `VIEW_CHANNEL` is in `default_everyone`. If `default_everyone` ever changes, audit these handlers.
+- The new `restoreSession()` call in `routes/servers/+layout.svelte` runs on every full reload of an authed page. If that surface ever needs to skip auth restore (e.g. share-link landing pages mounted under `/servers/`), gate it explicitly.
 - Use `cargo fmt --check` before finalizing Rust changes; the repo is now formatted.

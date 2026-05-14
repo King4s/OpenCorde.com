@@ -1,0 +1,57 @@
+{
+  "ok": true,
+  "base": "https://opencorde.com",
+  "auth": {
+    "ownerMethod": "default_member_login",
+    "tokensStoredInReport": false
+  },
+  "fixture": {
+    "serverId": "293907048062648321",
+    "channelId": "293907048134082561",
+    "channelName": "general",
+    "messageContentSuffix": "63717441"
+  },
+  "browser": {
+    "browser": {
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    "channel": {
+      "id": "293907048134082561",
+      "name": "general"
+    },
+    "send": {
+      "text": "msg-ui-send-63717441",
+      "msgId": "313299912899297281",
+      "screenshot": "reports/parity-screenshots/messaging-ui/01-send.png"
+    },
+    "edit": {
+      "text": "msg-ui-edit-63717441",
+      "editedIndicatorVisible": true,
+      "screenshot": "reports/parity-screenshots/messaging-ui/02-edit.png"
+    },
+    "reply": {
+      "text": "msg-ui-reply-63717441",
+      "msgId": "313299916619644929",
+      "contextVisible": true,
+      "screenshot": "reports/parity-screenshots/messaging-ui/03-reply.png"
+    },
+    "react": {
+      "reactionVisible": true,
+      "screenshot": "reports/parity-screenshots/messaging-ui/04-react.png"
+    },
+    "pin": {
+      "pinnedListVisible": true,
+      "screenshot": "reports/parity-screenshots/messaging-ui/05-pin.png"
+    },
+    "delete": {
+      "targetMsgId": "313299916619644929",
+      "rowRemoved": true,
+      "screenshot": "reports/parity-screenshots/messaging-ui/06-delete.png"
+    }
+  },
+  "cleanup": {
+    "messagesRemoved": 1
+  }
+}

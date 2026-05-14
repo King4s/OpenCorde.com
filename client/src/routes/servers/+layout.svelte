@@ -7,6 +7,7 @@
 	import { spaces, fetchSpaces, selectSpace, currentSpaceId } from '$lib/stores/servers';
 	import { serverHasUnread } from '$lib/stores/unread';
 	import { hasAnyDmUnread, initDmListener } from '$lib/stores/dms';
+	import { restoreSession } from '$lib/stores/auth';
 	import ServerIcon from '$lib/components/layout/ServerIcon.svelte';
 	import api from '$lib/api/client';
 
@@ -17,6 +18,10 @@
 		if (!token) {
 			window.location.href = '/login';
 		} else {
+			// Hydrate $currentUser from the stored token. Without this the
+			// in-memory user is null after every full reload, which breaks any
+			// UI gated on isOwn (edit/delete buttons, owner-only panels, …).
+			restoreSession().catch(() => {});
 			fetchSpaces().catch(() => {});
 			initDmListener();
 			// Sync currentSpaceId from URL

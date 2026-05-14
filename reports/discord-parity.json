@@ -79,6 +79,11 @@
       "note": "Live Playwright UI proof that a private channel is hidden until a role is assigned, channel permission overrides show role names, and role create/rename/delete works from server settings."
     },
     {
+      "path": "reports/raw/messaging-ui-proof.json",
+      "type": "qa",
+      "note": "Live Playwright UI proof of the daily-chat workflows: send, edit (with edited indicator), reply (with reply context), react, pin (visible in pinned panel), delete (row removed). Screenshots at reports/parity-screenshots/messaging-ui/. Produced by scripts/messaging_ui_qa.py against https://opencorde.com."
+    },
+    {
       "path": "reports/raw/schema-smoke.json",
       "type": "qa",
       "note": "Live database schema smoke comparing migrations against applied migrations, tables, and columns."
@@ -189,21 +194,23 @@
     {
       "id": "messaging",
       "name": "Messaging",
-      "status": "shallow_needs_proof",
+      "status": "partial",
       "observed": [
         "Message routes, stores, MessageList, MessageInput, replies, reactions, pins, attachments, search, link preview, and thread UI names exist.",
         "Non-author message delete now respects channel `MANAGE_MESSAGES`, with live API smoke coverage.",
-        "Typing indicators now require `VIEW_CHANNEL` and `SEND_MESSAGES` before broadcasting."
+        "Typing indicators now require `VIEW_CHANNEL` and `SEND_MESSAGES` before broadcasting.",
+        "Live Playwright UI proof now covers the daily-chat actions end-to-end: send, edit (with 'edited' indicator), reply (with reply context bubble), react (badge visible), pin (visible in pinned panel), delete (row removed). reports/raw/messaging-ui-proof.json, screenshots under reports/parity-screenshots/messaging-ui/.",
+        "Fixed an app bug surfaced while building the messaging harness: $currentUser was never restored after a full page reload, so isOwn was false and edit/delete/pin actions stayed hidden. Added restoreSession() to routes/servers/+layout.svelte."
       ],
       "gaps": [
-        "Discord-grade message context actions are not proven.",
         "Jump-to-message, grouping, date separators, local drafts, upload progress, mention behavior, and permission denial UX need proof or implementation.",
-        "Realtime multi-client behavior needs regression coverage."
+        "Realtime multi-client behavior (two clients in the same channel) needs regression coverage.",
+        "Attachment upload + decryption flow not yet covered by Playwright."
       ],
       "next_todos": [
-        "Add Playwright chat suite for send/edit/delete/reply/react/pin/upload.",
-        "Implement or prove message grouping and jump-to-message.",
-        "Add denied SEND_MESSAGES and VIEW_CHANNEL tests.",
+        "Extend messaging_ui_qa.py with attachment upload, jump-to-message, and a denied SEND_MESSAGES path.",
+        "Add a two-client real-time check (one client sends, the other sees the WS event).",
+        "Implement or prove message grouping and date separators.",
         "Add Emma Bot chat script."
       ],
       "proof_required": [
@@ -360,7 +367,7 @@
     }
   ],
   "next_session_focus": [
-    "Start the Playwright parity harness for messaging and roles.",
+    "Extend scripts/messaging_ui_qa.py with attachment upload + denied SEND_MESSAGES + two-client realtime checks.",
     "Document Emma Bot credentials and test protocol without exposing secrets.",
     "Two-client voice Playwright/manual checklist."
   ]
