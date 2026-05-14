@@ -10,13 +10,10 @@ mod crud;
 mod roles;
 
 pub use crud::{
-    MemberRow, MemberWithUsernameRow,
-    list_with_usernames_by_server, add_member, remove_member, get_member,
-    list_by_server, update_nickname,
+    MemberRow, MemberWithUsernameRow, add_member, get_member, list_by_server,
+    list_with_usernames_by_server, remove_member, update_nickname,
 };
-pub use roles::{
-    MemberRoleRow, add_role, remove_role, list_member_roles,
-};
+pub use roles::{MemberRoleRow, add_role, list_member_roles, remove_role};
 
 #[cfg(test)]
 mod tests {

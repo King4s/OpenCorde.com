@@ -16,17 +16,17 @@
 //! - crate::routes::upload_validation (MIME, size, magic, EXIF)
 
 use axum::{
+    Json, Router,
     extract::{Multipart, Path, State},
     http::StatusCode,
     routing::post,
-    Json, Router,
 };
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 use uuid::Uuid;
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
 use crate::routes::{helpers::parse_snowflake, permission_check, upload_validation};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use opencorde_core::permissions::Permissions;
 
 /// Response body for successful file upload.
@@ -176,14 +176,10 @@ async fn upload_attachment(
 async fn extract_file_from_multipart(
     mut multipart: Multipart,
 ) -> Result<(String, String, Vec<u8>), ApiError> {
-    while let Some(field) = multipart
-        .next_field()
-        .await
-        .map_err(|e| {
-            tracing::error!(error = %e, "failed to read multipart field");
-            ApiError::BadRequest("invalid multipart form data".into())
-        })?
-    {
+    while let Some(field) = multipart.next_field().await.map_err(|e| {
+        tracing::error!(error = %e, "failed to read multipart field");
+        ApiError::BadRequest("invalid multipart form data".into())
+    })? {
         if field.name() == Some("file") {
             let filename = field
                 .file_name()

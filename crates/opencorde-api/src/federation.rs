@@ -26,11 +26,7 @@ use opencorde_db::repos::mesh_peer_repo;
 use reqwest::Client;
 use sqlx::PgPool;
 
-use crate::{
-    config::Config,
-    identity::ServerIdentity,
-    routes::federation::FederatedEvent,
-};
+use crate::{config::Config, identity::ServerIdentity, routes::federation::FederatedEvent};
 
 const REGISTRY_URL: &str =
     "https://raw.githubusercontent.com/King4s/opencorde-servers/master/servers.json";
@@ -75,12 +71,7 @@ async fn sync_registry(
 ) -> anyhow::Result<()> {
     tracing::info!(url = REGISTRY_URL, "syncing peer registry");
 
-    let entries: Vec<RegistryEntry> = client
-        .get(REGISTRY_URL)
-        .send()
-        .await?
-        .json()
-        .await?;
+    let entries: Vec<RegistryEntry> = client.get(REGISTRY_URL).send().await?.json().await?;
 
     tracing::info!(count = entries.len(), "registry entries fetched");
 
@@ -146,7 +137,7 @@ pub async fn introduce_to_peer(
     let existing = mesh_peer_repo::get_by_hostname(db, peer_hostname).await?;
     if let Some(peer) = existing {
         sqlx::query(
-            "UPDATE mesh_peers SET public_key = $1, status = 1, last_seen_at = NOW() WHERE id = $2"
+            "UPDATE mesh_peers SET public_key = $1, status = 1, last_seen_at = NOW() WHERE id = $2",
         )
         .bind(&their_pubkey)
         .bind(peer.id)
@@ -158,7 +149,7 @@ pub async fn introduce_to_peer(
         let id = sf_gen.next_id();
         sqlx::query(
             "INSERT INTO mesh_peers (id, hostname, public_key, status, last_seen_at) \
-             VALUES ($1, $2, $3, 1, NOW())"
+             VALUES ($1, $2, $3, 1, NOW())",
         )
         .bind(id.as_i64())
         .bind(peer_hostname)

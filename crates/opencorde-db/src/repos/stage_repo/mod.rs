@@ -11,19 +11,19 @@
 //! - opencorde_core::Snowflake
 //! - chrono (DateTime handling)
 
-mod session;
 mod participant;
+mod session;
 
-pub use session::{StageSessionRow, start_session, get_session, end_session};
 pub use participant::{
-    StageParticipantRow, join_stage, leave_stage, list_participants,
-    raise_hand, lower_hand, promote_to_speaker, demote_to_audience,
+    StageParticipantRow, demote_to_audience, join_stage, leave_stage, list_participants,
+    lower_hand, promote_to_speaker, raise_hand,
 };
+pub use session::{StageSessionRow, end_session, get_session, start_session};
 
 #[cfg(test)]
 mod tests {
-    use chrono::Utc;
     use super::*;
+    use chrono::Utc;
 
     #[test]
     fn test_stage_session_row_creation() {

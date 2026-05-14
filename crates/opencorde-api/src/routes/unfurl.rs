@@ -17,9 +17,18 @@
 //! - tokio::sync::Mutex (shared unfurl cache)
 //! - crate::AppState (access to the shared cache)
 
-use std::{collections::HashMap, net::IpAddr, sync::Arc, time::{Duration, Instant}};
+use std::{
+    collections::HashMap,
+    net::IpAddr,
+    sync::Arc,
+    time::{Duration, Instant},
+};
 
-use axum::{Router, extract::{Query, State}, routing::get};
+use axum::{
+    Router,
+    extract::{Query, State},
+    routing::get,
+};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
@@ -38,11 +47,11 @@ pub fn new_cache() -> UnfurlCache {
 /// OpenGraph / Twitter-card metadata extracted from a URL.
 #[derive(Clone, Debug, Serialize, Default)]
 pub struct UnfurlData {
-    pub url:         String,
-    pub title:       Option<String>,
+    pub url: String,
+    pub title: Option<String>,
     pub description: Option<String>,
-    pub image_url:   Option<String>,
-    pub site_name:   Option<String>,
+    pub image_url: Option<String>,
+    pub site_name: Option<String>,
 }
 
 /// Query parameters for the unfurl endpoint.
@@ -75,7 +84,9 @@ pub async fn unfurl(
 
     // Basic scheme check
     if !url.starts_with("http://") && !url.starts_with("https://") {
-        return Err(ApiError::BadRequest("only http/https URLs are supported".into()));
+        return Err(ApiError::BadRequest(
+            "only http/https URLs are supported".into(),
+        ));
     }
 
     // Normalise to first 1024 chars as cache key (defends against giant URLs)
@@ -85,9 +96,10 @@ pub async fn unfurl(
     {
         let cache = state.unfurl_cache.lock().await;
         if let Some((data, fetched_at)) = cache.get(&cache_key)
-            && fetched_at.elapsed() < CACHE_TTL {
-                return Ok(axum::Json(data.clone()));
-            }
+            && fetched_at.elapsed() < CACHE_TTL
+        {
+            return Ok(axum::Json(data.clone()));
+        }
     }
 
     // SSRF protection: resolve host and block private ranges
@@ -112,9 +124,10 @@ pub async fn unfurl(
         .map_err(|_| ApiError::BadRequest("failed to reach URL".into()))?;
 
     if !resp.status().is_success() {
-        return Err(ApiError::BadRequest(
-            format!("remote returned {}", resp.status()),
-        ));
+        return Err(ApiError::BadRequest(format!(
+            "remote returned {}",
+            resp.status()
+        )));
     }
 
     // Only parse HTML; skip images, PDFs, etc.
@@ -159,9 +172,10 @@ fn guard_url(raw: &str) -> Result<(), String> {
 
     // Try to parse as an IP directly
     if let Ok(ip) = host.parse::<IpAddr>()
-        && is_blocked_ip(ip) {
-            return Err("private/loopback addresses are not allowed".to_string());
-        }
+        && is_blocked_ip(ip)
+    {
+        return Err("private/loopback addresses are not allowed".to_string());
+    }
     // Note: hostname-based SSRF (e.g., evil.internal) requires DNS resolution,
     // which we skip here for latency. The reqwest timeout and User-Agent serve
     // as secondary mitigations in a trusted-server context.
@@ -195,15 +209,14 @@ fn is_fc00(ip: std::net::Ipv6Addr) -> bool {
 /// `<head>`, so the first match is authoritative.
 fn parse_og(url: &str, html: &str) -> UnfurlData {
     UnfurlData {
-        url:         url.to_string(),
-        title:       og_tag(html, "og:title")
-                        .or_else(|| og_name_tag(html, "twitter:title"))
-                        .or_else(|| html_title(html)),
+        url: url.to_string(),
+        title: og_tag(html, "og:title")
+            .or_else(|| og_name_tag(html, "twitter:title"))
+            .or_else(|| html_title(html)),
         description: og_tag(html, "og:description")
-                        .or_else(|| og_name_tag(html, "twitter:description")),
-        image_url:   og_tag(html, "og:image")
-                        .or_else(|| og_name_tag(html, "twitter:image")),
-        site_name:   og_tag(html, "og:site_name"),
+            .or_else(|| og_name_tag(html, "twitter:description")),
+        image_url: og_tag(html, "og:image").or_else(|| og_name_tag(html, "twitter:image")),
+        site_name: og_tag(html, "og:site_name"),
     }
 }
 
@@ -211,7 +224,7 @@ fn parse_og(url: &str, html: &str) -> UnfurlData {
 fn og_tag(html: &str, prop: &str) -> Option<String> {
     let lower = html.to_lowercase();
     let needle = format!("property=\"{}\"", prop);
-    let alt    = format!("property='{}'", prop);
+    let alt = format!("property='{}'", prop);
     let pos = lower.find(&needle).or_else(|| lower.find(&alt))?;
     extract_content(&html[pos..])
 }
@@ -220,7 +233,7 @@ fn og_tag(html: &str, prop: &str) -> Option<String> {
 fn og_name_tag(html: &str, name: &str) -> Option<String> {
     let lower = html.to_lowercase();
     let needle = format!("name=\"{}\"", name);
-    let alt    = format!("name='{}'", name);
+    let alt = format!("name='{}'", name);
     let pos = lower.find(&needle).or_else(|| lower.find(&alt))?;
     extract_content(&html[pos..])
 }
@@ -244,7 +257,11 @@ fn extract_content(fragment: &str) -> Option<String> {
     let value_end = value_start.find(end_pat)?;
     let raw = &value_start[..value_end];
     let decoded = html_decode(raw.trim());
-    if decoded.is_empty() { None } else { Some(decoded) }
+    if decoded.is_empty() {
+        None
+    } else {
+        Some(decoded)
+    }
 }
 
 /// Extract `<title>...</title>` as a fallback.
@@ -254,19 +271,23 @@ fn html_title(html: &str) -> Option<String> {
     let end = lower[start..].find("</title>")?;
     let raw = &html[start..start + end];
     let decoded = html_decode(raw.trim());
-    if decoded.is_empty() { None } else { Some(decoded) }
+    if decoded.is_empty() {
+        None
+    } else {
+        Some(decoded)
+    }
 }
 
 /// Decode common HTML entities.
 fn html_decode(s: &str) -> String {
     s.replace("&amp;", "&")
-     .replace("&lt;", "<")
-     .replace("&gt;", ">")
-     .replace("&quot;", "\"")
-     .replace("&#039;", "'")
-     .replace("&#39;", "'")
-     .replace("&nbsp;", " ")
-     .replace("&apos;", "'")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
+        .replace("&#039;", "'")
+        .replace("&#39;", "'")
+        .replace("&nbsp;", " ")
+        .replace("&apos;", "'")
 }
 
 #[cfg(test)]

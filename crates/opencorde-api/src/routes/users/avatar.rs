@@ -1,11 +1,14 @@
 //! POST /api/v1/users/@me/avatar handler for avatar uploads.
 
-use axum::{Json, extract::{State, Multipart}};
-use uuid::Uuid;
+use axum::{
+    Json,
+    extract::{Multipart, State},
+};
 use opencorde_db::repos::user_repo;
+use uuid::Uuid;
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use super::get::UserProfile;
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
 /// POST /api/v1/users/@me/avatar — Upload user avatar.
 ///
@@ -21,9 +24,10 @@ pub async fn upload_avatar(
 
     // Extract file from multipart
     let (filename, content_type, bytes) = loop {
-        let field = multipart.next_field().await.map_err(|e| {
-            ApiError::BadRequest(format!("invalid multipart: {}", e))
-        })?;
+        let field = multipart
+            .next_field()
+            .await
+            .map_err(|e| ApiError::BadRequest(format!("invalid multipart: {}", e)))?;
         let Some(field) = field else {
             return Err(ApiError::BadRequest("no file field found".into()));
         };
@@ -33,9 +37,10 @@ pub async fn upload_avatar(
             if !content_type.starts_with("image/") {
                 return Err(ApiError::BadRequest("avatar must be an image".into()));
             }
-            let bytes = field.bytes().await.map_err(|e| {
-                ApiError::BadRequest(format!("failed to read file: {}", e))
-            })?;
+            let bytes = field
+                .bytes()
+                .await
+                .map_err(|e| ApiError::BadRequest(format!("failed to read file: {}", e)))?;
             break (filename, content_type, bytes);
         }
     };
@@ -47,7 +52,8 @@ pub async fn upload_avatar(
 
     // Upload to MinIO
     let object_key = format!("avatars/{}/{}", Uuid::new_v4(), filename);
-    state.s3
+    state
+        .s3
         .put_object()
         .bucket(&state.config.minio_bucket)
         .key(&object_key)
@@ -57,7 +63,10 @@ pub async fn upload_avatar(
         .await
         .map_err(|e| ApiError::Internal(anyhow::anyhow!("S3 upload failed: {}", e)))?;
 
-    let avatar_url = format!("{}/{}/{}", state.config.files_public_url, state.config.minio_bucket, object_key);
+    let avatar_url = format!(
+        "{}/{}/{}",
+        state.config.files_public_url, state.config.minio_bucket, object_key
+    );
 
     // Update user record
     sqlx::query("UPDATE users SET avatar_url = $1 WHERE id = $2")

@@ -36,25 +36,23 @@
 //! - Main.rs orchestrates startup and server initialization
 
 pub mod automod;
-pub mod federation;
-pub mod identity;
 pub mod config;
 pub mod email;
 pub mod emoji_helpers;
 pub mod error;
+pub mod federation;
+pub mod identity;
 pub mod jwt;
 pub mod middleware;
 pub mod push_sender;
 pub mod routes;
 pub mod ws;
 
+use crate::middleware::rate_limit::RateLimitState;
 use axum::extract::FromRef;
 use sqlx::PgPool;
 use std::sync::Arc;
 use tokio::sync::broadcast;
-use crate::middleware::rate_limit::RateLimitState;
-
-
 
 /// Shared application state.
 ///

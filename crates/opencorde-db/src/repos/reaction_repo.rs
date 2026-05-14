@@ -93,7 +93,10 @@ pub async fn list_reactions(
     pool: &PgPool,
     message_id: Snowflake,
 ) -> Result<Vec<ReactionRow>, sqlx::Error> {
-    tracing::info!(message_id = message_id.as_i64(), "listing reactions for message");
+    tracing::info!(
+        message_id = message_id.as_i64(),
+        "listing reactions for message"
+    );
 
     sqlx::query_as::<_, ReactionRow>(
         "SELECT message_id, user_id, emoji, created_at \

@@ -21,11 +21,7 @@ pub enum AutomodResult {
 ///
 /// Returns Allow if no rules match, Block if content contains a banned keyword.
 #[tracing::instrument(skip(pool, content))]
-pub async fn check_message(
-    pool: &PgPool,
-    server_id: Snowflake,
-    content: &str,
-) -> AutomodResult {
+pub async fn check_message(pool: &PgPool, server_id: Snowflake, content: &str) -> AutomodResult {
     let rules = match automod_repo::list_enabled_by_server(pool, server_id).await {
         Ok(r) => r,
         Err(e) => {

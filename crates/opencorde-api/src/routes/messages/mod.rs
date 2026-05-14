@@ -29,8 +29,8 @@ pub mod types;
 mod validation;
 
 pub use handlers::router;
-pub use types::{EditMessageRequest, MessageQuery, MessageResponse, SendMessageRequest};
 pub use send_list::message_row_to_response;
+pub use types::{EditMessageRequest, MessageQuery, MessageResponse, SendMessageRequest};
 
 #[cfg(test)]
 mod tests {

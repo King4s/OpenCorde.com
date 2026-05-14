@@ -67,10 +67,7 @@ pub async fn create_webhook(
 /// # Errors
 /// Returns sqlx::Error on database error.
 #[tracing::instrument(skip(pool))]
-pub async fn get_by_id(
-    pool: &PgPool,
-    id: Snowflake,
-) -> Result<Option<WebhookRow>, sqlx::Error> {
+pub async fn get_by_id(pool: &PgPool, id: Snowflake) -> Result<Option<WebhookRow>, sqlx::Error> {
     sqlx::query_as::<_, WebhookRow>("SELECT * FROM webhooks WHERE id = $1")
         .bind(id.as_i64())
         .fetch_optional(pool)
@@ -86,10 +83,7 @@ pub async fn get_by_id(
 /// # Errors
 /// Returns sqlx::Error on database error.
 #[tracing::instrument(skip(pool, token))]
-pub async fn get_by_token(
-    pool: &PgPool,
-    token: &str,
-) -> Result<Option<WebhookRow>, sqlx::Error> {
+pub async fn get_by_token(pool: &PgPool, token: &str) -> Result<Option<WebhookRow>, sqlx::Error> {
     sqlx::query_as::<_, WebhookRow>("SELECT * FROM webhooks WHERE token = $1")
         .bind(token)
         .fetch_optional(pool)

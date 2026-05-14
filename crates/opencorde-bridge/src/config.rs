@@ -27,21 +27,18 @@ impl BridgeConfig {
     /// # Errors
     /// Returns an error if DISCORD_TOKEN or DATABASE_URL are not set.
     pub fn from_env() -> anyhow::Result<Self> {
-        let discord_token = env::var("DISCORD_TOKEN")
-            .map_err(|_| anyhow::anyhow!("DISCORD_TOKEN is required"))?;
+        let discord_token =
+            env::var("DISCORD_TOKEN").map_err(|_| anyhow::anyhow!("DISCORD_TOKEN is required"))?;
 
-        let database_url = env::var("DATABASE_URL")
-            .map_err(|_| anyhow::anyhow!("DATABASE_URL is required"))?;
+        let database_url =
+            env::var("DATABASE_URL").map_err(|_| anyhow::anyhow!("DATABASE_URL is required"))?;
 
         let poll_interval_ms: u64 = env::var("BRIDGE_POLL_INTERVAL_MS")
             .unwrap_or_else(|_| "2000".to_string())
             .parse()
             .map_err(|_| anyhow::anyhow!("BRIDGE_POLL_INTERVAL_MS must be a valid u64"))?;
 
-        tracing::info!(
-            poll_interval_ms,
-            "bridge configuration loaded"
-        );
+        tracing::info!(poll_interval_ms, "bridge configuration loaded");
 
         Ok(Self {
             discord_token,

@@ -32,8 +32,8 @@ use opencorde_core::Snowflake;
 use opencorde_db::repos::{refresh_token_repo, user_repo};
 use serde::Deserialize;
 
-use crate::{jwt, AppState, error::ApiError};
 use super::steam_verify;
+use crate::{AppState, error::ApiError, jwt};
 
 /// OpenID 2.0 callback query parameters from Steam.
 #[derive(Debug, Deserialize)]
@@ -68,12 +68,20 @@ pub async fn steam_login(State(state): State<AppState>) -> Redirect {
     let return_to = format!("{}/api/v1/auth/steam/callback", state.config.base_url);
     let realm = state.config.base_url.clone();
 
-    let params = [("openid.ns", "http://specs.openid.net/auth/2.0"),
+    let params = [
+        ("openid.ns", "http://specs.openid.net/auth/2.0"),
         ("openid.mode", "checkid_setup"),
         ("openid.return_to", &return_to),
         ("openid.realm", &realm),
-        ("openid.identity", "http://specs.openid.net/auth/2.0/identifier_select"),
-        ("openid.claimed_id", "http://specs.openid.net/auth/2.0/identifier_select")];
+        (
+            "openid.identity",
+            "http://specs.openid.net/auth/2.0/identifier_select",
+        ),
+        (
+            "openid.claimed_id",
+            "http://specs.openid.net/auth/2.0/identifier_select",
+        ),
+    ];
 
     let query_string = params
         .iter()
@@ -143,7 +151,10 @@ pub async fn steam_callback(
         .await
         .map_err(|e| ApiError::Internal(anyhow!("failed to store refresh token JTI: {}", e)))?;
 
-    tracing::info!(user_id = user_row.id, "steam login tokens generated and JTI stored");
+    tracing::info!(
+        user_id = user_row.id,
+        "steam login tokens generated and JTI stored"
+    );
 
     // Redirect to login page with tokens as URL encoded query params
     let redirect_url = format!(

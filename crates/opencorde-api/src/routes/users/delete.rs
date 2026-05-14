@@ -17,12 +17,12 @@
 //! - opencorde_db::repos::user_repo (user lookup)
 //! - crate::AppState, crate::middleware::auth::AuthUser
 
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{Json, extract::State, http::StatusCode};
 use opencorde_core::password;
 use opencorde_db::repos::user_repo;
 use serde::Deserialize;
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
 /// Request body for account deletion.
 #[derive(Debug, Deserialize)]
@@ -81,61 +81,115 @@ pub async fn delete_account(
 
     // Ephemeral stage sessions this user started
     sqlx::query("DELETE FROM stage_sessions WHERE started_by = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
 
     // Server config items created by user (server stays, creator ref must go)
     sqlx::query("DELETE FROM automod_rules WHERE created_by = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
     sqlx::query("DELETE FROM slash_commands WHERE created_by = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
     sqlx::query("DELETE FROM webhooks WHERE created_by = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
     sqlx::query("DELETE FROM server_emojis WHERE uploaded_by = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
 
     // Events (cascades event_rsvps for other users)
     sqlx::query("DELETE FROM events WHERE creator_id = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
 
     // Forum content (delete replies first, then posts, or cascade handles it)
     sqlx::query("DELETE FROM forum_replies WHERE author_id = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
     sqlx::query("DELETE FROM forum_posts WHERE author_id = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
 
     // Threads and pins
     sqlx::query("DELETE FROM threads WHERE created_by = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
     sqlx::query("DELETE FROM pinned_messages WHERE pinned_by = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
 
     // Invites and voice presence
     sqlx::query("DELETE FROM invites WHERE creator_id = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
     sqlx::query("DELETE FROM voice_states WHERE user_id = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
 
     // Bans this user issued (bans where this user IS banned have CASCADE)
     sqlx::query("DELETE FROM bans WHERE banned_by = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
 
     // Files and messages
     sqlx::query("DELETE FROM files WHERE uploader_id = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
     sqlx::query("DELETE FROM dm_messages WHERE author_id = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
     sqlx::query("DELETE FROM messages WHERE author_id = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
 
     // Server memberships
     sqlx::query("DELETE FROM server_members WHERE user_id = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
 
     // Delete user row (CASCADE cleans up reactions, read_state, dm_channel_members,
     // relationships, stage_participants, e2ee keys, bridge ghost, password_reset_tokens;
     // audit_log.actor_id SET NULL)
     sqlx::query("DELETE FROM users WHERE id = $1")
-        .bind(uid).execute(&mut *tx).await.map_err(ApiError::Database)?;
+        .bind(uid)
+        .execute(&mut *tx)
+        .await
+        .map_err(ApiError::Database)?;
 
     tx.commit().await.map_err(ApiError::Database)?;
 

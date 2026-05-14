@@ -62,7 +62,11 @@ pub async fn send_push(pool: &PgPool, config: &Config, user_id: i64, title: &str
         return;
     }
 
-    tracing::info!(user_id, count = tokens.len(), "dispatching push notifications");
+    tracing::info!(
+        user_id,
+        count = tokens.len(),
+        "dispatching push notifications"
+    );
 
     for tok in &tokens {
         match tok.platform.as_str() {

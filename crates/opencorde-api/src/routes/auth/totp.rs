@@ -23,8 +23,8 @@ use serde::{Deserialize, Serialize};
 use totp_rs::{Algorithm, Secret, TOTP};
 use tracing::instrument;
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use crate::routes::moderation::audit_mod::log_mod_action;
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use opencorde_db::repos::user_repo;
 
 /// Issuer name shown in authenticator apps (e.g., Google Authenticator).
@@ -73,11 +73,7 @@ pub async fn enable(
         .map_err(ApiError::Database)?
         .ok_or_else(|| ApiError::Unauthorized)?;
 
-    let account_name = user
-        .email
-        .as_deref()
-        .unwrap_or(&user.username)
-        .to_string();
+    let account_name = user.email.as_deref().unwrap_or(&user.username).to_string();
 
     // Generate a new random secret
     let secret = Secret::generate_secret();
@@ -145,7 +141,14 @@ pub async fn verify(
         .map_err(ApiError::Database)?;
 
     tracing::info!(user_id = %auth.user_id, "2FA successfully enabled");
-    log_mod_action(&state, opencorde_core::Snowflake::new(0), auth.user_id, "2fa.enable", auth.user_id.as_i64()).await;
+    log_mod_action(
+        &state,
+        opencorde_core::Snowflake::new(0),
+        auth.user_id,
+        "2fa.enable",
+        auth.user_id.as_i64(),
+    )
+    .await;
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -195,7 +198,14 @@ pub async fn disable(
         .map_err(ApiError::Database)?;
 
     tracing::info!(user_id = %auth.user_id, "2FA disabled");
-    log_mod_action(&state, opencorde_core::Snowflake::new(0), auth.user_id, "2fa.disable", auth.user_id.as_i64()).await;
+    log_mod_action(
+        &state,
+        opencorde_core::Snowflake::new(0),
+        auth.user_id,
+        "2fa.disable",
+        auth.user_id.as_i64(),
+    )
+    .await;
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -225,19 +235,15 @@ pub fn check_totp_code(
 }
 
 /// Build a TOTP instance from a base32 secret.
-fn make_totp(
-    secret_base32: String,
-    account_name: &str,
-    issuer: &str,
-) -> Result<TOTP, ApiError> {
+fn make_totp(secret_base32: String, account_name: &str, issuer: &str) -> Result<TOTP, ApiError> {
     let secret_bytes = Secret::Encoded(secret_base32)
         .to_bytes()
         .map_err(|e| ApiError::Internal(anyhow::anyhow!("invalid TOTP secret: {}", e)))?;
     TOTP::new(
         Algorithm::SHA1,
-        6,    // digits
-        1,    // skew (±1 step tolerance for clock drift)
-        30,   // step in seconds (RFC 6238 default)
+        6,  // digits
+        1,  // skew (±1 step tolerance for clock drift)
+        30, // step in seconds (RFC 6238 default)
         secret_bytes,
         Some(issuer.to_string()),
         account_name.to_string(),
@@ -260,7 +266,11 @@ mod tests {
     #[test]
     fn test_make_totp_invalid_secret() {
         // Garbage input should produce an error
-        let result = make_totp("not valid base32!!!".to_string(), "user@example.com", "OpenCorde");
+        let result = make_totp(
+            "not valid base32!!!".to_string(),
+            "user@example.com",
+            "OpenCorde",
+        );
         assert!(result.is_err());
     }
 

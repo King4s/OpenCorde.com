@@ -22,6 +22,34 @@ pub struct InstanceStats {
     pub attachment_storage_bytes: i64,
     /// Total number of uploaded files
     pub attachment_count: i64,
+    /// LiveKit local and public endpoint health.
+    pub livekit_health: LiveKitHealth,
+}
+
+/// LiveKit endpoint health summary for admin dashboards.
+#[derive(Debug, Serialize)]
+pub struct LiveKitHealth {
+    /// True when both configured endpoints responded with OK.
+    pub ok: bool,
+    /// Internal LiveKit endpoint health.
+    pub local: LiveKitEndpointHealth,
+    /// Public LiveKit endpoint health as reached through the reverse proxy.
+    pub public: LiveKitEndpointHealth,
+}
+
+/// Single LiveKit endpoint health result.
+#[derive(Debug, Serialize)]
+pub struct LiveKitEndpointHealth {
+    /// URL checked after translating ws/wss to http/https.
+    pub url: String,
+    /// True when the endpoint returns HTTP 200 with body "OK".
+    pub ok: bool,
+    /// HTTP status code, if a response was received.
+    pub status: Option<u16>,
+    /// Request latency in milliseconds.
+    pub latency_ms: Option<u128>,
+    /// Short failure detail, if the endpoint did not pass.
+    pub error: Option<String>,
 }
 
 /// User row for admin listing.

@@ -12,15 +12,15 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
 };
-use opencorde_core::snowflake::SnowflakeGenerator;
 use opencorde_core::permissions::Permissions;
+use opencorde_core::snowflake::SnowflakeGenerator;
 use opencorde_db::repos::{message_repo, thread_repo};
 use tracing::instrument;
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::permission_check};
-use crate::routes::helpers::parse_snowflake;
-use crate::routes::messages::{message_row_to_response, MessageResponse};
 use super::types::{CreateThreadRequest, SendThreadMessageRequest, ThreadResponse};
+use crate::routes::helpers::parse_snowflake;
+use crate::routes::messages::{MessageResponse, message_row_to_response};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::permission_check};
 
 /// Convert ThreadRow to ThreadResponse.
 fn thread_row_to_response(row: thread_repo::ThreadRow) -> ThreadResponse {
@@ -72,7 +72,11 @@ async fn create_thread(
 
     let channel_id_sf = parse_snowflake(&channel_id)?;
     let message_id_sf = parse_snowflake(&message_id)?;
-    tracing::debug!(channel_id = channel_id_sf.as_i64(), message_id = message_id_sf.as_i64(), "parsed IDs");
+    tracing::debug!(
+        channel_id = channel_id_sf.as_i64(),
+        message_id = message_id_sf.as_i64(),
+        "parsed IDs"
+    );
 
     let name = req.name.unwrap_or_else(|| "Thread".to_string());
     permission_check::require_channel_perm(

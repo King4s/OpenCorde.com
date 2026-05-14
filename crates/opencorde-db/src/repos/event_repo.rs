@@ -86,9 +86,7 @@ pub async fn create_event(
     .execute(pool)
     .await?;
 
-    let event = get_by_id(pool, id)
-        .await?
-        .ok_or(sqlx::Error::RowNotFound)?;
+    let event = get_by_id(pool, id).await?.ok_or(sqlx::Error::RowNotFound)?;
 
     tracing::info!(event_id = event.id, "event created successfully");
     Ok(event)
@@ -110,7 +108,7 @@ pub async fn get_by_id(pool: &PgPool, id: Snowflake) -> Result<Option<EventRow>,
          JOIN users u ON e.creator_id = u.id \
          LEFT JOIN event_rsvps r ON e.id = r.event_id \
          WHERE e.id = $1 \
-         GROUP BY e.id, u.username"
+         GROUP BY e.id, u.username",
     )
     .bind(id.as_i64())
     .fetch_optional(pool)
@@ -152,7 +150,7 @@ pub async fn list_by_server(
              LEFT JOIN event_rsvps r ON e.id = r.event_id \
              WHERE e.server_id = $1 \
              GROUP BY e.id, u.username \
-             ORDER BY e.starts_at ASC"
+             ORDER BY e.starts_at ASC",
         )
         .bind(server_id.as_i64())
         .fetch_all(pool)
@@ -169,7 +167,7 @@ pub async fn list_by_server(
              LEFT JOIN event_rsvps r ON e.id = r.event_id \
              WHERE e.server_id = $1 AND e.status != 'completed' AND e.status != 'cancelled' \
              GROUP BY e.id, u.username \
-             ORDER BY e.starts_at ASC"
+             ORDER BY e.starts_at ASC",
         )
         .bind(server_id.as_i64())
         .fetch_all(pool)
@@ -190,18 +188,16 @@ pub async fn list_by_server(
 /// # Errors
 /// Returns sqlx::Error if the update fails.
 #[tracing::instrument(skip(pool))]
-pub async fn update_status(
-    pool: &PgPool,
-    id: Snowflake,
-    status: &str,
-) -> Result<(), sqlx::Error> {
+pub async fn update_status(pool: &PgPool, id: Snowflake, status: &str) -> Result<(), sqlx::Error> {
     tracing::info!(event_id = id.as_i64(), status = %status, "updating event status");
 
-    sqlx::query("UPDATE server_events SET status = $1::event_status, updated_at = NOW() WHERE id = $2")
-        .bind(status)
-        .bind(id.as_i64())
-        .execute(pool)
-        .await?;
+    sqlx::query(
+        "UPDATE server_events SET status = $1::event_status, updated_at = NOW() WHERE id = $2",
+    )
+    .bind(status)
+    .bind(id.as_i64())
+    .execute(pool)
+    .await?;
 
     Ok(())
 }
@@ -237,13 +233,19 @@ pub async fn rsvp(
     event_id: Snowflake,
     user_id: Snowflake,
 ) -> Result<(), sqlx::Error> {
-    tracing::info!(event_id = event_id.as_i64(), user_id = user_id.as_i64(), "adding rsvp");
+    tracing::info!(
+        event_id = event_id.as_i64(),
+        user_id = user_id.as_i64(),
+        "adding rsvp"
+    );
 
-    sqlx::query("INSERT INTO event_rsvps (event_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING")
-        .bind(event_id.as_i64())
-        .bind(user_id.as_i64())
-        .execute(pool)
-        .await?;
+    sqlx::query(
+        "INSERT INTO event_rsvps (event_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+    )
+    .bind(event_id.as_i64())
+    .bind(user_id.as_i64())
+    .execute(pool)
+    .await?;
 
     Ok(())
 }
@@ -258,7 +260,11 @@ pub async fn un_rsvp(
     event_id: Snowflake,
     user_id: Snowflake,
 ) -> Result<(), sqlx::Error> {
-    tracing::info!(event_id = event_id.as_i64(), user_id = user_id.as_i64(), "removing rsvp");
+    tracing::info!(
+        event_id = event_id.as_i64(),
+        user_id = user_id.as_i64(),
+        "removing rsvp"
+    );
 
     sqlx::query("DELETE FROM event_rsvps WHERE event_id = $1 AND user_id = $2")
         .bind(event_id.as_i64())
@@ -280,7 +286,7 @@ pub async fn get_rsvp_status(
     user_id: Snowflake,
 ) -> Result<bool, sqlx::Error> {
     let result: (bool,) = sqlx::query_as(
-        "SELECT EXISTS(SELECT 1 FROM event_rsvps WHERE event_id = $1 AND user_id = $2)"
+        "SELECT EXISTS(SELECT 1 FROM event_rsvps WHERE event_id = $1 AND user_id = $2)",
     )
     .bind(event_id.as_i64())
     .bind(user_id.as_i64())

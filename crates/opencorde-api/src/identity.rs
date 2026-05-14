@@ -19,9 +19,9 @@
 //! - ed25519-dalek 2 (keypair, signing, verification)
 //! - hex (public key encoding for DB/wire)
 
-use std::{fs, path::Path};
 use ed25519_dalek::{Signature, Signer, SigningKey};
 use rand_core::OsRng;
+use std::{fs, path::Path};
 
 const DEFAULT_KEY_PATH: &str = ".opencorde.key";
 
@@ -39,8 +39,8 @@ impl ServerIdentity {
     /// Reads path from `IDENTITY_KEY_PATH` env var, falling back to `.opencorde.key`.
     /// Creates the file on first run.
     pub fn load_or_generate() -> anyhow::Result<Self> {
-        let path = std::env::var("IDENTITY_KEY_PATH")
-            .unwrap_or_else(|_| DEFAULT_KEY_PATH.to_string());
+        let path =
+            std::env::var("IDENTITY_KEY_PATH").unwrap_or_else(|_| DEFAULT_KEY_PATH.to_string());
 
         let signing_key = if Path::new(&path).exists() {
             let bytes = fs::read(&path)?;
@@ -63,7 +63,10 @@ impl ServerIdentity {
         let public_key_hex = hex::encode(signing_key.verifying_key().to_bytes());
         tracing::info!(public_key = %public_key_hex, "server identity loaded");
 
-        Ok(Self { signing_key, public_key_hex })
+        Ok(Self {
+            signing_key,
+            public_key_hex,
+        })
     }
 
     /// Sign arbitrary bytes. Returns hex-encoded 64-byte signature.

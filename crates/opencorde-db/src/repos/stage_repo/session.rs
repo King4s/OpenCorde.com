@@ -90,12 +90,10 @@ pub async fn get_session(
     pool: &PgPool,
     channel_id: Snowflake,
 ) -> Result<Option<StageSessionRow>, sqlx::Error> {
-    sqlx::query_as::<_, StageSessionRow>(
-        "SELECT * FROM stage_sessions WHERE channel_id = $1",
-    )
-    .bind(channel_id.as_i64())
-    .fetch_optional(pool)
-    .await
+    sqlx::query_as::<_, StageSessionRow>("SELECT * FROM stage_sessions WHERE channel_id = $1")
+        .bind(channel_id.as_i64())
+        .fetch_optional(pool)
+        .await
 }
 
 /// End the stage session for a channel.

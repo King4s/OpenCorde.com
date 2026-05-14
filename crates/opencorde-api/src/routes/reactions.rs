@@ -12,14 +12,19 @@
 //! - crate::middleware::auth::AuthUser (authentication)
 //! - crate::AppState (application state)
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::{helpers, permission_check}};
-use opencorde_core::{permissions::Permissions, Snowflake};
+use crate::{
+    AppState,
+    error::ApiError,
+    middleware::auth::AuthUser,
+    routes::{helpers, permission_check},
+};
 use axum::{
     Json, Router,
     extract::{Path, State},
     http::StatusCode,
     routing::{get, put},
 };
+use opencorde_core::{Snowflake, permissions::Permissions};
 use opencorde_db::repos::{message_repo, reaction_repo};
 use serde::Serialize;
 use tracing::instrument;
@@ -48,9 +53,7 @@ pub fn router() -> Router<AppState> {
 /// Validate emoji parameter: must be 1-64 characters (UTF-8 bytes).
 fn validate_emoji(emoji: &str) -> Result<(), ApiError> {
     if emoji.is_empty() || emoji.len() > 64 {
-        return Err(ApiError::BadRequest(
-            "emoji must be 1-64 characters".into(),
-        ));
+        return Err(ApiError::BadRequest("emoji must be 1-64 characters".into()));
     }
     Ok(())
 }
@@ -103,14 +106,9 @@ async fn add_reaction(
     .await?;
 
     // Add reaction to database
-    let is_new = reaction_repo::add_reaction(
-        &state.db,
-        message_id_sf,
-        auth.user_id,
-        &emoji,
-    )
-    .await
-    .map_err(ApiError::Database)?;
+    let is_new = reaction_repo::add_reaction(&state.db, message_id_sf, auth.user_id, &emoji)
+        .await
+        .map_err(ApiError::Database)?;
 
     // Fetch updated reaction counts
     let reactions = reaction_repo::count_by_emoji(&state.db, message_id_sf, auth.user_id)
@@ -145,7 +143,11 @@ async fn add_reaction(
 
         Ok((StatusCode::OK, Json(response)))
     } else {
-        tracing::debug!(message_id = message_id_sf.as_i64(), emoji, "reaction already existed");
+        tracing::debug!(
+            message_id = message_id_sf.as_i64(),
+            emoji,
+            "reaction already existed"
+        );
         Ok((StatusCode::NO_CONTENT, Json(response)))
     }
 }
@@ -189,17 +191,17 @@ async fn remove_reaction(
     .await?;
 
     // Remove reaction from database
-    let was_removed = reaction_repo::remove_reaction(
-        &state.db,
-        message_id_sf,
-        auth.user_id,
-        &emoji,
-    )
-    .await
-    .map_err(ApiError::Database)?;
+    let was_removed =
+        reaction_repo::remove_reaction(&state.db, message_id_sf, auth.user_id, &emoji)
+            .await
+            .map_err(ApiError::Database)?;
 
     if was_removed {
-        tracing::info!(message_id = message_id_sf.as_i64(), emoji, "reaction removed");
+        tracing::info!(
+            message_id = message_id_sf.as_i64(),
+            emoji,
+            "reaction removed"
+        );
 
         // Broadcast ReactionRemove event (includes channel_id for dispatch filtering)
         let event = serde_json::json!({
@@ -215,7 +217,11 @@ async fn remove_reaction(
             tracing::debug!("no WebSocket subscribers for ReactionRemove event");
         }
     } else {
-        tracing::debug!(message_id = message_id_sf.as_i64(), emoji, "reaction did not exist");
+        tracing::debug!(
+            message_id = message_id_sf.as_i64(),
+            emoji,
+            "reaction did not exist"
+        );
     }
 
     Ok(StatusCode::NO_CONTENT)

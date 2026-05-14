@@ -9,12 +9,10 @@
 mod crud;
 mod query;
 
-pub use crud::{create_message, update_content, delete_message};
-pub use query::{
-    get_by_id, list_by_channel, list_by_thread, get_reply_context,
-};
 pub use crate::repos::message_repo::crud::MessageRow;
 pub use crate::repos::message_repo::query::ReplyContext;
+pub use crud::{create_message, delete_message, update_content};
+pub use query::{get_by_id, get_reply_context, list_by_channel, list_by_thread};
 
 #[cfg(test)]
 mod tests {

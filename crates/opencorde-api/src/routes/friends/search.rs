@@ -1,10 +1,13 @@
 //! GET /api/v1/users/search handler.
 
-use axum::{Json, extract::{State, Query}};
+use axum::{
+    Json,
+    extract::{Query, State},
+};
 use std::collections::HashMap;
 
-use crate::{error::ApiError, AppState};
 use super::types::UserSearchResult;
+use crate::{AppState, error::ApiError};
 
 /// GET /api/v1/users/search?q={query} — Search users by username.
 #[tracing::instrument(skip(state), fields(query_len = 0))]
@@ -17,7 +20,9 @@ pub async fn search_users(
         .ok_or_else(|| ApiError::BadRequest("q parameter required".into()))?;
 
     if q.len() < 2 {
-        return Err(ApiError::BadRequest("query must be at least 2 characters".into()));
+        return Err(ApiError::BadRequest(
+            "query must be at least 2 characters".into(),
+        ));
     }
 
     tracing::info!(query = %q, "searching users");

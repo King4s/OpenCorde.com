@@ -119,7 +119,9 @@ pub async fn login(
     let expires_at = Utc::now() + Duration::seconds(state.config.jwt_refresh_expiry as i64);
     refresh_token_repo::insert(&state.db, &jti, user_id.as_i64(), expires_at)
         .await
-        .map_err(|e| ApiError::Internal(anyhow::anyhow!("failed to store refresh token JTI: {}", e)))?;
+        .map_err(|e| {
+            ApiError::Internal(anyhow::anyhow!("failed to store refresh token JTI: {}", e))
+        })?;
 
     tracing::debug!(user_id = user_row.id, "tokens generated and JTI stored");
 
@@ -265,7 +267,12 @@ pub async fn refresh(
     let expires_at = Utc::now() + Duration::seconds(state.config.jwt_refresh_expiry as i64);
     refresh_token_repo::insert(&state.db, &new_jti, user_id.as_i64(), expires_at)
         .await
-        .map_err(|e| ApiError::Internal(anyhow::anyhow!("failed to store new refresh token JTI: {}", e)))?;
+        .map_err(|e| {
+            ApiError::Internal(anyhow::anyhow!(
+                "failed to store new refresh token JTI: {}",
+                e
+            ))
+        })?;
 
     tracing::debug!(user_id = %user_id, old_jti = jti, new_jti = %new_jti, "refresh token rotated");
 

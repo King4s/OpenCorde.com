@@ -152,7 +152,11 @@ pub async fn send_dm_message(
     author_id: Snowflake,
     content: &str,
 ) -> Result<DmMessageRow, sqlx::Error> {
-    tracing::info!(dm_id = dm_id.as_i64(), author_id = author_id.as_i64(), "sending dm message");
+    tracing::info!(
+        dm_id = dm_id.as_i64(),
+        author_id = author_id.as_i64(),
+        "sending dm message"
+    );
 
     let row = sqlx::query_as::<_, DmMessageRow>(
         "WITH inserted AS ( \

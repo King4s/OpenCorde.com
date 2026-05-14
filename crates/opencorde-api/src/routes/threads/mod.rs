@@ -18,8 +18,8 @@
 mod handlers;
 mod types;
 
-pub use types::{CreateThreadRequest, SendThreadMessageRequest, ThreadResponse};
 pub use handlers::router;
+pub use types::{CreateThreadRequest, SendThreadMessageRequest, ThreadResponse};
 
 #[cfg(test)]
 mod tests {

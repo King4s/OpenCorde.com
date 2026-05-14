@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 use anyhow::Context;
 use twilight_http::Client;
-use twilight_model::id::{marker::WebhookMarker, Id};
+use twilight_model::id::{Id, marker::WebhookMarker};
 
 /// Discord REST API wrapper.
 ///

@@ -31,7 +31,10 @@ pub async fn list_for_channel(
     pool: &PgPool,
     channel_id: i64,
 ) -> Result<Vec<OverrideRow>, sqlx::Error> {
-    tracing::info!(channel_id = channel_id, "listing channel permission overrides");
+    tracing::info!(
+        channel_id = channel_id,
+        "listing channel permission overrides"
+    );
 
     sqlx::query_as::<_, OverrideRow>(
         "SELECT * FROM channel_permission_overrides \

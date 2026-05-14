@@ -22,10 +22,10 @@
 //! - crate::email (email service)
 //! - crate::AppState (app state + email service)
 
-use crate::{error::ApiError, AppState};
+use crate::{AppState, error::ApiError};
 use argon2::{Argon2, PasswordHasher};
-use axum::extract::State;
 use axum::Json;
+use axum::extract::State;
 use axum::http::StatusCode;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -78,7 +78,7 @@ pub async fn forgot_password(
 
             // Clean up any expired tokens for this user
             let _ = sqlx::query(
-                "DELETE FROM password_reset_tokens WHERE user_id = $1 AND expires_at < now()"
+                "DELETE FROM password_reset_tokens WHERE user_id = $1 AND expires_at < now()",
             )
             .bind(user_id)
             .execute(&state.db)

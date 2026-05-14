@@ -73,19 +73,24 @@ pub async fn check_verification_level(
         }
     }
 
-    if level >= 3 && include_member_tenure
+    if level >= 3
+        && include_member_tenure
         && let Some(member) = member_repo::get_member(pool, user_id, server_id)
             .await
             .map_err(ApiError::Database)?
-        {
-            let tenure_secs = Utc::now()
-                .signed_duration_since(member.joined_at)
-                .num_seconds();
-            if tenure_secs < 600 {
-                tracing::warn!(user_id = user_id.as_i64(), tenure_secs, "member tenure too short");
-                return Err(ApiError::Forbidden);
-            }
+    {
+        let tenure_secs = Utc::now()
+            .signed_duration_since(member.joined_at)
+            .num_seconds();
+        if tenure_secs < 600 {
+            tracing::warn!(
+                user_id = user_id.as_i64(),
+                tenure_secs,
+                "member tenure too short"
+            );
+            return Err(ApiError::Forbidden);
         }
+    }
 
     if level >= 4 && !user.totp_enabled {
         tracing::warn!(user_id = user_id.as_i64(), "user 2FA not enabled");

@@ -3,8 +3,8 @@
 use axum::{Json, extract::State};
 use opencorde_db::repos::relationship_repo;
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
 use super::types::{PendingResponse, RelationshipResponse};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
 /// GET /api/v1/friends/pending — List pending incoming and outgoing requests.
 #[tracing::instrument(skip(state, auth), fields(user_id = %auth.user_id))]

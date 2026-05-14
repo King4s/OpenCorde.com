@@ -115,7 +115,7 @@ pub fn process_welcome(
         other => {
             return Err(CryptoError::group(format!(
                 "expected Welcome message, got: {other:?}"
-            )))
+            )));
         }
     };
 
@@ -201,7 +201,8 @@ mod tests {
         let (creator_cred, creator_signer) = make_credential_and_signer(111, &provider);
         let mut group = create_group(creator_cred, &creator_signer, &provider).unwrap();
 
-        let (member_kp, _member_signer) = key_package::generate_key_package(222, &provider).unwrap();
+        let (member_kp, _member_signer) =
+            key_package::generate_key_package(222, &provider).unwrap();
         let result = add_member(&mut group, member_kp, &creator_signer, &provider);
         assert!(result.is_ok(), "{:?}", result.err());
     }

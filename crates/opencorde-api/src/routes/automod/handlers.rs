@@ -11,11 +11,9 @@ use opencorde_core::snowflake::{Snowflake, SnowflakeGenerator};
 use opencorde_db::repos::{automod_repo, server_repo};
 use tracing::instrument;
 
-use crate::{
-    error::ApiError, middleware::auth::AuthUser, AppState,
-};
 use super::super::helpers::parse_snowflake;
 use super::types::{AutomodRuleResponse, CreateAutomodRuleRequest, UpdateAutomodRuleRequest};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
 fn row_to_response(row: automod_repo::AutomodRuleRow) -> AutomodRuleResponse {
     let keywords = row
@@ -46,8 +44,7 @@ async fn create_rule(
 ) -> Result<(StatusCode, Json<AutomodRuleResponse>), ApiError> {
     tracing::info!("creating automod rule");
 
-    req.validate()
-        .map_err(ApiError::BadRequest)?;
+    req.validate().map_err(ApiError::BadRequest)?;
 
     // Parse server ID
     let server_id_sf = parse_snowflake(&server_id)?;
@@ -155,24 +152,22 @@ async fn update_rule(
 ) -> Result<Json<AutomodRuleResponse>, ApiError> {
     tracing::info!("updating automod rule");
 
-    req.validate_keywords()
-        .map_err(ApiError::BadRequest)?;
+    req.validate_keywords().map_err(ApiError::BadRequest)?;
 
     // Parse rule ID
     let rule_id_sf = parse_snowflake(&rule_id)?;
 
     // Fetch current rule to verify ownership and get current values
-    let current_row: automod_repo::AutomodRuleRow = sqlx::query_as(
-        "SELECT * FROM automod_rules WHERE id = $1",
-    )
-    .bind(rule_id_sf.as_i64())
-    .fetch_optional(&state.db)
-    .await
-    .map_err(|e| {
-        tracing::error!(error = %e, "failed to fetch automod rule");
-        ApiError::Database(e)
-    })?
-    .ok_or(ApiError::NotFound("rule not found".to_string()))?;
+    let current_row: automod_repo::AutomodRuleRow =
+        sqlx::query_as("SELECT * FROM automod_rules WHERE id = $1")
+            .bind(rule_id_sf.as_i64())
+            .fetch_optional(&state.db)
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, "failed to fetch automod rule");
+                ApiError::Database(e)
+            })?
+            .ok_or(ApiError::NotFound("rule not found".to_string()))?;
 
     // Verify user is rule creator or server owner
     let server = server_repo::get_by_id(&state.db, Snowflake::new(current_row.server_id))
@@ -183,9 +178,7 @@ async fn update_rule(
         })?
         .ok_or(ApiError::NotFound("server not found".to_string()))?;
 
-    if current_row.created_by != auth.user_id.as_i64()
-        && server.owner_id != auth.user_id.as_i64()
-    {
+    if current_row.created_by != auth.user_id.as_i64() && server.owner_id != auth.user_id.as_i64() {
         tracing::warn!("user is not rule creator or server owner");
         return Err(ApiError::Forbidden);
     }
@@ -210,18 +203,20 @@ async fn update_rule(
         })?;
 
     // Fetch updated rule
-    let updated_row: automod_repo::AutomodRuleRow = sqlx::query_as(
-        "SELECT * FROM automod_rules WHERE id = $1",
-    )
-    .bind(rule_id_sf.as_i64())
-    .fetch_one(&state.db)
-    .await
-    .map_err(|e| {
-        tracing::error!(error = %e, "failed to fetch updated automod rule");
-        ApiError::Database(e)
-    })?;
+    let updated_row: automod_repo::AutomodRuleRow =
+        sqlx::query_as("SELECT * FROM automod_rules WHERE id = $1")
+            .bind(rule_id_sf.as_i64())
+            .fetch_one(&state.db)
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, "failed to fetch updated automod rule");
+                ApiError::Database(e)
+            })?;
 
-    tracing::info!(rule_id = updated_row.id, "automod rule updated successfully");
+    tracing::info!(
+        rule_id = updated_row.id,
+        "automod rule updated successfully"
+    );
 
     Ok(Json(row_to_response(updated_row)))
 }
@@ -239,17 +234,16 @@ async fn delete_rule(
     let rule_id_sf = parse_snowflake(&rule_id)?;
 
     // Fetch rule to verify ownership
-    let rule: automod_repo::AutomodRuleRow = sqlx::query_as(
-        "SELECT * FROM automod_rules WHERE id = $1",
-    )
-    .bind(rule_id_sf.as_i64())
-    .fetch_optional(&state.db)
-    .await
-    .map_err(|e| {
-        tracing::error!(error = %e, "failed to fetch automod rule");
-        ApiError::Database(e)
-    })?
-    .ok_or(ApiError::NotFound("rule not found".to_string()))?;
+    let rule: automod_repo::AutomodRuleRow =
+        sqlx::query_as("SELECT * FROM automod_rules WHERE id = $1")
+            .bind(rule_id_sf.as_i64())
+            .fetch_optional(&state.db)
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, "failed to fetch automod rule");
+                ApiError::Database(e)
+            })?
+            .ok_or(ApiError::NotFound("rule not found".to_string()))?;
 
     // Verify user is rule creator or server owner
     let server = server_repo::get_by_id(&state.db, Snowflake::new(rule.server_id))
@@ -273,7 +267,10 @@ async fn delete_rule(
             ApiError::Database(e)
         })?;
 
-    tracing::info!(rule_id = rule_id_sf.as_i64(), "automod rule deleted successfully");
+    tracing::info!(
+        rule_id = rule_id_sf.as_i64(),
+        "automod rule deleted successfully"
+    );
 
     Ok(StatusCode::NO_CONTENT)
 }

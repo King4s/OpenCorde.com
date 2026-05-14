@@ -19,11 +19,11 @@
 //! - crate::middleware::auth::AuthUser (resend endpoint)
 //! - crate::AppState (app state)
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use axum::{
+    Json,
     extract::{Query, State},
     http::StatusCode,
-    Json,
 };
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -98,22 +98,23 @@ pub async fn resend_verification(
     auth: AuthUser,
 ) -> Result<(StatusCode, Json<VerificationResponse>), ApiError> {
     // Fetch user email and current verified status
-    let row = sqlx::query(
-        "SELECT email, email_verified FROM users WHERE id = $1",
-    )
-    .bind(auth.user_id.as_i64())
-    .fetch_optional(&state.db)
-    .await
-    .map_err(ApiError::Database)?
-    .ok_or(ApiError::Unauthorized)?;
+    let row = sqlx::query("SELECT email, email_verified FROM users WHERE id = $1")
+        .bind(auth.user_id.as_i64())
+        .fetch_optional(&state.db)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or(ApiError::Unauthorized)?;
 
     let already_verified: bool = row.get("email_verified");
     if already_verified {
-        return Err(ApiError::BadRequest("Email is already verified.".to_string()));
+        return Err(ApiError::BadRequest(
+            "Email is already verified.".to_string(),
+        ));
     }
 
     let email: Option<String> = row.try_get("email").ok();
-    let email = email.ok_or_else(|| ApiError::BadRequest("No email address on account.".to_string()))?;
+    let email =
+        email.ok_or_else(|| ApiError::BadRequest("No email address on account.".to_string()))?;
 
     // Generate new token
     let token = generate_verification_token();
@@ -129,7 +130,11 @@ pub async fn resend_verification(
     .await
     .map_err(ApiError::Database)?;
 
-    if let Err(e) = state.email_service.send_verification_email(&email, &token).await {
+    if let Err(e) = state
+        .email_service
+        .send_verification_email(&email, &token)
+        .await
+    {
         tracing::warn!(user_id = %auth.user_id, error = ?e, "failed to send verification email");
     }
 

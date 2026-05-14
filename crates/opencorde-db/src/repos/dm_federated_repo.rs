@@ -124,13 +124,11 @@ pub async fn get_remote_server(
     pool: &PgPool,
     dm_id: Snowflake,
 ) -> Result<Option<String>, sqlx::Error> {
-    sqlx::query_scalar::<_, Option<String>>(
-        "SELECT remote_server FROM dm_channels WHERE id = $1",
-    )
-    .bind(dm_id.as_i64())
-    .fetch_optional(pool)
-    .await
-    .map(|opt| opt.flatten())
+    sqlx::query_scalar::<_, Option<String>>("SELECT remote_server FROM dm_channels WHERE id = $1")
+        .bind(dm_id.as_i64())
+        .fetch_optional(pool)
+        .await
+        .map(|opt| opt.flatten())
 }
 
 /// Get the remote_peer_address for a DM channel.

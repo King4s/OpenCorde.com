@@ -14,8 +14,11 @@ mod types;
 pub use handlers::{get_identity, introduce, lookup_user, receive_event};
 pub use types::FederatedEvent;
 
-use axum::{Router, routing::{get, post}};
 use crate::AppState;
+use axum::{
+    Router,
+    routing::{get, post},
+};
 
 pub fn router() -> Router<AppState> {
     Router::new()

@@ -24,10 +24,7 @@ pub use lifecycle::handle_connection;
 
 use axum::{
     Router,
-    extract::{
-        State,
-        ws::WebSocketUpgrade,
-    },
+    extract::{State, ws::WebSocketUpgrade},
     response::IntoResponse,
     routing::get,
 };

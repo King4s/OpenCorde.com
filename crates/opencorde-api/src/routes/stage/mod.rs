@@ -12,11 +12,11 @@
 //! ## Depends On
 //! - axum, opencorde_db::repos::stage_repo, crate::AppState
 
-use axum::{Router, routing};
 use crate::AppState;
+use axum::{Router, routing};
 
-pub mod types;
 pub mod handlers;
+pub mod types;
 
 pub fn router() -> Router<AppState> {
     Router::new()

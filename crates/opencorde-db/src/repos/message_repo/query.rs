@@ -1,9 +1,9 @@
 //! # Query operations for messages
 //! Retrieve and list messages with cursor-based pagination.
 
+use super::crud::MessageRow;
 use opencorde_core::snowflake::Snowflake;
 use sqlx::PgPool;
-use super::crud::MessageRow;
 
 /// Context for a message being replied to (minimal data for display).
 #[derive(Debug, Clone, sqlx::FromRow)]
@@ -173,7 +173,10 @@ pub async fn list_by_thread(
     .fetch_all(pool)
     .await?;
 
-    tracing::info!(count = messages.len(), "thread messages fetched successfully");
+    tracing::info!(
+        count = messages.len(),
+        "thread messages fetched successfully"
+    );
     Ok(messages)
 }
 

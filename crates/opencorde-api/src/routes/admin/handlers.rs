@@ -2,14 +2,19 @@
 //! Request handlers for admin endpoints.
 
 use axum::{
-    extract::{Path, Query, State},
     Json,
+    extract::{Path, Query, State},
 };
 use sqlx::Row;
+use std::{time::Duration, time::Instant};
+use url::Url;
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
-use super::types::{AdminServerRow, AdminUserRow, InstanceStats, PaginationQuery};
+use super::types::{
+    AdminServerRow, AdminUserRow, InstanceStats, LiveKitEndpointHealth, LiveKitHealth,
+    PaginationQuery,
+};
 
 /// Check if user is admin.
 pub(super) fn is_admin(auth: &AuthUser, state: &AppState) -> bool {
@@ -17,6 +22,90 @@ pub(super) fn is_admin(auth: &AuthUser, state: &AppState) -> bool {
         .config
         .admin_user_ids
         .contains(&auth.user_id.as_i64().to_string())
+}
+
+fn livekit_http_url(raw: &str) -> Result<String, String> {
+    let mut url = Url::parse(raw).map_err(|err| err.to_string())?;
+    match url.scheme() {
+        "ws" => url
+            .set_scheme("http")
+            .map_err(|_| "invalid ws URL".to_string())?,
+        "wss" => url
+            .set_scheme("https")
+            .map_err(|_| "invalid wss URL".to_string())?,
+        "http" | "https" => {}
+        scheme => return Err(format!("unsupported scheme: {scheme}")),
+    }
+    if url.path().is_empty() {
+        url.set_path("/");
+    }
+    Ok(url.to_string())
+}
+
+async fn check_livekit_endpoint(client: &reqwest::Client, raw_url: &str) -> LiveKitEndpointHealth {
+    let url = match livekit_http_url(raw_url) {
+        Ok(url) => url,
+        Err(error) => {
+            return LiveKitEndpointHealth {
+                url: raw_url.to_string(),
+                ok: false,
+                status: None,
+                latency_ms: None,
+                error: Some(error),
+            };
+        }
+    };
+
+    let started = Instant::now();
+    match client.get(&url).send().await {
+        Ok(response) => {
+            let status = response.status().as_u16();
+            match response.text().await {
+                Ok(body) => {
+                    let ok = status == 200 && body.trim() == "OK";
+                    LiveKitEndpointHealth {
+                        url,
+                        ok,
+                        status: Some(status),
+                        latency_ms: Some(started.elapsed().as_millis()),
+                        error: (!ok).then(|| format!("unexpected response body: {}", body.trim())),
+                    }
+                }
+                Err(err) => LiveKitEndpointHealth {
+                    url,
+                    ok: false,
+                    status: Some(status),
+                    latency_ms: Some(started.elapsed().as_millis()),
+                    error: Some(err.to_string()),
+                },
+            }
+        }
+        Err(err) => LiveKitEndpointHealth {
+            url,
+            ok: false,
+            status: None,
+            latency_ms: Some(started.elapsed().as_millis()),
+            error: Some(err.to_string()),
+        },
+    }
+}
+
+async fn get_livekit_health(state: &AppState) -> LiveKitHealth {
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(3))
+        .build()
+        .unwrap_or_else(|_| reqwest::Client::new());
+
+    let (local, public) = tokio::join!(
+        check_livekit_endpoint(&client, &state.config.livekit_url),
+        check_livekit_endpoint(&client, &state.config.livekit_public_url),
+    );
+
+    LiveKitHealth {
+        ok: local.ok && public.ok,
+        local,
+        public,
+    }
 }
 
 /// GET /api/v1/admin/stats — Get instance statistics.
@@ -65,10 +154,9 @@ pub async fn get_stats(
     let active_voice_sessions: i64 = voice_row.get("count");
 
     // PostgreSQL database size
-    let db_size_row =
-        sqlx::query("SELECT pg_database_size(current_database()) as size")
-            .fetch_one(&state.db)
-            .await?;
+    let db_size_row = sqlx::query("SELECT pg_database_size(current_database()) as size")
+        .fetch_one(&state.db)
+        .await?;
     let db_size_bytes: i64 = db_size_row.get("size");
 
     // Attachment storage (sum of file sizes + count)
@@ -79,6 +167,7 @@ pub async fn get_stats(
     .await?;
     let attachment_storage_bytes: i64 = attach_row.get("total_size");
     let attachment_count: i64 = attach_row.get("total_count");
+    let livekit_health = get_livekit_health(&state).await;
 
     let stats = InstanceStats {
         total_users,
@@ -89,6 +178,7 @@ pub async fn get_stats(
         db_size_bytes,
         attachment_storage_bytes,
         attachment_count,
+        livekit_health,
     };
 
     tracing::info!(
@@ -100,6 +190,7 @@ pub async fn get_stats(
         db_size_bytes,
         attachment_storage_bytes,
         attachment_count,
+        livekit_ok = stats.livekit_health.ok,
         "admin: instance stats retrieved"
     );
 
@@ -262,4 +353,27 @@ pub async fn delete_server(
     tracing::info!(server_id = %server_id, "admin: server deleted");
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn livekit_http_url_converts_ws_urls() {
+        assert_eq!(
+            livekit_http_url("ws://localhost:7880").unwrap(),
+            "http://localhost:7880/"
+        );
+        assert_eq!(
+            livekit_http_url("wss://opencorde.com/livekit").unwrap(),
+            "https://opencorde.com/livekit"
+        );
+    }
+
+    #[test]
+    fn livekit_http_url_rejects_unsupported_schemes() {
+        let err = livekit_http_url("ftp://localhost:7880").unwrap_err();
+        assert!(err.contains("unsupported scheme"));
+    }
 }

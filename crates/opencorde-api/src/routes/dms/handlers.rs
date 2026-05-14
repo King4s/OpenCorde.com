@@ -16,16 +16,16 @@
 //! - crate::error::ApiError (error handling)
 
 use axum::{
+    Json,
     extract::{Path, Query, State},
     http::StatusCode,
-    Json,
 };
 use opencorde_core::snowflake::{Snowflake, SnowflakeGenerator};
 use reqwest::Client;
 use serde_json::json;
 use std::time::Duration;
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use opencorde_db::repos::{dm_federated_repo, dm_repo, user_repo};
 
 use super::types::{DmChannelResponse, DmMessageResponse, MessageListQuery, SendDmRequest};
@@ -87,7 +87,8 @@ pub async fn open_dm(
     }
 
     // Local DM: recipient_id = snowflake string
-    let raw_id = req.recipient_id
+    let raw_id = req
+        .recipient_id
         .ok_or_else(|| ApiError::BadRequest("recipient_id or recipient_address required".into()))?;
 
     tracing::info!(recipient_id = %raw_id, "opening local dm");
@@ -119,12 +120,15 @@ pub async fn open_dm(
             ApiError::NotFound("dm channel not found".into())
         })?;
 
-    Ok((StatusCode::CREATED, Json(DmChannelResponse {
-        id: channel.id.to_string(),
-        other_user_id: channel.other_user_id.to_string(),
-        other_username: channel.other_username,
-        last_read_id: channel.last_read_id.to_string(),
-    })))
+    Ok((
+        StatusCode::CREATED,
+        Json(DmChannelResponse {
+            id: channel.id.to_string(),
+            other_user_id: channel.other_user_id.to_string(),
+            other_username: channel.other_username,
+            last_read_id: channel.last_read_id.to_string(),
+        }),
+    ))
 }
 
 /// Open a federated DM channel with a user on another server.
@@ -162,14 +166,19 @@ async fn open_federated_dm(
         let channels = dm_repo::list_dms_for_user(&state.db, local_user)
             .await
             .map_err(ApiError::Database)?;
-        let ch = channels.into_iter().find(|c| c.id == dm_id_result)
+        let ch = channels
+            .into_iter()
+            .find(|c| c.id == dm_id_result)
             .ok_or_else(|| ApiError::NotFound("dm channel not found".into()))?;
-        return Ok((StatusCode::CREATED, Json(DmChannelResponse {
-            id: ch.id.to_string(),
-            other_user_id: ch.other_user_id.to_string(),
-            other_username: ch.other_username,
-            last_read_id: ch.last_read_id.to_string(),
-        })));
+        return Ok((
+            StatusCode::CREATED,
+            Json(DmChannelResponse {
+                id: ch.id.to_string(),
+                other_user_id: ch.other_user_id.to_string(),
+                other_username: ch.other_username,
+                last_read_id: ch.last_read_id.to_string(),
+            }),
+        ));
     }
 
     // Verify remote user exists
@@ -210,12 +219,15 @@ async fn open_federated_dm(
 
     tracing::info!(dm_id = dm_id_result, recipient_address = %address, "federated dm channel opened");
 
-    Ok((StatusCode::CREATED, Json(DmChannelResponse {
-        id: dm_id_result.to_string(),
-        other_user_id: "0".to_string(),
-        other_username: address.to_string(),
-        last_read_id: "0".to_string(),
-    })))
+    Ok((
+        StatusCode::CREATED,
+        Json(DmChannelResponse {
+            id: dm_id_result.to_string(),
+            other_user_id: "0".to_string(),
+            other_username: address.to_string(),
+            last_read_id: "0".to_string(),
+        }),
+    ))
 }
 
 /// GET /api/v1/channels/@dms/{dm_id}/messages — List DM messages.
@@ -328,12 +340,13 @@ pub async fn send_dm_message(
     let message_id = generator.next_id();
 
     // Send message locally
-    let message = dm_repo::send_dm_message(&state.db, message_id, dm_id_sf, auth.user_id, &req.content)
-        .await
-        .map_err(|e| {
-            tracing::error!(error = %e, "failed to send dm message");
-            ApiError::InternalServerError("failed to send message".into())
-        })?;
+    let message =
+        dm_repo::send_dm_message(&state.db, message_id, dm_id_sf, auth.user_id, &req.content)
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, "failed to send dm message");
+                ApiError::InternalServerError("failed to send message".into())
+            })?;
 
     let response = DmMessageResponse {
         id: message.id.to_string(),
@@ -356,7 +369,8 @@ pub async fn send_dm_message(
     }
 
     // Forward to remote server if this is a federated DM channel
-    if let Ok(Some(remote_server)) = dm_federated_repo::get_remote_server(&state.db, dm_id_sf).await {
+    if let Ok(Some(remote_server)) = dm_federated_repo::get_remote_server(&state.db, dm_id_sf).await
+    {
         let remote_peer = dm_federated_repo::get_remote_peer_address(&state.db, dm_id_sf)
             .await
             .unwrap_or(None)

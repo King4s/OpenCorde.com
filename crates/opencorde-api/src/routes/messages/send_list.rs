@@ -24,14 +24,22 @@ use tracing::instrument;
 
 use opencorde_core::permissions::Permissions;
 
-use crate::{AppState, automod, error::ApiError, middleware::auth::AuthUser, routes::permission_check};
+use crate::{
+    AppState, automod, error::ApiError, middleware::auth::AuthUser, routes::permission_check,
+};
 
 use super::types::{MessageQuery, MessageResponse, ReplyContextResponse, SendMessageRequest};
-use super::validation::{extract_mention_ids, parse_snowflake_id, validate_content, validate_limit};
+use super::validation::{
+    extract_mention_ids, parse_snowflake_id, validate_content, validate_limit,
+};
 
 /// Convert MessageRow to MessageResponse.
 pub fn message_row_to_response(row: message_repo::MessageRow) -> MessageResponse {
-    let reply_to = match (row.reply_to_id, row.reply_author_username, row.reply_content_preview) {
+    let reply_to = match (
+        row.reply_to_id,
+        row.reply_author_username,
+        row.reply_content_preview,
+    ) {
         (Some(id), Some(author), Some(content)) => Some(ReplyContextResponse {
             id: id.to_string(),
             author_username: author,
@@ -94,26 +102,20 @@ pub async fn send_message(
     tracing::debug!(reply_to_id = ?reply_to_id, "reply_to_id parsed");
 
     // Fetch server_id and slowmode_delay from channel
-    let channel_info: (i64, i64, i32) = sqlx::query_as(
-        "SELECT id, server_id, slowmode_delay FROM channels WHERE id = $1",
-    )
-    .bind(channel_id_sf.as_i64())
-    .fetch_optional(&state.db)
-    .await
-    .map_err(ApiError::Database)?
-    .ok_or(ApiError::NotFound("channel not found".to_string()))?;
+    let channel_info: (i64, i64, i32) =
+        sqlx::query_as("SELECT id, server_id, slowmode_delay FROM channels WHERE id = $1")
+            .bind(channel_id_sf.as_i64())
+            .fetch_optional(&state.db)
+            .await
+            .map_err(ApiError::Database)?
+            .ok_or(ApiError::NotFound("channel not found".to_string()))?;
 
     let server_id = Snowflake::new(channel_info.1);
     let slowmode_delay = channel_info.2;
 
     // Enforce server verification level (requires member tenure check)
-    crate::routes::helpers::check_verification_level(
-        &state.db,
-        auth.user_id,
-        server_id,
-        true,
-    )
-    .await?;
+    crate::routes::helpers::check_verification_level(&state.db, auth.user_id, server_id, true)
+        .await?;
 
     // Enforce slowmode: check when this user last sent a message in this channel
     if slowmode_delay > 0 {
@@ -129,9 +131,7 @@ pub async fn send_message(
         .map_err(ApiError::Database)?;
 
         if let Some(last) = last_sent {
-            let elapsed = Utc::now()
-                .signed_duration_since(last)
-                .num_seconds();
+            let elapsed = Utc::now().signed_duration_since(last).num_seconds();
             let remaining = slowmode_delay as i64 - elapsed;
             if remaining > 0 {
                 tracing::info!(
@@ -151,9 +151,10 @@ pub async fn send_message(
     match automod::check_message(&state.db, server_id, &req.content).await {
         automod::AutomodResult::Block { rule_name, .. } => {
             tracing::info!(rule = %rule_name, "message blocked by automod");
-            return Err(ApiError::BadRequest(
-                format!("message blocked by automod rule: {}", rule_name),
-            ));
+            return Err(ApiError::BadRequest(format!(
+                "message blocked by automod rule: {}",
+                rule_name
+            )));
         }
         automod::AutomodResult::Allow => {}
     }
@@ -227,14 +228,15 @@ pub async fn send_message(
     if let Some(ref engine) = state.search {
         let engine = engine.clone();
         let msg_id = response.id.parse::<u64>().unwrap_or(0);
-        let ch_id  = response.channel_id.parse::<u64>().unwrap_or(0);
+        let ch_id = response.channel_id.parse::<u64>().unwrap_or(0);
         let srv_id = server_id.as_i64() as u64;
         let auth_id = auth.user_id.as_i64() as u64;
-        let text   = req.content.clone();
-        let ts     = chrono::Utc::now().timestamp() as u64;
+        let text = req.content.clone();
+        let ts = chrono::Utc::now().timestamp() as u64;
         tokio::spawn(async move {
             if let Ok(mut indexer) = engine.make_indexer(50_000_000) {
-                let _ = indexer.index_message(msg_id, ch_id, srv_id, auth_id, &text, ts)
+                let _ = indexer
+                    .index_message(msg_id, ch_id, srv_id, auth_id, &text, ts)
                     .and_then(|_| indexer.commit());
             }
         });

@@ -11,22 +11,22 @@
 //! - GET /api/v1/users/search?q={query} — Search users by username
 
 use axum::{
-    routing::{delete, get, post, put},
     Router,
+    routing::{delete, get, post, put},
 };
 
 use crate::AppState;
 
-mod types;
-mod list;
-mod request;
-mod pending;
 mod accept;
-mod remove;
 mod block;
+mod list;
+mod pending;
+mod remove;
+mod request;
 mod search;
+mod types;
 
-pub use types::{RelationshipResponse, PendingResponse, UserIdRequest, UserSearchResult};
+pub use types::{PendingResponse, RelationshipResponse, UserIdRequest, UserSearchResult};
 
 /// Build the friends router.
 pub fn router() -> Router<AppState> {
@@ -35,7 +35,13 @@ pub fn router() -> Router<AppState> {
         .route("/api/v1/friends/request", post(request::send_request))
         .route("/api/v1/friends/pending", get(pending::list_pending))
         .route("/api/v1/friends/block", post(block::block_user))
-        .route("/api/v1/friends/{relationship_id}/accept", put(accept::accept_request))
-        .route("/api/v1/friends/{relationship_id}", delete(remove::remove_relationship))
+        .route(
+            "/api/v1/friends/{relationship_id}/accept",
+            put(accept::accept_request),
+        )
+        .route(
+            "/api/v1/friends/{relationship_id}",
+            delete(remove::remove_relationship),
+        )
         .route("/api/v1/users/search", get(search::search_users))
 }

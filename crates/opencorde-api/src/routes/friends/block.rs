@@ -4,8 +4,8 @@ use axum::{Json, extract::State, http::StatusCode};
 use opencorde_core::snowflake::SnowflakeGenerator;
 use opencorde_db::repos::{relationship_repo, user_repo};
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
-use super::types::{UserIdRequest, RelationshipResponse};
+use super::types::{RelationshipResponse, UserIdRequest};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
 /// POST /api/v1/friends/block — Block a user.
 #[tracing::instrument(skip(state, auth, req), fields(user_id = %auth.user_id))]

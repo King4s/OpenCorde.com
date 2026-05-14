@@ -53,7 +53,8 @@ pub fn generate_key_package(
         .map_err(|e| CryptoError::key_package(format!("failed to create signature key: {e:?}")))?;
 
     // Store signer in key store so it's available for group operations
-    signer.store(provider.key_store())
+    signer
+        .store(provider.key_store())
         .map_err(|e| CryptoError::key_package(format!("failed to store signature key: {e:?}")))?;
 
     let credential_with_key = CredentialWithKey {
@@ -64,10 +65,13 @@ pub fn generate_key_package(
 
     // CryptoConfig::default() uses MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519
     let key_package = KeyPackage::builder()
-        .build(CryptoConfig::default(), provider, &signer, credential_with_key)
-        .map_err(|e| {
-            CryptoError::key_package(format!("failed to build key package: {e:?}"))
-        })?;
+        .build(
+            CryptoConfig::default(),
+            provider,
+            &signer,
+            credential_with_key,
+        )
+        .map_err(|e| CryptoError::key_package(format!("failed to build key package: {e:?}")))?;
 
     tracing::debug!("key package generated");
     Ok((key_package, signer))
@@ -85,7 +89,10 @@ pub fn serialize_key_package(kp: &KeyPackage) -> Result<Vec<u8>, CryptoError> {
 ///
 /// Uses `KeyPackageIn::tls_deserialize` + `.validate()` — the two-step process
 /// required by openmls 0.5 (KeyPackage itself has no tls_deserialize).
-pub fn deserialize_key_package(bytes: &[u8], provider: &OpenMlsRustCrypto) -> Result<KeyPackage, CryptoError> {
+pub fn deserialize_key_package(
+    bytes: &[u8],
+    provider: &OpenMlsRustCrypto,
+) -> Result<KeyPackage, CryptoError> {
     let kp_in = KeyPackageIn::tls_deserialize(&mut std::io::Cursor::new(bytes))
         .map_err(|e| CryptoError::key_package(format!("deserialization failed: {e:?}")))?;
     kp_in
@@ -103,7 +110,10 @@ mod tests {
         let result = generate_key_package(12345, &provider);
         assert!(result.is_ok(), "{:?}", result.err());
         let (kp, signer) = result.unwrap();
-        assert_eq!(kp.leaf_node().credential().credential_type(), CredentialType::Basic);
+        assert_eq!(
+            kp.leaf_node().credential().credential_type(),
+            CredentialType::Basic
+        );
         let _ = signer;
     }
 

@@ -91,10 +91,7 @@ pub async fn list_by_channel(
     pool: &PgPool,
     channel_id: Snowflake,
 ) -> Result<Vec<ThreadRow>, sqlx::Error> {
-    tracing::info!(
-        channel_id = channel_id.as_i64(),
-        "listing channel threads"
-    );
+    tracing::info!(channel_id = channel_id.as_i64(), "listing channel threads");
 
     let threads = sqlx::query_as::<_, ThreadRow>(
         "SELECT * FROM threads WHERE channel_id = $1 ORDER BY last_msg_at DESC LIMIT 50",
@@ -115,12 +112,10 @@ pub async fn list_by_channel(
 pub async fn increment_message_count(pool: &PgPool, id: Snowflake) -> Result<(), sqlx::Error> {
     tracing::info!(thread_id = id.as_i64(), "incrementing message count");
 
-    sqlx::query(
-        "UPDATE threads SET msg_count = msg_count + 1, last_msg_at = NOW() WHERE id = $1",
-    )
-    .bind(id.as_i64())
-    .execute(pool)
-    .await?;
+    sqlx::query("UPDATE threads SET msg_count = msg_count + 1, last_msg_at = NOW() WHERE id = $1")
+        .bind(id.as_i64())
+        .execute(pool)
+        .await?;
 
     Ok(())
 }

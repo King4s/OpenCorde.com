@@ -24,8 +24,8 @@ pub struct UserRow {
     pub status_message: Option<String>,
     pub steam_id: Option<String>, // Optional: Steam64 ID for OpenID login
     pub totp_secret: Option<String>, // Base32 TOTP secret (None = not set up)
-    pub totp_enabled: bool,          // True = 2FA is active for this user
-    pub email_verified: bool,        // True = user has verified their email
+    pub totp_enabled: bool,       // True = 2FA is active for this user
+    pub email_verified: bool,     // True = user has verified their email
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -199,13 +199,11 @@ pub async fn set_totp_secret(
     id: Snowflake,
     secret: &str,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query(
-        "UPDATE users SET totp_secret = $1, updated_at = NOW() WHERE id = $2",
-    )
-    .bind(secret)
-    .bind(id.as_i64())
-    .execute(pool)
-    .await?;
+    sqlx::query("UPDATE users SET totp_secret = $1, updated_at = NOW() WHERE id = $2")
+        .bind(secret)
+        .bind(id.as_i64())
+        .execute(pool)
+        .await?;
     tracing::debug!(user_id = id.as_i64(), "TOTP secret stored");
     Ok(())
 }
@@ -216,12 +214,10 @@ pub async fn set_totp_secret(
 /// Returns sqlx::Error if the update fails.
 #[tracing::instrument(skip(pool))]
 pub async fn enable_totp(pool: &PgPool, id: Snowflake) -> Result<(), sqlx::Error> {
-    sqlx::query(
-        "UPDATE users SET totp_enabled = TRUE, updated_at = NOW() WHERE id = $1",
-    )
-    .bind(id.as_i64())
-    .execute(pool)
-    .await?;
+    sqlx::query("UPDATE users SET totp_enabled = TRUE, updated_at = NOW() WHERE id = $1")
+        .bind(id.as_i64())
+        .execute(pool)
+        .await?;
     tracing::info!(user_id = id.as_i64(), "TOTP enabled for user");
     Ok(())
 }

@@ -106,19 +106,13 @@ pub async fn delete_emoji(
     emoji_id: i64,
     server_id: i64,
 ) -> Result<bool, sqlx::Error> {
-    tracing::info!(
-        emoji_id = emoji_id,
-        server_id = server_id,
-        "deleting emoji"
-    );
+    tracing::info!(emoji_id = emoji_id, server_id = server_id, "deleting emoji");
 
-    let result = sqlx::query(
-        "DELETE FROM server_emojis WHERE id = $1 AND server_id = $2",
-    )
-    .bind(emoji_id)
-    .bind(server_id)
-    .execute(pool)
-    .await?;
+    let result = sqlx::query("DELETE FROM server_emojis WHERE id = $1 AND server_id = $2")
+        .bind(emoji_id)
+        .bind(server_id)
+        .execute(pool)
+        .await?;
 
     let deleted = result.rows_affected() > 0;
     tracing::debug!(deleted = deleted, "emoji deletion processed");

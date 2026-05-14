@@ -257,7 +257,9 @@
         "Voice LiveKit tokens now keep `CONNECT` and `SPEAK` separate: users denied `SPEAK` receive subscribe-only tokens with `canPublish=false`.",
         "Stage detail/join/hand/speaker routes now enforce channel `CONNECT`, `REQUEST_TO_SPEAK`, `SPEAK`, and `MUTE_MEMBERS` on the API path.",
         "Stage RTC publish grants now require both channel `SPEAK` and current stage participant role `speaker`; audience and demoted users get subscribe-only refreshed tokens.",
-        "LiveKit local service and public proxy health checks pass."
+        "LiveKit local service and public proxy health checks pass.",
+        "Admin stats now include LiveKit local and public proxy health for instance reporting.",
+        "2026-05-11 GitHub commit f9c6a76 improved voice speaking indicators, guarded rapid join races, and changed voice leave to 204."
       ],
       "gaps": [
         "Two-client join/leave/mute/deafen/screen-share workflow is not proven.",
@@ -268,7 +270,8 @@
         "Create two-client voice Playwright/manual checklist.",
         "Prove stage audience-to-speaker flow.",
         "Add voice permission denial tests.",
-        "Prove stage RTC token refresh after promotion/demotion from the UI."
+        "Prove stage RTC token refresh after promotion/demotion from the UI.",
+        "Add Playwright/manual proof for the admin dashboard LiveKit health surface."
       ],
       "proof_required": [
         "LiveKit health output",
@@ -327,8 +330,8 @@
     }
   ],
   "next_session_focus": [
-    "Start the permissions route audit and effective-permission report.",
-    "Add no-overclaim QA check for docs and public copy.",
+    "Add Playwright UI proof for private-channel and role-management workflows.",
+    "Add route inventory JSON generated from Axum route declarations and permission annotations.",
     "Start the Playwright parity harness for messaging and roles.",
     "Document Emma Bot credentials and test protocol without exposing secrets."
   ]

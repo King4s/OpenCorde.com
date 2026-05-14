@@ -121,17 +121,15 @@ async fn unregister_token(
 ) -> Result<Json<PushResponse>, ApiError> {
     tracing::info!("unregistering push token");
 
-    sqlx::query(
-        "DELETE FROM push_tokens WHERE user_id = $1 AND token = $2",
-    )
-    .bind(auth.user_id.as_i64())
-    .bind(&req.token)
-    .execute(&state.db)
-    .await
-    .map_err(|e| {
-        tracing::error!(error = %e, "failed to delete push token");
-        ApiError::Database(e)
-    })?;
+    sqlx::query("DELETE FROM push_tokens WHERE user_id = $1 AND token = $2")
+        .bind(auth.user_id.as_i64())
+        .bind(&req.token)
+        .execute(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, "failed to delete push token");
+            ApiError::Database(e)
+        })?;
 
     tracing::info!("push token unregistered (or was not present)");
     Ok(Json(PushResponse { ok: true }))

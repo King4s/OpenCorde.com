@@ -10,10 +10,10 @@
 //! - crate::middleware::auth::AuthUser
 //! - crate::AppState
 
-use axum::{extract::State, Json};
+use axum::{Json, extract::State};
 use serde::{Deserialize, Serialize};
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
 use super::handlers::is_admin;
 
@@ -89,7 +89,9 @@ pub async fn update_rate_limits(
     }
 
     if body.requests_per_second == 0 {
-        return Err(ApiError::BadRequest("requests_per_second must be >= 1".into()));
+        return Err(ApiError::BadRequest(
+            "requests_per_second must be >= 1".into(),
+        ));
     }
 
     {

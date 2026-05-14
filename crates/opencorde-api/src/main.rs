@@ -27,15 +27,15 @@
 //! - tracing — Structured logging
 //! - tower_http — Middleware implementations
 
-use opencorde_api::{AppState, config::Config, middleware, routes};
+use aws_sdk_s3::config::{Credentials as S3Credentials, Region as S3Region};
 use opencorde_api::middleware::rate_limit::{RateLimitConfig, RateLimitState};
+use opencorde_api::{AppState, config::Config, middleware, routes};
+use opencorde_search::SearchEngine;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio::sync::broadcast;
 use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
-use aws_sdk_s3::config::{Credentials as S3Credentials, Region as S3Region};
-use opencorde_search::SearchEngine;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -62,21 +62,22 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!("database migrations completed");
 
     // Initialize search engine from SEARCH_INDEX_PATH (optional)
-    let search: Option<std::sync::Arc<SearchEngine>> = if let Some(ref index_path) = config.search_index_path {
-        match opencorde_search::open_or_create(std::path::Path::new(index_path)) {
-            Ok((index, schema)) => {
-                tracing::info!(path = %index_path, "search index opened");
-                Some(std::sync::Arc::new(SearchEngine::new(index, schema)))
+    let search: Option<std::sync::Arc<SearchEngine>> =
+        if let Some(ref index_path) = config.search_index_path {
+            match opencorde_search::open_or_create(std::path::Path::new(index_path)) {
+                Ok((index, schema)) => {
+                    tracing::info!(path = %index_path, "search index opened");
+                    Some(std::sync::Arc::new(SearchEngine::new(index, schema)))
+                }
+                Err(e) => {
+                    tracing::warn!(error = %e, "search index init failed, disabling search");
+                    None
+                }
             }
-            Err(e) => {
-                tracing::warn!(error = %e, "search index init failed, disabling search");
-                None
-            }
-        }
-    } else {
-        tracing::info!("SEARCH_INDEX_PATH not set, search disabled");
-        None
-    };
+        } else {
+            tracing::info!("SEARCH_INDEX_PATH not set, search disabled");
+            None
+        };
     tracing::info!(enabled = search.is_some(), "search engine initialized");
 
     // Initialize S3 client for MinIO/AWS S3 object storage
@@ -84,7 +85,9 @@ async fn main() -> anyhow::Result<()> {
     let s3_creds = S3Credentials::new(
         &config.minio_access_key,
         &config.minio_secret_key,
-        None, None, "opencorde",
+        None,
+        None,
+        "opencorde",
     );
     let s3_config = aws_sdk_s3::Config::builder()
         .credentials_provider(s3_creds)
@@ -137,7 +140,11 @@ async fn main() -> anyhow::Result<()> {
     );
 
     // Spawn registry sync background task
-    opencorde_api::federation::spawn_registry_sync(pool.clone(), Arc::new(config.clone()), identity.clone());
+    opencorde_api::federation::spawn_registry_sync(
+        pool.clone(),
+        Arc::new(config.clone()),
+        identity.clone(),
+    );
 
     // Build application state
     let state = AppState {
@@ -177,8 +184,12 @@ async fn main() -> anyhow::Result<()> {
             rate_limit_state,
             middleware::rate_limit::rate_limit_middleware,
         ))
-        .layer(axum::middleware::from_fn(middleware::security_headers_layer))
-        .layer(tower_http::limit::RequestBodyLimitLayer::new(body_limit_bytes))
+        .layer(axum::middleware::from_fn(
+            middleware::security_headers_layer,
+        ))
+        .layer(tower_http::limit::RequestBodyLimitLayer::new(
+            body_limit_bytes,
+        ))
         .layer(tower_http::timeout::TimeoutLayer::with_status_code(
             axum::http::StatusCode::REQUEST_TIMEOUT,
             std::time::Duration::from_secs(request_timeout_secs),

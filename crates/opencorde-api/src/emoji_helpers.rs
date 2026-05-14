@@ -1,8 +1,8 @@
 //! # Emoji Validation & Parsing Helpers
 //! Validation and multipart parsing utilities for emoji endpoints.
 
-use axum::extract::Multipart;
 use crate::error::ApiError;
+use axum::extract::Multipart;
 
 pub const MAX_EMOJI_SIZE: u64 = 256 * 1024; // 256 KB
 pub const VALID_EMOJI_CONTENT_TYPES: &[&str] = &["image/png", "image/gif", "image/webp"];
@@ -93,7 +93,9 @@ mod tests {
     #[test]
     fn test_invalid_emoji_names() {
         assert!(!is_valid_emoji_name("a")); // Too short
-        assert!(!is_valid_emoji_name("VeryLongEmojiNameThatExceeds32Characters"));
+        assert!(!is_valid_emoji_name(
+            "VeryLongEmojiNameThatExceeds32Characters"
+        ));
         assert!(!is_valid_emoji_name("Happy Face")); // Space
         assert!(!is_valid_emoji_name("emoji-face")); // Hyphen
         assert!(!is_valid_emoji_name("EMOJI")); // Uppercase

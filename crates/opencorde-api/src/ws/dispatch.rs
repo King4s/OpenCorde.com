@@ -49,7 +49,9 @@ pub fn should_dispatch(
                 .and_then(|m| m.get("channel_id"))
                 .and_then(|c| c.as_str())
                 .and_then(|c| c.parse::<i64>().ok());
-            channel_id.map(|id| accessible_channels.contains(&id)).unwrap_or(false)
+            channel_id
+                .map(|id| accessible_channels.contains(&id))
+                .unwrap_or(false)
         }
         "MessageDelete" | "TypingStart" | "ReactionAdd" | "ReactionRemove" => {
             let channel_id = event
@@ -57,7 +59,9 @@ pub fn should_dispatch(
                 .and_then(|d| d.get("channel_id"))
                 .and_then(|c| c.as_str())
                 .and_then(|c| c.parse::<i64>().ok());
-            channel_id.map(|id| accessible_channels.contains(&id)).unwrap_or(false)
+            channel_id
+                .map(|id| accessible_channels.contains(&id))
+                .unwrap_or(false)
         }
         // Server-scoped events: dispatch only to members of the server
         "ChannelCreate" | "ChannelUpdate" => {
@@ -67,7 +71,9 @@ pub fn should_dispatch(
                 .and_then(|c| c.get("server_id"))
                 .and_then(|s| s.as_str())
                 .and_then(|s| s.parse::<i64>().ok());
-            server_id.map(|id| member_server_ids.contains(&id)).unwrap_or(false)
+            server_id
+                .map(|id| member_server_ids.contains(&id))
+                .unwrap_or(false)
         }
         "ChannelDelete" | "RoleCreate" | "RoleUpdate" | "RoleDelete" | "MemberUpdate" => {
             let server_id = event
@@ -75,7 +81,9 @@ pub fn should_dispatch(
                 .and_then(|d| d.get("server_id"))
                 .and_then(|s| s.as_str())
                 .and_then(|s| s.parse::<i64>().ok());
-            server_id.map(|id| member_server_ids.contains(&id)).unwrap_or(false)
+            server_id
+                .map(|id| member_server_ids.contains(&id))
+                .unwrap_or(false)
         }
         "ServerUpdate" => {
             let server_id = event
@@ -84,7 +92,9 @@ pub fn should_dispatch(
                 .and_then(|s| s.get("id"))
                 .and_then(|s| s.as_str())
                 .and_then(|s| s.parse::<i64>().ok());
-            server_id.map(|id| member_server_ids.contains(&id)).unwrap_or(false)
+            server_id
+                .map(|id| member_server_ids.contains(&id))
+                .unwrap_or(false)
         }
         "ChannelAck" | "PresenceUpdate" | "MemberJoin" | "MemberLeave" => true,
         _ => false,

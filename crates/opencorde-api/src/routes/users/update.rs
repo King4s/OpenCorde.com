@@ -4,8 +4,8 @@ use axum::{Json, extract::State};
 use opencorde_db::repos::user_repo;
 use serde::Deserialize;
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use super::get::UserProfile;
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
 /// Request body for updating user profile.
 #[derive(Debug, Deserialize)]
@@ -105,7 +105,9 @@ pub async fn update_me(
     // Handle bio update
     if let Some(ref bio) = req.bio {
         if bio.len() > 500 {
-            return Err(ApiError::BadRequest("bio must be 500 characters or less".into()));
+            return Err(ApiError::BadRequest(
+                "bio must be 500 characters or less".into(),
+            ));
         }
         user_row.bio = Some(bio.clone());
     }
@@ -113,13 +115,21 @@ pub async fn update_me(
     // Handle status_message update
     if let Some(ref sm) = req.status_message {
         if sm.len() > 128 {
-            return Err(ApiError::BadRequest("status message must be 128 characters or less".into()));
+            return Err(ApiError::BadRequest(
+                "status message must be 128 characters or less".into(),
+            ));
         }
-        user_row.status_message = if sm.is_empty() { None } else { Some(sm.clone()) };
+        user_row.status_message = if sm.is_empty() {
+            None
+        } else {
+            Some(sm.clone())
+        };
     }
 
-    let has_changes = req.username.is_some() || req.email.is_some()
-        || req.bio.is_some() || req.status_message.is_some();
+    let has_changes = req.username.is_some()
+        || req.email.is_some()
+        || req.bio.is_some()
+        || req.status_message.is_some();
 
     if has_changes {
         sqlx::query(

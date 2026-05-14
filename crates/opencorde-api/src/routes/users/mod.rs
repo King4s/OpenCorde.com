@@ -5,7 +5,10 @@
 //! POST   /api/v1/users/@me/avatar — upload user avatar
 //! GET    /api/v1/users/{id}       — public user profile
 
-use axum::{Router, routing::{get, post}};
+use axum::{
+    Router,
+    routing::{get, post},
+};
 
 use crate::AppState;
 
@@ -14,9 +17,9 @@ mod delete;
 mod get;
 mod update;
 
-pub use get::{UserProfile, PublicUserProfile};
-pub use update::UpdateMeRequest;
 pub use avatar::upload_avatar;
+pub use get::{PublicUserProfile, UserProfile};
+pub use update::UpdateMeRequest;
 
 /// Build the users router.
 pub fn router() -> Router<AppState> {

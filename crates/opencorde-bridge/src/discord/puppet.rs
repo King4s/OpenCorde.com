@@ -39,7 +39,13 @@ fn random_public_key() -> String {
 /// Sanitise a Discord username to fit OpenCorde's alphanumeric+underscore rules.
 fn sanitise_username(name: &str) -> String {
     name.chars()
-        .map(|c| if c.is_alphanumeric() || c == '_' { c } else { '_' })
+        .map(|c| {
+            if c.is_alphanumeric() || c == '_' {
+                c
+            } else {
+                '_'
+            }
+        })
         .collect()
 }
 
@@ -64,12 +70,11 @@ pub async fn find_or_create(
     discord_avatar_url: Option<&str>,
 ) -> anyhow::Result<i64> {
     // Fast path: ghost user already exists
-    if let Some(row) = sqlx::query(
-        "SELECT opencorde_user_id FROM bridge_ghost_users WHERE discord_user_id = $1",
-    )
-    .bind(discord_user_id as i64)
-    .fetch_optional(db)
-    .await?
+    if let Some(row) =
+        sqlx::query("SELECT opencorde_user_id FROM bridge_ghost_users WHERE discord_user_id = $1")
+            .bind(discord_user_id as i64)
+            .fetch_optional(db)
+            .await?
     {
         // Update last_seen and avatar in background (non-critical)
         let _ = sqlx::query(

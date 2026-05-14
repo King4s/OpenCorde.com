@@ -3,7 +3,7 @@
 
 use opencorde_db::repos::forum_repo;
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
 /// Check if user is author or server owner of a post.
 pub async fn check_post_author_or_owner(
@@ -50,7 +50,7 @@ pub async fn check_reply_author_or_owner(
     let channel: (i64,) = sqlx::query_as(
         "SELECT c.server_id FROM channels c \
          JOIN forum_posts fp ON c.id = fp.channel_id \
-         WHERE fp.id = $1"
+         WHERE fp.id = $1",
     )
     .bind(post_id)
     .fetch_optional(&state.db)

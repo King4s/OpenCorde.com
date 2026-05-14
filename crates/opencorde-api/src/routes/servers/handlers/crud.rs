@@ -11,8 +11,8 @@ use opencorde_core::Snowflake;
 use opencorde_db::repos::{channel_repo, member_repo, server_repo};
 use tracing::instrument;
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use crate::routes::moderation::audit_mod::log_mod_action;
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use serde_json::json;
 
 use super::super::{
@@ -99,17 +99,24 @@ async fn create_server(
     // Create default #general text channel
     let mut channel_generator = opencorde_core::snowflake::SnowflakeGenerator::new(2, 0);
     let general_channel_id = channel_generator.next_id();
-    channel_repo::create_channel(&state.db, general_channel_id, server_id, "general", 0, false)
-        .await
-        .map_err(|e| {
-            tracing::error!(
-                server_id = server_id.as_i64(),
-                channel_id = general_channel_id.as_i64(),
-                error = %e,
-                "failed to create default #general channel"
-            );
-            ApiError::Database(e)
-        })?;
+    channel_repo::create_channel(
+        &state.db,
+        general_channel_id,
+        server_id,
+        "general",
+        0,
+        false,
+    )
+    .await
+    .map_err(|e| {
+        tracing::error!(
+            server_id = server_id.as_i64(),
+            channel_id = general_channel_id.as_i64(),
+            error = %e,
+            "failed to create default #general channel"
+        );
+        ApiError::Database(e)
+    })?;
 
     tracing::info!(
         server_id = server_row.id,
@@ -229,15 +236,21 @@ async fn update_server(
     // Determine which fields to update (fall back to current values if not provided)
     let update_name = req.name.as_deref().unwrap_or(&server.name);
     let update_description = req.description.as_deref().or(server.description.as_deref());
-    let update_verification  = req.verification_level.unwrap_or(server.verification_level);
-    let update_content_filter = req.explicit_content_filter.unwrap_or(server.explicit_content_filter);
-    let update_notifications = req.default_notifications.unwrap_or(server.default_notifications);
+    let update_verification = req.verification_level.unwrap_or(server.verification_level);
+    let update_content_filter = req
+        .explicit_content_filter
+        .unwrap_or(server.explicit_content_filter);
+    let update_notifications = req
+        .default_notifications
+        .unwrap_or(server.default_notifications);
     let update_vanity = req.vanity_url.as_deref().or(server.vanity_url.as_deref());
-    let update_system_ch = req.system_channel_id
+    let update_system_ch = req
+        .system_channel_id
         .as_deref()
         .map(|s| s.parse::<i64>().ok())
         .unwrap_or(server.system_channel_id);
-    let update_rules_ch = req.rules_channel_id
+    let update_rules_ch = req
+        .rules_channel_id
         .as_deref()
         .map(|s| s.parse::<i64>().ok())
         .unwrap_or(server.rules_channel_id);
@@ -249,17 +262,28 @@ async fn update_server(
 
     // Validate moderation ranges
     if !(0..=4).contains(&update_verification) {
-        return Err(ApiError::BadRequest("verification_level must be 0–4".into()));
+        return Err(ApiError::BadRequest(
+            "verification_level must be 0–4".into(),
+        ));
     }
     if !(0..=2).contains(&update_content_filter) {
-        return Err(ApiError::BadRequest("explicit_content_filter must be 0–2".into()));
+        return Err(ApiError::BadRequest(
+            "explicit_content_filter must be 0–2".into(),
+        ));
     }
 
     // Update server
     server_repo::update_server(
-        &state.db, server_id, update_name, update_description,
-        update_verification, update_content_filter, update_notifications,
-        update_vanity, update_system_ch, update_rules_ch,
+        &state.db,
+        server_id,
+        update_name,
+        update_description,
+        update_verification,
+        update_content_filter,
+        update_notifications,
+        update_vanity,
+        update_system_ch,
+        update_rules_ch,
     )
     .await
     .map_err(ApiError::Database)?;
@@ -269,7 +293,14 @@ async fn update_server(
         name = %update_name,
         "server updated"
     );
-    log_mod_action(&state, server_id, auth.user_id, "server.update", server_id.as_i64()).await;
+    log_mod_action(
+        &state,
+        server_id,
+        auth.user_id,
+        "server.update",
+        server_id.as_i64(),
+    )
+    .await;
 
     // Fetch updated server
     let updated = server_repo::get_by_id(&state.db, server_id)
@@ -335,6 +366,13 @@ async fn delete_server(
         .map_err(ApiError::Database)?;
 
     tracing::info!(server_id = server.id, "server deleted");
-    log_mod_action(&state, server_id, auth.user_id, "server.delete", server_id.as_i64()).await;
+    log_mod_action(
+        &state,
+        server_id,
+        auth.user_id,
+        "server.delete",
+        server_id.as_i64(),
+    )
+    .await;
     Ok(StatusCode::NO_CONTENT)
 }

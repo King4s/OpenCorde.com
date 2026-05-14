@@ -1,13 +1,17 @@
 //! POST /api/v1/servers/{id}/commands handler.
 
-use axum::{Json, extract::{State, Path}, http::StatusCode};
+use axum::{
+    Json,
+    extract::{Path, State},
+    http::StatusCode,
+};
 use opencorde_core::snowflake::SnowflakeGenerator;
 use opencorde_db::repos::{server_repo, slash_command_repo};
 
-use crate::{error::ApiError, middleware::auth::AuthUser, routes::permission_check, AppState};
-use opencorde_core::permissions::Permissions;
 use super::helpers::parse_snowflake;
 use super::types::{CreateCommandRequest, SlashCommandResponse, row_to_response};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::permission_check};
+use opencorde_core::permissions::Permissions;
 
 /// POST /api/v1/servers/{id}/commands — Register a slash command.
 #[tracing::instrument(skip(state, auth), fields(user_id = %auth.user_id))]
@@ -31,7 +35,13 @@ pub async fn create_command(
         })?
         .ok_or(ApiError::NotFound("server not found".to_string()))?;
 
-    permission_check::require_server_perm(&state.db, auth.user_id, server_id_sf, Permissions::MANAGE_SERVER).await?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id_sf,
+        Permissions::MANAGE_SERVER,
+    )
+    .await?;
 
     // Validate command name: lowercase letters/dashes/numbers only, 1-32 chars
     let name = req.name.trim().to_lowercase();
@@ -40,7 +50,10 @@ pub async fn create_command(
             "command name must be 1-32 characters".to_string(),
         ));
     }
-    if !name.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-') {
+    if !name
+        .chars()
+        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+    {
         return Err(ApiError::BadRequest(
             "command name must contain only lowercase letters, numbers, and dashes".to_string(),
         ));

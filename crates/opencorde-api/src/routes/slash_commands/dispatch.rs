@@ -1,14 +1,17 @@
 //! POST /api/v1/channels/{channel_id}/interact handler.
 
-use axum::{Json, extract::{State, Path}};
-use opencorde_core::snowflake::{Snowflake, SnowflakeGenerator};
+use axum::{
+    Json,
+    extract::{Path, State},
+};
 use opencorde_core::permissions::Permissions;
+use opencorde_core::snowflake::{Snowflake, SnowflakeGenerator};
 use opencorde_db::repos::{channel_repo, message_repo, slash_command_repo};
 use tracing::instrument;
 
-use crate::{error::ApiError, middleware::auth::AuthUser, routes::permission_check, AppState};
 use super::helpers::parse_snowflake;
-use super::types::{InteractRequest, CommandHandlerPayload, CommandHandlerResponse};
+use super::types::{CommandHandlerPayload, CommandHandlerResponse, InteractRequest};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::permission_check};
 
 /// POST /api/v1/channels/{channel_id}/interact — Dispatch slash command.
 #[instrument(skip(state, auth), fields(user_id = %auth.user_id))]

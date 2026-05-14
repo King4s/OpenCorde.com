@@ -10,20 +10,20 @@
 //! - axum, serde, opencorde_db, crate::AppState, aws_sdk_s3
 
 use axum::{
+    Json, Router,
     extract::{Multipart, Path, State},
     http::StatusCode,
     routing::{delete, post},
-    Json, Router,
 };
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
-use crate::routes::helpers::parse_snowflake;
 use crate::emoji_helpers::{
-    extract_emoji_from_multipart, is_valid_emoji_name, get_emoji_extension,
-    MAX_EMOJI_SIZE, VALID_EMOJI_CONTENT_TYPES,
+    MAX_EMOJI_SIZE, VALID_EMOJI_CONTENT_TYPES, extract_emoji_from_multipart, get_emoji_extension,
+    is_valid_emoji_name,
 };
+use crate::routes::helpers::parse_snowflake;
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
 /// Response body for emoji data.
 #[derive(Debug, Serialize, Deserialize)]
@@ -84,12 +84,18 @@ async fn upload_emoji(
 
     if !VALID_EMOJI_CONTENT_TYPES.contains(&content_type.as_str()) {
         tracing::warn!(content_type = %content_type, "invalid emoji content type");
-        return Err(ApiError::BadRequest("emoji must be PNG, GIF, or WebP".into()));
+        return Err(ApiError::BadRequest(
+            "emoji must be PNG, GIF, or WebP".into(),
+        ));
     }
 
     let size = bytes.len() as u64;
     if size > MAX_EMOJI_SIZE {
-        tracing::warn!(size = size, max = MAX_EMOJI_SIZE, "emoji exceeds maximum size");
+        tracing::warn!(
+            size = size,
+            max = MAX_EMOJI_SIZE,
+            "emoji exceeds maximum size"
+        );
         return Err(ApiError::BadRequest(
             "emoji size exceeds maximum of 256KB".into(),
         ));
@@ -209,16 +215,13 @@ async fn delete_emoji(
     // Verify ownership
     check_server_owner(&state, auth.user_id.as_i64(), server_id_i64).await?;
 
-    let deleted = opencorde_db::repos::emoji_repo::delete_emoji(
-        &state.db,
-        emoji_id_i64,
-        server_id_i64,
-    )
-    .await
-    .map_err(|e| {
-        tracing::error!(error = %e, "emoji deletion failed");
-        ApiError::Database(e)
-    })?;
+    let deleted =
+        opencorde_db::repos::emoji_repo::delete_emoji(&state.db, emoji_id_i64, server_id_i64)
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, "emoji deletion failed");
+                ApiError::Database(e)
+            })?;
 
     if !deleted {
         tracing::warn!(emoji_id = emoji_id_i64, "emoji not found");
@@ -249,7 +252,11 @@ async fn check_server_owner(
         })?;
 
     if user_id != owner_id.0 {
-        tracing::warn!(user_id = user_id, owner_id = owner_id.0, "user is not server owner");
+        tracing::warn!(
+            user_id = user_id,
+            owner_id = owner_id.0,
+            "user is not server owner"
+        );
         return Err(ApiError::Forbidden);
     }
     Ok(())

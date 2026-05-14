@@ -26,8 +26,8 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::Row;
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use crate::routes::helpers::{check_server_owner, parse_snowflake};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use opencorde_db::repos::server_repo;
 
 /// Serialized bridge mapping returned to the client.
@@ -154,7 +154,10 @@ async fn create_mapping(
     let discord_webhook_id: Option<i64> = req
         .discord_webhook_id
         .as_deref()
-        .map(|s| s.parse::<i64>().map_err(|_| ApiError::BadRequest("invalid discord_webhook_id".into())))
+        .map(|s| {
+            s.parse::<i64>()
+                .map_err(|_| ApiError::BadRequest("invalid discord_webhook_id".into()))
+        })
         .transpose()?;
 
     let row = sqlx::query(
@@ -278,6 +281,10 @@ async fn delete_mapping(
         return Err(ApiError::NotFound("mapping not found".into()));
     }
 
-    tracing::info!(mapping_id, server_id = sid.as_i64(), "bridge mapping deleted");
+    tracing::info!(
+        mapping_id,
+        server_id = sid.as_i64(),
+        "bridge mapping deleted"
+    );
     Ok(StatusCode::NO_CONTENT)
 }

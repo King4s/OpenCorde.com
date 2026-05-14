@@ -12,6 +12,8 @@
 //! - crate::middleware::auth::AuthUser
 //! - crate::AppState
 
+use crate::routes::helpers::parse_snowflake;
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use axum::{
     Json, Router,
     extract::{Path, Query, State},
@@ -20,8 +22,6 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
-use crate::routes::helpers::parse_snowflake;
 
 /// Public server info for discovery listing.
 #[derive(Debug, Serialize, Clone)]
@@ -72,10 +72,20 @@ async fn list_discovery(
 
     let servers = if let Some(search) = params.q.as_ref() {
         let query = format!("%{}%", search);
-        sqlx::query_as::<_, (i64, String, Option<String>, Option<String>, i32, Option<String>)>(
+        sqlx::query_as::<
+            _,
+            (
+                i64,
+                String,
+                Option<String>,
+                Option<String>,
+                i32,
+                Option<String>,
+            ),
+        >(
             "SELECT id, name, description, icon_url, member_count, tags FROM servers \
              WHERE public = TRUE AND (name ILIKE $1 OR description ILIKE $1 OR tags ILIKE $1) \
-             ORDER BY member_count DESC LIMIT $2"
+             ORDER BY member_count DESC LIMIT $2",
         )
         .bind(query)
         .bind(limit as i64)
@@ -83,9 +93,19 @@ async fn list_discovery(
         .await
         .map_err(ApiError::Database)?
     } else {
-        sqlx::query_as::<_, (i64, String, Option<String>, Option<String>, i32, Option<String>)>(
+        sqlx::query_as::<
+            _,
+            (
+                i64,
+                String,
+                Option<String>,
+                Option<String>,
+                i32,
+                Option<String>,
+            ),
+        >(
             "SELECT id, name, description, icon_url, member_count, tags FROM servers \
-             WHERE public = TRUE ORDER BY member_count DESC LIMIT $1"
+             WHERE public = TRUE ORDER BY member_count DESC LIMIT $1",
         )
         .bind(limit as i64)
         .fetch_all(&state.db)
@@ -95,14 +115,16 @@ async fn list_discovery(
 
     let responses: Vec<DiscoveryServer> = servers
         .into_iter()
-        .map(|(id, name, description, icon_url, member_count, tags)| DiscoveryServer {
-            id: id.to_string(),
-            name,
-            description,
-            icon_url,
-            member_count,
-            tags,
-        })
+        .map(
+            |(id, name, description, icon_url, member_count, tags)| DiscoveryServer {
+                id: id.to_string(),
+                name,
+                description,
+                icon_url,
+                member_count,
+                tags,
+            },
+        )
         .collect();
 
     tracing::info!(count = responses.len(), "discovery servers fetched");
@@ -127,17 +149,15 @@ async fn update_discovery(
     let server_id = server_id_sf.as_i64();
 
     // Fetch server and verify ownership
-    let server = sqlx::query_as::<_, (i64,)>(
-        "SELECT owner_id FROM servers WHERE id = $1"
-    )
-    .bind(server_id)
-    .fetch_optional(&state.db)
-    .await
-    .map_err(ApiError::Database)?
-    .ok_or_else(|| {
-        tracing::warn!(server_id = server_id, "server not found");
-        ApiError::NotFound("server not found".into())
-    })?;
+    let server = sqlx::query_as::<_, (i64,)>("SELECT owner_id FROM servers WHERE id = $1")
+        .bind(server_id)
+        .fetch_optional(&state.db)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| {
+            tracing::warn!(server_id = server_id, "server not found");
+            ApiError::NotFound("server not found".into())
+        })?;
 
     let owner_id = server.0;
     let user_id = auth.user_id.as_i64();
@@ -150,7 +170,7 @@ async fn update_discovery(
     // Update discovery settings
     sqlx::query(
         "UPDATE servers SET public = $1, description = COALESCE($2, description), \
-         tags = COALESCE($3, tags), updated_at = NOW() WHERE id = $4"
+         tags = COALESCE($3, tags), updated_at = NOW() WHERE id = $4",
     )
     .bind(req.public)
     .bind(req.description)

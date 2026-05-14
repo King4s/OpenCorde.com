@@ -75,7 +75,11 @@ impl StrictPathLimits {
     }
 
     /// Return the appropriate strict limiter for this (method, path), if any.
-    fn limiter_for(&self, method: &Method, path: &str) -> Option<Arc<DefaultKeyedRateLimiter<IpAddr>>> {
+    fn limiter_for(
+        &self,
+        method: &Method,
+        path: &str,
+    ) -> Option<Arc<DefaultKeyedRateLimiter<IpAddr>>> {
         if method != Method::POST {
             return None;
         }
@@ -155,14 +159,15 @@ pub async fn rate_limit_middleware(
 
     // Strict path-specific check (always runs)
     if let Some(strict_limiter) = rl.strict.limiter_for(&method, &path)
-        && strict_limiter.check_key(&ip).is_err() {
-            tracing::warn!(
-                client_ip = %ip,
-                path = %path,
-                "strict path rate limit exceeded"
-            );
-            return Err(StatusCode::TOO_MANY_REQUESTS);
-        }
+        && strict_limiter.check_key(&ip).is_err()
+    {
+        tracing::warn!(
+            client_ip = %ip,
+            path = %path,
+            "strict path rate limit exceeded"
+        );
+        return Err(StatusCode::TOO_MANY_REQUESTS);
+    }
 
     // Global per-IP check
     let enabled = rl.config.read().await.enabled;
@@ -193,17 +198,41 @@ mod tests {
     fn test_strict_path_limits_matching() {
         let limits = StrictPathLimits::new();
         // Login endpoint
-        assert!(limits.limiter_for(&Method::POST, "/api/v1/auth/login").is_some());
+        assert!(
+            limits
+                .limiter_for(&Method::POST, "/api/v1/auth/login")
+                .is_some()
+        );
         // GET to login is not limited by strict
-        assert!(limits.limiter_for(&Method::GET, "/api/v1/auth/login").is_none());
+        assert!(
+            limits
+                .limiter_for(&Method::GET, "/api/v1/auth/login")
+                .is_none()
+        );
         // Register endpoint
-        assert!(limits.limiter_for(&Method::POST, "/api/v1/auth/register").is_some());
+        assert!(
+            limits
+                .limiter_for(&Method::POST, "/api/v1/auth/register")
+                .is_some()
+        );
         // Password reset
-        assert!(limits.limiter_for(&Method::POST, "/api/v1/auth/password-reset").is_some());
+        assert!(
+            limits
+                .limiter_for(&Method::POST, "/api/v1/auth/password-reset")
+                .is_some()
+        );
         // Message send
-        assert!(limits.limiter_for(&Method::POST, "/api/v1/channels/123/messages").is_some());
+        assert!(
+            limits
+                .limiter_for(&Method::POST, "/api/v1/channels/123/messages")
+                .is_some()
+        );
         // Normal route — not limited
-        assert!(limits.limiter_for(&Method::GET, "/api/v1/servers").is_none());
+        assert!(
+            limits
+                .limiter_for(&Method::GET, "/api/v1/servers")
+                .is_none()
+        );
     }
 
     #[tokio::test]

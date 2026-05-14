@@ -101,9 +101,7 @@ pub fn verify_magic_bytes(content_type: &str, bytes: &[u8]) -> Result<(), ApiErr
         "image/jpeg" | "image/jpg" => bytes.starts_with(&[0xFF, 0xD8, 0xFF]),
         "image/png" => bytes.starts_with(&[0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A]),
         "image/gif" => bytes.starts_with(b"GIF87") || bytes.starts_with(b"GIF89"),
-        "image/webp" => {
-            bytes.len() >= 12 && bytes.starts_with(b"RIFF") && &bytes[8..12] == b"WEBP"
-        }
+        "image/webp" => bytes.len() >= 12 && bytes.starts_with(b"RIFF") && &bytes[8..12] == b"WEBP",
         "image/bmp" => bytes.starts_with(&[0x42, 0x4D]),
         "video/mp4" | "video/quicktime" | "video/x-m4v" => {
             // ISO BMFF: ftyp box starts at byte 4

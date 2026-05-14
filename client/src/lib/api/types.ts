@@ -163,6 +163,21 @@ export interface InstanceStats {
   db_size_bytes: number;
   attachment_storage_bytes: number;
   attachment_count: number;
+  livekit_health: LiveKitHealth;
+}
+
+export interface LiveKitHealth {
+  ok: boolean;
+  local: LiveKitEndpointHealth;
+  public: LiveKitEndpointHealth;
+}
+
+export interface LiveKitEndpointHealth {
+  url: string;
+  ok: boolean;
+  status: number | null;
+  latency_ms: number | null;
+  error: string | null;
 }
 
 export interface RateLimitConfig {

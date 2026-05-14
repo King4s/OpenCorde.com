@@ -19,10 +19,7 @@ pub const HEARTBEAT_INTERVAL_SECS: u64 = 30;
 /// - Incoming client messages (HeartbeatAck, etc.)
 /// - Connection closure and offline presence broadcast
 pub async fn run_main_loop(
-    mut sender: futures::stream::SplitSink<
-        axum::extract::ws::WebSocket,
-        Message,
-    >,
+    mut sender: futures::stream::SplitSink<axum::extract::ws::WebSocket, Message>,
     mut receiver: futures::stream::SplitStream<axum::extract::ws::WebSocket>,
     mut event_rx: tokio::sync::broadcast::Receiver<serde_json::Value>,
     user_id_str: String,

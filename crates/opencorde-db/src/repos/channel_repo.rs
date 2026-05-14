@@ -126,7 +126,13 @@ pub async fn update_channel(
     name: &str,
     update: ChannelUpdate<'_>,
 ) -> Result<(), sqlx::Error> {
-    let ChannelUpdate { topic, parent_id, nsfw, slowmode_delay, e2ee_enabled } = update;
+    let ChannelUpdate {
+        topic,
+        parent_id,
+        nsfw,
+        slowmode_delay,
+        e2ee_enabled,
+    } = update;
     tracing::info!(channel_id = id.as_i64(), name = %name, "updating channel");
 
     let parent_id_i64 = parent_id.map(|sf| sf.as_i64());
@@ -184,10 +190,7 @@ pub async fn update_position(
 /// # Errors
 /// Returns sqlx::Error if the query fails.
 #[tracing::instrument(skip(pool))]
-pub async fn list_ids_by_user(
-    pool: &PgPool,
-    user_id: Snowflake,
-) -> Result<Vec<i64>, sqlx::Error> {
+pub async fn list_ids_by_user(pool: &PgPool, user_id: Snowflake) -> Result<Vec<i64>, sqlx::Error> {
     sqlx::query_scalar::<_, i64>(
         "SELECT c.id FROM channels c \
          INNER JOIN server_members m ON c.server_id = m.server_id \

@@ -45,13 +45,12 @@ pub async fn unpin_message(
     channel_id: Snowflake,
     message_id: Snowflake,
 ) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query(
-        "DELETE FROM pinned_messages WHERE channel_id = $1 AND message_id = $2",
-    )
-    .bind(channel_id.as_i64())
-    .bind(message_id.as_i64())
-    .execute(pool)
-    .await?;
+    let result =
+        sqlx::query("DELETE FROM pinned_messages WHERE channel_id = $1 AND message_id = $2")
+            .bind(channel_id.as_i64())
+            .bind(message_id.as_i64())
+            .execute(pool)
+            .await?;
     Ok(result.rows_affected() > 0)
 }
 

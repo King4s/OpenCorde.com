@@ -1,11 +1,14 @@
 //! GET /api/v1/users/@me and /api/v1/users/{id} handlers.
 
-use axum::{Json, extract::{State, Path}};
+use axum::{
+    Json,
+    extract::{Path, State},
+};
 use opencorde_db::repos::user_repo;
 use serde::Serialize;
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use super::super::helpers::parse_snowflake;
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
 /// User profile response.
 #[derive(Debug, Serialize)]

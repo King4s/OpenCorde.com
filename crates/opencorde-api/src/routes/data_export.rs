@@ -10,17 +10,17 @@
 //! - crate::AppState, crate::middleware::auth::AuthUser
 
 use axum::{
+    Router,
     extract::State,
-    http::{header, HeaderMap},
+    http::{HeaderMap, header},
     response::IntoResponse,
     routing::get,
-    Router,
 };
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::Row;
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
 /// Full data export response.
 #[derive(Debug, Serialize)]
@@ -91,11 +91,12 @@ pub async fn export_user_data(
     tracing::info!(user_id = uid, "starting data export");
 
     // Profile
-    let profile_row = sqlx::query("SELECT id, username, email, created_at FROM users WHERE id = $1")
-        .bind(uid)
-        .fetch_one(&state.db)
-        .await
-        .map_err(ApiError::Database)?;
+    let profile_row =
+        sqlx::query("SELECT id, username, email, created_at FROM users WHERE id = $1")
+            .bind(uid)
+            .fetch_one(&state.db)
+            .await
+            .map_err(ApiError::Database)?;
     let profile = UserExport {
         id: profile_row.get::<i64, _>("id").to_string(),
         username: profile_row.get("username"),
@@ -215,10 +216,7 @@ pub async fn export_user_data(
     tracing::info!(user_id = uid, "data export completed");
 
     let mut headers = HeaderMap::new();
-    headers.insert(
-        header::CONTENT_TYPE,
-        "application/json".parse().unwrap(),
-    );
+    headers.insert(header::CONTENT_TYPE, "application/json".parse().unwrap());
     headers.insert(
         header::CONTENT_DISPOSITION,
         "attachment; filename=\"opencorde-data-export.json\""

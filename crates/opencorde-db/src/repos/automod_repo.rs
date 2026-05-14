@@ -77,7 +77,10 @@ pub async fn list_enabled_by_server(
     pool: &sqlx::PgPool,
     server_id: Snowflake,
 ) -> Result<Vec<AutomodRuleRow>, sqlx::Error> {
-    tracing::debug!(server_id = server_id.as_i64(), "listing enabled automod rules");
+    tracing::debug!(
+        server_id = server_id.as_i64(),
+        "listing enabled automod rules"
+    );
 
     sqlx::query_as::<_, AutomodRuleRow>(
         "SELECT * FROM automod_rules WHERE server_id = $1 AND enabled = TRUE ORDER BY created_at",

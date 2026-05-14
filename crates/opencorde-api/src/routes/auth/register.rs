@@ -55,7 +55,9 @@ pub async fn register(
                 }
                 _ => {
                     tracing::warn!("invite-only: no invite code provided");
-                    return Err(ApiError::BadRequest("registration requires an invite code".into()));
+                    return Err(ApiError::BadRequest(
+                        "registration requires an invite code".into(),
+                    ));
                 }
             }
         }
@@ -131,7 +133,11 @@ pub async fn register(
     .await;
 
     // Send verification email (log failures; don't block registration)
-    if let Err(e) = state.email_service.send_verification_email(&req.email, &verification_token).await {
+    if let Err(e) = state
+        .email_service
+        .send_verification_email(&req.email, &verification_token)
+        .await
+    {
         tracing::warn!(user_id = user_row.id, error = ?e, "failed to send verification email");
     }
 
@@ -153,10 +159,13 @@ pub async fn register(
     .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
 
     // Store the JTI for rotation and theft detection
-    let expires_at = chrono::Utc::now() + chrono::Duration::seconds(state.config.jwt_refresh_expiry as i64);
+    let expires_at =
+        chrono::Utc::now() + chrono::Duration::seconds(state.config.jwt_refresh_expiry as i64);
     opencorde_db::repos::refresh_token_repo::insert(&state.db, &jti, user_id.as_i64(), expires_at)
         .await
-        .map_err(|e| ApiError::Internal(anyhow::anyhow!("failed to store refresh token JTI: {}", e)))?;
+        .map_err(|e| {
+            ApiError::Internal(anyhow::anyhow!("failed to store refresh token JTI: {}", e))
+        })?;
 
     tracing::debug!(user_id = %user_id, "tokens generated and JTI stored");
 

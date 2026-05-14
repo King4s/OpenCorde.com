@@ -20,12 +20,12 @@
 //! - anyhow (error handling)
 
 use lettre::{
+    AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor,
     message::header::ContentType,
     transport::smtp::{
         authentication::Credentials,
         client::{Tls, TlsParameters},
     },
-    AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor,
 };
 use tracing::instrument;
 
@@ -93,11 +93,7 @@ impl EmailService {
     /// - `to`: Recipient email address
     /// - `token`: Email verification token
     #[instrument(skip(self), fields(to, token = %token.chars().take(8).collect::<String>()))]
-    pub async fn send_verification_email(
-        &self,
-        to: &str,
-        token: &str,
-    ) -> anyhow::Result<()> {
+    pub async fn send_verification_email(&self, to: &str, token: &str) -> anyhow::Result<()> {
         let verify_link = format!("{}/verify-email?token={}", self.base_url, token);
 
         if !self.smtp_configured {
@@ -109,8 +105,12 @@ impl EmailService {
             return Ok(());
         }
 
-        self.send_smtp_email(to, "Verify your OpenCorde email", &self.build_verification_html(&verify_link))
-            .await
+        self.send_smtp_email(
+            to,
+            "Verify your OpenCorde email",
+            &self.build_verification_html(&verify_link),
+        )
+        .await
     }
 
     /// Send a password reset email.
@@ -125,11 +125,7 @@ impl EmailService {
     /// # Returns
     /// Ok(()) on success, Err if email sending fails.
     #[instrument(skip(self), fields(to, token = %token.chars().take(8).collect::<String>()))]
-    pub async fn send_password_reset(
-        &self,
-        to: &str,
-        token: &str,
-    ) -> anyhow::Result<()> {
+    pub async fn send_password_reset(&self, to: &str, token: &str) -> anyhow::Result<()> {
         let reset_link = format!("{}/reset-password?token={}", self.base_url, token);
 
         if !self.smtp_configured {

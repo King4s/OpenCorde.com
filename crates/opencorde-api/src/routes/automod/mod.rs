@@ -7,8 +7,8 @@
 //! - PATCH /api/v1/automod/{rule_id} — Update rule
 //! - DELETE /api/v1/automod/{rule_id} — Delete rule
 
-mod types;
 mod handlers;
+mod types;
 
-pub use types::{AutomodRuleResponse, CreateAutomodRuleRequest, UpdateAutomodRuleRequest};
 pub use handlers::router;
+pub use types::{AutomodRuleResponse, CreateAutomodRuleRequest, UpdateAutomodRuleRequest};

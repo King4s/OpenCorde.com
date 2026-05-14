@@ -124,6 +124,16 @@
 		deleteConfirm = { type, id, name };
 	}
 
+	function healthLabel(ok: boolean): string {
+		return ok ? 'OK' : 'Issue';
+	}
+
+	function endpointMeta(endpoint: { status: number | null; latency_ms: number | null }): string {
+		const status = endpoint.status ? `${endpoint.status}` : 'no status';
+		const latency = endpoint.latency_ms !== null ? `${endpoint.latency_ms} ms` : 'no latency';
+		return `${status} · ${latency}`;
+	}
+
 	function confirmDelete() {
 		if (!deleteConfirm) return;
 		if (deleteConfirm.type === 'user') handleDeleteUser(deleteConfirm.id);
@@ -154,6 +164,41 @@
 				<div class="bg-gray-800 rounded-lg p-4"><div class="text-gray-400 text-xs uppercase mb-1">DB Size</div><div class="text-2xl font-bold text-white">{formatBytes(stats.db_size_bytes)}</div></div>
 				<div class="bg-gray-800 rounded-lg p-4"><div class="text-gray-400 text-xs uppercase mb-1">File Storage</div><div class="text-2xl font-bold text-white">{formatBytes(stats.attachment_storage_bytes)}</div></div>
 				<div class="bg-gray-800 rounded-lg p-4"><div class="text-gray-400 text-xs uppercase mb-1">Total Files</div><div class="text-2xl font-bold text-white">{stats.attachment_count}</div></div>
+			</div>
+			<div class="bg-gray-800 rounded-lg p-4 mb-8">
+				<div class="flex flex-wrap items-start justify-between gap-3">
+					<div>
+						<div class="text-gray-400 text-xs uppercase mb-1">LiveKit Health</div>
+						<div class="text-2xl font-bold {stats.livekit_health.ok ? 'text-green-400' : 'text-amber-300'}">
+							{healthLabel(stats.livekit_health.ok)}
+						</div>
+					</div>
+					<button onclick={loadStats} class="px-3 py-1.5 text-xs rounded bg-gray-700 text-gray-200 hover:bg-gray-600">Refresh</button>
+				</div>
+				<div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+					<div class="border border-gray-700 rounded p-3">
+						<div class="flex items-center justify-between gap-2">
+							<span class="text-gray-300 font-medium">Local</span>
+							<span class={stats.livekit_health.local.ok ? 'text-green-400' : 'text-amber-300'}>{healthLabel(stats.livekit_health.local.ok)}</span>
+						</div>
+						<div class="mt-1 text-gray-500 text-xs break-all">{stats.livekit_health.local.url}</div>
+						<div class="mt-2 text-gray-400 text-xs">{endpointMeta(stats.livekit_health.local)}</div>
+						{#if stats.livekit_health.local.error}
+							<div class="mt-2 text-amber-300 text-xs break-words">{stats.livekit_health.local.error}</div>
+						{/if}
+					</div>
+					<div class="border border-gray-700 rounded p-3">
+						<div class="flex items-center justify-between gap-2">
+							<span class="text-gray-300 font-medium">Public Proxy</span>
+							<span class={stats.livekit_health.public.ok ? 'text-green-400' : 'text-amber-300'}>{healthLabel(stats.livekit_health.public.ok)}</span>
+						</div>
+						<div class="mt-1 text-gray-500 text-xs break-all">{stats.livekit_health.public.url}</div>
+						<div class="mt-2 text-gray-400 text-xs">{endpointMeta(stats.livekit_health.public)}</div>
+						{#if stats.livekit_health.public.error}
+							<div class="mt-2 text-amber-300 text-xs break-words">{stats.livekit_health.public.error}</div>
+						{/if}
+					</div>
+				</div>
 			</div>
 		{/if}
 

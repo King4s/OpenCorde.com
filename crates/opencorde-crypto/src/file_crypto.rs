@@ -20,8 +20,8 @@
 //! - crate::error (CryptoError)
 
 use aes_gcm::{
-    aead::{Aead, KeyInit},
     Aes256Gcm, Key, Nonce,
+    aead::{Aead, KeyInit},
 };
 use rand::RngCore;
 
@@ -57,7 +57,7 @@ pub fn decrypt_bytes(key: &[u8; 32], encrypted: &[u8]) -> Result<Vec<u8>, Crypto
     if encrypted.len() < IV_LEN + 16 {
         // 16 = minimum GCM tag length
         return Err(CryptoError::decryption(
-            "encrypted blob too short (expected IV + ciphertext)"
+            "encrypted blob too short (expected IV + ciphertext)",
         ));
     }
 

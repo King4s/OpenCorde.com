@@ -84,11 +84,7 @@ pub async fn ban_user(
 /// # Errors
 /// Returns sqlx::Error if the delete fails.
 #[tracing::instrument(skip(pool))]
-pub async fn unban_user(
-    pool: &PgPool,
-    server_id: i64,
-    user_id: i64,
-) -> Result<bool, sqlx::Error> {
+pub async fn unban_user(pool: &PgPool, server_id: i64, user_id: i64) -> Result<bool, sqlx::Error> {
     tracing::info!(
         server_id = server_id,
         user_id = user_id,
@@ -118,18 +114,13 @@ pub async fn unban_user(
 /// # Errors
 /// Returns sqlx::Error if the query fails.
 #[tracing::instrument(skip(pool))]
-pub async fn is_banned(
-    pool: &PgPool,
-    server_id: i64,
-    user_id: i64,
-) -> Result<bool, sqlx::Error> {
-    let result: Option<(i64,)> = sqlx::query_as(
-        "SELECT 1 FROM server_bans WHERE server_id = $1 AND user_id = $2",
-    )
-    .bind(server_id)
-    .bind(user_id)
-    .fetch_optional(pool)
-    .await?;
+pub async fn is_banned(pool: &PgPool, server_id: i64, user_id: i64) -> Result<bool, sqlx::Error> {
+    let result: Option<(i64,)> =
+        sqlx::query_as("SELECT 1 FROM server_bans WHERE server_id = $1 AND user_id = $2")
+            .bind(server_id)
+            .bind(user_id)
+            .fetch_optional(pool)
+            .await?;
 
     Ok(result.is_some())
 }

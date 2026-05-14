@@ -38,7 +38,10 @@ mod validation;
 mod verification;
 
 use crate::AppState;
-use axum::{Router, routing::{get, post}};
+use axum::{
+    Router,
+    routing::{get, post},
+};
 
 pub use types::{AuthResponse, LoginRequest, RegisterRequest, UserInfo};
 
@@ -48,10 +51,19 @@ pub fn router() -> Router<AppState> {
         .route("/api/v1/auth/register", post(register::register))
         .route("/api/v1/auth/login", post(handlers::login))
         .route("/api/v1/auth/refresh", post(handlers::refresh))
-        .route("/api/v1/auth/forgot-password", post(password_reset::forgot_password))
-        .route("/api/v1/auth/reset-password", post(password_reset::reset_password))
+        .route(
+            "/api/v1/auth/forgot-password",
+            post(password_reset::forgot_password),
+        )
+        .route(
+            "/api/v1/auth/reset-password",
+            post(password_reset::reset_password),
+        )
         .route("/api/v1/auth/verify-email", get(verification::verify_email))
-        .route("/api/v1/auth/resend-verification", post(verification::resend_verification))
+        .route(
+            "/api/v1/auth/resend-verification",
+            post(verification::resend_verification),
+        )
         .route("/api/v1/auth/steam", get(steam::steam_login))
         .route("/api/v1/auth/steam/callback", get(steam::steam_callback))
         .route("/api/v1/auth/2fa/enable", post(totp::enable))

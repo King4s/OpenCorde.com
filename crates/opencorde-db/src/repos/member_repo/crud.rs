@@ -33,7 +33,10 @@ pub async fn list_with_usernames_by_server(
     pool: &PgPool,
     server_id: Snowflake,
 ) -> Result<Vec<MemberWithUsernameRow>, sqlx::Error> {
-    tracing::info!(server_id = server_id.as_i64(), "listing server members with usernames");
+    tracing::info!(
+        server_id = server_id.as_i64(),
+        "listing server members with usernames"
+    );
 
     sqlx::query_as::<_, MemberWithUsernameRow>(
         "SELECT m.user_id, m.server_id, u.username, m.nickname, m.joined_at \

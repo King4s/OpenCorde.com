@@ -9,8 +9,8 @@ use std::collections::HashSet;
 use std::time::Duration;
 use tracing::instrument;
 
-use crate::AppState;
 use super::main_loop::run_main_loop;
+use crate::AppState;
 
 pub const IDENTIFY_TIMEOUT_SECS: u64 = 10;
 pub const HEARTBEAT_INTERVAL_SECS: u64 = 30;
@@ -138,11 +138,12 @@ pub async fn handle_connection(socket: WebSocket, state: AppState) {
     };
     let user_snowflake = Snowflake::new(user_id_i64);
 
-    let accessible_channels: HashSet<i64> = channel_repo::list_ids_by_user(&state.db, user_snowflake)
-        .await
-        .unwrap_or_default()
-        .into_iter()
-        .collect();
+    let accessible_channels: HashSet<i64> =
+        channel_repo::list_ids_by_user(&state.db, user_snowflake)
+            .await
+            .unwrap_or_default()
+            .into_iter()
+            .collect();
 
     let member_server_ids: HashSet<i64> = server_repo::list_by_user(&state.db, user_snowflake)
         .await

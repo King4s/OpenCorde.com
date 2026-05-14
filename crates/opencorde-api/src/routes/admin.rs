@@ -22,8 +22,8 @@ pub mod rate_limit;
 pub mod types;
 
 use axum::{
-    routing::{delete, get},
     Router,
+    routing::{delete, get},
 };
 
 use crate::AppState;
@@ -35,8 +35,17 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/api/v1/admin/stats", get(handlers::get_stats))
         .route("/api/v1/admin/users", get(handlers::list_users))
-        .route("/api/v1/admin/users/{user_id}", delete(handlers::delete_user))
+        .route(
+            "/api/v1/admin/users/{user_id}",
+            delete(handlers::delete_user),
+        )
         .route("/api/v1/admin/servers", get(handlers::list_servers))
-        .route("/api/v1/admin/servers/{server_id}", delete(handlers::delete_server))
-        .route("/api/v1/admin/rate-limits", get(rate_limit::get_rate_limits).put(rate_limit::update_rate_limits))
+        .route(
+            "/api/v1/admin/servers/{server_id}",
+            delete(handlers::delete_server),
+        )
+        .route(
+            "/api/v1/admin/rate-limits",
+            get(rate_limit::get_rate_limits).put(rate_limit::update_rate_limits),
+        )
 }

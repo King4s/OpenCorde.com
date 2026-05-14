@@ -41,14 +41,12 @@ pub async fn insert(
     user_id: i64,
     expires_at: DateTime<Utc>,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query(
-        "INSERT INTO refresh_tokens (jti, user_id, expires_at) VALUES ($1, $2, $3)",
-    )
-    .bind(jti)
-    .bind(user_id)
-    .bind(expires_at)
-    .execute(pool)
-    .await?;
+    sqlx::query("INSERT INTO refresh_tokens (jti, user_id, expires_at) VALUES ($1, $2, $3)")
+        .bind(jti)
+        .bind(user_id)
+        .bind(expires_at)
+        .execute(pool)
+        .await?;
     tracing::debug!(jti = jti, user_id = user_id, "refresh token JTI stored");
     Ok(())
 }
@@ -60,16 +58,11 @@ pub async fn insert(
 /// # Errors
 /// Returns `sqlx::Error` on query failure.
 #[tracing::instrument(skip(pool))]
-pub async fn get_by_jti(
-    pool: &PgPool,
-    jti: &str,
-) -> Result<Option<RefreshTokenRow>, sqlx::Error> {
-    sqlx::query_as::<_, RefreshTokenRow>(
-        "SELECT * FROM refresh_tokens WHERE jti = $1",
-    )
-    .bind(jti)
-    .fetch_optional(pool)
-    .await
+pub async fn get_by_jti(pool: &PgPool, jti: &str) -> Result<Option<RefreshTokenRow>, sqlx::Error> {
+    sqlx::query_as::<_, RefreshTokenRow>("SELECT * FROM refresh_tokens WHERE jti = $1")
+        .bind(jti)
+        .fetch_optional(pool)
+        .await
 }
 
 /// Mark a single refresh token as revoked (normal rotation — old token used, new issued).
@@ -118,10 +111,9 @@ pub async fn revoke_all_for_user(pool: &PgPool, user_id: i64) -> Result<u64, sql
 /// Returns `sqlx::Error` on delete failure.
 #[tracing::instrument(skip(pool))]
 pub async fn cleanup_expired(pool: &PgPool) -> Result<u64, sqlx::Error> {
-    let result =
-        sqlx::query("DELETE FROM refresh_tokens WHERE expires_at < NOW()")
-            .execute(pool)
-            .await?;
+    let result = sqlx::query("DELETE FROM refresh_tokens WHERE expires_at < NOW()")
+        .execute(pool)
+        .await?;
     let count = result.rows_affected();
     tracing::info!(deleted = count, "expired refresh tokens cleaned up");
     Ok(count)

@@ -78,7 +78,7 @@ pub async fn get_for_user(
 
     sqlx::query_as::<_, ReadStateRow>(
         "SELECT user_id, channel_id, last_read_id, mention_count, updated_at \
-         FROM channel_read_state WHERE user_id = $1 ORDER BY updated_at DESC"
+         FROM channel_read_state WHERE user_id = $1 ORDER BY updated_at DESC",
     )
     .bind(user_id.as_i64())
     .fetch_all(pool)
@@ -113,7 +113,7 @@ pub async fn count_unread(
          WHERE channel_id = $1 AND id > COALESCE( \
              (SELECT last_read_id FROM channel_read_state WHERE user_id = $2 AND channel_id = $1), \
              0 \
-         )"
+         )",
     )
     .bind(channel_id.as_i64())
     .bind(user_id.as_i64())

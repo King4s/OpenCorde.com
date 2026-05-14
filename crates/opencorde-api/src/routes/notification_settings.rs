@@ -17,22 +17,21 @@
 //! - crate::error::ApiError
 
 use axum::{
-    Router,
+    Json, Router,
     extract::{Path, State},
     http::StatusCode,
     routing::{get, put},
-    Json,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use crate::routes::helpers::parse_snowflake;
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
 /// Wire type for the setting stored per (user, channel).
 #[derive(Debug, Serialize, sqlx::FromRow)]
 pub struct ChannelNotifSetting {
     pub channel_id: i64,
-    pub level:      i16,
+    pub level: i16,
 }
 
 /// Request body for PUT.
@@ -44,7 +43,10 @@ pub struct SetNotifRequest {
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/api/v1/users/@me/notification-settings", get(list_settings))
+        .route(
+            "/api/v1/users/@me/notification-settings",
+            get(list_settings),
+        )
         .route(
             "/api/v1/channels/{id}/notification-settings",
             put(set_setting).delete(reset_setting),
@@ -117,14 +119,12 @@ pub async fn reset_setting(
 ) -> Result<StatusCode, ApiError> {
     let channel_id = parse_snowflake(&channel_id_str)?;
 
-    sqlx::query(
-        "DELETE FROM channel_notification_settings WHERE user_id = $1 AND channel_id = $2",
-    )
-    .bind(auth.user_id.as_i64())
-    .bind(channel_id.as_i64())
-    .execute(&state.db)
-    .await
-    .map_err(ApiError::Database)?;
+    sqlx::query("DELETE FROM channel_notification_settings WHERE user_id = $1 AND channel_id = $2")
+        .bind(auth.user_id.as_i64())
+        .bind(channel_id.as_i64())
+        .execute(&state.db)
+        .await
+        .map_err(ApiError::Database)?;
 
     Ok(StatusCode::NO_CONTENT)
 }

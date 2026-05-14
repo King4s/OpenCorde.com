@@ -83,7 +83,7 @@ pub fn decrypt_message(
         other => {
             return Err(CryptoError::decryption(format!(
                 "expected PrivateMessage or PublicMessage, got: {other:?}"
-            )))
+            )));
         }
     };
 
@@ -103,7 +103,8 @@ pub fn decrypt_message(
             tracing::debug!("staged commit merged");
             Ok(None)
         }
-        ProcessedMessageContent::ProposalMessage(_) | ProcessedMessageContent::ExternalJoinProposalMessage(_) => {
+        ProcessedMessageContent::ProposalMessage(_)
+        | ProcessedMessageContent::ExternalJoinProposalMessage(_) => {
             tracing::debug!("proposal message processed");
             Ok(None)
         }
@@ -135,15 +136,19 @@ mod tests {
 
         // Setup creator
         let (creator_cred, creator_signer) = make_cred_and_signer(222, &provider);
-        let mut creator_group = group::create_group(creator_cred, &creator_signer, &provider).unwrap();
+        let mut creator_group =
+            group::create_group(creator_cred, &creator_signer, &provider).unwrap();
 
         // Add a second member; add_member returns (commit_bytes, welcome_bytes)
-        let (member_kp, _member_signer) = key_package::generate_key_package(333, &provider).unwrap();
-        let (_commit_bytes, welcome_bytes) = group::add_member(&mut creator_group, member_kp, &creator_signer, &provider).unwrap();
+        let (member_kp, _member_signer) =
+            key_package::generate_key_package(333, &provider).unwrap();
+        let (_commit_bytes, welcome_bytes) =
+            group::add_member(&mut creator_group, member_kp, &creator_signer, &provider).unwrap();
 
         // Encrypt by creator
         let plaintext = b"Hello, E2EE!";
-        let ciphertext = encrypt_message(&mut creator_group, plaintext, &creator_signer, &provider).unwrap();
+        let ciphertext =
+            encrypt_message(&mut creator_group, plaintext, &creator_signer, &provider).unwrap();
         assert!(!ciphertext.is_empty());
 
         // Member joins via welcome bytes (same provider — key store has member's key package)

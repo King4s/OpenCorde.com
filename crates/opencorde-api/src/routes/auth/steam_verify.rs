@@ -14,8 +14,8 @@ use opencorde_db::repos::user_repo;
 use serde::Deserialize;
 use std::collections::HashMap;
 
-use crate::{AppState, error::ApiError};
 use super::steam::SteamCallbackParams;
+use crate::{AppState, error::ApiError};
 
 /// Steam Web API response for GetPlayerSummaries.
 #[derive(Debug, Deserialize)]
@@ -37,9 +37,7 @@ pub struct SteamPlayer {
 }
 
 /// Verify Steam OpenID identity by posting back to Steam's endpoint.
-pub async fn verify_steam_identity(
-    params: &SteamCallbackParams,
-) -> Result<String, ApiError> {
+pub async fn verify_steam_identity(params: &SteamCallbackParams) -> Result<String, ApiError> {
     // Ensure mode is id_res (identity response from Steam)
     if params.openid_mode.as_deref() != Some("id_res") {
         tracing::warn!("invalid openid mode");
@@ -58,8 +56,14 @@ pub async fn verify_steam_identity(
         "openid.claimed_id",
         params.openid_claimed_id.as_deref().unwrap_or(""),
     );
-    verify_params.insert("openid.identity", params.openid_identity.as_deref().unwrap_or(""));
-    verify_params.insert("openid.return_to", params.openid_return_to.as_deref().unwrap_or(""));
+    verify_params.insert(
+        "openid.identity",
+        params.openid_identity.as_deref().unwrap_or(""),
+    );
+    verify_params.insert(
+        "openid.return_to",
+        params.openid_return_to.as_deref().unwrap_or(""),
+    );
     verify_params.insert(
         "openid.response_nonce",
         params.openid_response_nonce.as_deref().unwrap_or(""),
@@ -68,7 +72,10 @@ pub async fn verify_steam_identity(
         "openid.assoc_handle",
         params.openid_assoc_handle.as_deref().unwrap_or(""),
     );
-    verify_params.insert("openid.signed", params.openid_signed.as_deref().unwrap_or(""));
+    verify_params.insert(
+        "openid.signed",
+        params.openid_signed.as_deref().unwrap_or(""),
+    );
     verify_params.insert("openid.sig", params.openid_sig.as_deref().unwrap_or(""));
 
     // POST to Steam's verification endpoint
@@ -83,13 +90,10 @@ pub async fn verify_steam_identity(
             ApiError::Internal(anyhow!("steam verification failed: {}", e))
         })?;
 
-    let body = response
-        .text()
-        .await
-        .map_err(|e| {
-            tracing::error!(error = %e, "failed to read steam response");
-            ApiError::Internal(anyhow!("failed to read steam response: {}", e))
-        })?;
+    let body = response.text().await.map_err(|e| {
+        tracing::error!(error = %e, "failed to read steam response");
+        ApiError::Internal(anyhow!("failed to read steam response: {}", e))
+    })?;
 
     tracing::debug!(response_body = %body, "steam verification response received");
 
@@ -101,13 +105,10 @@ pub async fn verify_steam_identity(
 
     // Extract Steam64 ID from openid.claimed_id URL
     // Format: https://steamcommunity.com/openid/id/{steam64id}
-    let claimed_id = params
-        .openid_claimed_id
-        .as_deref()
-        .ok_or_else(|| {
-            tracing::warn!("no openid.claimed_id in steam response");
-            ApiError::Unauthorized
-        })?;
+    let claimed_id = params.openid_claimed_id.as_deref().ok_or_else(|| {
+        tracing::warn!("no openid.claimed_id in steam response");
+        ApiError::Unauthorized
+    })?;
 
     let steam_id = claimed_id
         .strip_prefix("https://steamcommunity.com/openid/id/")
@@ -186,22 +187,15 @@ async fn fetch_steam_player_info(
     );
 
     let client = reqwest::Client::new();
-    let response = client
-        .get(&url)
-        .send()
-        .await
-        .map_err(|e| {
-            tracing::warn!(error = %e, "steam api request failed");
-            ApiError::Internal(anyhow!("steam api request failed: {}", e))
-        })?;
+    let response = client.get(&url).send().await.map_err(|e| {
+        tracing::warn!(error = %e, "steam api request failed");
+        ApiError::Internal(anyhow!("steam api request failed: {}", e))
+    })?;
 
-    let steam_api: SteamApiResponse = response
-        .json()
-        .await
-        .map_err(|e| {
-            tracing::warn!(error = %e, "failed to parse steam api response");
-            ApiError::Internal(anyhow!("failed to parse steam api response: {}", e))
-        })?;
+    let steam_api: SteamApiResponse = response.json().await.map_err(|e| {
+        tracing::warn!(error = %e, "failed to parse steam api response");
+        ApiError::Internal(anyhow!("failed to parse steam api response: {}", e))
+    })?;
 
     let player = steam_api
         .response

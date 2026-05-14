@@ -10,10 +10,10 @@
 //! - opencorde_db::repos::pin_repo
 
 use axum::{
+    Json, Router,
     extract::{Path, State},
     http::StatusCode,
     routing::{get, put},
-    Json, Router,
 };
 use chrono::{DateTime, Utc};
 use opencorde_core::permissions::Permissions;
@@ -21,8 +21,8 @@ use opencorde_db::repos::pin_repo;
 use serde::Serialize;
 use tracing::instrument;
 
-use crate::{error::ApiError, middleware::auth::AuthUser, AppState};
 use crate::routes::{helpers, permission_check};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
 #[derive(Debug, Serialize, Clone)]
 pub struct PinnedMessageResponse {

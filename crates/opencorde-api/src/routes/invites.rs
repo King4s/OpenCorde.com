@@ -1,7 +1,11 @@
 //! # Route: Invites - Server invite creation and usage
 
-use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::{helpers, permission_check}};
-use opencorde_core::permissions::Permissions;
+use crate::{
+    AppState,
+    error::ApiError,
+    middleware::auth::AuthUser,
+    routes::{helpers, permission_check},
+};
 use axum::{
     Json, Router,
     extract::{Path, State},
@@ -10,6 +14,7 @@ use axum::{
 };
 use chrono::Utc;
 use opencorde_core::Snowflake;
+use opencorde_core::permissions::Permissions;
 use opencorde_db::repos::{invite_repo, member_repo, server_repo};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -35,7 +40,10 @@ pub struct CreateInviteRequest {
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/api/v1/servers/{server_id}/invites", post(create_invite).get(list_invites))
+        .route(
+            "/api/v1/servers/{server_id}/invites",
+            post(create_invite).get(list_invites),
+        )
         .route("/api/v1/invites/{code}", get(get_invite))
         .route("/api/v1/invites/{code}/join", post(join_invite))
         .route(
@@ -61,7 +69,13 @@ async fn create_invite(
 ) -> Result<(StatusCode, Json<InviteResponse>), ApiError> {
     tracing::info!("creating invite");
     let server_id = helpers::parse_snowflake(&server_id)?;
-    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::CREATE_INVITE).await?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::CREATE_INVITE,
+    )
+    .await?;
     let server = server_repo::get_by_id(&state.db, server_id)
         .await
         .map_err(ApiError::Database)?
@@ -106,7 +120,13 @@ async fn list_invites(
     let server_id_sf = helpers::parse_snowflake(&server_id)?;
 
     // Any member with CREATE_INVITE can list invites
-    permission_check::require_server_perm(&state.db, auth.user_id, server_id_sf, Permissions::CREATE_INVITE).await?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id_sf,
+        Permissions::CREATE_INVITE,
+    )
+    .await?;
 
     let server = server_repo::get_by_id(&state.db, server_id_sf)
         .await
@@ -119,16 +139,21 @@ async fn list_invites(
 
     tracing::info!(count = invites.len(), "invites listed");
 
-    Ok(Json(invites.into_iter().map(|inv| InviteResponse {
-        code: inv.code,
-        server_id: server.id.to_string(),
-        server_name: server.name.clone(),
-        creator_id: inv.creator_id.to_string(),
-        uses: inv.uses,
-        max_uses: inv.max_uses,
-        expires_at: inv.expires_at,
-        created_at: inv.created_at,
-    }).collect()))
+    Ok(Json(
+        invites
+            .into_iter()
+            .map(|inv| InviteResponse {
+                code: inv.code,
+                server_id: server.id.to_string(),
+                server_name: server.name.clone(),
+                creator_id: inv.creator_id.to_string(),
+                uses: inv.uses,
+                max_uses: inv.max_uses,
+                expires_at: inv.expires_at,
+                created_at: inv.created_at,
+            })
+            .collect(),
+    ))
 }
 
 #[instrument(skip(state))]
@@ -194,7 +219,7 @@ async fn join_invite(
         &state.db,
         auth.user_id,
         server_id,
-        false,  // no member tenure check on join
+        false, // no member tenure check on join
     )
     .await?;
 
@@ -237,7 +262,13 @@ async fn revoke_invite(
     tracing::info!(code = %code, "revoking invite");
     let server_id = helpers::parse_snowflake(&server_id)?;
     // Revoking requires MANAGE_SERVER (moderators can revoke any invite)
-    permission_check::require_server_perm(&state.db, auth.user_id, server_id, Permissions::MANAGE_SERVER).await?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::MANAGE_SERVER,
+    )
+    .await?;
     let invite = invite_repo::get_by_code(&state.db, &code)
         .await
         .map_err(ApiError::Database)?

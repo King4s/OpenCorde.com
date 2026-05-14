@@ -20,8 +20,8 @@
 pub mod groups;
 pub mod key_packages;
 
-use axum::Router;
 use crate::AppState;
+use axum::Router;
 
 pub fn router() -> Router<AppState> {
     Router::new()

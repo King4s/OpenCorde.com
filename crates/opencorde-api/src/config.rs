@@ -140,8 +140,8 @@ impl Config {
 
         let minio_endpoint =
             env::var("MINIO_ENDPOINT").unwrap_or_else(|_| "http://127.0.0.1:9000".to_string());
-        let files_public_url = env::var("FILES_PUBLIC_URL")
-            .unwrap_or_else(|_| minio_endpoint.clone());
+        let files_public_url =
+            env::var("FILES_PUBLIC_URL").unwrap_or_else(|_| minio_endpoint.clone());
         let minio_access_key =
             env::var("MINIO_ACCESS_KEY").unwrap_or_else(|_| "minioadmin".to_string());
         let minio_secret_key =
@@ -150,8 +150,8 @@ impl Config {
 
         let livekit_url =
             env::var("LIVEKIT_URL").unwrap_or_else(|_| "ws://127.0.0.1:7880".to_string());
-        let livekit_public_url = env::var("LIVEKIT_PUBLIC_URL")
-            .unwrap_or_else(|_| "wss://localhost:7881".to_string());
+        let livekit_public_url =
+            env::var("LIVEKIT_PUBLIC_URL").unwrap_or_else(|_| "wss://localhost:7881".to_string());
         let livekit_api_key = env::var("LIVEKIT_API_KEY").unwrap_or_else(|_| "".to_string());
         let livekit_api_secret = env::var("LIVEKIT_API_SECRET").unwrap_or_else(|_| "".to_string());
 
@@ -173,10 +173,8 @@ impl Config {
             .map_err(|_| anyhow::anyhow!("SMTP_PORT must be a valid u16"))?;
         let smtp_username = env::var("SMTP_USERNAME").ok();
         let smtp_password = env::var("SMTP_PASSWORD").ok();
-        let smtp_from =
-            env::var("SMTP_FROM").unwrap_or_else(|_| "noreply@localhost".to_string());
-        let base_url =
-            env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:5173".to_string());
+        let smtp_from = env::var("SMTP_FROM").unwrap_or_else(|_| "noreply@localhost".to_string());
+        let base_url = env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:5173".to_string());
 
         let rate_limit_rps: u32 = env::var("RATE_LIMIT_RPS")
             .unwrap_or_else(|_| "100".to_string())

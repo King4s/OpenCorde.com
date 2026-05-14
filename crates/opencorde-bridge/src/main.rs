@@ -28,7 +28,7 @@ mod discord;
 
 use std::{sync::Arc, time::Duration};
 
-use discord::{mapper, DiscordApi};
+use discord::{DiscordApi, mapper};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -81,11 +81,7 @@ async fn main() -> anyhow::Result<()> {
 /// Every `interval`, loads all active mappings with a webhook configured,
 /// fetches new messages from OpenCorde users (not ghost users), and
 /// forwards them to Discord via the channel's webhook.
-async fn run_poll_loop(
-    db: sqlx::PgPool,
-    api: Arc<DiscordApi>,
-    interval: Duration,
-) {
+async fn run_poll_loop(db: sqlx::PgPool, api: Arc<DiscordApi>, interval: Duration) {
     let mut ticker = tokio::time::interval(interval);
     ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
@@ -137,12 +133,9 @@ async fn run_poll_loop(
                             author = %msg.author_username,
                             "OpenCorde → Discord message forwarded"
                         );
-                        let _ = mapper::update_opencorde_cursor(
-                            &db,
-                            mapping.id,
-                            msg.opencorde_msg_id,
-                        )
-                        .await;
+                        let _ =
+                            mapper::update_opencorde_cursor(&db, mapping.id, msg.opencorde_msg_id)
+                                .await;
                     }
                     Err(e) => {
                         tracing::warn!(

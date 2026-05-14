@@ -106,13 +106,11 @@ impl IntoResponse for ApiError {
 
             ApiError::Conflict(msg) => (StatusCode::CONFLICT, "CONFLICT", msg.clone()),
 
-            ApiError::RateLimited { retry_after } => {
-                (
-                    StatusCode::TOO_MANY_REQUESTS,
-                    "RATE_LIMITED",
-                    format!("retry after {} seconds", retry_after),
-                )
-            }
+            ApiError::RateLimited { retry_after } => (
+                StatusCode::TOO_MANY_REQUESTS,
+                "RATE_LIMITED",
+                format!("retry after {} seconds", retry_after),
+            ),
 
             ApiError::ServiceUnavailable(msg) => (
                 StatusCode::SERVICE_UNAVAILABLE,
@@ -157,12 +155,11 @@ impl IntoResponse for ApiError {
 
         // Add Retry-After header for rate-limited responses
         if let ApiError::RateLimited { retry_after } = &self
-            && let Ok(val) = axum::http::HeaderValue::from_str(&retry_after.to_string()) {
-                resp.headers_mut().insert(
-                    axum::http::header::RETRY_AFTER,
-                    val,
-                );
-            }
+            && let Ok(val) = axum::http::HeaderValue::from_str(&retry_after.to_string())
+        {
+            resp.headers_mut()
+                .insert(axum::http::header::RETRY_AFTER, val);
+        }
 
         resp
     }

@@ -11,12 +11,16 @@
 //! Signatures are over a deterministic string including the timestamp,
 //! which prevents replay attacks (we reject timestamps >5 min old).
 
-use axum::{Json, extract::{Path, State}, http::StatusCode};
+use axum::{
+    Json,
+    extract::{Path, State},
+    http::StatusCode,
+};
 use opencorde_core::snowflake::SnowflakeGenerator;
 use opencorde_db::repos::{dm_federated_repo, mesh_peer_repo, user_repo};
 
-use crate::{AppState, error::ApiError, identity::ServerIdentity};
 use super::types::*;
+use crate::{AppState, error::ApiError, identity::ServerIdentity};
 
 const REPLAY_WINDOW_SECS: i64 = 300; // 5 minutes
 
@@ -71,7 +75,9 @@ pub async fn introduce(
             timestamp = req.timestamp,
             "rejecting introduce: timestamp out of window"
         );
-        return Err(ApiError::BadRequest("timestamp out of acceptable window".into()));
+        return Err(ApiError::BadRequest(
+            "timestamp out of acceptable window".into(),
+        ));
     }
 
     // Verify signature
@@ -94,7 +100,7 @@ pub async fn introduce(
     if let Some(peer) = existing {
         // Re-activate and update public key in case it changed
         sqlx::query(
-            "UPDATE mesh_peers SET public_key = $1, status = 1, last_seen_at = NOW() WHERE id = $2"
+            "UPDATE mesh_peers SET public_key = $1, status = 1, last_seen_at = NOW() WHERE id = $2",
         )
         .bind(&req.public_key)
         .bind(peer.id)
@@ -108,7 +114,7 @@ pub async fn introduce(
         let new_id = sf_gen.next_id();
         sqlx::query(
             "INSERT INTO mesh_peers (id, hostname, public_key, status, last_seen_at) \
-             VALUES ($1, $2, $3, 1, NOW())"
+             VALUES ($1, $2, $3, 1, NOW())",
         )
         .bind(new_id.as_i64())
         .bind(&req.hostname)
@@ -120,12 +126,19 @@ pub async fn introduce(
         tracing::info!(hostname = %req.hostname, "new peer registered via introduce");
     }
 
-    let status = if is_new { StatusCode::CREATED } else { StatusCode::OK };
-    Ok((status, Json(IntroduceResponse {
-        accepted: true,
-        hostname: state.config.mesh_hostname.clone(),
-        public_key: state.identity.public_key_hex.clone(),
-    })))
+    let status = if is_new {
+        StatusCode::CREATED
+    } else {
+        StatusCode::OK
+    };
+    Ok((
+        status,
+        Json(IntroduceResponse {
+            accepted: true,
+            hostname: state.config.mesh_hostname.clone(),
+            public_key: state.identity.public_key_hex.clone(),
+        }),
+    ))
 }
 
 /// POST /api/v1/federation/events
@@ -158,7 +171,10 @@ pub async fn receive_event(
 
     // 3. Verify signature
     let payload_str = event.payload.to_string();
-    let signed_msg = format!("{}:{}:{}:{}", event.origin, event.timestamp, event.event_type, payload_str);
+    let signed_msg = format!(
+        "{}:{}:{}:{}",
+        event.origin, event.timestamp, event.event_type, payload_str
+    );
     if !ServerIdentity::verify(&peer.public_key, signed_msg.as_bytes(), &event.signature) {
         tracing::warn!(origin = %event.origin, "rejecting federated event: invalid signature");
         return Err(ApiError::Unauthorized);
@@ -217,7 +233,9 @@ async fn handle_federated_dm(state: &AppState, event: &FederatedEvent) -> Result
     .map_err(ApiError::Database)?;
 
     // Insert message with federated author attribution
-    let message_sf = dm.message_id.parse::<i64>()
+    let message_sf = dm
+        .message_id
+        .parse::<i64>()
         .map(opencorde_core::snowflake::Snowflake::new)
         .unwrap_or_else(|_| sf_gen.next_id());
 
@@ -259,19 +277,21 @@ async fn handle_federated_dm(state: &AppState, event: &FederatedEvent) -> Result
 }
 
 /// Insert a federated message into the local DB and broadcast to WebSocket clients.
-async fn handle_federated_message(state: &AppState, event: &FederatedEvent) -> Result<(), ApiError> {
+async fn handle_federated_message(
+    state: &AppState,
+    event: &FederatedEvent,
+) -> Result<(), ApiError> {
     let msg: FederatedMessage = serde_json::from_value(event.payload.clone())
         .map_err(|_| ApiError::BadRequest("invalid MessageCreate payload".into()))?;
 
     // Find the local channel that maps to this federated channel
     // Convention: channel topic contains "federated:{origin_server}:{origin_channel_id}"
-    let local_channel = sqlx::query_as::<_, (i64,)>(
-        "SELECT id FROM channels WHERE topic LIKE $1 LIMIT 1"
-    )
-    .bind(format!("%federated:{}:{}%", event.origin, msg.channel_id))
-    .fetch_optional(&state.db)
-    .await
-    .map_err(ApiError::Database)?;
+    let local_channel =
+        sqlx::query_as::<_, (i64,)>("SELECT id FROM channels WHERE topic LIKE $1 LIMIT 1")
+            .bind(format!("%federated:{}:{}%", event.origin, msg.channel_id))
+            .fetch_optional(&state.db)
+            .await
+            .map_err(ApiError::Database)?;
 
     let Some((local_channel_id,)) = local_channel else {
         tracing::debug!(
@@ -291,7 +311,7 @@ async fn handle_federated_message(state: &AppState, event: &FederatedEvent) -> R
     sqlx::query(
         "INSERT INTO messages (id, channel_id, author_id, content, created_at, updated_at) \
          SELECT $1, $2, s.owner_id, $3, NOW(), NOW() \
-         FROM channels c JOIN servers s ON c.server_id = s.id WHERE c.id = $2 LIMIT 1"
+         FROM channels c JOIN servers s ON c.server_id = s.id WHERE c.id = $2 LIMIT 1",
     )
     .bind(msg.message_id.parse::<i64>().unwrap_or(0))
     .bind(local_channel_id)
