@@ -1070,6 +1070,44 @@ async def main() -> int:
                 "url": f"{API}/servers/{server_id}/soundboard/1/play",
                 "expect": 403,
             },
+            {
+                "name": "nonmember cannot get server details",
+                "method": "GET",
+                "url": f"{API}/servers/{server_id}",
+                "expect": 403,
+            },
+            {
+                "name": "nonmember cannot list server members",
+                "method": "GET",
+                "url": f"{API}/servers/{server_id}/members",
+                "expect": 403,
+            },
+            {
+                "name": "nonmember cannot update own nickname on foreign server",
+                "method": "PATCH",
+                "url": f"{API}/servers/{server_id}/members/{nonmember_user_id}",
+                "json": {"nickname": "smoke"},
+                "expect": 403,
+            },
+            {
+                "name": "nonmember cannot list server emojis",
+                "method": "GET",
+                "url": f"{API}/servers/{server_id}/emojis",
+                "expect": 403,
+            },
+            {
+                "name": "nonmember cannot list automod rules",
+                "method": "GET",
+                "url": f"{API}/servers/{server_id}/automod",
+                "expect": 403,
+            },
+            {
+                "name": "nonmember cannot patch server discovery",
+                "method": "PATCH",
+                "url": f"{API}/servers/{server_id}/discovery",
+                "json": {"public": False},
+                "expect": 403,
+            },
         ]
 
         if channel_id:
@@ -1136,6 +1174,19 @@ async def main() -> int:
                         "name": "nonmember cannot send typing indicator",
                         "method": "POST",
                         "url": f"{API}/channels/{channel_id}/typing",
+                        "expect": 403,
+                    },
+                    {
+                        "name": "nonmember cannot set channel notification level",
+                        "method": "PUT",
+                        "url": f"{API}/channels/{channel_id}/notification-settings",
+                        "json": {"level": 0},
+                        "expect": 403,
+                    },
+                    {
+                        "name": "nonmember cannot reset channel notification level",
+                        "method": "DELETE",
+                        "url": f"{API}/channels/{channel_id}/notification-settings",
                         "expect": 403,
                     },
                 ]

@@ -7,46 +7,41 @@ This file is the first context a new AI agent should read before continuing the 
 - Repository: `King4s/OpenCorde.com`
 - Local path: `/home/mb/opencorde`
 - Branch: `main`
-- Last pushed functional commit before this update: `3c7f70a audit(routes): transitive helper resolution + named-gate recognizers`
-- Earlier relevant commits: `a4bff96` recognizer hardening, `d1aecc8` initial route inventory, `231d8e8` permissions UI proof, `ae6ed3b` LiveKit health proof.
+- Last pushed functional commit before this update: `52a9902 feat(permissions): gate the 7 likely-real route-inventory gaps`
+- Earlier relevant commits: `3c7f70a` transitive recognizer resolution, `a4bff96` recognizer hardening, `d1aecc8` initial route inventory, `231d8e8` permissions UI proof.
 
-At the time this handoff was updated, the next task was completed locally and should be committed/pushed with this file: gates added for the 7 likely-real gaps surfaced by the route inventory. `needs_review` is now 6, all accepted-by-design.
+At the time this handoff was updated, the next task was completed locally and should be committed/pushed with this file: live-API denial smoke for the 8 newly added gates.
 
 ## What Changed Most Recently
 
-The permission gate pass completed after `3c7f70a`:
+The smoke-coverage pass completed after `52a9902`:
 
-- `crates/opencorde-api/src/routes/automod/handlers.rs::list_rules` — added `permission_check::require_server_perm(.., Permissions::MANAGE_SERVER)`. The "no permission check needed for viewing rules" comment was misleading; rule keyword lists are sensitive. Behavior now matches POST/PATCH/DELETE on the same surface.
-- `crates/opencorde-api/src/routes/servers/handlers/crud.rs::get_server` — added `require_server_perm(.., Permissions::VIEW_CHANNEL)`. `VIEW_CHANNEL` is part of `Permissions::default_everyone()`, so this works as a membership test: owner passes, members pass, non-members get Forbidden.
-- `crates/opencorde-api/src/routes/emojis.rs::list_emojis` — same membership test; removed the now-unused `verify_server_exists` helper since `require_server_perm` covers existence + membership.
-- `crates/opencorde-api/src/routes/members.rs::list_members` and `::update_member` — same membership test; `update_member` retains its self-only check via `target_user_id != auth.user_id`.
-- `crates/opencorde-api/src/routes/discovery.rs::update_discovery` — refactored to use `helpers::check_server_owner(auth.user_id, owner_id)?` (same gate, but now recognized by the inventory's named-gate regex).
-- `crates/opencorde-api/src/routes/notification_settings.rs::set_setting` and `::reset_setting` — added `require_channel_perm(.., Permissions::VIEW_CHANNEL)`. Now you can only set notification preferences for channels you can see.
+- Added 8 nonmember-denial checks to `scripts/permission_smoke.py`:
+  - `GET /api/v1/servers/{server_id}` → 403
+  - `GET /api/v1/servers/{server_id}/members` → 403
+  - `PATCH /api/v1/servers/{server_id}/members/{nonmember_user_id}` → 403 (PATCH-own-nickname on a foreign server)
+  - `GET /api/v1/servers/{server_id}/emojis` → 403
+  - `GET /api/v1/servers/{server_id}/automod` → 403
+  - `PATCH /api/v1/servers/{server_id}/discovery` → 403
+  - `PUT /api/v1/channels/{channel_id}/notification-settings` → 403
+  - `DELETE /api/v1/channels/{channel_id}/notification-settings` → 403
+- Rebuilt `target/release/opencorde-api` and restarted `opencorde-api.service` so the new gates are live.
+- Ran `python3 scripts/permission_smoke.py` against `https://opencorde.com` with `OC_MEMBER_EMAIL=browsertest@opencorde.com OC_NONMEMBER_EMAIL=permission-nonmember@opencorde.com OC_LIMITED_EMAIL=permission-limited@opencorde.com`: **52 checks, 0 failures**.
+- `reports/raw/permission-smoke.json` regenerated with the expanded coverage.
+- `reports/discord-parity.json` evidence_sources updated to record the live proof of all 8 new gates.
 
 Verification:
 
-- `cargo fmt --check` passes.
-- `cargo check -p opencorde-api` passes.
-- `cargo test -p opencorde-api --lib` passes: 215 passed, 0 failed.
-- `python3 scripts/route_inventory.py --fail-on-unresolved` reports 169 routes, 0 unresolved, `needs_review` 6 (down from 14).
+- `cargo fmt --check` ✓
+- `cargo build --release -p opencorde-api` ✓ (deployed; new build serving traffic at opencorde.com)
+- `cargo test -p opencorde-api --lib` ✓ — 215 passed, 0 failed
+- `python3 scripts/route_inventory.py --fail-on-unresolved` ✓ — 169 routes, 0 unresolved, needs_review 6
+- `python3 scripts/permission_smoke.py` (with email env overrides) ✓ — 52 checks, 0 failures
 
-The remaining 6 `needs_review` entries are all accepted-by-design:
+## Operational Notes
 
-- `GET /api/v1/servers` — caller's own server list, scoped server-side.
-- `POST /api/v1/servers` — any authed user can create a new server (they become owner).
-- `GET /api/v1/users/{id}` — Discord-style public profile fetch, open to any authed user.
-- `POST /api/v1/voice/leave` and `PATCH /api/v1/voice/state` — own voice state.
-- `DELETE /api/v1/channels/{channel_id}/stage/leave` — own stage state; leave is a no-op for non-participants.
-
-None of these are handler-side gaps. They are intentional auth-only endpoints whose URL shape the inventory's `path_kind` heuristic doesn't yet classify. If you want a clean zero, add a `caller_implicit` `path_kind` in `scripts/route_inventory.py` covering `/api/v1/voice/`, `/api/v1/servers` (exact match), the `stage/leave` shape, and `GET /api/v1/users/{id}`. Otherwise leave them documented as accepted in `reports/discord-parity.json`.
-
-Functional files to inspect first:
-
-- `crates/opencorde-api/src/routes/{automod,emojis,members,discovery,notification_settings}/...` (the 7 gates).
-- `crates/opencorde-api/src/routes/servers/handlers/crud.rs` (get_server gate).
-- `scripts/route_inventory.py` (regenerator).
-- `reports/raw/route-inventory.json` (regenerated; new `by_permission` totals: server:MANAGE_SERVER 4→5, server:VIEW_CHANNEL 8→15, channel:VIEW_CHANNEL 30→36).
-- `reports/discord-parity.json` (roles_permissions area).
+- `scripts/permission_smoke.py` default email fixtures use the `@opencorde.local` domain, but the live DB has `@opencorde.com`. Override the email defaults via `OC_MEMBER_EMAIL`, `OC_NONMEMBER_EMAIL`, `OC_LIMITED_EMAIL`. Passwords match the script defaults (`OC_MEMBER_PASSWORD`, `OC_NONMEMBER_PASSWORD`, `OC_LIMITED_PASSWORD`) — set them locally in your environment; do not check fixture passwords into docs.
+- After any handler change that affects gates, regenerate the inventory (`python3 scripts/route_inventory.py`) and re-run the smoke. The smoke needs the new code deployed, so the full cycle is: build release → `sudo systemctl restart opencorde-api.service` → smoke.
 
 ## GitHub Issue Map
 
@@ -59,24 +54,23 @@ Primary source-of-truth issues:
 - `#7` Voice, video, and stage parity
 - `#8` Apps, slash commands, bots, and webhooks parity
 
-Issue `#5` should reference `reports/raw/route-inventory.json` (`needs_review_routes`) — now 6 routes, all accepted. The previous likely-real-gap list is closed.
+Issue `#5` should treat the route-inventory needs_review list and the permission-smoke results together as the audit trail: any new endpoint without a recognized gate either lands in needs_review (caught by inventory) or fails non-member denial (caught by smoke).
 
 ## Current Next TODOs
 
 Recommended order for the next agent:
 
-1. **Add API denial smoke tests** in `scripts/permission_smoke.py` covering the 8 new gates (one per endpoint, hit it as a non-member, assert 403/404). Patterns to copy from the existing private-channel smoke section.
-2. (Optional) Add a `caller_implicit` path_kind classifier to drive `needs_review` to 0 without hand-editing.
-3. Start the Playwright parity harness for messaging and roles (Issue `#4`).
-4. Document Emma Bot credentials and test protocol without exposing secrets (Issue `#8`).
-5. Two-client voice Playwright/manual checklist (Issue `#7`).
-6. Add the broader permission matrix for owner/admin/mod/member/muted/banned workflows (Issue `#5` continuation).
+1. Start the Playwright parity harness for messaging and roles (Issue `#4`, `#5`).
+2. Document Emma Bot credentials and test protocol without exposing secrets (Issue `#8`).
+3. Two-client voice Playwright/manual checklist for join/leave/mute/deafen/screen-share (Issue `#7`).
+4. (Optional) Add a `caller_implicit` path_kind classifier in `scripts/route_inventory.py` so the 6 remaining accepted-by-design entries drop out of needs_review.
+5. Broaden the permission matrix to owner/admin/mod/member/muted/banned workflows.
 
 ## Exact Next Task Candidate
 
 Best immediate task:
 
-Extend `scripts/permission_smoke.py` with a section that creates a server + a non-member fixture, then hits each of the 8 newly-gated endpoints and asserts Forbidden. Write the result into `reports/raw/permission-smoke.json` and reference it from `discord-parity.json`. Confirm the new section keeps the rest of permission_smoke.py green.
+Begin the Playwright parity harness for messaging. Suggested first scope: a new `scripts/messaging_ui_qa.py` that proves send/edit/delete/reply/react/pin against a live channel as the `browsertest_user` fixture, mirroring the structure of `scripts/permissions_ui_qa.py`. Write proof to `reports/raw/messaging-ui-proof.json` and screenshots to `reports/parity-screenshots/messaging-ui/`.
 
 ## Caution
 
@@ -84,5 +78,5 @@ Extend `scripts/permission_smoke.py` with a section that creates a server + a no
 - Do not expose tokens, admin credentials, or Emma Bot credentials in docs, GitHub comments, or reports.
 - Keep `reports/discord-parity.json` aligned with GitHub issues when status changes.
 - `reports/raw/route-inventory.json` is generated. Re-run `python3 scripts/route_inventory.py` after any router/handler change instead of editing it by hand.
-- The new `require_server_perm(.., Permissions::VIEW_CHANNEL)` calls double as membership checks because `VIEW_CHANNEL` is in `default_everyone`. If the default-everyone bitmask is ever changed, audit these handlers — they may need to switch to an explicit membership helper.
+- The `require_server_perm(.., Permissions::VIEW_CHANNEL)` calls added to get_server / list_emojis / list_members / update_member double as membership checks because `VIEW_CHANNEL` is in `default_everyone`. If `default_everyone` ever changes, audit these handlers.
 - Use `cargo fmt --check` before finalizing Rust changes; the repo is now formatted.

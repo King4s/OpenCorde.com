@@ -71,7 +71,7 @@
     {
       "path": "reports/raw/permission-smoke.json",
       "type": "qa",
-      "note": "Live API smoke proving selected non-member denial paths plus private-channel deny/allow overwrite workflows."
+      "note": "Live API smoke proving non-member denial paths, private-channel deny/allow overwrite workflows, and the 8 gates added 2026-05-14 (automod list, server details, server members list, member self-update, server emojis list, discovery patch, channel notification PUT/DELETE). 52 checks, 0 failures against https://opencorde.com after the gate-pass deploy."
     },
     {
       "path": "reports/raw/permissions-ui-proof.json",
@@ -229,7 +229,8 @@
         "Manager-gated server and channel effective permission inspector endpoints now return bitfields and permission names.",
         "Generated route inventory at reports/raw/route-inventory.json (schema v2) lists every Axum endpoint with method, path, auth class, path_kind, and detected permission/owner/author/member gates; covers 169 endpoints across 126 unique paths.",
         "Inventory recognizers now classify own-resource paths (/@me, /me/, /friends, /push), detect inline owner/author/member checks, recognize named gate helpers (check_server_owner, is_dm_member), and resolve same-directory helper calls transitively so wrappers like require_event_visible lift gates onto their callers.",
-        "All 7 of the previous likely-real gaps are now gated and the build + 215 lib tests pass: list_rules in automod (MANAGE_SERVER), get_server / list_emojis / list_members / update_member (require_server_perm with VIEW_CHANNEL as the membership test), discovery patch (refactored to helpers::check_server_owner), and PUT/DELETE channel notification-settings (require_channel_perm VIEW_CHANNEL)."
+        "All 7 of the previous likely-real gaps are now gated and the build + 215 lib tests pass: list_rules in automod (MANAGE_SERVER), get_server / list_emojis / list_members / update_member (require_server_perm with VIEW_CHANNEL as the membership test), discovery patch (refactored to helpers::check_server_owner), and PUT/DELETE channel notification-settings (require_channel_perm VIEW_CHANNEL).",
+        "Live API denial smoke now covers all 8 new gates against https://opencorde.com (52 checks total, 0 failures)."
       ],
       "gaps": [
         "Discord overwrite resolution behavior has core precedence tests plus live API and UI private-channel proof, but still needs a broader matrix.",
@@ -359,8 +360,8 @@
     }
   ],
   "next_session_focus": [
-    "Add API denial smoke tests in scripts/permission_smoke.py for the 8 newly added gates.",
     "Start the Playwright parity harness for messaging and roles.",
-    "Document Emma Bot credentials and test protocol without exposing secrets."
+    "Document Emma Bot credentials and test protocol without exposing secrets.",
+    "Two-client voice Playwright/manual checklist."
   ]
 }
