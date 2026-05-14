@@ -7,89 +7,45 @@ This file is the first context a new AI agent should read before continuing the 
 - Repository: `King4s/OpenCorde.com`
 - Local path: `/home/mb/opencorde`
 - Branch: `main`
-- Last pushed functional commit before this update: `ae6ed3b test(admin): prove LiveKit health dashboard`
-- Previous relevant commit: `f9c6a76 fix(voice): speaking indicator, race condition guard, and leave 204`
+- Last pushed functional commit before this update: `231d8e8 test(permissions): prove private channel and role UI`
+- Previous relevant commit: `ae6ed3b test(admin): prove LiveKit health dashboard`
 
-At the time this handoff was updated, the next task was completed locally and should be committed/pushed with this file: Playwright UI proof for private-channel and role-management workflows.
+At the time this handoff was updated, the next task was completed locally and should be committed/pushed with this file: route inventory generator + first inventory artifact.
 
 ## What Changed Most Recently
 
-Commit `5dadd96` did two things:
+The route inventory task completed after `231d8e8`:
 
-- Added LiveKit operational health to `GET /api/v1/admin/stats`.
-- Applied `cargo fmt` across the Rust workspace so `cargo fmt --check` passes.
+- Added `scripts/route_inventory.py`, which walks the API module graph from `crates/opencorde-api/src/routes/mod.rs` and `crates/opencorde-api/src/ws/handler/mod.rs`, parses every `.route(...)` call, resolves handler references to their fn definitions, and extracts permission gates (`require_server_perm`, `require_channel_perm`, `is_admin`, `check_verification_level`, role-hierarchy and rate-limit helpers) plus auth-class (admin / user / public).
+- Wrote first inventory to `reports/raw/route-inventory.json`. Summary at the time of this handoff: 169 endpoint registrations across 126 unique paths, 0 unresolved handlers, by auth class admin=7 / user=144 / public=18.
+- Updated `reports/discord-parity.json` to register the inventory under `evidence_sources`, add it to `proof_required` for the roles/permissions area, surface the `60 auth-only routes` audit list as a gap and as `next_session_focus`.
 
-The admin LiveKit follow-up task completed after that commit:
-
-- Added `scripts/admin_livekit_health_qa.py`, which creates a short-lived local admin JWT from `.env` without storing it, calls `GET /api/v1/admin/stats`, opens live `/admin` with Playwright, and writes sanitized proof.
-- Wrote live proof to `reports/raw/admin-livekit-health-ui.json`.
-- Wrote screenshot proof to `reports/parity-screenshots/admin-livekit-health.png`.
-- Fixed an admin users panic caused by nullable `users.email` by making `AdminUserRow.email` nullable in Rust/TypeScript and rendering `No email` in the admin user table.
-- Rebuilt `client/build`, rebuilt `target/release/opencorde-api`, and restarted `opencorde-api`.
-
-The permission UI follow-up task completed after `ae6ed3b`:
-
-- Added `scripts/permissions_ui_qa.py`, which creates temporary live DB fixtures, proves browser behavior with Playwright, writes sanitized proof, and cleans fixtures in `finally`.
-- Wrote live proof to `reports/raw/permissions-ui-proof.json`.
-- Wrote screenshots under `reports/parity-screenshots/permissions-ui/`.
-- Fixed `ChannelPermissionsTab` so it fetches roles before rendering override labels; without this, override rows showed fallback `Role <id>` labels.
-- Added stable `data-role-name` hooks to `RolesPanel` rows so role create/rename/delete proof targets the specific UI-created role.
-- Rebuilt `client/build` after the frontend changes.
+The earlier handoff baseline (admin LiveKit health + permission UI proof from commits `5dadd96` / `ae6ed3b` / `231d8e8`) is unchanged. See git log for those changes.
 
 Functional files to inspect first:
 
-- `crates/opencorde-api/src/routes/admin/handlers.rs`
-- `crates/opencorde-api/src/routes/admin/types.rs`
-- `client/src/lib/api/types.ts`
-- `client/src/routes/admin/+page.svelte`
-- `client/src/routes/admin/UsersTable.svelte`
-- `client/src/lib/components/modals/ChannelPermissionsTab.svelte`
-- `client/src/routes/servers/[serverId]/settings/panels/RolesPanel.svelte`
-- `scripts/admin_livekit_health_qa.py`
-- `scripts/permissions_ui_qa.py`
-- `reports/raw/admin-livekit-health-ui.json`
-- `reports/raw/permissions-ui-proof.json`
+- `scripts/route_inventory.py`
+- `reports/raw/route-inventory.json`
 - `reports/discord-parity.json`
-- `docs/audits/2026-04-28-permission-route-audit.md`
-
-Large Rust diffs in the same commit are formatting-only unless they touch the admin LiveKit health code above.
+- `crates/opencorde-api/src/routes/mod.rs` (entry point for the module walk)
+- `crates/opencorde-api/src/routes/permission_check.rs` (the helpers the inventory looks for)
 
 ## Verification Already Run
 
 These commands passed after the latest changes:
 
 ```bash
-cargo fmt --check
-cargo check -p opencorde-api
-cargo test -p opencorde-api admin --quiet
-cd client && pnpm check
-git diff --check
+python3 -m py_compile scripts/route_inventory.py
+python3 scripts/route_inventory.py --fail-on-unresolved
 python3 -m json.tool reports/discord-parity.json >/dev/null
-python3 -m py_compile scripts/admin_livekit_health_qa.py
-python3 scripts/admin_livekit_health_qa.py --fail-on-issues
-python3 -m py_compile scripts/permissions_ui_qa.py
-python3 scripts/permissions_ui_qa.py --fail-on-issues
+python3 -m json.tool reports/raw/route-inventory.json >/dev/null
 ```
 
-The admin LiveKit health proof ran against `https://opencorde.com` and passed with:
+The inventory run reported `169 routes, 0 unresolved` and produced these auth-class counts:
 
-- API status `200`
-- `livekit_health.ok=true`
-- local LiveKit status `200`
-- public proxy status `200`
-- `/admin` status `200`
-- LiveKit Health panel visible
-- Local and Public Proxy rows visible
-- no browser console errors, page errors, failed requests, or token leakage in page HTML
-
-The permission UI proof ran against `https://opencorde.com` and passed with:
-
-- private channel hidden from the limited user before role assignment
-- same channel visible/openable after assigning the allowed role
-- channel permissions modal renders the allowed role name and `View Channel` controls
-- role create, rename, and delete all work from server settings
-- no browser console errors, page errors, or non-ignored failed requests
-- temporary `private-ui-*`, `allow-ui-*`, and `managed-ui-*` fixtures removed after the run
+- `admin`: 7 (the `/api/v1/admin/*` surface)
+- `user`: 144 (handlers that take an `AuthUser` extractor)
+- `public`: 18 (auth flows, federation server-to-server endpoints, gateway upgrade, health, invite resolution, discover, user search, webhook execute-by-token)
 
 ## GitHub Issue Map
 
@@ -102,15 +58,13 @@ Primary source-of-truth issues:
 - `#7` Voice, video, and stage parity
 - `#8` Apps, slash commands, bots, and webhooks parity
 
-Issue `#7` should no longer be treated as needing either the implementation of "LiveKit health to instance report" or the admin UI proof. The implementation is in `5dadd96`; the browser/API proof is in `reports/raw/admin-livekit-health-ui.json` with screenshot `reports/parity-screenshots/admin-livekit-health.png`.
-
-Issue `#5` should no longer be treated as needing first proof for "private-channel and role-management UI workflows"; first proof is in `reports/raw/permissions-ui-proof.json` with screenshots under `reports/parity-screenshots/permissions-ui/`. It still needs a broader permission matrix and UI proof for batch role reordering/effective permission inspector workflows.
+Issue `#5` should reference `reports/raw/route-inventory.json` as the authoritative list when triaging which routes still need permission gates. The inventory is generated, so it can be regenerated and diffed in any future session — do not hand-edit it.
 
 ## Current Next TODOs
 
 Recommended order for the next agent:
 
-1. Add route inventory JSON generated from Axum route declarations and permission annotations.
+1. Triage the 60 authenticated routes in `reports/raw/route-inventory.json` whose `permissions` array is empty and `flags` is empty — for each, decide whether `auth-only` is the correct posture (e.g. own-resource endpoints like `users/@me/...`) or whether a gate is missing. Update the relevant handler and re-run the generator.
 2. Start the Playwright parity harness for messaging and roles.
 3. Broaden permission UI proof to owner/admin/mod/member/muted/banned workflows.
 4. Document Emma Bot credentials and test protocol without exposing secrets.
@@ -120,11 +74,12 @@ Recommended order for the next agent:
 
 Best immediate task:
 
-Add route inventory JSON generated from Axum route declarations and permission annotations. Keep `reports/discord-parity.json` and the GitHub issue map aligned with the result.
+Run the route-inventory triage. Start with handlers whose path begins with `/api/v1/servers/`, `/api/v1/channels/`, or `/api/v1/messages/` and have neither permission gates nor a documented "own resource" pattern. Add the missing `require_server_perm` / `require_channel_perm` calls and add API smoke coverage in `scripts/permission_smoke.py` for each new gate.
 
 ## Caution
 
 - Do not mark Discord parity features done just because tables, routes, or UI components exist.
 - Do not expose tokens, admin credentials, or Emma Bot credentials in docs, GitHub comments, or reports.
 - Keep `reports/discord-parity.json` aligned with GitHub issues when status changes.
+- `reports/raw/route-inventory.json` is generated. Re-run `python3 scripts/route_inventory.py` after any router/handler change instead of editing it by hand.
 - Use `cargo fmt --check` before finalizing Rust changes; the repo is now formatted.

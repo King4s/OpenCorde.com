@@ -1,0 +1,2294 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-14",
+  "source": {
+    "entry_points": [
+      "crates/opencorde-api/src/routes/mod.rs",
+      "crates/opencorde-api/src/ws/handler/mod.rs"
+    ],
+    "modules_walked": 116
+  },
+  "summary": {
+    "total_routes": 169,
+    "by_method": {
+      "DELETE": 33,
+      "GET": 61,
+      "PATCH": 13,
+      "POST": 51,
+      "PUT": 11
+    },
+    "by_auth_class": {
+      "admin": 7,
+      "public": 18,
+      "user": 144
+    },
+    "by_permission": {
+      "channel:ADD_REACTIONS": 1,
+      "channel:ATTACH_FILES": 1,
+      "channel:CONNECT": 7,
+      "channel:CREATE_PUBLIC_THREADS": 1,
+      "channel:MANAGE_CHANNELS": 6,
+      "channel:MANAGE_MESSAGES": 1,
+      "channel:MANAGE_ROLES": 1,
+      "channel:MANAGE_WEBHOOKS": 3,
+      "channel:MUTE_MEMBERS": 3,
+      "channel:PIN_MESSAGES": 2,
+      "channel:READ_MESSAGE_HISTORY": 1,
+      "channel:REQUEST_TO_SPEAK": 1,
+      "channel:SEND_MESSAGES": 8,
+      "channel:SEND_MESSAGES_IN_THREADS": 1,
+      "channel:SPEAK": 2,
+      "channel:USE_APPLICATION_COMMANDS": 1,
+      "channel:VIEW_CHANNEL": 30,
+      "server:BAN_MEMBERS": 3,
+      "server:CREATE_EVENTS": 1,
+      "server:CREATE_INVITE": 2,
+      "server:KICK_MEMBERS": 1,
+      "server:MANAGE_CHANNELS": 1,
+      "server:MANAGE_GUILD_EXPRESSIONS": 2,
+      "server:MANAGE_ROLES": 7,
+      "server:MANAGE_SERVER": 4,
+      "server:MODERATE_MEMBERS": 2,
+      "server:VIEW_AUDIT_LOG": 1,
+      "server:VIEW_CHANNEL": 8
+    },
+    "unresolved_handlers": 0
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/rate-limits",
+      "handler": "rate_limit::get_rate_limits",
+      "handler_file": "crates/opencorde-api/src/routes/admin/rate_limit.rs",
+      "declared_in": "crates/opencorde-api/src/routes/admin.rs",
+      "auth": "admin",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [
+        "admin"
+      ],
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/admin/rate-limits",
+      "handler": "rate_limit::update_rate_limits",
+      "handler_file": "crates/opencorde-api/src/routes/admin/rate_limit.rs",
+      "declared_in": "crates/opencorde-api/src/routes/admin.rs",
+      "auth": "admin",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [
+        "admin"
+      ],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/servers",
+      "handler": "handlers::list_servers",
+      "handler_file": "crates/opencorde-api/src/routes/admin/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/admin.rs",
+      "auth": "admin",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [
+        "admin"
+      ],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/admin/servers/{server_id}",
+      "handler": "handlers::delete_server",
+      "handler_file": "crates/opencorde-api/src/routes/admin/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/admin.rs",
+      "auth": "admin",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [
+        "admin"
+      ],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/stats",
+      "handler": "handlers::get_stats",
+      "handler_file": "crates/opencorde-api/src/routes/admin/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/admin.rs",
+      "auth": "admin",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [
+        "admin"
+      ],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/users",
+      "handler": "handlers::list_users",
+      "handler_file": "crates/opencorde-api/src/routes/admin/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/admin.rs",
+      "auth": "admin",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [
+        "admin"
+      ],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/admin/users/{user_id}",
+      "handler": "handlers::delete_user",
+      "handler_file": "crates/opencorde-api/src/routes/admin/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/admin.rs",
+      "auth": "admin",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [
+        "admin"
+      ],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/auth/2fa",
+      "handler": "totp::disable",
+      "handler_file": "crates/opencorde-api/src/routes/auth/totp.rs",
+      "declared_in": "crates/opencorde-api/src/routes/auth/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/2fa/enable",
+      "handler": "totp::enable",
+      "handler_file": "crates/opencorde-api/src/routes/auth/totp.rs",
+      "declared_in": "crates/opencorde-api/src/routes/auth/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/2fa/verify",
+      "handler": "totp::verify",
+      "handler_file": "crates/opencorde-api/src/routes/auth/totp.rs",
+      "declared_in": "crates/opencorde-api/src/routes/auth/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/forgot-password",
+      "handler": "password_reset::forgot_password",
+      "handler_file": "crates/opencorde-api/src/routes/auth/password_reset.rs",
+      "declared_in": "crates/opencorde-api/src/routes/auth/mod.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/login",
+      "handler": "handlers::login",
+      "handler_file": "crates/opencorde-api/src/routes/auth/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/auth/mod.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/refresh",
+      "handler": "handlers::refresh",
+      "handler_file": "crates/opencorde-api/src/routes/auth/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/auth/mod.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/register",
+      "handler": "register::register",
+      "handler_file": "crates/opencorde-api/src/routes/auth/register.rs",
+      "declared_in": "crates/opencorde-api/src/routes/auth/mod.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/resend-verification",
+      "handler": "verification::resend_verification",
+      "handler_file": "crates/opencorde-api/src/routes/auth/verification.rs",
+      "declared_in": "crates/opencorde-api/src/routes/auth/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/reset-password",
+      "handler": "password_reset::reset_password",
+      "handler_file": "crates/opencorde-api/src/routes/auth/password_reset.rs",
+      "declared_in": "crates/opencorde-api/src/routes/auth/mod.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/auth/steam",
+      "handler": "steam::steam_login",
+      "handler_file": "crates/opencorde-api/src/routes/auth/steam.rs",
+      "declared_in": "crates/opencorde-api/src/routes/auth/mod.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/auth/steam/callback",
+      "handler": "steam::steam_callback",
+      "handler_file": "crates/opencorde-api/src/routes/auth/steam.rs",
+      "declared_in": "crates/opencorde-api/src/routes/auth/mod.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/auth/verify-email",
+      "handler": "verification::verify_email",
+      "handler_file": "crates/opencorde-api/src/routes/auth/verification.rs",
+      "declared_in": "crates/opencorde-api/src/routes/auth/mod.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/automod/{rule_id}",
+      "handler": "delete_rule",
+      "handler_file": "crates/opencorde-api/src/routes/automod/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/automod/handlers.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/automod/{rule_id}",
+      "handler": "update_rule",
+      "handler_file": "crates/opencorde-api/src/routes/automod/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/automod/handlers.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/channels/@dms/{dm_id}/messages",
+      "handler": "handlers::list_dm_messages",
+      "handler_file": "crates/opencorde-api/src/routes/dms/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/dms/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/@dms/{dm_id}/messages",
+      "handler": "handlers::send_dm_message",
+      "handler_file": "crates/opencorde-api/src/routes/dms/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/dms/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/{channel_id}/ack",
+      "handler": "mark_channel_read",
+      "handler_file": "crates/opencorde-api/src/routes/read_state.rs",
+      "declared_in": "crates/opencorde-api/src/routes/read_state.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/{channel_id}/attachments",
+      "handler": "upload_attachment",
+      "handler_file": "crates/opencorde-api/src/routes/uploads.rs",
+      "declared_in": "crates/opencorde-api/src/routes/uploads.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:ATTACH_FILES",
+        "channel:SEND_MESSAGES",
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/{channel_id}/e2ee/init",
+      "handler": "init_group",
+      "handler_file": "crates/opencorde-api/src/routes/e2ee/groups.rs",
+      "declared_in": "crates/opencorde-api/src/routes/e2ee/groups.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:SEND_MESSAGES",
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/channels/{channel_id}/e2ee/state",
+      "handler": "update_state",
+      "handler_file": "crates/opencorde-api/src/routes/e2ee/groups.rs",
+      "declared_in": "crates/opencorde-api/src/routes/e2ee/groups.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:SEND_MESSAGES",
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/channels/{channel_id}/e2ee/welcome",
+      "handler": "get_welcome",
+      "handler_file": "crates/opencorde-api/src/routes/e2ee/groups.rs",
+      "declared_in": "crates/opencorde-api/src/routes/e2ee/groups.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/{channel_id}/interact",
+      "handler": "dispatch::dispatch_command",
+      "handler_file": "crates/opencorde-api/src/routes/slash_commands/dispatch.rs",
+      "declared_in": "crates/opencorde-api/src/routes/slash_commands/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:SEND_MESSAGES",
+        "channel:USE_APPLICATION_COMMANDS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/channels/{channel_id}/messages",
+      "handler": "send_list::list_messages",
+      "handler_file": "crates/opencorde-api/src/routes/messages/send_list.rs",
+      "declared_in": "crates/opencorde-api/src/routes/messages/handlers.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/{channel_id}/messages",
+      "handler": "send_list::send_message",
+      "handler_file": "crates/opencorde-api/src/routes/messages/send_list.rs",
+      "declared_in": "crates/opencorde-api/src/routes/messages/handlers.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:SEND_MESSAGES"
+      ],
+      "inspects_effective": [],
+      "flags": [
+        "verification_level"
+      ],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/{channel_id}/messages/{message_id}/thread",
+      "handler": "create_thread",
+      "handler_file": "crates/opencorde-api/src/routes/threads/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/threads/handlers.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:CREATE_PUBLIC_THREADS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/channels/{channel_id}/permissions",
+      "handler": "list_overrides",
+      "handler_file": "crates/opencorde-api/src/routes/channel_overrides.rs",
+      "declared_in": "crates/opencorde-api/src/routes/channel_overrides.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/channels/{channel_id}/permissions/{target_type}/{target_id}",
+      "handler": "delete_override",
+      "handler_file": "crates/opencorde-api/src/routes/channel_overrides.rs",
+      "declared_in": "crates/opencorde-api/src/routes/channel_overrides.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:MANAGE_CHANNELS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/channels/{channel_id}/permissions/{target_type}/{target_id}",
+      "handler": "upsert_override",
+      "handler_file": "crates/opencorde-api/src/routes/channel_overrides.rs",
+      "declared_in": "crates/opencorde-api/src/routes/channel_overrides.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:MANAGE_CHANNELS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/channels/{channel_id}/permissions/{user_id}/effective",
+      "handler": "get_channel_effective_permissions",
+      "handler_file": "crates/opencorde-api/src/routes/permissions.rs",
+      "declared_in": "crates/opencorde-api/src/routes/permissions.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:MANAGE_ROLES"
+      ],
+      "inspects_effective": [
+        "channel:effective"
+      ],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/channels/{channel_id}/pins",
+      "handler": "list_pins",
+      "handler_file": "crates/opencorde-api/src/routes/pins.rs",
+      "declared_in": "crates/opencorde-api/src/routes/pins.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/channels/{channel_id}/pins/{message_id}",
+      "handler": "unpin_message",
+      "handler_file": "crates/opencorde-api/src/routes/pins.rs",
+      "declared_in": "crates/opencorde-api/src/routes/pins.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:PIN_MESSAGES"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/channels/{channel_id}/pins/{message_id}",
+      "handler": "pin_message",
+      "handler_file": "crates/opencorde-api/src/routes/pins.rs",
+      "declared_in": "crates/opencorde-api/src/routes/pins.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:PIN_MESSAGES"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/channels/{channel_id}/posts",
+      "handler": "handlers::list_posts",
+      "handler_file": "crates/opencorde-api/src/routes/forum/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/forum/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/{channel_id}/posts",
+      "handler": "handlers::create_post",
+      "handler_file": "crates/opencorde-api/src/routes/forum/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/forum/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:SEND_MESSAGES",
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/channels/{channel_id}/stage",
+      "handler": "handlers::end_stage",
+      "handler_file": "crates/opencorde-api/src/routes/stage/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/stage/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:MUTE_MEMBERS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/channels/{channel_id}/stage",
+      "handler": "handlers::get_stage",
+      "handler_file": "crates/opencorde-api/src/routes/stage/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/stage/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:CONNECT"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/{channel_id}/stage/hand",
+      "handler": "handlers::toggle_hand",
+      "handler_file": "crates/opencorde-api/src/routes/stage/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/stage/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:CONNECT",
+        "channel:REQUEST_TO_SPEAK"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/{channel_id}/stage/join",
+      "handler": "handlers::join_stage",
+      "handler_file": "crates/opencorde-api/src/routes/stage/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/stage/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:CONNECT"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/channels/{channel_id}/stage/leave",
+      "handler": "handlers::leave_stage",
+      "handler_file": "crates/opencorde-api/src/routes/stage/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/stage/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/channels/{channel_id}/stage/speakers/{user_id}",
+      "handler": "handlers::set_speaker",
+      "handler_file": "crates/opencorde-api/src/routes/stage/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/stage/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:MUTE_MEMBERS",
+        "channel:SPEAK"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/{channel_id}/stage/start",
+      "handler": "handlers::start_stage",
+      "handler_file": "crates/opencorde-api/src/routes/stage/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/stage/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:CONNECT",
+        "channel:MUTE_MEMBERS",
+        "channel:SPEAK"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/channels/{channel_id}/threads",
+      "handler": "list_threads",
+      "handler_file": "crates/opencorde-api/src/routes/threads/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/threads/handlers.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/{channel_id}/typing",
+      "handler": "edit_delete::typing_indicator",
+      "handler_file": "crates/opencorde-api/src/routes/messages/edit_delete.rs",
+      "declared_in": "crates/opencorde-api/src/routes/messages/handlers.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:SEND_MESSAGES",
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/channels/{channel_id}/webhooks",
+      "handler": "list_webhooks",
+      "handler_file": "crates/opencorde-api/src/routes/webhooks.rs",
+      "declared_in": "crates/opencorde-api/src/routes/webhooks.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:MANAGE_WEBHOOKS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/{channel_id}/webhooks",
+      "handler": "create_webhook",
+      "handler_file": "crates/opencorde-api/src/routes/webhooks.rs",
+      "declared_in": "crates/opencorde-api/src/routes/webhooks.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:MANAGE_WEBHOOKS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/channels/{id}",
+      "handler": "delete_channel",
+      "handler_file": "crates/opencorde-api/src/routes/channels/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/channels/handlers.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:MANAGE_CHANNELS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/channels/{id}",
+      "handler": "update_channel",
+      "handler_file": "crates/opencorde-api/src/routes/channels/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/channels/handlers.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:MANAGE_CHANNELS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/channels/{id}/notification-settings",
+      "handler": "reset_setting",
+      "handler_file": "crates/opencorde-api/src/routes/notification_settings.rs",
+      "declared_in": "crates/opencorde-api/src/routes/notification_settings.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/channels/{id}/notification-settings",
+      "handler": "set_setting",
+      "handler_file": "crates/opencorde-api/src/routes/notification_settings.rs",
+      "declared_in": "crates/opencorde-api/src/routes/notification_settings.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/{id}/recording/start",
+      "handler": "handlers::start_recording",
+      "handler_file": "crates/opencorde-api/src/routes/recordings/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/recordings/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:MANAGE_CHANNELS",
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/{id}/recording/stop",
+      "handler": "handlers::stop_recording",
+      "handler_file": "crates/opencorde-api/src/routes/recordings/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/recordings/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:MANAGE_CHANNELS",
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/channels/{id}/recordings",
+      "handler": "handlers::list_recordings",
+      "handler_file": "crates/opencorde-api/src/routes/recordings/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/recordings/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/commands/{command_id}",
+      "handler": "delete::delete_command",
+      "handler_file": "crates/opencorde-api/src/routes/slash_commands/delete.rs",
+      "declared_in": "crates/opencorde-api/src/routes/slash_commands/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MANAGE_SERVER"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/discover",
+      "handler": "list_discovery",
+      "handler_file": "crates/opencorde-api/src/routes/discovery.rs",
+      "declared_in": "crates/opencorde-api/src/routes/discovery.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/events/{event_id}",
+      "handler": "delete_event",
+      "handler_file": "crates/opencorde-api/src/routes/events/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/events/handlers.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/events/{event_id}",
+      "handler": "get_event",
+      "handler_file": "crates/opencorde-api/src/routes/events/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/events/handlers.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/events/{event_id}",
+      "handler": "update_event",
+      "handler_file": "crates/opencorde-api/src/routes/events/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/events/handlers.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/events/{event_id}/rsvp",
+      "handler": "super::rsvp::un_rsvp",
+      "handler_file": "crates/opencorde-api/src/routes/events/rsvp.rs",
+      "declared_in": "crates/opencorde-api/src/routes/events/handlers.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/events/{event_id}/rsvp",
+      "handler": "super::rsvp::rsvp",
+      "handler_file": "crates/opencorde-api/src/routes/events/rsvp.rs",
+      "declared_in": "crates/opencorde-api/src/routes/events/handlers.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/federation/events",
+      "handler": "receive_event",
+      "handler_file": "crates/opencorde-api/src/routes/federation/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/federation/mod.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/federation/identity",
+      "handler": "get_identity",
+      "handler_file": "crates/opencorde-api/src/routes/federation/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/federation/mod.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/federation/introduce",
+      "handler": "introduce",
+      "handler_file": "crates/opencorde-api/src/routes/federation/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/federation/mod.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/federation/users/{username}",
+      "handler": "lookup_user",
+      "handler_file": "crates/opencorde-api/src/routes/federation/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/federation/mod.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/friends",
+      "handler": "list::list_friends",
+      "handler_file": "crates/opencorde-api/src/routes/friends/list.rs",
+      "declared_in": "crates/opencorde-api/src/routes/friends/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/friends/block",
+      "handler": "block::block_user",
+      "handler_file": "crates/opencorde-api/src/routes/friends/block.rs",
+      "declared_in": "crates/opencorde-api/src/routes/friends/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/friends/pending",
+      "handler": "pending::list_pending",
+      "handler_file": "crates/opencorde-api/src/routes/friends/pending.rs",
+      "declared_in": "crates/opencorde-api/src/routes/friends/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/friends/request",
+      "handler": "request::send_request",
+      "handler_file": "crates/opencorde-api/src/routes/friends/request.rs",
+      "declared_in": "crates/opencorde-api/src/routes/friends/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/friends/{relationship_id}",
+      "handler": "remove::remove_relationship",
+      "handler_file": "crates/opencorde-api/src/routes/friends/remove.rs",
+      "declared_in": "crates/opencorde-api/src/routes/friends/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/friends/{relationship_id}/accept",
+      "handler": "accept::accept_request",
+      "handler_file": "crates/opencorde-api/src/routes/friends/accept.rs",
+      "declared_in": "crates/opencorde-api/src/routes/friends/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/gateway",
+      "handler": "ws_upgrade",
+      "handler_file": "crates/opencorde-api/src/ws/handler/mod.rs",
+      "declared_in": "crates/opencorde-api/src/ws/handler/mod.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/health",
+      "handler": "health_check",
+      "handler_file": "crates/opencorde-api/src/routes/health.rs",
+      "declared_in": "crates/opencorde-api/src/routes/health.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/invites/{code}",
+      "handler": "get_invite",
+      "handler_file": "crates/opencorde-api/src/routes/invites.rs",
+      "declared_in": "crates/opencorde-api/src/routes/invites.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/invites/{code}/join",
+      "handler": "join_invite",
+      "handler_file": "crates/opencorde-api/src/routes/invites.rs",
+      "declared_in": "crates/opencorde-api/src/routes/invites.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [
+        "verification_level"
+      ],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/livekit/token",
+      "handler": "handlers::get_livekit_token",
+      "handler_file": "crates/opencorde-api/src/routes/voice/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/voice/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:CONNECT"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/mesh/peers",
+      "handler": "list_peers",
+      "handler_file": "crates/opencorde-api/src/routes/mesh/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/mesh/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/mesh/peers",
+      "handler": "add_peer",
+      "handler_file": "crates/opencorde-api/src/routes/mesh/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/mesh/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/mesh/peers/{id}",
+      "handler": "remove_peer",
+      "handler_file": "crates/opencorde-api/src/routes/mesh/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/mesh/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/mesh/status",
+      "handler": "mesh_status",
+      "handler_file": "crates/opencorde-api/src/routes/mesh/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/mesh/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/messages/{id}",
+      "handler": "edit_delete::delete_message",
+      "handler_file": "crates/opencorde-api/src/routes/messages/edit_delete.rs",
+      "declared_in": "crates/opencorde-api/src/routes/messages/handlers.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:MANAGE_MESSAGES",
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/messages/{id}",
+      "handler": "edit_delete::edit_message",
+      "handler_file": "crates/opencorde-api/src/routes/messages/edit_delete.rs",
+      "declared_in": "crates/opencorde-api/src/routes/messages/handlers.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/messages/{message_id}/reactions",
+      "handler": "list_reactions",
+      "handler_file": "crates/opencorde-api/src/routes/reactions.rs",
+      "declared_in": "crates/opencorde-api/src/routes/reactions.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/messages/{message_id}/reactions/{emoji}",
+      "handler": "remove_reaction",
+      "handler_file": "crates/opencorde-api/src/routes/reactions.rs",
+      "declared_in": "crates/opencorde-api/src/routes/reactions.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/messages/{message_id}/reactions/{emoji}",
+      "handler": "add_reaction",
+      "handler_file": "crates/opencorde-api/src/routes/reactions.rs",
+      "declared_in": "crates/opencorde-api/src/routes/reactions.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:ADD_REACTIONS",
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/posts/{post_id}",
+      "handler": "handlers::delete_post",
+      "handler_file": "crates/opencorde-api/src/routes/forum/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/forum/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/posts/{post_id}",
+      "handler": "handlers::get_post",
+      "handler_file": "crates/opencorde-api/src/routes/forum/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/forum/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/posts/{post_id}/replies",
+      "handler": "handlers::create_reply",
+      "handler_file": "crates/opencorde-api/src/routes/forum/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/forum/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:SEND_MESSAGES",
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/push/register",
+      "handler": "register_token",
+      "handler_file": "crates/opencorde-api/src/routes/push.rs",
+      "declared_in": "crates/opencorde-api/src/routes/push.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/push/unregister",
+      "handler": "unregister_token",
+      "handler_file": "crates/opencorde-api/src/routes/push.rs",
+      "declared_in": "crates/opencorde-api/src/routes/push.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/replies/{reply_id}",
+      "handler": "handlers::delete_reply",
+      "handler_file": "crates/opencorde-api/src/routes/forum/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/forum/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/search",
+      "handler": "search_messages",
+      "handler_file": "crates/opencorde-api/src/routes/search.rs",
+      "declared_in": "crates/opencorde-api/src/routes/search.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers",
+      "handler": "list_servers",
+      "handler_file": "crates/opencorde-api/src/routes/servers/handlers/crud.rs",
+      "declared_in": "crates/opencorde-api/src/routes/servers/handlers/crud.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/servers",
+      "handler": "create_server",
+      "handler_file": "crates/opencorde-api/src/routes/servers/handlers/crud.rs",
+      "declared_in": "crates/opencorde-api/src/routes/servers/handlers/crud.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/servers/{id}",
+      "handler": "delete_server",
+      "handler_file": "crates/opencorde-api/src/routes/servers/handlers/crud.rs",
+      "declared_in": "crates/opencorde-api/src/routes/servers/handlers/crud.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{id}",
+      "handler": "get_server",
+      "handler_file": "crates/opencorde-api/src/routes/servers/handlers/crud.rs",
+      "declared_in": "crates/opencorde-api/src/routes/servers/handlers/crud.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/servers/{id}",
+      "handler": "update_server",
+      "handler_file": "crates/opencorde-api/src/routes/servers/handlers/crud.rs",
+      "declared_in": "crates/opencorde-api/src/routes/servers/handlers/crud.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{id}/audit-log",
+      "handler": "list_audit_log",
+      "handler_file": "crates/opencorde-api/src/routes/audit_log.rs",
+      "declared_in": "crates/opencorde-api/src/routes/audit_log.rs",
+      "auth": "user",
+      "permissions": [
+        "server:VIEW_AUDIT_LOG"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{id}/commands",
+      "handler": "list::list_commands",
+      "handler_file": "crates/opencorde-api/src/routes/slash_commands/list.rs",
+      "declared_in": "crates/opencorde-api/src/routes/slash_commands/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "server:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/servers/{id}/commands",
+      "handler": "create::create_command",
+      "handler_file": "crates/opencorde-api/src/routes/slash_commands/create.rs",
+      "declared_in": "crates/opencorde-api/src/routes/slash_commands/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MANAGE_SERVER"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/servers/{id}/discovery",
+      "handler": "update_discovery",
+      "handler_file": "crates/opencorde-api/src/routes/discovery.rs",
+      "declared_in": "crates/opencorde-api/src/routes/discovery.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{id}/emojis",
+      "handler": "list_emojis",
+      "handler_file": "crates/opencorde-api/src/routes/emojis.rs",
+      "declared_in": "crates/opencorde-api/src/routes/emojis.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/servers/{id}/emojis",
+      "handler": "upload_emoji",
+      "handler_file": "crates/opencorde-api/src/routes/emojis.rs",
+      "declared_in": "crates/opencorde-api/src/routes/emojis.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/servers/{id}/emojis/{emoji_id}",
+      "handler": "delete_emoji",
+      "handler_file": "crates/opencorde-api/src/routes/emojis.rs",
+      "declared_in": "crates/opencorde-api/src/routes/emojis.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{server_id}/automod",
+      "handler": "list_rules",
+      "handler_file": "crates/opencorde-api/src/routes/automod/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/automod/handlers.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/servers/{server_id}/automod",
+      "handler": "create_rule",
+      "handler_file": "crates/opencorde-api/src/routes/automod/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/automod/handlers.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{server_id}/bans",
+      "handler": "list_bans",
+      "handler_file": "crates/opencorde-api/src/routes/moderation/mod.rs",
+      "declared_in": "crates/opencorde-api/src/routes/moderation/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "server:BAN_MEMBERS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/servers/{server_id}/bans/{user_id}",
+      "handler": "unban_user",
+      "handler_file": "crates/opencorde-api/src/routes/moderation/mod.rs",
+      "declared_in": "crates/opencorde-api/src/routes/moderation/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "server:BAN_MEMBERS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/servers/{server_id}/bans/{user_id}",
+      "handler": "ban_user",
+      "handler_file": "crates/opencorde-api/src/routes/moderation/mod.rs",
+      "declared_in": "crates/opencorde-api/src/routes/moderation/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "server:BAN_MEMBERS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{server_id}/bridge/mappings",
+      "handler": "list_mappings",
+      "handler_file": "crates/opencorde-api/src/routes/bridge.rs",
+      "declared_in": "crates/opencorde-api/src/routes/bridge.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/servers/{server_id}/bridge/mappings",
+      "handler": "create_mapping",
+      "handler_file": "crates/opencorde-api/src/routes/bridge.rs",
+      "declared_in": "crates/opencorde-api/src/routes/bridge.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/servers/{server_id}/bridge/mappings/{mapping_id}",
+      "handler": "delete_mapping",
+      "handler_file": "crates/opencorde-api/src/routes/bridge.rs",
+      "declared_in": "crates/opencorde-api/src/routes/bridge.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/servers/{server_id}/bridge/mappings/{mapping_id}",
+      "handler": "update_mapping",
+      "handler_file": "crates/opencorde-api/src/routes/bridge.rs",
+      "declared_in": "crates/opencorde-api/src/routes/bridge.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{server_id}/channels",
+      "handler": "list_channels",
+      "handler_file": "crates/opencorde-api/src/routes/channels/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/channels/handlers.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL",
+        "server:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/servers/{server_id}/channels",
+      "handler": "create_channel",
+      "handler_file": "crates/opencorde-api/src/routes/channels/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/channels/handlers.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MANAGE_CHANNELS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{server_id}/events",
+      "handler": "list_events",
+      "handler_file": "crates/opencorde-api/src/routes/events/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/events/handlers.rs",
+      "auth": "user",
+      "permissions": [
+        "server:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/servers/{server_id}/events",
+      "handler": "create_event",
+      "handler_file": "crates/opencorde-api/src/routes/events/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/events/handlers.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL",
+        "server:CREATE_EVENTS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{server_id}/invites",
+      "handler": "list_invites",
+      "handler_file": "crates/opencorde-api/src/routes/invites.rs",
+      "declared_in": "crates/opencorde-api/src/routes/invites.rs",
+      "auth": "user",
+      "permissions": [
+        "server:CREATE_INVITE"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/servers/{server_id}/invites",
+      "handler": "create_invite",
+      "handler_file": "crates/opencorde-api/src/routes/invites.rs",
+      "declared_in": "crates/opencorde-api/src/routes/invites.rs",
+      "auth": "user",
+      "permissions": [
+        "server:CREATE_INVITE"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/servers/{server_id}/invites/{code}",
+      "handler": "revoke_invite",
+      "handler_file": "crates/opencorde-api/src/routes/invites.rs",
+      "declared_in": "crates/opencorde-api/src/routes/invites.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MANAGE_SERVER"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{server_id}/members",
+      "handler": "list_members",
+      "handler_file": "crates/opencorde-api/src/routes/members.rs",
+      "declared_in": "crates/opencorde-api/src/routes/members.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/servers/{server_id}/members/{user_id}",
+      "handler": "remove_member",
+      "handler_file": "crates/opencorde-api/src/routes/members.rs",
+      "declared_in": "crates/opencorde-api/src/routes/members.rs",
+      "auth": "user",
+      "permissions": [
+        "server:KICK_MEMBERS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/servers/{server_id}/members/{user_id}",
+      "handler": "update_member",
+      "handler_file": "crates/opencorde-api/src/routes/members.rs",
+      "declared_in": "crates/opencorde-api/src/routes/members.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{server_id}/members/{user_id}/roles",
+      "handler": "get_member_roles",
+      "handler_file": "crates/opencorde-api/src/routes/roles.rs",
+      "declared_in": "crates/opencorde-api/src/routes/roles.rs",
+      "auth": "user",
+      "permissions": [
+        "server:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/servers/{server_id}/members/{user_id}/roles/{role_id}",
+      "handler": "unassign_role",
+      "handler_file": "crates/opencorde-api/src/routes/roles.rs",
+      "declared_in": "crates/opencorde-api/src/routes/roles.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MANAGE_ROLES"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/servers/{server_id}/members/{user_id}/roles/{role_id}",
+      "handler": "assign_role",
+      "handler_file": "crates/opencorde-api/src/routes/roles.rs",
+      "declared_in": "crates/opencorde-api/src/routes/roles.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MANAGE_ROLES"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/servers/{server_id}/members/{user_id}/timeout",
+      "handler": "remove_timeout",
+      "handler_file": "crates/opencorde-api/src/routes/moderation/mod.rs",
+      "declared_in": "crates/opencorde-api/src/routes/moderation/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MODERATE_MEMBERS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/servers/{server_id}/members/{user_id}/timeout",
+      "handler": "set_timeout",
+      "handler_file": "crates/opencorde-api/src/routes/moderation/mod.rs",
+      "declared_in": "crates/opencorde-api/src/routes/moderation/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MODERATE_MEMBERS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{server_id}/onboarding",
+      "handler": "get_onboarding",
+      "handler_file": "crates/opencorde-api/src/routes/onboarding.rs",
+      "declared_in": "crates/opencorde-api/src/routes/onboarding.rs",
+      "auth": "user",
+      "permissions": [
+        "server:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/servers/{server_id}/onboarding",
+      "handler": "update_onboarding",
+      "handler_file": "crates/opencorde-api/src/routes/onboarding.rs",
+      "declared_in": "crates/opencorde-api/src/routes/onboarding.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MANAGE_SERVER"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{server_id}/permissions/{user_id}/effective",
+      "handler": "get_server_effective_permissions",
+      "handler_file": "crates/opencorde-api/src/routes/permissions.rs",
+      "declared_in": "crates/opencorde-api/src/routes/permissions.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MANAGE_ROLES"
+      ],
+      "inspects_effective": [
+        "server:effective"
+      ],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{server_id}/roles",
+      "handler": "list_roles",
+      "handler_file": "crates/opencorde-api/src/routes/roles.rs",
+      "declared_in": "crates/opencorde-api/src/routes/roles.rs",
+      "auth": "user",
+      "permissions": [
+        "server:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/servers/{server_id}/roles",
+      "handler": "reorder_roles",
+      "handler_file": "crates/opencorde-api/src/routes/roles.rs",
+      "declared_in": "crates/opencorde-api/src/routes/roles.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MANAGE_ROLES"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/servers/{server_id}/roles",
+      "handler": "create_role",
+      "handler_file": "crates/opencorde-api/src/routes/roles.rs",
+      "declared_in": "crates/opencorde-api/src/routes/roles.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MANAGE_ROLES"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/servers/{server_id}/roles/{role_id}",
+      "handler": "delete_role",
+      "handler_file": "crates/opencorde-api/src/routes/roles.rs",
+      "declared_in": "crates/opencorde-api/src/routes/roles.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MANAGE_ROLES"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/servers/{server_id}/roles/{role_id}",
+      "handler": "update_role",
+      "handler_file": "crates/opencorde-api/src/routes/roles.rs",
+      "declared_in": "crates/opencorde-api/src/routes/roles.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MANAGE_ROLES"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/servers/{server_id}/soundboard",
+      "handler": "list_sounds",
+      "handler_file": "crates/opencorde-api/src/routes/soundboard.rs",
+      "declared_in": "crates/opencorde-api/src/routes/soundboard.rs",
+      "auth": "user",
+      "permissions": [
+        "server:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/servers/{server_id}/soundboard",
+      "handler": "create_sound",
+      "handler_file": "crates/opencorde-api/src/routes/soundboard.rs",
+      "declared_in": "crates/opencorde-api/src/routes/soundboard.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MANAGE_GUILD_EXPRESSIONS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/servers/{server_id}/soundboard/{sound_id}",
+      "handler": "delete_sound",
+      "handler_file": "crates/opencorde-api/src/routes/soundboard.rs",
+      "declared_in": "crates/opencorde-api/src/routes/soundboard.rs",
+      "auth": "user",
+      "permissions": [
+        "server:MANAGE_GUILD_EXPRESSIONS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/servers/{server_id}/soundboard/{sound_id}/play",
+      "handler": "play_sound",
+      "handler_file": "crates/opencorde-api/src/routes/soundboard.rs",
+      "declared_in": "crates/opencorde-api/src/routes/soundboard.rs",
+      "auth": "user",
+      "permissions": [
+        "server:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/threads/{thread_id}",
+      "handler": "get_thread",
+      "handler_file": "crates/opencorde-api/src/routes/threads/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/threads/handlers.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/threads/{thread_id}/messages",
+      "handler": "list_thread_messages",
+      "handler_file": "crates/opencorde-api/src/routes/threads/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/threads/handlers.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:READ_MESSAGE_HISTORY",
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/threads/{thread_id}/messages",
+      "handler": "send_thread_message",
+      "handler_file": "crates/opencorde-api/src/routes/threads/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/threads/handlers.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:SEND_MESSAGES_IN_THREADS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/unfurl",
+      "handler": "unfurl",
+      "handler_file": "crates/opencorde-api/src/routes/unfurl.rs",
+      "declared_in": "crates/opencorde-api/src/routes/unfurl.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/users/@me",
+      "handler": "delete::delete_account",
+      "handler_file": "crates/opencorde-api/src/routes/users/delete.rs",
+      "declared_in": "crates/opencorde-api/src/routes/users/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/@me",
+      "handler": "get::get_me",
+      "handler_file": "crates/opencorde-api/src/routes/users/get.rs",
+      "declared_in": "crates/opencorde-api/src/routes/users/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/users/@me",
+      "handler": "update::update_me",
+      "handler_file": "crates/opencorde-api/src/routes/users/update.rs",
+      "declared_in": "crates/opencorde-api/src/routes/users/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/users/@me/avatar",
+      "handler": "upload_avatar",
+      "handler_file": "crates/opencorde-api/src/routes/users/avatar.rs",
+      "declared_in": "crates/opencorde-api/src/routes/users/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/@me/channels",
+      "handler": "handlers::list_dms",
+      "handler_file": "crates/opencorde-api/src/routes/dms/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/dms/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/users/@me/channels",
+      "handler": "handlers::open_dm",
+      "handler_file": "crates/opencorde-api/src/routes/dms/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/dms/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/@me/export",
+      "handler": "export_user_data",
+      "handler_file": "crates/opencorde-api/src/routes/data_export.rs",
+      "declared_in": "crates/opencorde-api/src/routes/data_export.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/@me/notification-settings",
+      "handler": "list_settings",
+      "handler_file": "crates/opencorde-api/src/routes/notification_settings.rs",
+      "declared_in": "crates/opencorde-api/src/routes/notification_settings.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/@me/read-states",
+      "handler": "get_user_read_states",
+      "handler_file": "crates/opencorde-api/src/routes/read_state.rs",
+      "declared_in": "crates/opencorde-api/src/routes/read_state.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/users/me/key-packages",
+      "handler": "delete_all_key_packages",
+      "handler_file": "crates/opencorde-api/src/routes/e2ee/key_packages.rs",
+      "declared_in": "crates/opencorde-api/src/routes/e2ee/key_packages.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/users/me/key-packages",
+      "handler": "upload_key_package",
+      "handler_file": "crates/opencorde-api/src/routes/e2ee/key_packages.rs",
+      "declared_in": "crates/opencorde-api/src/routes/e2ee/key_packages.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/search",
+      "handler": "search::search_users",
+      "handler_file": "crates/opencorde-api/src/routes/friends/search.rs",
+      "declared_in": "crates/opencorde-api/src/routes/friends/mod.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/{id}",
+      "handler": "get::get_user_profile",
+      "handler_file": "crates/opencorde-api/src/routes/users/get.rs",
+      "declared_in": "crates/opencorde-api/src/routes/users/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/{user_id}/key-packages/one",
+      "handler": "consume_key_package",
+      "handler_file": "crates/opencorde-api/src/routes/e2ee/key_packages.rs",
+      "declared_in": "crates/opencorde-api/src/routes/e2ee/key_packages.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/voice/join",
+      "handler": "handlers::join_voice",
+      "handler_file": "crates/opencorde-api/src/routes/voice/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/voice/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:CONNECT"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/voice/leave",
+      "handler": "handlers::leave_voice",
+      "handler_file": "crates/opencorde-api/src/routes/voice/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/voice/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/voice/participants/{channel_id}",
+      "handler": "handlers::get_participants",
+      "handler_file": "crates/opencorde-api/src/routes/voice/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/voice/mod.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:CONNECT"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/voice/state",
+      "handler": "handlers::update_voice_state",
+      "handler_file": "crates/opencorde-api/src/routes/voice/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/voice/mod.rs",
+      "auth": "user",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/webhooks/{token}/execute",
+      "handler": "execute_webhook",
+      "handler_file": "crates/opencorde-api/src/routes/webhooks.rs",
+      "declared_in": "crates/opencorde-api/src/routes/webhooks.rs",
+      "auth": "public",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/webhooks/{webhook_id}",
+      "handler": "delete_webhook",
+      "handler_file": "crates/opencorde-api/src/routes/webhooks.rs",
+      "declared_in": "crates/opencorde-api/src/routes/webhooks.rs",
+      "auth": "user",
+      "permissions": [
+        "channel:MANAGE_WEBHOOKS"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true
+    }
+  ]
+}

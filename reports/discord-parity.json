@@ -99,6 +99,11 @@
       "note": "Live admin stats API and /admin browser proof for the LiveKit Health panel, with screenshot at reports/parity-screenshots/admin-livekit-health.png."
     },
     {
+      "path": "reports/raw/route-inventory.json",
+      "type": "audit",
+      "note": "Generated route inventory: every Axum endpoint with method, path, handler, auth class, and detected permission gates. Produced by scripts/route_inventory.py."
+    },
+    {
       "path": "tasks-future.md",
       "type": "legacy_claims",
       "note": "Legacy task list marks many Discord-like features complete; now explicitly labeled as an implementation log, not parity proof."
@@ -221,22 +226,25 @@
         "Live Playwright UI proof now confirms private-channel hidden/visible behavior, channel permission override rendering, and role create/rename/delete from server settings.",
         "Batch role reorder API now exists and validates role hierarchy before changing positions.",
         "Role assign/unassign now checks target member hierarchy, so managers cannot change roles on same-position or higher members.",
-        "Manager-gated server and channel effective permission inspector endpoints now return bitfields and permission names."
+        "Manager-gated server and channel effective permission inspector endpoints now return bitfields and permission names.",
+        "Generated route inventory at reports/raw/route-inventory.json now lists every Axum endpoint with method, path, auth class, and detected permission gates; covers 169 endpoints across 126 unique paths."
       ],
       "gaps": [
         "Discord overwrite resolution behavior has core precedence tests plus live API and UI private-channel proof, but still needs a broader matrix.",
         "Role and override UI has first workflow proof, but batch reorder and effective permission inspector UI remain unproven.",
-        "UI proof for batch role reordering/effective permission inspection and full MLS lifecycle proof still need work."
+        "UI proof for batch role reordering/effective permission inspection and full MLS lifecycle proof still need work.",
+        "Route inventory shows 60 authenticated endpoints with no detected permission/admin/verification gate — this is a candidate audit list, not all are gaps but each needs review."
       ],
       "next_todos": [
         "Add test matrix for owner/admin/mod/member/muted/banned users.",
-        "Audit every route for required permission.",
+        "Triage the 60 'auth-only' routes from route-inventory.json: confirm intentional vs add missing gates.",
         "Add regression tests for non-member denial and high-risk channel-scoped routes."
       ],
       "proof_required": [
         "Permission matrix report",
         "API denial tests",
         "reports/raw/permissions-ui-proof.json",
+        "reports/raw/route-inventory.json",
         "reports/parity-screenshots/permissions-ui/",
         "docs/audits/2026-04-28-permission-route-audit.md"
       ]
@@ -348,7 +356,7 @@
     }
   ],
   "next_session_focus": [
-    "Add route inventory JSON generated from Axum route declarations and permission annotations.",
+    "Triage the 60 auth-only routes from reports/raw/route-inventory.json and add gates where missing.",
     "Start the Playwright parity harness for messaging and roles.",
     "Document Emma Bot credentials and test protocol without exposing secrets."
   ]
