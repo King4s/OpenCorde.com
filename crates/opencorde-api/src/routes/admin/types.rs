@@ -59,8 +59,8 @@ pub struct AdminUserRow {
     pub id: String,
     /// Username
     pub username: String,
-    /// Email address
-    pub email: String,
+    /// Email address, if one is set on the account.
+    pub email: Option<String>,
     /// Account creation time
     pub created_at: chrono::DateTime<chrono::Utc>,
 }

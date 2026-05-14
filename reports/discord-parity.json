@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-29",
+  "generated_at": "2026-05-14",
   "repo": {
     "name": "King4s/OpenCorde.com",
     "url": "https://github.com/King4s/OpenCorde.com",
@@ -87,6 +87,11 @@
       "path": "reports/raw/livekit-health.json",
       "type": "qa",
       "note": "LiveKit local and public proxy health smoke."
+    },
+    {
+      "path": "reports/raw/admin-livekit-health-ui.json",
+      "type": "qa",
+      "note": "Live admin stats API and /admin browser proof for the LiveKit Health panel, with screenshot at reports/parity-screenshots/admin-livekit-health.png."
     },
     {
       "path": "tasks-future.md",
@@ -264,6 +269,7 @@
         "Stage RTC publish grants now require both channel `SPEAK` and current stage participant role `speaker`; audience and demoted users get subscribe-only refreshed tokens.",
         "LiveKit local service and public proxy health checks pass.",
         "Admin stats now include LiveKit local and public proxy health for instance reporting.",
+        "Live /admin browser proof confirms the LiveKit Health panel renders Local and Public Proxy rows with OK status.",
         "2026-05-11 GitHub commit f9c6a76 improved voice speaking indicators, guarded rapid join races, and changed voice leave to 204."
       ],
       "gaps": [
@@ -275,11 +281,12 @@
         "Create two-client voice Playwright/manual checklist.",
         "Prove stage audience-to-speaker flow.",
         "Add voice permission denial tests.",
-        "Prove stage RTC token refresh after promotion/demotion from the UI.",
-        "Add Playwright/manual proof for the admin dashboard LiveKit health surface."
+        "Prove stage RTC token refresh after promotion/demotion from the UI."
       ],
       "proof_required": [
         "LiveKit health output",
+        "reports/raw/admin-livekit-health-ui.json",
+        "reports/parity-screenshots/admin-livekit-health.png",
         "Two-client voice evidence",
         "Stage lifecycle evidence"
       ]
@@ -335,7 +342,6 @@
     }
   ],
   "next_session_focus": [
-    "Add Playwright/manual proof that the admin dashboard surfaces LiveKit local and public proxy health.",
     "Add Playwright UI proof for private-channel and role-management workflows.",
     "Add route inventory JSON generated from Axum route declarations and permission annotations.",
     "Start the Playwright parity harness for messaging and roles.",

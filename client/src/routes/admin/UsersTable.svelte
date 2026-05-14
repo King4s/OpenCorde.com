@@ -51,7 +51,7 @@
 					{#each users as user (user.id)}
 						<tr class="border-b border-gray-700 hover:bg-gray-700/50 transition">
 							<td class="px-4 py-3 text-white font-medium">{user.username}</td>
-							<td class="px-4 py-3 text-gray-300">{user.email}</td>
+							<td class="px-4 py-3 text-gray-300">{user.email ?? 'No email'}</td>
 							<td class="px-4 py-3 text-gray-400 text-xs">{formatDate(user.created_at)}</td>
 							<td class="px-4 py-3 text-center">
 								<button

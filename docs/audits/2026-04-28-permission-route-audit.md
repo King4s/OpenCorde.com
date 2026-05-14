@@ -208,4 +208,4 @@ Permission smoke coverage:
 
 - Add Playwright UI proof for private-channel and role-management workflows.
 - Add route inventory JSON generated from Axum route declarations and permission annotations.
-- Add Playwright/manual proof that the admin dashboard surfaces LiveKit local and public proxy health.
+- Keep the admin LiveKit health browser proof current when `/admin` or instance stats change.

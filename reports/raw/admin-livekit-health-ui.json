@@ -1,0 +1,44 @@
+{
+  "ok": true,
+  "base": "https://opencorde.com",
+  "auth": {
+    "method": "short_lived_jwt_from_local_env",
+    "adminIdConfigured": true,
+    "tokenStoredInReport": false
+  },
+  "api": {
+    "ok": true,
+    "status": 200,
+    "livekitHealth": {
+      "ok": true,
+      "local": {
+        "url": "http://localhost:7880/",
+        "ok": true,
+        "status": 200,
+        "latency_ms": 29,
+        "error": null
+      },
+      "public": {
+        "url": "https://opencorde.com/livekit",
+        "ok": true,
+        "status": 200,
+        "latency_ms": 36,
+        "error": null
+      }
+    }
+  },
+  "browser": {
+    "url": "https://opencorde.com/admin",
+    "status": 200,
+    "livekitPanelVisible": true,
+    "localRowVisible": true,
+    "publicProxyRowVisible": true,
+    "okLabelCount": 8,
+    "containsToken": false,
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "screenshot": "reports/parity-screenshots/admin-livekit-health.png",
+    "ok": true
+  }
+}

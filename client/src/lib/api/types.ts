@@ -189,7 +189,7 @@ export interface RateLimitConfig {
 export interface AdminUserRow {
   id: string;
   username: string;
-  email: string;
+  email: string | null;
   created_at: string;
 }
 
