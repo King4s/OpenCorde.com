@@ -4,7 +4,7 @@
 	 * @purpose List, add, edit, and delete channel permission overrides
 	 */
 	import api from '$lib/api/client';
-	import { roles } from '$lib/stores/roles';
+	import { fetchRoles, roles } from '$lib/stores/roles';
 
 	interface Override {
 		id: string;
@@ -45,6 +45,9 @@
 	// Fetch overrides on mount
 	$effect(() => {
 		loadOverrides();
+		if (spaceId) {
+			fetchRoles(spaceId).catch(() => {});
+		}
 	});
 
 	async function loadOverrides() {

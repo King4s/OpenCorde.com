@@ -1,0 +1,65 @@
+{
+  "ok": true,
+  "base": "https://opencorde.com",
+  "auth": {
+    "ownerMethod": "short_lived_jwt_from_local_env",
+    "limitedMethod": "register_or_login_default_test_account",
+    "tokensStoredInReport": false
+  },
+  "fixture": {
+    "serverId": "292089659817852929",
+    "channelId": "1778756222995601",
+    "channelName": "private-ui-56222995",
+    "allowedRoleId": "1778756222995602",
+    "allowedRoleName": "allow-ui-56222995",
+    "uiManagedRoleName": "managed-ui-56222995"
+  },
+  "browser": {
+    "privateChannel": {
+      "hiddenBeforeRole": true,
+      "visibleAfterRole": true,
+      "channelUrlOpened": true,
+      "screenshots": {
+        "hidden": "reports/parity-screenshots/permissions-ui/private-channel-hidden.png",
+        "visible": "reports/parity-screenshots/permissions-ui/private-channel-visible.png"
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "ignoredFailedRequests": []
+    },
+    "channelPermissions": {
+      "channelName": "private-ui-56222995",
+      "allowedRoleVisible": true,
+      "viewChannelControlVisible": true,
+      "screenshot": "reports/parity-screenshots/permissions-ui/channel-permissions-overrides.png",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "ignoredFailedRequests": []
+    },
+    "roleManagement": {
+      "createdVisible": true,
+      "renamedVisible": true,
+      "deletedFromList": true,
+      "screenshots": {
+        "created": "reports/parity-screenshots/permissions-ui/role-management-created.png",
+        "renamed": "reports/parity-screenshots/permissions-ui/role-management-renamed.png",
+        "deleted": "reports/parity-screenshots/permissions-ui/role-management-deleted.png"
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "ignoredFailedRequests": [
+        {
+          "url": "https://opencorde.com/api/v1/servers/292089659817852929/roles/313268496975003649",
+          "method": "DELETE",
+          "failure": "net::ERR_ABORTED"
+        }
+      ]
+    }
+  },
+  "cleanup": {
+    "temporaryFixturesRemoved": true
+  }
+}

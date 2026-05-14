@@ -142,7 +142,7 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 
 ## Still Open
 
-- Channel overwrite computation still needs Playwright UI proof for private-channel deny/allow workflows.
+- Channel overwrite computation now has first Playwright UI proof for a private-channel deny/allow workflow, but still needs a broader owner/admin/mod/member/muted/banned matrix.
 
 - Role hierarchy still needs deeper Discord parity:
   - UI proof for batch role reordering and effective permission inspector
@@ -160,6 +160,7 @@ This audit started fixing high-risk gaps, but permissions are still not parity-c
 - `python3 browser_test.py`: 26 passed, 0 failed.
 - `scripts/public_qa.py --fail-on-issues`: passed.
 - `scripts/permission_smoke.py`: passed against live API.
+- `scripts/permissions_ui_qa.py --fail-on-issues`: passed against live UI; wrote `reports/raw/permissions-ui-proof.json` and screenshots under `reports/parity-screenshots/permissions-ui/`.
 - `scripts/schema_smoke.py`: passed against live DB; 45 expected tables, 314 expected columns, and 51 applied migrations.
 
 Permission smoke coverage:
@@ -206,6 +207,6 @@ Permission smoke coverage:
 
 ## Next Recommended Fixes
 
-- Add Playwright UI proof for private-channel and role-management workflows.
 - Add route inventory JSON generated from Axum route declarations and permission annotations.
+- Broaden permission UI proof to owner/admin/mod/member/muted/banned role and overwrite workflows.
 - Keep the admin LiveKit health browser proof current when `/admin` or instance stats change.

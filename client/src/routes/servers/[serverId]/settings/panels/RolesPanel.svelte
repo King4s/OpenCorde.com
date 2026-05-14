@@ -114,7 +114,7 @@
   <div class="space-y-1">
     {#each $roles as role (role.id)}
       {#if editingRole?.id === role.id}
-        <div class="flex gap-2 p-2 bg-gray-700/50 rounded">
+        <div class="flex gap-2 p-2 bg-gray-700/50 rounded" data-role-name={role.name}>
           <input
             bind:value={editName}
             maxlength="100"
@@ -136,7 +136,7 @@
           >Cancel</button>
         </div>
       {:else}
-        <div class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700/50 group">
+        <div class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-700/50 group" data-role-name={role.name}>
           <span
             class="w-3 h-3 rounded-full flex-shrink-0"
             style="background-color: {intToHex(role.color)}"

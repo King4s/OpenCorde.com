@@ -74,6 +74,11 @@
       "note": "Live API smoke proving selected non-member denial paths plus private-channel deny/allow overwrite workflows."
     },
     {
+      "path": "reports/raw/permissions-ui-proof.json",
+      "type": "qa",
+      "note": "Live Playwright UI proof that a private channel is hidden until a role is assigned, channel permission overrides show role names, and role create/rename/delete works from server settings."
+    },
+    {
       "path": "reports/raw/schema-smoke.json",
       "type": "qa",
       "note": "Live database schema smoke comparing migrations against applied migrations, tables, and columns."
@@ -213,25 +218,26 @@
         "First-pass hardening now blocks non-members from receiving default permissions in permission_check.",
         "Voice, webhooks, slash commands, onboarding, audit log, threads, uploads, pins, reactions, search, forum, soundboard, recordings, E2EE groups, channel-scoped E2EE key packages, read-state, events, role-listing, role hierarchy, role permission subset checks, moderation target hierarchy, Discord-layered channel overwrite computation, channel list filtering, and channel override route gating received additional permission gates.",
         "Live API smoke now proves a private channel is hidden and denied without the allowed role, then visible and readable after the allowed role is assigned.",
+        "Live Playwright UI proof now confirms private-channel hidden/visible behavior, channel permission override rendering, and role create/rename/delete from server settings.",
         "Batch role reorder API now exists and validates role hierarchy before changing positions.",
         "Role assign/unassign now checks target member hierarchy, so managers cannot change roles on same-position or higher members.",
         "Manager-gated server and channel effective permission inspector endpoints now return bitfields and permission names."
       ],
       "gaps": [
-        "Discord overwrite resolution behavior has core precedence tests and live API private-channel proof, but still needs Playwright UI proof.",
-        "UI may expose role/override surfaces without proving end-to-end enforcement.",
+        "Discord overwrite resolution behavior has core precedence tests plus live API and UI private-channel proof, but still needs a broader matrix.",
+        "Role and override UI has first workflow proof, but batch reorder and effective permission inspector UI remain unproven.",
         "UI proof for batch role reordering/effective permission inspection and full MLS lifecycle proof still need work."
       ],
       "next_todos": [
         "Add test matrix for owner/admin/mod/member/muted/banned users.",
-        "Add Playwright role and private channel workflow.",
         "Audit every route for required permission.",
         "Add regression tests for non-member denial and high-risk channel-scoped routes."
       ],
       "proof_required": [
         "Permission matrix report",
         "API denial tests",
-        "Playwright private channel screenshots",
+        "reports/raw/permissions-ui-proof.json",
+        "reports/parity-screenshots/permissions-ui/",
         "docs/audits/2026-04-28-permission-route-audit.md"
       ]
     },
@@ -342,7 +348,6 @@
     }
   ],
   "next_session_focus": [
-    "Add Playwright UI proof for private-channel and role-management workflows.",
     "Add route inventory JSON generated from Axum route declarations and permission annotations.",
     "Start the Playwright parity harness for messaging and roles.",
     "Document Emma Bot credentials and test protocol without exposing secrets."
