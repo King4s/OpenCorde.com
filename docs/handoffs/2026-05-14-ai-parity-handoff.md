@@ -7,26 +7,24 @@ This file is the first context a new AI agent should read before continuing the 
 - Repository: `King4s/OpenCorde.com`
 - Local path: `/home/mb/opencorde`
 - Branch: `main`
-- Last pushed functional commit before this update: `d1aecc8 audit(routes): generate Axum route inventory with permission gates`
-- Earlier relevant commits: `231d8e8` permissions UI proof, `ae6ed3b` LiveKit health proof, `5dadd96` LiveKit health backend.
+- Last pushed functional commit before this update: `a4bff96 audit(routes): tighten inventory recognizers, surface needs_review list`
+- Earlier relevant commits: `d1aecc8` initial route inventory, `231d8e8` permissions UI proof, `ae6ed3b` LiveKit health proof.
 
-At the time this handoff was updated, the next task was completed locally and should be committed/pushed with this file: tightened route-inventory recognizers (owner/author/member checks + path-shape classification) and a focused needs_review list.
+At the time this handoff was updated, the next task was completed locally and should be committed/pushed with this file: transitive helper resolution in the route inventory generator. The needs_review list narrowed to 14 candidates with 7 likely-real gaps and 7 ambiguous-by-design.
 
 ## What Changed Most Recently
 
-The route-inventory hardening pass completed after `d1aecc8`:
+The inventory recognizer pass completed after `a4bff96`:
 
-- `scripts/route_inventory.py` (schema bumped to v2) now also detects inline `owner_id == auth.user_id` and `author_id == auth.user_id` checks plus caller-`member_repo::get_member` lookups, and classifies each route's `path_kind` (own_resource, admin, auth, federation, mesh, infrastructure, generic).
-- Own-resource paths now include `/@me`, `/me/`, `/api/v1/friends`, `/api/v1/push/`. Infrastructure includes `/api/v1/health`, `/api/v1/gateway`, `/api/v1/unfurl`.
-- Inventory output gained a top-level `needs_review_routes` list and `summary.needs_review` count: 27 routes (down from 60 in the first pass) where auth=user, path_kind=generic, and no permission/admin/owner/author/member/verification gate was detected.
-- `reports/discord-parity.json` updated to reflect the schema v2, the smaller needs_review list, and a per-surface gap breakdown so the next agent can pick a slice without rereading the inventory.
+- `scripts/route_inventory.py` now recognizes named-helper gates (`check_server_owner`, `is_dm_member`) and resolves wrapper helpers transitively. Scope: same file + same directory. The handler's own fn name is excluded so a signature can't lift gates onto itself. Same-dir scope is what makes the `events/rsvp.rs` → `events/handlers.rs::require_event_visible` pattern light up without name collisions bleeding across unrelated modules like `admin/`.
+- File-scoped resolution fixed a false positive: previously the user `list_servers` in `servers/handlers/crud.rs` inherited the admin flag from the admin `list_servers` in `admin/handlers.rs` because of a name collision.
+- `needs_review` dropped from 27 to 14. Of those 14, 7 are likely real gate gaps and 7 are intentionally auth-only by Discord-style design (caller-implicit own state or open fetch).
 
 Functional files to inspect first:
 
-- `scripts/route_inventory.py`
-- `reports/raw/route-inventory.json` (regenerated)
-- `reports/discord-parity.json` (roles_permissions area + next_session_focus)
-- `crates/opencorde-api/src/routes/permission_check.rs` (the helpers the inventory looks for)
+- `scripts/route_inventory.py` (the `transitive_annotations` + `visible_helpers` functions)
+- `reports/raw/route-inventory.json` (regenerated; `needs_review_routes` is the triage list)
+- `reports/discord-parity.json` (roles_permissions area enumerates the 7+7 split)
 
 ## Verification Already Run
 
@@ -39,7 +37,7 @@ python3 -m json.tool reports/discord-parity.json >/dev/null
 python3 -m json.tool reports/raw/route-inventory.json >/dev/null
 ```
 
-Inventory totals: 169 endpoints, 0 unresolved handlers, by auth class admin=7 / user=144 / public=18, by path kind generic=120 / own_resource=19 / auth=12 / admin=7 / mesh=4 / federation=4 / infrastructure=3, needs_review=27.
+Inventory totals: 169 endpoints, 0 unresolved handlers, by auth class admin=7 / user=144 / public=18, by path kind generic=120 / own_resource=19 / auth=12 / admin=7 / mesh=4 / federation=4 / infrastructure=3, needs_review=14.
 
 ## GitHub Issue Map
 
@@ -58,17 +56,16 @@ Issue `#5` should reference `reports/raw/route-inventory.json` (`needs_review_ro
 
 Recommended order for the next agent:
 
-1. Walk the `needs_review_routes` list in `reports/raw/route-inventory.json` and add gates. Suggested groupings:
-   - **Server admin (likely MANAGE_SERVER)**: bridge mappings (POST/PATCH/DELETE/GET on `/api/v1/servers/{server_id}/bridge/mappings*`), automod read (`GET /api/v1/servers/{server_id}/automod`), discovery patch (`PATCH /api/v1/servers/{id}/discovery`).
-   - **Emojis (MANAGE_GUILD_EXPRESSIONS)**: GET/POST `/api/v1/servers/{id}/emojis`, DELETE `/api/v1/servers/{id}/emojis/{emoji_id}`.
-   - **Events**: server-membership for read+RSVP, MANAGE_EVENTS for create/edit/delete (5 routes under `/api/v1/events/{event_id}*`).
-   - **DMs**: participant check on `GET/POST /api/v1/channels/@dms/{dm_id}/messages`.
-   - **Members**: VIEW server perm on `GET /api/v1/servers/{server_id}/members`; MANAGE_NICKNAMES/MANAGE_ROLES on `PATCH /api/v1/servers/{server_id}/members/{user_id}`.
-   - **Channel notification settings** (PUT/DELETE `/api/v1/channels/{id}/notification-settings`): VIEW_CHANNEL or server membership.
-   - **Voice/stage** (`POST /api/v1/voice/leave`, `PATCH /api/v1/voice/state`, `DELETE /api/v1/channels/{channel_id}/stage/leave`): own-state but cross-checked against current LiveKit/voice presence.
-   - **Ambiguous-by-design** (intentional auth-only): `GET /api/v1/servers` (caller's own server list), `POST /api/v1/servers` (anyone authed can create), `GET /api/v1/servers/{id}` (consider membership or document open-by-design), `GET /api/v1/users/{id}` (Discord allows for any authed user).
-2. After each gate added, regenerate the inventory and confirm `needs_review` shrinks.
-3. Add API smoke coverage for each new gate in `scripts/permission_smoke.py` (denial path).
+1. **Fix the 7 likely-real gaps**, one route at a time, regenerating the inventory after each:
+   - `GET /api/v1/servers/{server_id}/automod` — handler `list_rules` in `routes/automod/handlers.rs` has a comment "no permission check needed for viewing rules". This is a misjudgment: rule keyword lists are sensitive. Add `permission_check::require_server_perm(.., Permissions::MANAGE_SERVER)` to match the other automod handlers.
+   - `GET /api/v1/servers/{id}` — `get_server` in `routes/servers/handlers/crud.rs`. Add `permission_check::require_server_perm(.., Permissions::VIEW_CHANNEL)` (or equivalent membership check).
+   - `GET /api/v1/servers/{id}/emojis` — `routes/emojis.rs`. Same membership gate.
+   - `GET /api/v1/servers/{server_id}/members` — `routes/members.rs`. Membership gate.
+   - `PATCH /api/v1/servers/{server_id}/members/{user_id}` — `routes/members.rs`. Gate on `MANAGE_NICKNAMES` (self-rename) or `MANAGE_ROLES` (other-rename). Check `require_member_below_actor` is in place when target is not self.
+   - `PATCH /api/v1/servers/{id}/discovery` — `routes/discovery.rs`. Add `MANAGE_SERVER`.
+   - `PUT /api/v1/channels/{id}/notification-settings` and `DELETE /api/v1/channels/{id}/notification-settings` — `routes/notification_settings.rs`. Decide: per-user per-channel preferences are caller-implicit; the gate should be "user must be able to see this channel" → `VIEW_CHANNEL`.
+2. For each gate added, add an API denial smoke test in `scripts/permission_smoke.py`.
+3. After all 7 are gated, the only `needs_review_routes` left should be the 7 ambiguous-by-design entries: `GET /api/v1/servers`, `POST /api/v1/servers`, `GET /api/v1/users/{id}`, `POST /api/v1/voice/leave`, `PATCH /api/v1/voice/state`, `DELETE /api/v1/channels/{channel_id}/stage/leave`. Either accept those as final and document them, or push back to the inventory by widening `path_kind`.
 4. Start the Playwright parity harness for messaging and roles.
 5. Document Emma Bot credentials and test protocol without exposing secrets.
 6. Two-client voice Playwright/manual checklist.
@@ -77,7 +74,7 @@ Recommended order for the next agent:
 
 Best immediate task:
 
-Pick the bridge-mappings group (4 routes, all under `/api/v1/servers/{server_id}/bridge/mappings*`). Add `permission_check::require_server_perm(.., Permissions::MANAGE_SERVER)` at the top of each handler in `crates/opencorde-api/src/routes/bridge.rs`, add a denial smoke test in `scripts/permission_smoke.py`, regenerate the inventory, and verify `needs_review` drops by 4.
+Gate `list_rules` in `crates/opencorde-api/src/routes/automod/handlers.rs` with `permission_check::require_server_perm(.., Permissions::MANAGE_SERVER)` to match the other automod handlers; remove the misleading "no permission check needed" comment. Add a denial smoke in `scripts/permission_smoke.py`. Regenerate inventory; confirm `needs_review` drops by 1.
 
 ## Caution
 

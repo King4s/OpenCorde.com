@@ -47,6 +47,14 @@ OWNER_PATTERN = re.compile(r"owner_id\s*(?:!=|==)\s*auth\.user_id")
 AUTHOR_PATTERN = re.compile(r"author_id\s*(?:!=|==)\s*auth\.user_id")
 # Membership lookups gated on the caller (not on a target user).
 MEMBER_PATTERN = re.compile(r"member_repo::get_member\s*\(\s*[^,]+,\s*auth\.user_id\b")
+# Named helpers whose semantics are gate-equivalent.
+NAMED_GATES = {
+    "check_server_owner": "owner_check",
+    "is_dm_member": "dm_participant",
+}
+NAMED_GATE_PATTERNS = {
+    flag: re.compile(rf"\b{re.escape(name)}\s*\(") for name, flag in NAMED_GATES.items()
+}
 
 
 def resolve_module(parent: Path, mod_name: str) -> Path | None:
@@ -346,6 +354,9 @@ def extract_perms(body: str) -> dict:
         flags.append("author_check")
     if MEMBER_PATTERN.search(body):
         flags.append("member_check")
+    for flag, pat in NAMED_GATE_PATTERNS.items():
+        if pat.search(body):
+            flags.append(flag)
     auth_required = bool(re.search(r"\bAuthUser\b", body))
     return {
         "permissions": sorted(set(perms)),
@@ -397,6 +408,60 @@ def needs_review(route: dict) -> bool:
     return True
 
 
+def merge_annotations(a: dict, b: dict) -> dict:
+    """Merge a second annotation block into the first (returns a new dict)."""
+    return {
+        "permissions": sorted(set(a["permissions"] + b["permissions"])),
+        "inspects_effective": sorted(set(a["inspects_effective"] + b["inspects_effective"])),
+        "flags": sorted(set(a["flags"] + b["flags"])),
+        "auth_required": a["auth_required"] or b["auth_required"],
+    }
+
+
+def visible_helpers(
+    handler_file: Path,
+    file_fns: dict[Path, dict[str, dict]],
+) -> dict[str, dict]:
+    """Return helper gates visible from `handler_file`: same file + same directory.
+
+    Same-dir scope catches `super::helper` patterns (events/rsvp.rs reaching
+    helpers in events/handlers.rs) without bleeding gates in from unrelated
+    modules like admin/. On name collision the handler's own file wins.
+    """
+    siblings_dir = handler_file.parent
+    out: dict[str, dict] = {}
+    out.update(file_fns.get(handler_file, {}))
+    for f, fns in file_fns.items():
+        if f == handler_file or f.parent != siblings_dir:
+            continue
+        for name, gates in fns.items():
+            out.setdefault(name, gates)
+    return out
+
+
+def transitive_annotations(
+    body: str,
+    fn_name: str,
+    handler_file: Path,
+    file_fns: dict[Path, dict[str, dict]],
+) -> dict:
+    """Lift gates from local helpers the body calls, scoped to same-dir siblings.
+
+    The handler's own name is excluded so a fn's signature can't lift gates
+    onto itself.
+    """
+    annotations = extract_perms(body)
+    helpers = visible_helpers(handler_file, file_fns)
+    for helper_name, helper_gates in helpers.items():
+        if helper_name == fn_name:
+            continue
+        if not (helper_gates["permissions"] or helper_gates["flags"]):
+            continue
+        if re.search(rf"\b{re.escape(helper_name)}\s*\(", body):
+            annotations = merge_annotations(annotations, helper_gates)
+    return annotations
+
+
 def build_inventory() -> dict:
     visited: set[Path] = set()
     for entry in ENTRY_POINTS:
@@ -404,6 +469,14 @@ def build_inventory() -> dict:
     files = sorted(visited)
     handlers = index_handlers(files)
     raw_routes = collect_routes(files)
+
+    # Pre-compute direct gates for every fn, keyed by file then name.
+    # This makes transitive resolution scoped to siblings in the same file,
+    # so same-name fns in unrelated modules can't bleed gates into each other.
+    file_fns: dict[Path, dict[str, dict]] = defaultdict(dict)
+    for name, candidates in handlers.items():
+        for file_path, body in candidates:
+            file_fns[file_path][name] = extract_perms(body)
 
     inventory: list[dict] = []
     seen: set[tuple[str, str]] = set()
@@ -424,7 +497,9 @@ def build_inventory() -> dict:
                 handler_file = None
             else:
                 handler_file, body = resolved
-                annotations = extract_perms(body)
+                annotations = transitive_annotations(
+                    body, handler_ref.split("::")[-1], handler_file, file_fns
+                )
             entry = {
                 "method": method,
                 "path": r["path"],

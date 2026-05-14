@@ -46,35 +46,26 @@
       "channel:REQUEST_TO_SPEAK": 1,
       "channel:SEND_MESSAGES": 8,
       "channel:SEND_MESSAGES_IN_THREADS": 1,
-      "channel:SPEAK": 2,
+      "channel:SPEAK": 4,
       "channel:USE_APPLICATION_COMMANDS": 1,
-      "channel:VIEW_CHANNEL": 30,
+      "channel:VIEW_CHANNEL": 34,
       "server:BAN_MEMBERS": 3,
       "server:CREATE_EVENTS": 1,
       "server:CREATE_INVITE": 2,
       "server:KICK_MEMBERS": 1,
       "server:MANAGE_CHANNELS": 1,
+      "server:MANAGE_EVENTS": 2,
       "server:MANAGE_GUILD_EXPRESSIONS": 2,
       "server:MANAGE_ROLES": 7,
       "server:MANAGE_SERVER": 4,
       "server:MODERATE_MEMBERS": 2,
       "server:VIEW_AUDIT_LOG": 1,
-      "server:VIEW_CHANNEL": 8
+      "server:VIEW_CHANNEL": 11
     },
     "unresolved_handlers": 0,
-    "needs_review": 27
+    "needs_review": 14
   },
   "needs_review_routes": [
-    {
-      "method": "GET",
-      "path": "/api/v1/channels/@dms/{dm_id}/messages",
-      "handler_file": "crates/opencorde-api/src/routes/dms/handlers.rs"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/channels/@dms/{dm_id}/messages",
-      "handler_file": "crates/opencorde-api/src/routes/dms/handlers.rs"
-    },
     {
       "method": "DELETE",
       "path": "/api/v1/channels/{channel_id}/stage/leave",
@@ -89,31 +80,6 @@
       "method": "PUT",
       "path": "/api/v1/channels/{id}/notification-settings",
       "handler_file": "crates/opencorde-api/src/routes/notification_settings.rs"
-    },
-    {
-      "method": "DELETE",
-      "path": "/api/v1/events/{event_id}",
-      "handler_file": "crates/opencorde-api/src/routes/events/handlers.rs"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/events/{event_id}",
-      "handler_file": "crates/opencorde-api/src/routes/events/handlers.rs"
-    },
-    {
-      "method": "PATCH",
-      "path": "/api/v1/events/{event_id}",
-      "handler_file": "crates/opencorde-api/src/routes/events/handlers.rs"
-    },
-    {
-      "method": "DELETE",
-      "path": "/api/v1/events/{event_id}/rsvp",
-      "handler_file": "crates/opencorde-api/src/routes/events/rsvp.rs"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/events/{event_id}/rsvp",
-      "handler_file": "crates/opencorde-api/src/routes/events/rsvp.rs"
     },
     {
       "method": "GET",
@@ -141,39 +107,9 @@
       "handler_file": "crates/opencorde-api/src/routes/emojis.rs"
     },
     {
-      "method": "POST",
-      "path": "/api/v1/servers/{id}/emojis",
-      "handler_file": "crates/opencorde-api/src/routes/emojis.rs"
-    },
-    {
-      "method": "DELETE",
-      "path": "/api/v1/servers/{id}/emojis/{emoji_id}",
-      "handler_file": "crates/opencorde-api/src/routes/emojis.rs"
-    },
-    {
       "method": "GET",
       "path": "/api/v1/servers/{server_id}/automod",
       "handler_file": "crates/opencorde-api/src/routes/automod/handlers.rs"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/servers/{server_id}/bridge/mappings",
-      "handler_file": "crates/opencorde-api/src/routes/bridge.rs"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/servers/{server_id}/bridge/mappings",
-      "handler_file": "crates/opencorde-api/src/routes/bridge.rs"
-    },
-    {
-      "method": "DELETE",
-      "path": "/api/v1/servers/{server_id}/bridge/mappings/{mapping_id}",
-      "handler_file": "crates/opencorde-api/src/routes/bridge.rs"
-    },
-    {
-      "method": "PATCH",
-      "path": "/api/v1/servers/{server_id}/bridge/mappings/{mapping_id}",
-      "handler_file": "crates/opencorde-api/src/routes/bridge.rs"
     },
     {
       "method": "GET",
@@ -524,9 +460,11 @@
       "path_kind": "generic",
       "permissions": [],
       "inspects_effective": [],
-      "flags": [],
+      "flags": [
+        "dm_participant"
+      ],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "POST",
@@ -538,9 +476,11 @@
       "path_kind": "generic",
       "permissions": [],
       "inspects_effective": [],
-      "flags": [],
+      "flags": [
+        "dm_participant"
+      ],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "POST",
@@ -1167,11 +1107,13 @@
       "declared_in": "crates/opencorde-api/src/routes/events/handlers.rs",
       "auth": "user",
       "path_kind": "generic",
-      "permissions": [],
+      "permissions": [
+        "server:MANAGE_EVENTS"
+      ],
       "inspects_effective": [],
       "flags": [],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "GET",
@@ -1181,11 +1123,14 @@
       "declared_in": "crates/opencorde-api/src/routes/events/handlers.rs",
       "auth": "user",
       "path_kind": "generic",
-      "permissions": [],
+      "permissions": [
+        "channel:VIEW_CHANNEL",
+        "server:VIEW_CHANNEL"
+      ],
       "inspects_effective": [],
       "flags": [],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "PATCH",
@@ -1195,11 +1140,13 @@
       "declared_in": "crates/opencorde-api/src/routes/events/handlers.rs",
       "auth": "user",
       "path_kind": "generic",
-      "permissions": [],
+      "permissions": [
+        "server:MANAGE_EVENTS"
+      ],
       "inspects_effective": [],
       "flags": [],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "DELETE",
@@ -1209,11 +1156,14 @@
       "declared_in": "crates/opencorde-api/src/routes/events/handlers.rs",
       "auth": "user",
       "path_kind": "generic",
-      "permissions": [],
+      "permissions": [
+        "channel:VIEW_CHANNEL",
+        "server:VIEW_CHANNEL"
+      ],
       "inspects_effective": [],
       "flags": [],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "POST",
@@ -1223,11 +1173,14 @@
       "declared_in": "crates/opencorde-api/src/routes/events/handlers.rs",
       "auth": "user",
       "path_kind": "generic",
-      "permissions": [],
+      "permissions": [
+        "channel:VIEW_CHANNEL",
+        "server:VIEW_CHANNEL"
+      ],
       "inspects_effective": [],
       "flags": [],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "POST",
@@ -1437,7 +1390,8 @@
       "auth": "user",
       "path_kind": "generic",
       "permissions": [
-        "channel:CONNECT"
+        "channel:CONNECT",
+        "channel:SPEAK"
       ],
       "inspects_effective": [],
       "flags": [],
@@ -1596,7 +1550,9 @@
         "channel:VIEW_CHANNEL"
       ],
       "inspects_effective": [],
-      "flags": [],
+      "flags": [
+        "author_check"
+      ],
       "auth_required": true,
       "needs_review": false
     },
@@ -1673,7 +1629,9 @@
         "channel:VIEW_CHANNEL"
       ],
       "inspects_effective": [],
-      "flags": [],
+      "flags": [
+        "author_check"
+      ],
       "auth_required": true,
       "needs_review": false
     },
@@ -1853,9 +1811,11 @@
       "path_kind": "generic",
       "permissions": [],
       "inspects_effective": [],
-      "flags": [],
+      "flags": [
+        "owner_check"
+      ],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "DELETE",
@@ -1867,9 +1827,11 @@
       "path_kind": "generic",
       "permissions": [],
       "inspects_effective": [],
-      "flags": [],
+      "flags": [
+        "owner_check"
+      ],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "GET",
@@ -1959,9 +1921,11 @@
       "path_kind": "generic",
       "permissions": [],
       "inspects_effective": [],
-      "flags": [],
+      "flags": [
+        "owner_check"
+      ],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "POST",
@@ -1973,9 +1937,11 @@
       "path_kind": "generic",
       "permissions": [],
       "inspects_effective": [],
-      "flags": [],
+      "flags": [
+        "owner_check"
+      ],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "DELETE",
@@ -1987,9 +1953,11 @@
       "path_kind": "generic",
       "permissions": [],
       "inspects_effective": [],
-      "flags": [],
+      "flags": [
+        "owner_check"
+      ],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "PATCH",
@@ -2001,9 +1969,11 @@
       "path_kind": "generic",
       "permissions": [],
       "inspects_effective": [],
-      "flags": [],
+      "flags": [
+        "owner_check"
+      ],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "GET",
@@ -2047,6 +2017,7 @@
       "auth": "user",
       "path_kind": "generic",
       "permissions": [
+        "channel:VIEW_CHANNEL",
         "server:VIEW_CHANNEL"
       ],
       "inspects_effective": [],
@@ -2713,7 +2684,8 @@
       "auth": "user",
       "path_kind": "generic",
       "permissions": [
-        "channel:CONNECT"
+        "channel:CONNECT",
+        "channel:SPEAK"
       ],
       "inspects_effective": [],
       "flags": [],
