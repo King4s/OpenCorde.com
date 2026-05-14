@@ -111,10 +111,13 @@ async fn list_members(
 ) -> Result<Json<Vec<MemberResponse>>, ApiError> {
     tracing::info!("listing server members");
     let server_id = helpers::parse_snowflake(&server_id)?;
-    server_repo::get_by_id(&state.db, server_id)
-        .await
-        .map_err(ApiError::Database)?
-        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
     let members = member_repo::list_with_usernames_by_server(&state.db, server_id)
         .await
         .map_err(ApiError::Database)?;
@@ -191,10 +194,15 @@ async fn update_member(
         return Err(ApiError::Forbidden);
     }
     validate_nickname(req.nickname.as_deref())?;
-    server_repo::get_by_id(&state.db, server_id)
-        .await
-        .map_err(ApiError::Database)?
-        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
+    // Self-only update, but also verify the caller is actually a member of
+    // this server before accepting changes.
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
     let member = member_repo::get_member(&state.db, target_user_id, server_id)
         .await
         .map_err(ApiError::Database)?

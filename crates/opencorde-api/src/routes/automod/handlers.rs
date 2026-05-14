@@ -7,11 +7,13 @@ use axum::{
     http::StatusCode,
     routing::{patch, post},
 };
+use opencorde_core::permissions::Permissions;
 use opencorde_core::snowflake::{Snowflake, SnowflakeGenerator};
 use opencorde_db::repos::{automod_repo, server_repo};
 use tracing::instrument;
 
 use super::super::helpers::parse_snowflake;
+use super::super::permission_check;
 use super::types::{AutomodRuleResponse, CreateAutomodRuleRequest, UpdateAutomodRuleRequest};
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
@@ -118,14 +120,15 @@ async fn list_rules(
     // Parse server ID
     let server_id_sf = parse_snowflake(&server_id)?;
 
-    // Verify server exists (no permission check needed for viewing rules)
-    let _server = server_repo::get_by_id(&state.db, server_id_sf)
-        .await
-        .map_err(|e| {
-            tracing::error!(error = %e, "failed to fetch server");
-            ApiError::Database(e)
-        })?
-        .ok_or(ApiError::NotFound("server not found".to_string()))?;
+    // Rule keyword lists are sensitive (slur lists, moderation strategy);
+    // restrict viewing to users who can edit them.
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id_sf,
+        Permissions::MANAGE_SERVER,
+    )
+    .await?;
 
     // Fetch rules
     let rows = automod_repo::list_by_server(&state.db, server_id_sf)

@@ -23,7 +23,9 @@ use crate::emoji_helpers::{
     is_valid_emoji_name,
 };
 use crate::routes::helpers::parse_snowflake;
+use crate::routes::permission_check;
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
+use opencorde_core::permissions::Permissions;
 
 /// Response body for emoji data.
 #[derive(Debug, Serialize, Deserialize)]
@@ -167,11 +169,18 @@ async fn list_emojis(
     auth: AuthUser,
     Path(server_id): Path<String>,
 ) -> Result<Json<Vec<EmojiResponse>>, ApiError> {
-    let server_id_i64 = parse_snowflake(&server_id)?.as_i64();
+    let server_id_sf = parse_snowflake(&server_id)?;
+    let server_id_i64 = server_id_sf.as_i64();
     tracing::info!(server_id = server_id_i64, "listing emojis");
 
-    // Verify server exists
-    verify_server_exists(&state, server_id_i64).await?;
+    // Server emojis are visible to members only.
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id_sf,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
 
     let rows = opencorde_db::repos::emoji_repo::list_emojis(&state.db, server_id_i64)
         .await
@@ -259,23 +268,6 @@ async fn check_server_owner(
         );
         return Err(ApiError::Forbidden);
     }
-    Ok(())
-}
-
-/// Verify server exists.
-async fn verify_server_exists(state: &AppState, server_id: i64) -> Result<(), ApiError> {
-    let _: (i64,) = sqlx::query_as("SELECT id FROM servers WHERE id = $1")
-        .bind(server_id)
-        .fetch_optional(&state.db)
-        .await
-        .map_err(|e| {
-            tracing::error!(error = %e, "failed to fetch server");
-            ApiError::Database(e)
-        })?
-        .ok_or_else(|| {
-            tracing::warn!(server_id = server_id, "server not found");
-            ApiError::NotFound("server not found".into())
-        })?;
     Ok(())
 }
 

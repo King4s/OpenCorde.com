@@ -8,10 +8,12 @@ use axum::{
     routing::{get, post},
 };
 use opencorde_core::Snowflake;
+use opencorde_core::permissions::Permissions;
 use opencorde_db::repos::{channel_repo, member_repo, server_repo};
 use tracing::instrument;
 
 use crate::routes::moderation::audit_mod::log_mod_action;
+use crate::routes::permission_check;
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use serde_json::json;
 
@@ -173,6 +175,16 @@ async fn get_server(
         })?;
 
     tracing::debug!(server_id = server_id.as_i64(), "parsed server id");
+
+    // Only members can read server details. VIEW_CHANNEL is in default_everyone,
+    // so any current member passes; non-members are rejected by the membership check.
+    permission_check::require_server_perm(
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
 
     let server = server_repo::get_by_id(&state.db, server_id)
         .await

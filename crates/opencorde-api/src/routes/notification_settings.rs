@@ -24,7 +24,10 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 
+use opencorde_core::permissions::Permissions;
+
 use crate::routes::helpers::parse_snowflake;
+use crate::routes::permission_check;
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 
 /// Wire type for the setting stored per (user, channel).
@@ -88,6 +91,15 @@ pub async fn set_setting(
         return Err(ApiError::BadRequest("level must be 0, 1, or 2".into()));
     }
 
+    // Only let users set preferences for channels they can see.
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
+
     sqlx::query(
         "INSERT INTO channel_notification_settings (user_id, channel_id, level, updated_at) \
          VALUES ($1, $2, $3, NOW()) \
@@ -118,6 +130,14 @@ pub async fn reset_setting(
     Path(channel_id_str): Path<String>,
 ) -> Result<StatusCode, ApiError> {
     let channel_id = parse_snowflake(&channel_id_str)?;
+
+    permission_check::require_channel_perm(
+        &state.db,
+        auth.user_id,
+        channel_id,
+        Permissions::VIEW_CHANNEL,
+    )
+    .await?;
 
     sqlx::query("DELETE FROM channel_notification_settings WHERE user_id = $1 AND channel_id = $2")
         .bind(auth.user_id.as_i64())

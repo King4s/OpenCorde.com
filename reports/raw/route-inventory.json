@@ -48,7 +48,7 @@
       "channel:SEND_MESSAGES_IN_THREADS": 1,
       "channel:SPEAK": 4,
       "channel:USE_APPLICATION_COMMANDS": 1,
-      "channel:VIEW_CHANNEL": 34,
+      "channel:VIEW_CHANNEL": 36,
       "server:BAN_MEMBERS": 3,
       "server:CREATE_EVENTS": 1,
       "server:CREATE_INVITE": 2,
@@ -57,29 +57,19 @@
       "server:MANAGE_EVENTS": 2,
       "server:MANAGE_GUILD_EXPRESSIONS": 2,
       "server:MANAGE_ROLES": 7,
-      "server:MANAGE_SERVER": 4,
+      "server:MANAGE_SERVER": 5,
       "server:MODERATE_MEMBERS": 2,
       "server:VIEW_AUDIT_LOG": 1,
-      "server:VIEW_CHANNEL": 11
+      "server:VIEW_CHANNEL": 15
     },
     "unresolved_handlers": 0,
-    "needs_review": 14
+    "needs_review": 6
   },
   "needs_review_routes": [
     {
       "method": "DELETE",
       "path": "/api/v1/channels/{channel_id}/stage/leave",
       "handler_file": "crates/opencorde-api/src/routes/stage/handlers.rs"
-    },
-    {
-      "method": "DELETE",
-      "path": "/api/v1/channels/{id}/notification-settings",
-      "handler_file": "crates/opencorde-api/src/routes/notification_settings.rs"
-    },
-    {
-      "method": "PUT",
-      "path": "/api/v1/channels/{id}/notification-settings",
-      "handler_file": "crates/opencorde-api/src/routes/notification_settings.rs"
     },
     {
       "method": "GET",
@@ -90,36 +80,6 @@
       "method": "POST",
       "path": "/api/v1/servers",
       "handler_file": "crates/opencorde-api/src/routes/servers/handlers/crud.rs"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/servers/{id}",
-      "handler_file": "crates/opencorde-api/src/routes/servers/handlers/crud.rs"
-    },
-    {
-      "method": "PATCH",
-      "path": "/api/v1/servers/{id}/discovery",
-      "handler_file": "crates/opencorde-api/src/routes/discovery.rs"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/servers/{id}/emojis",
-      "handler_file": "crates/opencorde-api/src/routes/emojis.rs"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/servers/{server_id}/automod",
-      "handler_file": "crates/opencorde-api/src/routes/automod/handlers.rs"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/servers/{server_id}/members",
-      "handler_file": "crates/opencorde-api/src/routes/members.rs"
-    },
-    {
-      "method": "PATCH",
-      "path": "/api/v1/servers/{server_id}/members/{user_id}",
-      "handler_file": "crates/opencorde-api/src/routes/members.rs"
     },
     {
       "method": "GET",
@@ -999,11 +959,13 @@
       "declared_in": "crates/opencorde-api/src/routes/notification_settings.rs",
       "auth": "user",
       "path_kind": "generic",
-      "permissions": [],
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
       "inspects_effective": [],
       "flags": [],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "PUT",
@@ -1013,11 +975,13 @@
       "declared_in": "crates/opencorde-api/src/routes/notification_settings.rs",
       "auth": "user",
       "path_kind": "generic",
-      "permissions": [],
+      "permissions": [
+        "channel:VIEW_CHANNEL"
+      ],
       "inspects_effective": [],
       "flags": [],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "POST",
@@ -1703,11 +1667,13 @@
       "declared_in": "crates/opencorde-api/src/routes/servers/handlers/crud.rs",
       "auth": "user",
       "path_kind": "generic",
-      "permissions": [],
+      "permissions": [
+        "server:VIEW_CHANNEL"
+      ],
       "inspects_effective": [],
       "flags": [],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "PATCH",
@@ -1783,9 +1749,11 @@
       "path_kind": "generic",
       "permissions": [],
       "inspects_effective": [],
-      "flags": [],
+      "flags": [
+        "owner_check"
+      ],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "GET",
@@ -1795,11 +1763,13 @@
       "declared_in": "crates/opencorde-api/src/routes/emojis.rs",
       "auth": "user",
       "path_kind": "generic",
-      "permissions": [],
+      "permissions": [
+        "server:VIEW_CHANNEL"
+      ],
       "inspects_effective": [],
       "flags": [],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "POST",
@@ -1841,11 +1811,13 @@
       "declared_in": "crates/opencorde-api/src/routes/automod/handlers.rs",
       "auth": "user",
       "path_kind": "generic",
-      "permissions": [],
+      "permissions": [
+        "server:MANAGE_SERVER"
+      ],
       "inspects_effective": [],
       "flags": [],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "POST",
@@ -2098,11 +2070,13 @@
       "declared_in": "crates/opencorde-api/src/routes/members.rs",
       "auth": "user",
       "path_kind": "generic",
-      "permissions": [],
+      "permissions": [
+        "server:VIEW_CHANNEL"
+      ],
       "inspects_effective": [],
       "flags": [],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "DELETE",
@@ -2128,11 +2102,13 @@
       "declared_in": "crates/opencorde-api/src/routes/members.rs",
       "auth": "user",
       "path_kind": "generic",
-      "permissions": [],
+      "permissions": [
+        "server:VIEW_CHANNEL"
+      ],
       "inspects_effective": [],
       "flags": [],
       "auth_required": true,
-      "needs_review": true
+      "needs_review": false
     },
     {
       "method": "GET",

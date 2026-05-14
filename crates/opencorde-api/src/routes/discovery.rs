@@ -12,7 +12,7 @@
 //! - crate::middleware::auth::AuthUser
 //! - crate::AppState
 
-use crate::routes::helpers::parse_snowflake;
+use crate::routes::helpers::{check_server_owner, parse_snowflake};
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use axum::{
     Json, Router,
@@ -148,7 +148,7 @@ async fn update_discovery(
     let server_id_sf = parse_snowflake(&id)?;
     let server_id = server_id_sf.as_i64();
 
-    // Fetch server and verify ownership
+    // Fetch server owner and verify ownership.
     let server = sqlx::query_as::<_, (i64,)>("SELECT owner_id FROM servers WHERE id = $1")
         .bind(server_id)
         .fetch_optional(&state.db)
@@ -159,13 +159,7 @@ async fn update_discovery(
             ApiError::NotFound("server not found".into())
         })?;
 
-    let owner_id = server.0;
-    let user_id = auth.user_id.as_i64();
-
-    if owner_id != user_id {
-        tracing::warn!(server_id = server_id, "user not server owner");
-        return Err(ApiError::Forbidden);
-    }
+    check_server_owner(auth.user_id, server.0)?;
 
     // Update discovery settings
     sqlx::query(

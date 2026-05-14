@@ -228,18 +228,19 @@
         "Role assign/unassign now checks target member hierarchy, so managers cannot change roles on same-position or higher members.",
         "Manager-gated server and channel effective permission inspector endpoints now return bitfields and permission names.",
         "Generated route inventory at reports/raw/route-inventory.json (schema v2) lists every Axum endpoint with method, path, auth class, path_kind, and detected permission/owner/author/member gates; covers 169 endpoints across 126 unique paths.",
-        "Inventory recognizers now classify own-resource paths (/@me, /me/, /friends, /push), detect inline owner/author/member checks, recognize named gate helpers (check_server_owner, is_dm_member), and resolve same-directory helper calls transitively so wrappers like require_event_visible lift gates onto their callers. The focused needs_review list is now 14 routes (down from 60 in the first pass)."
+        "Inventory recognizers now classify own-resource paths (/@me, /me/, /friends, /push), detect inline owner/author/member checks, recognize named gate helpers (check_server_owner, is_dm_member), and resolve same-directory helper calls transitively so wrappers like require_event_visible lift gates onto their callers.",
+        "All 7 of the previous likely-real gaps are now gated and the build + 215 lib tests pass: list_rules in automod (MANAGE_SERVER), get_server / list_emojis / list_members / update_member (require_server_perm with VIEW_CHANNEL as the membership test), discovery patch (refactored to helpers::check_server_owner), and PUT/DELETE channel notification-settings (require_channel_perm VIEW_CHANNEL)."
       ],
       "gaps": [
         "Discord overwrite resolution behavior has core precedence tests plus live API and UI private-channel proof, but still needs a broader matrix.",
         "Role and override UI has first workflow proof, but batch reorder and effective permission inspector UI remain unproven.",
         "UI proof for batch role reordering/effective permission inspection and full MLS lifecycle proof still need work.",
-        "Route inventory needs_review list (14 routes): 7 likely real gaps — GET /api/v1/servers/{id} (membership), GET /api/v1/servers/{id}/emojis (membership), GET /api/v1/servers/{server_id}/members (VIEW server), PATCH /api/v1/servers/{server_id}/members/{user_id} (MANAGE_NICKNAMES/ROLES), PATCH /api/v1/servers/{id}/discovery (MANAGE_SERVER), GET /api/v1/servers/{server_id}/automod (MANAGE_SERVER — handler has explicit 'no permission check needed' comment that should be revisited), and PUT/DELETE /api/v1/channels/{id}/notification-settings (membership or VIEW_CHANNEL). The other 7 are ambiguous-by-design: GET /api/v1/servers (caller's own list), POST /api/v1/servers (any authed can create), GET /api/v1/users/{id} (Discord-style fetch), POST /api/v1/voice/leave / PATCH /api/v1/voice/state (own state), DELETE /api/v1/channels/{channel_id}/stage/leave (own state)."
+        "Route inventory needs_review is down to 6 routes, all accepted-by-design: GET /api/v1/servers (caller's own server list), POST /api/v1/servers (any authed can create a new server), GET /api/v1/users/{id} (Discord-style profile fetch open to any authed user), POST /api/v1/voice/leave + PATCH /api/v1/voice/state + DELETE /api/v1/channels/{channel_id}/stage/leave (own voice/stage state — leave is a no-op for non-participants). These are not handler gaps; they are intentional auth-only endpoints whose path shape the inventory's path_kind heuristic doesn't yet recognize. No action needed unless we add a 'caller_implicit' path_kind to suppress them."
       ],
       "next_todos": [
         "Add test matrix for owner/admin/mod/member/muted/banned users.",
-        "Add MANAGE_SERVER gate to GET /api/v1/servers/{server_id}/automod (list_rules in routes/automod/handlers.rs) — start of the 7-gap fix list.",
-        "Triage remaining 6 likely-real gaps from needs_review_routes and add gates one-by-one with API smoke coverage.",
+        "Add API denial smoke tests in scripts/permission_smoke.py covering the 8 new gates (automod list, get_server, list_emojis, list_members, update_member, discovery patch, set/reset notification settings).",
+        "Optionally add a 'caller_implicit' path_kind so the remaining 6 needs_review entries auto-classify; otherwise document them as accepted in this report.",
         "Add regression tests for non-member denial and high-risk channel-scoped routes."
       ],
       "proof_required": [
@@ -358,7 +359,7 @@
     }
   ],
   "next_session_focus": [
-    "Add gates for the 7 likely-real gaps from reports/raw/route-inventory.json needs_review list (automod list, server-membership reads, channel notification settings, members listing/patch, discovery patch).",
+    "Add API denial smoke tests in scripts/permission_smoke.py for the 8 newly added gates.",
     "Start the Playwright parity harness for messaging and roles.",
     "Document Emma Bot credentials and test protocol without exposing secrets."
   ]
