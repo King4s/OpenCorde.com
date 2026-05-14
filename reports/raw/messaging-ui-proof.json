@@ -9,7 +9,7 @@
     "serverId": "293907048062648321",
     "channelId": "293907048134082561",
     "channelName": "general",
-    "messageContentSuffix": "63717441"
+    "messageContentSuffix": "64177066"
   },
   "browser": {
     "browser": {
@@ -22,18 +22,18 @@
       "name": "general"
     },
     "send": {
-      "text": "msg-ui-send-63717441",
-      "msgId": "313299912899297281",
+      "text": "msg-ui-send-64177066",
+      "msgId": "313301840488169473",
       "screenshot": "reports/parity-screenshots/messaging-ui/01-send.png"
     },
     "edit": {
-      "text": "msg-ui-edit-63717441",
+      "text": "msg-ui-edit-64177066",
       "editedIndicatorVisible": true,
       "screenshot": "reports/parity-screenshots/messaging-ui/02-edit.png"
     },
     "reply": {
-      "text": "msg-ui-reply-63717441",
-      "msgId": "313299916619644929",
+      "text": "msg-ui-reply-64177066",
+      "msgId": "313301844103659521",
       "contextVisible": true,
       "screenshot": "reports/parity-screenshots/messaging-ui/03-reply.png"
     },
@@ -46,12 +46,18 @@
       "screenshot": "reports/parity-screenshots/messaging-ui/05-pin.png"
     },
     "delete": {
-      "targetMsgId": "313299916619644929",
+      "targetMsgId": "313301844103659521",
       "rowRemoved": true,
       "screenshot": "reports/parity-screenshots/messaging-ui/06-delete.png"
+    },
+    "attach": {
+      "text": "msg-ui-attach-64177066",
+      "msgId": "313301853469540353",
+      "imgVisible": true,
+      "screenshot": "reports/parity-screenshots/messaging-ui/07-attachment.png"
     }
   },
   "cleanup": {
-    "messagesRemoved": 1
+    "messagesRemoved": 2
   }
 }

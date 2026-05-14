@@ -35,6 +35,16 @@ STORAGE_KEY = "opencorde_token"
 MEMBER_EMAIL = os.environ.get("OC_MEMBER_EMAIL", "browsertest@opencorde.local")
 MEMBER_PASSWORD = os.environ.get("OC_MEMBER_PASSWORD", "BrowserTest@99")
 
+# 1x1 RGBA red PNG used by the attachment scenario. 70 bytes, valid through
+# IDAT CRC; renders as an <img> in the message row without needing fixture
+# files on disk.
+_PNG_1x1 = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+    b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\xf8\xcf"
+    b"\xc0\xf0\x1f\x00\x05\x00\x01\xff\x89\x99=\x1d\x00\x00\x00\x00IEND"
+    b"\xaeB`\x82"
+)
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -106,6 +116,7 @@ _IGNORED_ABORT_PATTERNS = (
     "/_app/immutable/",  # SvelteKit prefetch chunks cancelled by navigation.
     "/api/v1/channels/",  # /ack /pins /messages /reactions — chromium reports
     "/api/v1/messages/",  # ERR_ABORTED on context teardown even after the
+    "/app-icon-",         # PWA icons fetched optimistically; absent in dev.
 )                          # HTTP response has been received and acted on.
 
 
@@ -202,7 +213,9 @@ async def prove_messaging(
         wait_until="networkidle",
         timeout=30000,
     )
-    await page.locator('input[placeholder^="Message #"]').wait_for(timeout=20000)
+    # The channel page can be slow to hydrate on the first navigation after
+    # login; give the message input a generous window before failing.
+    await page.locator('input[placeholder^="Message #"]').wait_for(timeout=45000)
 
     send_text = f"msg-ui-send-{suffix}"
     send_msg_id = await send_message(page, send_text)
@@ -285,6 +298,30 @@ async def prove_messaging(
         await page.wait_for_timeout(250)
     delete_screenshot = await screenshot(page, "06-delete.png")
 
+    # Attachment: upload a 1x1 PNG and send it with a message.
+    attach_text = f"msg-ui-attach-{suffix}"
+    file_input = page.locator('input[type="file"]')
+    await file_input.set_input_files(
+        files=[{"name": f"smoke-{suffix}.png", "mimeType": "image/png", "buffer": _PNG_1x1}]
+    )
+    # Wait for the upload to complete: preview thumbnail renders.
+    await page.locator(".preview-image, img[alt*='smoke-']").first.wait_for(timeout=20000)
+    message_input = page.locator('input[placeholder^="Message #"]')
+    await message_input.fill(attach_text)
+    await message_input.press("Enter")
+    attach_msg_id = None
+    for _ in range(20):
+        attach_msg_id = await find_message_by_text(page, attach_text)
+        if attach_msg_id:
+            break
+        await page.wait_for_timeout(250)
+    attach_img_visible = False
+    if attach_msg_id:
+        attach_img_visible = (
+            await message_row(page, attach_msg_id).locator("img").count() > 0
+        )
+    attach_screenshot = await screenshot(page, "07-attachment.png")
+
     await context.close()
 
     return {
@@ -322,6 +359,12 @@ async def prove_messaging(
             "targetMsgId": delete_target_id,
             "rowRemoved": deleted_gone,
             "screenshot": delete_screenshot,
+        },
+        "attach": {
+            "text": attach_text,
+            "msgId": attach_msg_id,
+            "imgVisible": attach_img_visible,
+            "screenshot": attach_screenshot,
         },
     }
 
@@ -441,6 +484,8 @@ async def main() -> int:
                 and messaging["react"]["reactionVisible"]
                 and messaging["pin"]["pinnedListVisible"]
                 and messaging["delete"]["rowRemoved"]
+                and messaging["attach"]["msgId"] is not None
+                and messaging["attach"]["imgVisible"]
                 and no_browser_errors(messaging)
             )
         finally:

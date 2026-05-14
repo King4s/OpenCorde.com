@@ -7,35 +7,34 @@ This file is the first context a new AI agent should read before continuing the 
 - Repository: `King4s/OpenCorde.com`
 - Local path: `/home/mb/opencorde`
 - Branch: `main`
-- Last pushed functional commit before this update: `ef166ed test(permissions): live API denial smoke for 8 new gates`
-- Earlier relevant commits: `52a9902` 7 permission gates, `3c7f70a` transitive recognizer resolution, `a4bff96` recognizer hardening, `d1aecc8` initial route inventory.
+- Last pushed functional commit before this update: `79f97db test(messaging): live UI proof for daily-chat actions + fix currentUser restore`
+- Earlier relevant commits: `ef166ed` permission denial smoke, `52a9902` 7 permission gates, `3c7f70a` transitive recognizer resolution, `d1aecc8` initial route inventory.
 
-At the time this handoff was updated, the next task was completed locally and should be committed/pushed with this file: live Playwright UI proof for the daily messaging workflows (Issue #4), plus a real app bug fix surfaced while building the harness.
+At the time this handoff was updated, the next task was completed locally and should be committed/pushed with this file: attachment upload scenario added to the messaging UI harness.
 
 ## What Changed Most Recently
 
-The messaging-parity proof pass completed after `ef166ed`:
+The attachment scenario completed after `79f97db`:
 
-- Added `scripts/messaging_ui_qa.py` — Playwright harness that drives the chat UI as the fixture owner and proves: send, edit (with "edited" indicator), reply (with reply-context bubble), react (badge visible), pin (visible in pinned panel), delete (row removed). Output: `reports/raw/messaging-ui-proof.json`, screenshots `01-send.png … 06-delete.png` under `reports/parity-screenshots/messaging-ui/`. Cleans up its own messages at the end.
-- Fixed an app bug in `client/src/routes/servers/+layout.svelte`: after a full page reload, the in-memory `$currentUser` was never restored from the persisted token, so `isOwn` was false and edit/delete/pin context-menu buttons stayed hidden. The layout now calls `restoreSession()` when it sees a stored token. This is a real product fix — every refresh of `/servers/...` previously dropped the owner-only UI affordances.
-- Rebuilt `client/build` (`pnpm build`) so Caddy serves the patched layout. The release-mode `opencorde-api` binary is unchanged from `ef166ed`.
-- `reports/discord-parity.json` messaging area moved from `shallow_needs_proof` to `partial`, with the new observed proof + the app fix called out. `evidence_sources` registers the new artifact.
+- `scripts/messaging_ui_qa.py` gains a seventh scenario: `_PNG_1x1` (70-byte inline RGBA PNG, IDAT-CRC valid) is uploaded through the hidden `<input type="file">` via `set_input_files`, then a message carrying the attachment is sent. The new message row is verified to contain an `<img>` element, screenshot saved as `07-attachment.png`.
+- The cleanup pass now removes 2 messages per run (the original send/edit/pin'd message and the new attachment message — the reply gets deleted by the delete scenario).
+- The PWA icon (`/app-icon-*`) was added to the harness's `_IGNORED_ABORT_PATTERNS` so a missing optimistic asset fetch doesn't poison `ok`.
+- The initial-input wait was bumped from 20s → 45s to absorb hydration races on first navigation.
+- `reports/raw/messaging-ui-proof.json` regenerated with 7 scenarios + 7 screenshots; `ok: true`, 0 failed requests, 2 fixture messages removed.
+- `reports/discord-parity.json` messaging area observed list updated; the attachment gap closed; "attachment upload" removed from next_todos.
 
 Verification:
 
-- `pnpm check` ✓ — 474 files, 0 errors, 0 warnings.
-- `pnpm build` ✓ — fresh `client/build/`.
 - `python3 -m py_compile scripts/messaging_ui_qa.py` ✓.
 - `python3 -m json.tool reports/discord-parity.json >/dev/null` ✓.
 - `python3 -m json.tool reports/raw/messaging-ui-proof.json >/dev/null` ✓.
-- `OC_MEMBER_EMAIL=browsertest@opencorde.com python3 scripts/messaging_ui_qa.py` ✓ — `ok: true`, all 6 scenarios pass, 1 cleanup message removed, 6 screenshots saved.
+- `OC_MEMBER_EMAIL=browsertest@opencorde.com python3 scripts/messaging_ui_qa.py` ✓ — `ok: true` on 2 consecutive runs, 7 scenarios green.
 
 ## Operational Notes
 
-- `scripts/messaging_ui_qa.py` runs against `https://opencorde.com` by default. Override the test fixture email via `OC_MEMBER_EMAIL` and the password via `OC_MEMBER_PASSWORD` — never commit fixture credentials into docs or reports.
-- The script auto-accepts any `window.confirm()` dialogs that pop up during the action sequence. None are currently triggered by the chat UI but stage cleanup or future confirmations would not break the harness.
-- A small set of `net::ERR_ABORTED` failures (SvelteKit prefetch chunks, `/ack` POSTs, pin PUT, delete DELETE) are ignored: the corresponding HTTP responses are received before chromium reports the abort on context teardown. They land in `browser.browser.ignoredFailedRequests` for visibility.
-- If the chat UI is ever changed to require a different message-row anchor than `#msg-{id}`, update `message_row()` in the harness.
+- The `_PNG_1x1` constant is a 1x1 red RGBA PNG generated inline (`struct` + `zlib`). It is intentionally trivial so the script doesn't need a fixture file on disk. If you need a larger or differently-typed asset, generate it the same way.
+- `set_input_files` works against the hidden `<input type="file">` element regardless of CSS visibility, but the message-input form still needs to be hydrated first. The initial-input `wait_for(timeout=45000)` covers slow first paints.
+- Caddy serves `client/build/` directly; after any `pnpm build` the next browser load picks up the new bundle without restarting `opencorde-api.service`. The systemd service only carries Rust changes.
 
 ## GitHub Issue Map
 
@@ -43,7 +42,7 @@ Primary source-of-truth issues:
 
 - `#1` Discord parity master plan
 - `#2` Milestone -1: brutal audit and claim demotion
-- `#4` Messaging parity — daily-chat actions now have first live proof; remaining gaps: attachment upload, jump-to-message, grouping/date separators, two-client realtime, denied SEND_MESSAGES UX.
+- `#4` Messaging parity — send/edit/reply/react/pin/delete/attachment all have first live proof. Remaining gaps: jump-to-message, grouping/date separators, two-client realtime, denied SEND_MESSAGES UX.
 - `#5` Roles and permissions parity
 - `#7` Voice, video, and stage parity
 - `#8` Apps, slash commands, bots, and webhooks parity
@@ -53,19 +52,18 @@ Primary source-of-truth issues:
 Recommended order for the next agent:
 
 1. Extend `scripts/messaging_ui_qa.py`:
-   - Attachment upload + display (drag/drop or file input on the message form).
-   - Jump-to-message via the reply-context bubble (`scrollToMessage`).
-   - Denied SEND_MESSAGES: log in as a limited fixture user with no `SEND_MESSAGES` override, assert the input is disabled or the POST fails.
-2. Add a two-client realtime check: one Playwright context sends, another (same channel, different fixture user) observes the WS-driven update without a refresh.
-3. Document Emma Bot credentials and test protocol (Issue `#8`) without exposing secrets.
-4. Two-client voice Playwright/manual checklist (Issue `#7`).
-5. Add owner/admin/mod/member/muted/banned permission matrix in `scripts/permission_smoke.py`.
+   - **Denied SEND_MESSAGES**: log in as a limited fixture user with a channel override that removes `SEND_MESSAGES`, try to send, assert the POST returns 403 or the input is disabled. Reuse the limited fixture from `permissions_ui_qa.py`.
+   - **Jump-to-message**: click the reply-context bubble of the existing reply scenario, assert the page scrolls and `#msg-{id}` becomes visible.
+   - **Two-client realtime**: spawn a second Playwright context with a different fixture user (already in the same server), open the same channel, then have the first context send a message and assert the second context's `#msg-{id}` row appears without a refresh.
+2. Document Emma Bot credentials and test protocol (Issue `#8`) without exposing secrets.
+3. Two-client voice Playwright/manual checklist (Issue `#7`).
+4. Add owner/admin/mod/member/muted/banned permission matrix in `scripts/permission_smoke.py`.
 
 ## Exact Next Task Candidate
 
 Best immediate task:
 
-Extend `prove_messaging` with an attachment upload step. The chat input has an `aria-label="Attach file"` button that triggers a hidden file input. Use `page.set_input_files()` on the underlying `input[type="file"]` (find via the form), send a small fixture image, assert the new message row contains an `<img>` with the uploaded URL, screenshot it as `07-attachment.png`.
+Add the **denied SEND_MESSAGES** scenario to `prove_messaging`. Use the same limited fixture user `permissions_ui_qa.py` builds (or build a thin wrapper that gives a limited token), and a private channel where SEND_MESSAGES is denied for `@everyone`. The expected behavior: typing a message and pressing Enter does not produce a new row in the message list; the POST returns 403 visible in `failedRequests`. Screenshot as `08-send-denied.png`. Update `report["ok"]` to include the new check.
 
 ## Caution
 
@@ -74,4 +72,5 @@ Extend `prove_messaging` with an attachment upload step. The chat input has an `
 - Keep `reports/discord-parity.json` aligned with GitHub issues when status changes.
 - `reports/raw/route-inventory.json` is generated. Re-run `python3 scripts/route_inventory.py` after any router/handler change instead of editing it by hand.
 - The new `restoreSession()` call in `routes/servers/+layout.svelte` runs on every full reload of an authed page. If that surface ever needs to skip auth restore (e.g. share-link landing pages mounted under `/servers/`), gate it explicitly.
+- The harness's `_IGNORED_ABORT_PATTERNS` filters chromium-cleanup `net::ERR_ABORTED` noise. If a real regression triggers an aborted request matching one of those patterns, you will not catch it from `failedRequests`; check `ignoredFailedRequests` as well during investigations.
 - Use `cargo fmt --check` before finalizing Rust changes; the repo is now formatted.

@@ -81,7 +81,7 @@
     {
       "path": "reports/raw/messaging-ui-proof.json",
       "type": "qa",
-      "note": "Live Playwright UI proof of the daily-chat workflows: send, edit (with edited indicator), reply (with reply context), react, pin (visible in pinned panel), delete (row removed). Screenshots at reports/parity-screenshots/messaging-ui/. Produced by scripts/messaging_ui_qa.py against https://opencorde.com."
+      "note": "Live Playwright UI proof of the daily-chat workflows: send, edit (with edited indicator), reply (with reply context), react, pin (visible in pinned panel), delete (row removed), and attachment upload (1x1 PNG rendered as <img> in the message row). 7 screenshots at reports/parity-screenshots/messaging-ui/. Produced by scripts/messaging_ui_qa.py against https://opencorde.com."
     },
     {
       "path": "reports/raw/schema-smoke.json",
@@ -199,16 +199,16 @@
         "Message routes, stores, MessageList, MessageInput, replies, reactions, pins, attachments, search, link preview, and thread UI names exist.",
         "Non-author message delete now respects channel `MANAGE_MESSAGES`, with live API smoke coverage.",
         "Typing indicators now require `VIEW_CHANNEL` and `SEND_MESSAGES` before broadcasting.",
-        "Live Playwright UI proof now covers the daily-chat actions end-to-end: send, edit (with 'edited' indicator), reply (with reply context bubble), react (badge visible), pin (visible in pinned panel), delete (row removed). reports/raw/messaging-ui-proof.json, screenshots under reports/parity-screenshots/messaging-ui/.",
+        "Live Playwright UI proof now covers the daily-chat actions end-to-end: send, edit (with 'edited' indicator), reply (with reply context bubble), react (badge visible), pin (visible in pinned panel), delete (row removed), attachment upload (1x1 PNG rendered as <img> in the message row). reports/raw/messaging-ui-proof.json, 7 screenshots under reports/parity-screenshots/messaging-ui/.",
         "Fixed an app bug surfaced while building the messaging harness: $currentUser was never restored after a full page reload, so isOwn was false and edit/delete/pin actions stayed hidden. Added restoreSession() to routes/servers/+layout.svelte."
       ],
       "gaps": [
         "Jump-to-message, grouping, date separators, local drafts, upload progress, mention behavior, and permission denial UX need proof or implementation.",
         "Realtime multi-client behavior (two clients in the same channel) needs regression coverage.",
-        "Attachment upload + decryption flow not yet covered by Playwright."
+        "Attachment decryption flow (E2EE channels) not yet covered by Playwright; current proof only covers the unencrypted upload path."
       ],
       "next_todos": [
-        "Extend messaging_ui_qa.py with attachment upload, jump-to-message, and a denied SEND_MESSAGES path.",
+        "Extend messaging_ui_qa.py with jump-to-message and a denied SEND_MESSAGES path.",
         "Add a two-client real-time check (one client sends, the other sees the WS event).",
         "Implement or prove message grouping and date separators.",
         "Add Emma Bot chat script."
@@ -367,7 +367,7 @@
     }
   ],
   "next_session_focus": [
-    "Extend scripts/messaging_ui_qa.py with attachment upload + denied SEND_MESSAGES + two-client realtime checks.",
+    "Extend scripts/messaging_ui_qa.py with denied SEND_MESSAGES + two-client realtime checks; jump-to-message.",
     "Document Emma Bot credentials and test protocol without exposing secrets.",
     "Two-client voice Playwright/manual checklist."
   ]
