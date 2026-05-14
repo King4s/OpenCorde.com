@@ -227,17 +227,18 @@
         "Batch role reorder API now exists and validates role hierarchy before changing positions.",
         "Role assign/unassign now checks target member hierarchy, so managers cannot change roles on same-position or higher members.",
         "Manager-gated server and channel effective permission inspector endpoints now return bitfields and permission names.",
-        "Generated route inventory at reports/raw/route-inventory.json now lists every Axum endpoint with method, path, auth class, and detected permission gates; covers 169 endpoints across 126 unique paths."
+        "Generated route inventory at reports/raw/route-inventory.json (schema v2) lists every Axum endpoint with method, path, auth class, path_kind, and detected permission/owner/author/member gates; covers 169 endpoints across 126 unique paths.",
+        "Inventory recognizers now classify own-resource paths (/@me, /me/, /friends, /push) and detect inline owner/author/member checks, so the focused needs_review list is 27 routes (down from 60 in the first inventory pass)."
       ],
       "gaps": [
         "Discord overwrite resolution behavior has core precedence tests plus live API and UI private-channel proof, but still needs a broader matrix.",
         "Role and override UI has first workflow proof, but batch reorder and effective permission inspector UI remain unproven.",
         "UI proof for batch role reordering/effective permission inspection and full MLS lifecycle proof still need work.",
-        "Route inventory shows 60 authenticated endpoints with no detected permission/admin/verification gate — this is a candidate audit list, not all are gaps but each needs review."
+        "Route inventory needs_review list (27 routes) groups into: server emojis (3, want MANAGE_GUILD_EXPRESSIONS), bridge mappings (4, want MANAGE_SERVER), automod read (1, want MANAGE_SERVER), discovery patch (1, want MANAGE_SERVER), events (5, want server membership + MANAGE_EVENTS), DMs message routes (2, want participant check), notification settings on channels (2, want VIEW_CHANNEL or membership), members listing/patch (2, want VIEW + MANAGE_NICKNAMES/ROLES), stage leave (1), voice state/leave (2), and 4 ambiguous-by-design (GET /api/v1/servers, POST /api/v1/servers, GET /api/v1/servers/{id}, GET /api/v1/users/{id})."
       ],
       "next_todos": [
         "Add test matrix for owner/admin/mod/member/muted/banned users.",
-        "Triage the 60 'auth-only' routes from route-inventory.json: confirm intentional vs add missing gates.",
+        "Triage the 27 needs_review routes from route-inventory.json (see needs_review_routes); prioritize bridge/automod/emojis/events/DMs as concrete gaps.",
         "Add regression tests for non-member denial and high-risk channel-scoped routes."
       ],
       "proof_required": [
@@ -356,7 +357,7 @@
     }
   ],
   "next_session_focus": [
-    "Triage the 60 auth-only routes from reports/raw/route-inventory.json and add gates where missing.",
+    "Add gates for the 27 needs_review routes in reports/raw/route-inventory.json, prioritising bridge/automod/emojis/events/DMs.",
     "Start the Playwright parity harness for messaging and roles.",
     "Document Emma Bot credentials and test protocol without exposing secrets."
   ]

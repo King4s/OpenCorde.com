@@ -7,27 +7,25 @@ This file is the first context a new AI agent should read before continuing the 
 - Repository: `King4s/OpenCorde.com`
 - Local path: `/home/mb/opencorde`
 - Branch: `main`
-- Last pushed functional commit before this update: `231d8e8 test(permissions): prove private channel and role UI`
-- Previous relevant commit: `ae6ed3b test(admin): prove LiveKit health dashboard`
+- Last pushed functional commit before this update: `d1aecc8 audit(routes): generate Axum route inventory with permission gates`
+- Earlier relevant commits: `231d8e8` permissions UI proof, `ae6ed3b` LiveKit health proof, `5dadd96` LiveKit health backend.
 
-At the time this handoff was updated, the next task was completed locally and should be committed/pushed with this file: route inventory generator + first inventory artifact.
+At the time this handoff was updated, the next task was completed locally and should be committed/pushed with this file: tightened route-inventory recognizers (owner/author/member checks + path-shape classification) and a focused needs_review list.
 
 ## What Changed Most Recently
 
-The route inventory task completed after `231d8e8`:
+The route-inventory hardening pass completed after `d1aecc8`:
 
-- Added `scripts/route_inventory.py`, which walks the API module graph from `crates/opencorde-api/src/routes/mod.rs` and `crates/opencorde-api/src/ws/handler/mod.rs`, parses every `.route(...)` call, resolves handler references to their fn definitions, and extracts permission gates (`require_server_perm`, `require_channel_perm`, `is_admin`, `check_verification_level`, role-hierarchy and rate-limit helpers) plus auth-class (admin / user / public).
-- Wrote first inventory to `reports/raw/route-inventory.json`. Summary at the time of this handoff: 169 endpoint registrations across 126 unique paths, 0 unresolved handlers, by auth class admin=7 / user=144 / public=18.
-- Updated `reports/discord-parity.json` to register the inventory under `evidence_sources`, add it to `proof_required` for the roles/permissions area, surface the `60 auth-only routes` audit list as a gap and as `next_session_focus`.
-
-The earlier handoff baseline (admin LiveKit health + permission UI proof from commits `5dadd96` / `ae6ed3b` / `231d8e8`) is unchanged. See git log for those changes.
+- `scripts/route_inventory.py` (schema bumped to v2) now also detects inline `owner_id == auth.user_id` and `author_id == auth.user_id` checks plus caller-`member_repo::get_member` lookups, and classifies each route's `path_kind` (own_resource, admin, auth, federation, mesh, infrastructure, generic).
+- Own-resource paths now include `/@me`, `/me/`, `/api/v1/friends`, `/api/v1/push/`. Infrastructure includes `/api/v1/health`, `/api/v1/gateway`, `/api/v1/unfurl`.
+- Inventory output gained a top-level `needs_review_routes` list and `summary.needs_review` count: 27 routes (down from 60 in the first pass) where auth=user, path_kind=generic, and no permission/admin/owner/author/member/verification gate was detected.
+- `reports/discord-parity.json` updated to reflect the schema v2, the smaller needs_review list, and a per-surface gap breakdown so the next agent can pick a slice without rereading the inventory.
 
 Functional files to inspect first:
 
 - `scripts/route_inventory.py`
-- `reports/raw/route-inventory.json`
-- `reports/discord-parity.json`
-- `crates/opencorde-api/src/routes/mod.rs` (entry point for the module walk)
+- `reports/raw/route-inventory.json` (regenerated)
+- `reports/discord-parity.json` (roles_permissions area + next_session_focus)
 - `crates/opencorde-api/src/routes/permission_check.rs` (the helpers the inventory looks for)
 
 ## Verification Already Run
@@ -41,11 +39,7 @@ python3 -m json.tool reports/discord-parity.json >/dev/null
 python3 -m json.tool reports/raw/route-inventory.json >/dev/null
 ```
 
-The inventory run reported `169 routes, 0 unresolved` and produced these auth-class counts:
-
-- `admin`: 7 (the `/api/v1/admin/*` surface)
-- `user`: 144 (handlers that take an `AuthUser` extractor)
-- `public`: 18 (auth flows, federation server-to-server endpoints, gateway upgrade, health, invite resolution, discover, user search, webhook execute-by-token)
+Inventory totals: 169 endpoints, 0 unresolved handlers, by auth class admin=7 / user=144 / public=18, by path kind generic=120 / own_resource=19 / auth=12 / admin=7 / mesh=4 / federation=4 / infrastructure=3, needs_review=27.
 
 ## GitHub Issue Map
 
@@ -58,23 +52,32 @@ Primary source-of-truth issues:
 - `#7` Voice, video, and stage parity
 - `#8` Apps, slash commands, bots, and webhooks parity
 
-Issue `#5` should reference `reports/raw/route-inventory.json` as the authoritative list when triaging which routes still need permission gates. The inventory is generated, so it can be regenerated and diffed in any future session — do not hand-edit it.
+Issue `#5` should reference `reports/raw/route-inventory.json` (`needs_review_routes`) as the authoritative gate-triage list. Re-run the generator after every router/handler change; do not hand-edit the JSON.
 
 ## Current Next TODOs
 
 Recommended order for the next agent:
 
-1. Triage the 60 authenticated routes in `reports/raw/route-inventory.json` whose `permissions` array is empty and `flags` is empty — for each, decide whether `auth-only` is the correct posture (e.g. own-resource endpoints like `users/@me/...`) or whether a gate is missing. Update the relevant handler and re-run the generator.
-2. Start the Playwright parity harness for messaging and roles.
-3. Broaden permission UI proof to owner/admin/mod/member/muted/banned workflows.
-4. Document Emma Bot credentials and test protocol without exposing secrets.
-5. Create a two-client voice Playwright/manual checklist for join/leave/mute/deafen/screen-share.
+1. Walk the `needs_review_routes` list in `reports/raw/route-inventory.json` and add gates. Suggested groupings:
+   - **Server admin (likely MANAGE_SERVER)**: bridge mappings (POST/PATCH/DELETE/GET on `/api/v1/servers/{server_id}/bridge/mappings*`), automod read (`GET /api/v1/servers/{server_id}/automod`), discovery patch (`PATCH /api/v1/servers/{id}/discovery`).
+   - **Emojis (MANAGE_GUILD_EXPRESSIONS)**: GET/POST `/api/v1/servers/{id}/emojis`, DELETE `/api/v1/servers/{id}/emojis/{emoji_id}`.
+   - **Events**: server-membership for read+RSVP, MANAGE_EVENTS for create/edit/delete (5 routes under `/api/v1/events/{event_id}*`).
+   - **DMs**: participant check on `GET/POST /api/v1/channels/@dms/{dm_id}/messages`.
+   - **Members**: VIEW server perm on `GET /api/v1/servers/{server_id}/members`; MANAGE_NICKNAMES/MANAGE_ROLES on `PATCH /api/v1/servers/{server_id}/members/{user_id}`.
+   - **Channel notification settings** (PUT/DELETE `/api/v1/channels/{id}/notification-settings`): VIEW_CHANNEL or server membership.
+   - **Voice/stage** (`POST /api/v1/voice/leave`, `PATCH /api/v1/voice/state`, `DELETE /api/v1/channels/{channel_id}/stage/leave`): own-state but cross-checked against current LiveKit/voice presence.
+   - **Ambiguous-by-design** (intentional auth-only): `GET /api/v1/servers` (caller's own server list), `POST /api/v1/servers` (anyone authed can create), `GET /api/v1/servers/{id}` (consider membership or document open-by-design), `GET /api/v1/users/{id}` (Discord allows for any authed user).
+2. After each gate added, regenerate the inventory and confirm `needs_review` shrinks.
+3. Add API smoke coverage for each new gate in `scripts/permission_smoke.py` (denial path).
+4. Start the Playwright parity harness for messaging and roles.
+5. Document Emma Bot credentials and test protocol without exposing secrets.
+6. Two-client voice Playwright/manual checklist.
 
 ## Exact Next Task Candidate
 
 Best immediate task:
 
-Run the route-inventory triage. Start with handlers whose path begins with `/api/v1/servers/`, `/api/v1/channels/`, or `/api/v1/messages/` and have neither permission gates nor a documented "own resource" pattern. Add the missing `require_server_perm` / `require_channel_perm` calls and add API smoke coverage in `scripts/permission_smoke.py` for each new gate.
+Pick the bridge-mappings group (4 routes, all under `/api/v1/servers/{server_id}/bridge/mappings*`). Add `permission_check::require_server_perm(.., Permissions::MANAGE_SERVER)` at the top of each handler in `crates/opencorde-api/src/routes/bridge.rs`, add a denial smoke test in `scripts/permission_smoke.py`, regenerate the inventory, and verify `needs_review` drops by 4.
 
 ## Caution
 
@@ -82,4 +85,5 @@ Run the route-inventory triage. Start with handlers whose path begins with `/api
 - Do not expose tokens, admin credentials, or Emma Bot credentials in docs, GitHub comments, or reports.
 - Keep `reports/discord-parity.json` aligned with GitHub issues when status changes.
 - `reports/raw/route-inventory.json` is generated. Re-run `python3 scripts/route_inventory.py` after any router/handler change instead of editing it by hand.
+- The `needs_review` heuristic is conservative: a route may already be safe via a path/lookup pattern the inventory doesn't recognize. Always confirm by reading the handler before adding a gate.
 - Use `cargo fmt --check` before finalizing Rust changes; the repo is now formatted.

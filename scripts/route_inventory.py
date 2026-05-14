@@ -40,8 +40,13 @@ EFFECTIVE_PATTERNS = [
 ]
 ADMIN_PATTERN = re.compile(r"\bis_admin\s*\(")
 VERIFICATION_PATTERN = re.compile(r"check_verification_level\s*\(")
-HIERARCHY_PATTERN = re.compile(r"check_role_hierarchy|require_higher_role")
+HIERARCHY_PATTERN = re.compile(r"check_role_hierarchy|require_higher_role|require_member_below_actor")
 RATE_LIMIT_PATTERN = re.compile(r"rate_limit::check|RateLimitGuard")
+# Inline ownership/authorship checks against the calling user.
+OWNER_PATTERN = re.compile(r"owner_id\s*(?:!=|==)\s*auth\.user_id")
+AUTHOR_PATTERN = re.compile(r"author_id\s*(?:!=|==)\s*auth\.user_id")
+# Membership lookups gated on the caller (not on a target user).
+MEMBER_PATTERN = re.compile(r"member_repo::get_member\s*\(\s*[^,]+,\s*auth\.user_id\b")
 
 
 def resolve_module(parent: Path, mod_name: str) -> Path | None:
@@ -335,6 +340,12 @@ def extract_perms(body: str) -> dict:
         flags.append("role_hierarchy")
     if RATE_LIMIT_PATTERN.search(body):
         flags.append("rate_limit")
+    if OWNER_PATTERN.search(body):
+        flags.append("owner_check")
+    if AUTHOR_PATTERN.search(body):
+        flags.append("author_check")
+    if MEMBER_PATTERN.search(body):
+        flags.append("member_check")
     auth_required = bool(re.search(r"\bAuthUser\b", body))
     return {
         "permissions": sorted(set(perms)),
@@ -350,6 +361,40 @@ def auth_class(annotations: dict) -> str:
     if annotations["auth_required"]:
         return "user"
     return "public"
+
+
+def classify_path(path: str) -> str:
+    """URL-shape hint for triage."""
+    # Own-resource: anything scoped to the calling user's identity / state.
+    if "/@me" in path or "/me/" in path or path.endswith("/me"):
+        return "own_resource"
+    # Caller's friend graph + push tokens are all caller-implicit, like Discord.
+    if path.startswith(("/api/v1/friends", "/api/v1/push/")):
+        return "own_resource"
+    if path.startswith("/api/v1/admin/"):
+        return "admin"
+    if path.startswith("/api/v1/auth/"):
+        return "auth"
+    if path.startswith("/api/v1/federation/"):
+        return "federation"
+    if path.startswith("/api/v1/mesh/"):
+        return "mesh"
+    if path in {"/api/v1/health", "/api/v1/gateway", "/api/v1/unfurl"}:
+        return "infrastructure"
+    return "generic"
+
+
+def needs_review(route: dict) -> bool:
+    """An auth-required, generic-path route with no detected gate of any kind."""
+    if route["auth"] != "user":
+        return False
+    if route["path_kind"] != "generic":
+        return False
+    if route["permissions"]:
+        return False
+    if route["flags"]:
+        return False
+    return True
 
 
 def build_inventory() -> dict:
@@ -380,29 +425,32 @@ def build_inventory() -> dict:
             else:
                 handler_file, body = resolved
                 annotations = extract_perms(body)
-            inventory.append(
-                {
-                    "method": method,
-                    "path": r["path"],
-                    "handler": handler_ref,
-                    "handler_file": str(handler_file.relative_to(ROOT)) if handler_file else None,
-                    "declared_in": r["declared_in"],
-                    "auth": auth_class(annotations),
-                    **annotations,
-                }
-            )
+            entry = {
+                "method": method,
+                "path": r["path"],
+                "handler": handler_ref,
+                "handler_file": str(handler_file.relative_to(ROOT)) if handler_file else None,
+                "declared_in": r["declared_in"],
+                "auth": auth_class(annotations),
+                "path_kind": classify_path(r["path"]),
+                **annotations,
+            }
+            entry["needs_review"] = needs_review(entry)
+            inventory.append(entry)
     inventory.sort(key=lambda x: (x["path"], x["method"]))
 
     method_counts = Counter(r["method"] for r in inventory)
     auth_counts = Counter(r["auth"] for r in inventory)
+    path_kind_counts = Counter(r["path_kind"] for r in inventory)
     perm_counts: Counter[str] = Counter()
     for r in inventory:
         for p in r["permissions"]:
             perm_counts[p] += 1
     unresolved = [r for r in inventory if r["handler_file"] is None]
+    review_list = [r for r in inventory if r["needs_review"]]
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at": _dt.date.today().isoformat(),
         "source": {
             "entry_points": [str(p.relative_to(ROOT)) for p in ENTRY_POINTS],
@@ -412,9 +460,15 @@ def build_inventory() -> dict:
             "total_routes": len(inventory),
             "by_method": dict(sorted(method_counts.items())),
             "by_auth_class": dict(sorted(auth_counts.items())),
+            "by_path_kind": dict(sorted(path_kind_counts.items())),
             "by_permission": dict(sorted(perm_counts.items())),
             "unresolved_handlers": len(unresolved),
+            "needs_review": len(review_list),
         },
+        "needs_review_routes": [
+            {"method": r["method"], "path": r["path"], "handler_file": r["handler_file"]}
+            for r in review_list
+        ],
         "routes": inventory,
     }
 
