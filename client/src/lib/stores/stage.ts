@@ -33,7 +33,7 @@ export const handCount = derived(handsRaised, ($h) => $h.length);
 // ─── API Helpers ────────────────────────────────────────────────────────────
 
 /** Fetch current stage state for a channel */
-async function fetchStage(channelId: string): Promise<StageDetail | null> {
+export async function fetchStage(channelId: string): Promise<StageDetail | null> {
   try {
     const detail = await api.get<StageDetail>(`/channels/${channelId}/stage`);
     stageSession.set(detail.session);
