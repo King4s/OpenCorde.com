@@ -41,27 +41,28 @@ pub async fn join_stage(
         "user joining stage"
     );
 
-    let row = sqlx::query_as::<_, StageParticipantRow>(
+    // Step 1: INSERT (RETURNING can't JOIN, so we skip username here)
+    sqlx::query(
         "INSERT INTO stage_participants (id, channel_id, user_id, role) \
          VALUES ($1, $2, $3, 'audience') \
          ON CONFLICT (channel_id, user_id) DO UPDATE \
-         SET role = 'audience', hand_raised = FALSE \
-         RETURNING id, channel_id, user_id, role, hand_raised, joined_at",
+         SET role = 'audience', hand_raised = FALSE",
     )
     .bind(participant_id.as_i64())
     .bind(channel_id.as_i64())
     .bind(user_id.as_i64())
-    .fetch_one(pool)
+    .execute(pool)
     .await?;
 
-    // Fetch username separately — RETURNING cannot JOIN
+    // Step 2: SELECT with JOIN to get username
     let row = sqlx::query_as::<_, StageParticipantRow>(
         "SELECT sp.id, sp.channel_id, sp.user_id, u.username, sp.role, sp.hand_raised, sp.joined_at \
          FROM stage_participants sp \
          JOIN users u ON sp.user_id = u.id \
-         WHERE sp.id = $1",
+         WHERE sp.channel_id = $1 AND sp.user_id = $2",
     )
-    .bind(row.id)
+    .bind(channel_id.as_i64())
+    .bind(user_id.as_i64())
     .fetch_one(pool)
     .await?;
 
