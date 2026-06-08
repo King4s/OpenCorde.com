@@ -46,12 +46,22 @@ pub async fn join_stage(
          VALUES ($1, $2, $3, 'audience') \
          ON CONFLICT (channel_id, user_id) DO UPDATE \
          SET role = 'audience', hand_raised = FALSE \
-         RETURNING sp.id, sp.channel_id, sp.user_id, u.username, sp.role, sp.hand_raised, sp.joined_at \
-         FROM users u WHERE sp.user_id = u.id",
+         RETURNING id, channel_id, user_id, role, hand_raised, joined_at",
     )
     .bind(participant_id.as_i64())
     .bind(channel_id.as_i64())
     .bind(user_id.as_i64())
+    .fetch_one(pool)
+    .await?;
+
+    // Fetch username separately — RETURNING cannot JOIN
+    let row = sqlx::query_as::<_, StageParticipantRow>(
+        "SELECT sp.id, sp.channel_id, sp.user_id, u.username, sp.role, sp.hand_raised, sp.joined_at \
+         FROM stage_participants sp \
+         JOIN users u ON sp.user_id = u.id \
+         WHERE sp.id = $1",
+    )
+    .bind(row.id)
     .fetch_one(pool)
     .await?;
 
