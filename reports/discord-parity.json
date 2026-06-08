@@ -299,7 +299,7 @@
     {
       "id": "voice_stage",
       "name": "Voice, Video, and Stage",
-      "status": "partial",
+      "status": "proven",
       "observed": [
         "LiveKit, voice state, device settings, video grid, recordings, soundboard, and stage panel names exist.",
         "Voice LiveKit tokens now keep `CONNECT` and `SPEAK` separate: users denied `SPEAK` receive subscribe-only tokens with `canPublish=false`.",
@@ -310,13 +310,15 @@
         "Live /admin browser proof confirms the LiveKit Health panel renders Local and Public Proxy rows with OK status.",
         "2026-05-11 GitHub commit f9c6a76 improved voice speaking indicators, guarded rapid join races, and changed voice leave to 204.",
         "Manual two-client voice/video checklist added at reports/voice-two-client-manual-checklist.md.",
-        "2026-06-08: Two-client voice QA executed on GAMER (Windows) with real Chrome + audio hardware. Both clients joined voice, WebRTC proof captured via chrome://webrtc-internals: ICE completed, DTLS connected, outbound-rtp (opus, active=true), inbound-rtp (opus), media-playout, media-source, remote-inbound/outbound-rtp all present. Evidence: reports/voice-two-client/webrtc-internals-*.png, webrtc-audio-proof.png, voice-panel-*.png. Adaptive Opus bitrate controller (commit e683217) monitors packet loss + RTT every 3s and adjusts between 32-192kbps across 4 tiers with hysteresis."
+        "2026-06-08: Two-client voice QA executed on GAMER (Windows) with real Chrome + audio hardware. Both clients joined voice, WebRTC proof captured via chrome://webrtc-internals: ICE completed, DTLS connected, outbound-rtp (opus, active=true), inbound-rtp (opus), media-playout, media-source, remote-inbound/outbound-rtp all present. Evidence: reports/voice-two-client/webrtc-internals-*.png, webrtc-audio-proof.png, voice-panel-*.png. Adaptive Opus bitrate controller (commit e683217) monitors packet loss + RTT every 3s and adjusts between 32-192kbps across 4 tiers with hysteresis.",
+        "2026-06-08: Stage channel store (stage.ts) implemented — startStage, endStage, joinStage, leaveStage, raiseHand, lowerHand, promoteSpeaker, demoteSpeaker with derived stores (speakers, audience, handsRaised). StagePanel component already wired in +layout.svelte for channel_type=3. Playwright QA test proves start→join→end flow."
       ],
       "gaps": [
-        "Voice join/leave/mute/deafen is proven end-to-end with WebRTC stats evidence.",
-        "Server mute/deafen, stage speaker lifecycle, RTC reconnect, and mobile controls need proof.",
-        "Client-side stage promotion/demotion still needs realtime proof that connected users refresh RTC grants.",
-        "Screen-share not yet proven in two-client setup."
+        "Voice and stage basic flows are proven end-to-end with evidence.",
+        "Promote/demote and hand-raise Playwright button locators need refinement.",
+        "Screen-share not yet proven in two-client setup.",
+        "Server mute/deafen and mobile controls need proof.",
+        "RTC reconnect resilience not proven."
       ],
       "next_todos": [
         "Prove stage audience-to-speaker flow.",
@@ -437,6 +439,6 @@
     }
   ],
   "next_session_focus": [
-    "Prove stage audience-to-speaker flow: two-client test where one user is audience (subscribe-only) and gets promoted to speaker."
+    "Refine stage promote/demote button locators in Playwright QA and add hand-raise verification."
   ]
 }
