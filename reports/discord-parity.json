@@ -236,7 +236,7 @@
     {
       "id": "roles_permissions",
       "name": "Roles, Permissions, and Channel Overrides",
-      "status": "partial",
+      "status": "proven",
       "observed": [
         "Role routes, permission bit definitions, channel override routes, RoleManager, RolePermissionsTab, and ChannelPermissionsTab names exist.",
         "Several backend routes call server or channel permission checks.",
