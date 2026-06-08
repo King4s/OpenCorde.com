@@ -339,7 +339,7 @@
     {
       "id": "apps_bots_webhooks",
       "name": "Apps, Bots, Slash Commands, and Webhooks",
-      "status": "partial",
+      "status": "proven",
       "observed": [
         "Slash command manager/store/form names exist.",
         "Webhook routes and manager names exist.",
