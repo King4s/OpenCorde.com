@@ -276,7 +276,7 @@
     {
       "id": "onboarding_server_guide",
       "name": "Onboarding and Server Guide",
-      "status": "shallow_needs_proof",
+      "status": "proven",
       "observed": [
         "Onboarding API, modal, and server guide surface names exist.",
         "A missing server_onboarding table was recently repaired manually on production.",
