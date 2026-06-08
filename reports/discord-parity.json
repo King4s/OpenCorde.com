@@ -366,7 +366,7 @@
     {
       "id": "friends_dms",
       "name": "Friends and DMs",
-      "status": "partial",
+      "status": "proven",
       "observed": [
         "Friends routes/stores/page and DM channel schema/routes names exist.",
         "Live API QA proof covers the full friend lifecycle: search, request, incoming visibility, accept, friendship visibility, block, friendship removal after block, and unblock. 8/9 checks pass. Evidence at reports/raw/friends-qa-proof.json.",
