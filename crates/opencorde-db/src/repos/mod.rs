@@ -18,6 +18,7 @@ pub mod embed_repo;
 pub mod emoji_repo;
 pub mod event_repo;
 pub mod forum_repo;
+pub mod interaction_repo;
 pub mod invite_repo;
 pub mod member_repo;
 pub mod mesh_peer_repo;
