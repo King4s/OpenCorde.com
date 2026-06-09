@@ -1,0 +1,59 @@
+{
+  "test": "pwa-qa",
+  "timestamp": 1780358913.1960156,
+  "results": {
+    "manifest_validity": {
+      "pass": true,
+      "details": {
+        "name": "OpenCorde",
+        "display": "standalone",
+        "theme_color": "#313338",
+        "background_color": "#313338",
+        "icons": 2
+      }
+    },
+    "sw_registration": {
+      "pass": false,
+      "details": {
+        "error": "No registration found at scope /"
+      }
+    },
+    "cache_presence": {
+      "pass": false,
+      "details": {
+        "error": "No caches found"
+      }
+    },
+    "no_auth_leakage": {
+      "pass": true,
+      "details": {
+        "patterns_checked": 7,
+        "leaks": 0
+      }
+    },
+    "offline_shell": {
+      "pass": false,
+      "details": {
+        "error": "Page.reload: net::ERR_INTERNET_DISCONNECTED\nCall log:\n  - waiting for navigation until \"domcontentloaded\"\n"
+      }
+    },
+    "installability": {
+      "pass": true,
+      "details": {
+        "display_standalone": true,
+        "has_name": true,
+        "has_start_url": true,
+        "has_192_icon": true,
+        "has_512_icon": true,
+        "theme_color_set": true,
+        "background_color_set": true,
+        "has_id": true
+      }
+    }
+  },
+  "summary": {
+    "total": 6,
+    "passed": 3,
+    "failed": 3
+  }
+}

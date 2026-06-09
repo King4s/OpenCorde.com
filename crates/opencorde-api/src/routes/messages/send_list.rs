@@ -29,9 +29,7 @@ use crate::{
 };
 
 use super::types::{MessageQuery, MessageResponse, ReplyContextResponse, SendMessageRequest};
-use super::validation::{
-    extract_mention_ids, parse_snowflake_id, validate_content, validate_limit,
-};
+use super::validation::{extract_mentions, parse_snowflake_id, validate_content, validate_limit};
 
 /// Convert MessageRow to MessageResponse.
 pub fn message_row_to_response(row: message_repo::MessageRow) -> MessageResponse {
@@ -58,6 +56,7 @@ pub fn message_row_to_response(row: message_repo::MessageRow) -> MessageResponse
         created_at: row.created_at,
         reply_to_id: row.reply_to_id.map(|id| id.to_string()),
         reply_to,
+        forwarded_from: None,
     }
 }
 
@@ -65,6 +64,9 @@ pub fn message_row_to_response(row: message_repo::MessageRow) -> MessageResponse
 ///
 /// Requires authentication. Generates a new Snowflake ID for the message.
 /// Content must be 1-4000 characters.
+///
+/// Enforces @everyone/@here permission gates, role mentionable checks,
+/// and dispatches notification counts to affected users.
 ///
 /// Returns 201 Created with the new message.
 #[instrument(skip(state, auth, req), fields(user_id = %auth.user_id))]
@@ -112,6 +114,46 @@ pub async fn send_message(
 
     let server_id = Snowflake::new(channel_info.1);
     let slowmode_delay = channel_info.2;
+
+    // Parse mentions from content before permission gates
+    let mentions = extract_mentions(&req.content);
+
+    // Gate: @everyone / @here requires MENTION_EVERYONE permission in the channel
+    if mentions.has_everyone || mentions.has_here {
+        tracing::debug!(
+            has_everyone = mentions.has_everyone,
+            has_here = mentions.has_here,
+            "checking MENTION_EVERYONE permission"
+        );
+        permission_check::require_channel_perm(
+            &state.db,
+            auth.user_id,
+            channel_id_sf,
+            Permissions::MENTION_EVERYONE,
+        )
+        .await?;
+    }
+
+    // Gate: role mentions require each role to be mentionable
+    for &role_id in &mentions.role_ids {
+        let mentionable: Option<bool> =
+            sqlx::query_scalar("SELECT mentionable FROM roles WHERE id = $1")
+                .bind(role_id)
+                .fetch_optional(&state.db)
+                .await
+                .map_err(ApiError::Database)?;
+
+        match mentionable {
+            Some(true) => { /* role is mentionable — allow */ }
+            Some(false) => {
+                tracing::warn!(role_id, "role is not mentionable");
+                return Err(ApiError::Forbidden);
+            }
+            None => {
+                return Err(ApiError::NotFound(format!("role {} not found", role_id)));
+            }
+        }
+    }
 
     // Enforce server verification level (requires member tenure check)
     crate::routes::helpers::check_verification_level(&state.db, auth.user_id, server_id, true)
@@ -175,6 +217,7 @@ pub async fn send_message(
         reply_to_id,
         attachments,
         None,
+        None,
     )
     .await
     .map_err(|e| {
@@ -190,37 +233,53 @@ pub async fn send_message(
 
     let response = message_row_to_response(row);
 
+    // Build mention metadata for the MessageCreate event
+    let mention_data = serde_json::json!({
+        "users": mentions.user_ids,
+        "roles": mentions.role_ids,
+        "everyone": mentions.has_everyone,
+        "here": mentions.has_here,
+    });
+
     // Broadcast MessageCreate event to all connected WebSocket clients.
-    // Clients filter on their accessible channel IDs; errors here are non-fatal
-    // (no subscribers = SendError, lagged subscriber = RecvError on their side).
+    // Includes mention metadata so clients can decide whether to show badges.
     let event = serde_json::json!({
         "type": "MessageCreate",
-        "data": { "message": response }
+        "data": {
+            "message": response,
+            "mentions": mention_data,
+        }
     });
     if state.event_tx.send(event).is_err() {
         tracing::debug!("no WebSocket subscribers for MessageCreate event");
     }
 
-    // Fire push notifications for any users @mentioned in this message.
-    // Mentions use the format <@USER_ID> (Snowflake ID). We parse them here
-    // and dispatch non-blocking so the HTTP response is not delayed.
-    let mention_ids = extract_mention_ids(&req.content);
-    if !mention_ids.is_empty() {
+    // Compute notification targets and dispatch mention counts + push notifications.
+    if !mentions.is_empty() {
         let db = state.db.clone();
         let config = state.config.clone();
+        let sender_id = auth.user_id;
         let sender_username = response.author_username.clone();
         let content_preview: String = req.content.chars().take(80).collect();
+        let channel_i64 = channel_id_sf.as_i64();
+        let server_i64 = server_id.as_i64();
+        let message_id_i64 = message_id.as_i64();
+        let event_tx = state.event_tx.clone();
+
         tokio::spawn(async move {
-            for uid in mention_ids {
-                crate::push_sender::send_push(
-                    &db,
-                    &config,
-                    uid,
-                    &format!("Mention from {}", sender_username),
-                    &content_preview,
-                )
-                .await;
-            }
+            dispatch_mention_notifications(
+                &db,
+                &config,
+                &mentions,
+                sender_id,
+                &sender_username,
+                &content_preview,
+                channel_i64,
+                server_i64,
+                message_id_i64,
+                &event_tx,
+            )
+            .await;
         });
     }
 
@@ -243,6 +302,258 @@ pub async fn send_message(
     }
 
     Ok((StatusCode::CREATED, Json(response)))
+}
+
+/// Compute the set of user IDs that should receive a mention notification,
+/// respecting per-user notification and suppression settings.
+///
+/// For @everyone/@here: all server members except sender.
+/// For user mentions: the explicitly mentioned user IDs (minus sender).
+/// For role mentions: all members holding any of the mentioned roles.
+///
+/// Users are excluded if they have:
+/// - Channel notification level 2 (MUTED)
+/// - Server notification level 2 (NOTHING) or active mute_until
+/// - suppress_everyone enabled (for @everyone mentions)
+/// - suppress_here enabled (for @here mentions)
+/// - suppress_role_mentions enabled (for role mentions)
+async fn resolve_notification_targets(
+    pool: &sqlx::PgPool,
+    mentions: &super::validation::MentionSet,
+    sender_id: opencorde_core::snowflake::Snowflake,
+    channel_id: i64,
+    server_id: i64,
+) -> Result<Vec<i64>, ApiError> {
+    use std::collections::HashSet;
+
+    let sender_i64 = sender_id.as_i64();
+    let mut targets = HashSet::new();
+
+    // Collect raw targets based on mention type
+    if mentions.has_everyone || mentions.has_here {
+        // Everyone/here: all server members except sender
+        let members: Vec<(i64,)> =
+            sqlx::query_as("SELECT user_id FROM server_members WHERE server_id = $1")
+                .bind(server_id)
+                .fetch_all(pool)
+                .await
+                .map_err(ApiError::Database)?;
+
+        for (uid,) in members {
+            if uid != sender_i64 {
+                targets.insert(uid);
+            }
+        }
+    }
+
+    // User mentions
+    for &uid in &mentions.user_ids {
+        if uid != sender_i64 {
+            targets.insert(uid);
+        }
+    }
+
+    // Role mentions: members holding any of the mentioned roles
+    if !mentions.role_ids.is_empty() {
+        // Use a query that finds all members with these roles, excluding sender
+        let role_members: Vec<(i64,)> = sqlx::query_as(
+            "SELECT DISTINCT mr.user_id FROM member_roles mr \
+             WHERE mr.server_id = $1 AND mr.role_id = ANY($2)",
+        )
+        .bind(server_id)
+        .bind(&mentions.role_ids)
+        .fetch_all(pool)
+        .await
+        .map_err(ApiError::Database)?;
+
+        for (uid,) in role_members {
+            if uid != sender_i64 {
+                targets.insert(uid);
+            }
+        }
+    }
+
+    if targets.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    // Filter out muted / suppressed users
+    let mut eligible = Vec::with_capacity(targets.len());
+    for &user_id in &targets {
+        let should_notify = should_notify_user(
+            pool,
+            user_id,
+            channel_id,
+            server_id,
+            mentions.has_everyone,
+            mentions.has_here,
+            !mentions.role_ids.is_empty(),
+        )
+        .await
+        .unwrap_or(false);
+
+        if should_notify {
+            eligible.push(user_id);
+        }
+    }
+
+    Ok(eligible)
+}
+
+/// Check whether a user should be notified for a mention in a channel,
+/// accounting for channel-level mute, server-level mute, and suppression flags.
+async fn should_notify_user(
+    pool: &sqlx::PgPool,
+    user_id: i64,
+    channel_id: i64,
+    server_id: i64,
+    is_everyone: bool,
+    is_here: bool,
+    has_role_mention: bool,
+) -> Result<bool, ApiError> {
+    // Check channel-level notification setting (0=all, 1=mentions-only, 2=muted)
+    let channel_level: Option<i16> = sqlx::query_scalar(
+        "SELECT level FROM channel_notification_settings \
+         WHERE user_id = $1 AND channel_id = $2",
+    )
+    .bind(user_id)
+    .bind(channel_id)
+    .fetch_optional(pool)
+    .await
+    .map_err(ApiError::Database)?;
+
+    if channel_level == Some(2) {
+        // Channel muted — no notification
+        return Ok(false);
+    }
+
+    // Check server-level notification settings
+    let server_settings: Option<(i16, Option<chrono::DateTime<Utc>>, bool, bool, bool)> =
+        sqlx::query_as(
+            "SELECT level, mute_until, suppress_everyone, suppress_here, suppress_role_mentions \
+             FROM server_notification_settings \
+             WHERE user_id = $1 AND server_id = $2",
+        )
+        .bind(user_id)
+        .bind(server_id)
+        .fetch_optional(pool)
+        .await
+        .map_err(ApiError::Database)?;
+
+    if let Some((server_level, mute_until, se, sh, sr)) = server_settings {
+        // Server fully muted
+        if server_level == 2 {
+            return Ok(false);
+        }
+
+        // Active mute
+        if let Some(mu) = mute_until {
+            if mu > Utc::now() {
+                return Ok(false);
+            }
+        }
+
+        // Suppression flags
+        if is_everyone && se {
+            return Ok(false);
+        }
+        if is_here && sh {
+            return Ok(false);
+        }
+        if has_role_mention && sr {
+            return Ok(false);
+        }
+    }
+
+    Ok(true)
+}
+
+/// Dispatch mention notifications: increment mention_count in channel_read_state,
+/// send push notifications, and broadcast ChannelUnreadUpdate events.
+async fn dispatch_mention_notifications(
+    pool: &sqlx::PgPool,
+    config: &crate::config::Config,
+    mentions: &super::validation::MentionSet,
+    sender_id: opencorde_core::snowflake::Snowflake,
+    sender_username: &str,
+    content_preview: &str,
+    channel_id: i64,
+    server_id: i64,
+    _message_id: i64,
+    event_tx: &tokio::sync::broadcast::Sender<serde_json::Value>,
+) {
+    let targets = match resolve_notification_targets(
+        pool, mentions, sender_id, channel_id, server_id,
+    )
+    .await
+    {
+        Ok(t) => t,
+        Err(e) => {
+            tracing::error!(error = %e, "failed to resolve notification targets");
+            return;
+        }
+    };
+
+    tracing::info!(
+        target_count = targets.len(),
+        channel_id,
+        "dispatching mention notifications"
+    );
+
+    for &user_id in &targets {
+        // Increment mention_count in read state
+        if let Err(e) = sqlx::query(
+            "INSERT INTO channel_read_state (user_id, channel_id, last_read_id, mention_count, updated_at) \
+             VALUES ($1, $2, 0, 1, NOW()) \
+             ON CONFLICT (user_id, channel_id) DO UPDATE \
+             SET mention_count = channel_read_state.mention_count + 1, updated_at = NOW()",
+        )
+        .bind(user_id)
+        .bind(channel_id)
+        .execute(pool)
+        .await
+        {
+            tracing::error!(user_id, error = %e, "failed to increment mention_count");
+        }
+
+        // Send push notification
+        crate::push_sender::send_push(
+            pool,
+            config,
+            user_id,
+            &format!("Mention from {}", sender_username),
+            content_preview,
+        )
+        .await;
+
+        // Broadcast ChannelUnreadUpdate so other sessions of this user see the badge
+        let unread_event = serde_json::json!({
+            "type": "ChannelUnreadUpdate",
+            "data": {
+                "user_id": user_id.to_string(),
+                "channel_id": channel_id.to_string(),
+            }
+        });
+        if event_tx.send(unread_event).is_err() {
+            tracing::debug!("no WebSocket subscribers for ChannelUnreadUpdate event");
+        }
+    }
+
+    // Also send push notifications for explicitly mentioned users that we parsed
+    // (these go through even if suppressed, because direct @user mentions still
+    //  trigger a push in Discord's model — it's the badge that's suppressed)
+    for &uid in &mentions.user_ids {
+        if uid != sender_id.as_i64() && !targets.contains(&uid) {
+            crate::push_sender::send_push(
+                pool,
+                config,
+                uid,
+                &format!("Mention from {}", sender_username),
+                content_preview,
+            )
+            .await;
+        }
+    }
 }
 
 /// GET /api/v1/channels/{channel_id}/messages — List messages in a channel.
@@ -322,6 +633,7 @@ mod tests {
             reply_author_username: None,
             reply_content_preview: None,
             thread_id: None,
+            forwarded_from_id: None,
         };
 
         let response = message_row_to_response(row);
@@ -354,6 +666,7 @@ mod tests {
             reply_author_username: Some("originaluser".to_string()),
             reply_content_preview: Some("Original content".to_string()),
             thread_id: None,
+            forwarded_from_id: None,
         };
 
         let response = message_row_to_response(row);

@@ -1,0 +1,74 @@
+Create a WebRTC-Internals dump
+Download the "webrtc-internals dump"  Compress result
+
+The "webrtc-internals" dump is a JSON file containing API calls, events and getStats data about RTCPeerConnection objects as well as getUsermedia/getDisplayMedia API calls.
+
+Download the "rtcstats dump"
+
+The "rtcstats dump" is an alternative file format containing API calls, events and getStats data about RTCPeerConnection objects as well as getUsermedia/getDisplayMedia API calls.
+
+Create diagnostic audio recordings
+
+ Enable diagnostic audio recordings
+
+A diagnostic audio recording is used for analyzing audio problems. It consists of several files and contains the audio played out to the speaker (output) and captured from the microphone (input). The data is saved locally. Checking this box will enable recordings of all ongoing input and output audio streams (including non-WebRTC streams) and for future audio streams. When the box is unchecked or this page is closed, all ongoing recordings will be stopped and this recording functionality disabled. Recording audio from multiple tabs is supported as well as multiple recordings from the same tab.
+
+When enabling, select a base filename to which the following suffixes will be added:
+
+<base filename>.<render process ID>.aec_dump.<AEC dump recording ID>
+<base filename>.input.<stream recording ID>.wav
+<base filename>.output.<stream recording ID>.wav
+
+It is recommended to choose a new base filename each time the feature is enabled to avoid ending up with partially overwritten or unusable audio files.
+
+Create diagnostic packet recordings
+
+ Enable diagnostic packet and event recording
+
+A diagnostic packet and event recording can be used for analyzing various issues related to thread starvation, jitter buffers or bandwidth estimation. Two types of data are logged. First, incoming and outgoing RTP headers and RTCP packets are logged. These do not include any audio or video information, nor any other types of personally identifiable information (so no IP addresses or URLs). Checking this box will enable the recording for ongoing WebRTC calls and for future WebRTC calls. When the box is unchecked or this page is closed, all ongoing recordings will be stopped and this recording functionality will be disabled for future WebRTC calls. Recording in multiple tabs or multiple recordings in the same tab will cause multiple log files to be created. When enabling, a filename for the recording can be entered. The entered filename is used as a base, to which the following suffixes will be appended.
+
+<base filename>_<date>_<timestamp>_<render process ID>_<recording ID>
+
+If a file with the same name already exists, it will be overwritten. No more than 5 logfiles will be created, and each of them is limited to 60MB of storage. On Android these limits are 3 files of at most 10MB each. When the limit is reached, the checkbox must be unchecked and rechecked to resume logging.
+
+Create DataChannel message recordings
+
+ Enable DataChannel message recordings
+
+NOTE: DataChannel messages will also be recorded in incognito mode!
+
+A DataChannel message recording records all text and binary message sent over a PeerConnection. Text messages are recorded in plain text, and binary messages are recorded using base64 encoding. One file is created per PeerConnection. Checking this box will enable recording for ongoing and future PeerConnections. When the box is unchecked all ongoing recordings will be stopped and this recording functionality will be disabled for future PeerConnections. DataChannel message recording use the following file format:
+
+<base filename>_<date>_<timestamp>_<render process ID>_<recording ID>
+
+If a file with the same name already exists, it will be overwritten. No more than 5 logfiles will be created, and each of them is limited to 100MB of storage. On Android these limits are 3 files of at most 10MB each. When the limit is reached, the checkbox must be unchecked and rechecked to resume logging.
+
+getUserMedia/getDisplayMedia
+Caller origin: https://opencorde.com
+Caller process id: 27996
+getUserMedia call
+Time: 22:40:28 GMT+0200 (Centraleuropæisk sommertid)
+Audio constraints: true
+getUserMedia result
+Time: 22:40:28 GMT+0200 (Centraleuropæisk sommertid)
+Stream id: 8975786d-0ed1-49bc-b20e-c661ae3efa1d
+Audio track: id=059d8ace-44f5-42fe-a7f0-6278fd16b904 label:Standard - Mikrofon (USBAudio1.0) (3634:4155)
+Caller origin: https://opencorde.com
+Caller process id: 3044
+getUserMedia call
+Time: 22:38:21 GMT+0200 (Centraleuropæisk sommertid)
+Audio constraints: true
+getUserMedia result
+Time: 22:38:21 GMT+0200 (Centraleuropæisk sommertid)
+Stream id: 322aa0a2-d0d3-43a4-9282-93edc411d3d5
+Audio track: id=c57d77bb-c922-49fc-ac8e-6c3a880a3d18 label:Standard - Mikrofon (USBAudio1.0) (3634:4155)
+Caller origin: https://opencorde.com
+Caller process id: 35176
+getUserMedia call
+Time: 22:38:14 GMT+0200 (Centraleuropæisk sommertid)
+Audio constraints: true
+getUserMedia result
+Time: 22:38:14 GMT+0200 (Centraleuropæisk sommertid)
+Stream id: 913f279c-15bf-49da-8aad-515dae606f5c
+Audio track: id=802fe259-723b-4739-858d-f0bb61f93f24 label:Standard - Mikrofon (USBAudio1.0) (3634:4155)
+Filter by origin including 

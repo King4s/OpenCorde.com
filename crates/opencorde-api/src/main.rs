@@ -146,6 +146,13 @@ async fn main() -> anyhow::Result<()> {
         identity.clone(),
     );
 
+    // Spawn scheduled message delivery worker (checks every 15s)
+    opencorde_api::scheduled_delivery::spawn_delivery_worker(
+        pool.clone(),
+        event_tx.clone(),
+        search.clone(),
+    );
+
     // Build application state
     let state = AppState {
         db: pool,

@@ -124,6 +124,7 @@ pub async fn dispatch_command(
         None,
         serde_json::json!([]),
         None,
+        None,
     )
     .await
     .map_err(|e| {

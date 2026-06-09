@@ -1,0 +1,157 @@
+Create a WebRTC-Internals dump
+Create diagnostic audio recordings
+Create diagnostic packet recordings
+Create DataChannel message recordings
+
+https://opencorde.com/servers/322465729712619521 [ rid: 53, lid: 1, pid: 27996 ]getUserMedia/getDisplayMedia
+
+https://opencorde.com/servers/322465729712619521, {"iceServers":[{"urls":["stun:global.stun.twilio.com:3478","stun:stun.l.google.com:19302","stun:stun1.l.google.com:19302"]}],"alwaysNegotiateDataChannels":false},
+
+ICE connection state: new => "checking" => "connected" => "completed"
+Connection state: new => "connecting" => "connected" => "connected"
+Signaling state: new => "have-local-offer" => "stable" => "have-local-offer" => "stable" => "stable"
+ICE Candidate pair: 192.168.140.1:65047 <=>2.108.189.148:50077
+ICE candidate grid
+Time	Event
+8.6.2026, 22.40.28	
+createDataChannel
+
+8.6.2026, 22.40.28	
+createDataChannel
+
+8.6.2026, 22.40.28	onnegotiationneeded
+8.6.2026, 22.40.28	
+createOffer
+
+8.6.2026, 22.40.28	
+createOfferOnSuccess (type: "offer", 2 sections)
+
+8.6.2026, 22.40.28	
+setLocalDescription (munged) (type: "offer", 2 sections)
+
+8.6.2026, 22.40.28	setLocalDescriptionOnSuccess
+8.6.2026, 22.40.28	
+onsignalingstatechange
+
+8.6.2026, 22.40.28	
+onicegatheringstatechange
+
+8.6.2026, 22.40.28	
+onicecandidate
+
+8.6.2026, 22.40.28	
+onicecandidate
+
+8.6.2026, 22.40.28	
+onicecandidate
+
+8.6.2026, 22.40.28	
+onicecandidate
+
+8.6.2026, 22.40.28	
+setRemoteDescription (type: "answer", 2 sections)
+
+8.6.2026, 22.40.28	setRemoteDescriptionOnSuccess
+8.6.2026, 22.40.28	
+onsignalingstatechange
+
+8.6.2026, 22.40.28	
+addIceCandidate(sdpMid="0", sdpMLineIndex=0, type: host)
+
+8.6.2026, 22.40.28	
+oniceconnectionstatechange
+
+8.6.2026, 22.40.28	
+onconnectionstatechange
+
+8.6.2026, 22.40.28	
+addIceCandidate(sdpMid="0", sdpMLineIndex=0, type: host)
+
+8.6.2026, 22.40.29	
+oniceconnectionstatechange
+
+8.6.2026, 22.40.29	
+onicegatheringstatechange
+
+8.6.2026, 22.40.29	
+onconnectionstatechange
+
+8.6.2026, 22.40.29	
+transceiverAdded(index=0, kind=audio)
+
+8.6.2026, 22.40.29	onnegotiationneeded
+8.6.2026, 22.40.29	
+createOffer
+
+8.6.2026, 22.40.29	
+createOfferOnSuccess (type: "offer", 3 sections)
+
+8.6.2026, 22.40.29	
+setLocalDescription (munged) (type: "offer", 3 sections)
+
+8.6.2026, 22.40.29	setLocalDescriptionOnSuccess
+8.6.2026, 22.40.29	
+onsignalingstatechange
+
+8.6.2026, 22.40.29	
+transceiverModified(index=0, kind=audio)
+
+8.6.2026, 22.40.29	
+setRemoteDescription (type: "answer", 3 sections)
+
+8.6.2026, 22.40.29	setRemoteDescriptionOnSuccess
+8.6.2026, 22.40.29	
+onsignalingstatechange
+
+8.6.2026, 22.40.29	
+transceiverModified(index=0, kind=audio)
+
+8.6.2026, 22.40.38	
+setLocalDescription (munged) (type: "offer", 3 sections)
+
+8.6.2026, 22.40.38	
+setRemoteDescription (type: "answer", 3 sections)
+
+8.6.2026, 22.40.38	
+onsignalingstatechange
+
+8.6.2026, 22.40.38	
+oniceconnectionstatechange
+
+8.6.2026, 22.40.38	
+onconnectionstatechange
+Stats Tables
+Filter statistics by type including 
+outbound-rtp (kind=audio, mid=1, ssrc=3302588609, active=true, [codec]=opus (111, minptime=10;usedtx=1;useinbandfec=1), id=OT01A3302588609)
+media-playout (kind=audio, id=AP)
+certificate (id=CF6F:4A:BC:20:D6:50:C1:8C:84:C4:BE:D3:F4:80:E5:CB:0D:DB:8A:7C:81:BD:CD:59:DF:2C:6F:48:5A:28:76:70)
+certificate (id=CF7D:90:6B:D7:D1:F2:30:A7:FE:AE:6F:38:F8:7D:9D:CF:E4:EB:D0:6E:3C:12:0F:4D:98:C5:07:95:10:42:4F:87)
+codec (mimeType=audio/opus, payloadType=111, id=COT01_111_minptime=10;usedtx=1;useinbandfec=1)
+candidate-pair (state=succeeded, id=CPIOVBzXPD_M7PjlC3o)
+candidate-pair (state=in-progress, id=CPKXsHTbk7_M7PjlC3o)
+candidate-pair (state=in-progress, id=CPR/MNM0mH_M7PjlC3o)
+candidate-pair (state=in-progress, id=CPaid8uiy2_M7PjlC3o)
+data-channel (label=_lossy, state=open, id=D1)
+data-channel (label=_reliable, state=open, id=D2)
+local-candidate (candidateType=prflx, id=IIOVBzXPD)
+local-candidate (candidateType=host, id=IKXsHTbk7)
+remote-candidate (candidateType=host, id=IM7PjlC3o)
+local-candidate (candidateType=host, id=IR/MNM0mH)
+local-candidate (candidateType=host, id=Iaid8uiy2)
+peer-connection (id=P)
+remote-inbound-rtp (kind=audio, ssrc=3302588609, id=RIA3302588609)
+media-source (kind=audio, id=SA1)
+transport (iceState=connected, dtlsState=connected, id=T01)
+Filter statistics graphs by type including 
+Stats graphs for outbound-rtp (kind=audio, mid=1, ssrc=3302588609, active=true, [codec]=opus (111, minptime=10;usedtx=1;useinbandfec=1), id=OT01A3302588609)
+Stats graphs for media-playout (kind=audio, id=AP)
+Stats graphs for candidate-pair (state=succeeded, id=CPIOVBzXPD_M7PjlC3o)
+Stats graphs for candidate-pair (state=in-progress, id=CPKXsHTbk7_M7PjlC3o)
+Stats graphs for candidate-pair (state=in-progress, id=CPR/MNM0mH_M7PjlC3o)
+Stats graphs for candidate-pair (state=in-progress, id=CPaid8uiy2_M7PjlC3o)
+Stats graphs for data-channel (label=_lossy, state=open, id=D1)
+Stats graphs for data-channel (label=_reliable, state=open, id=D2)
+Stats graphs for peer-connection (id=P)
+Stats graphs for remote-inbound-rtp (kind=audio, ssrc=3302588609, id=RIA3302588609)
+Stats graphs for media-source (kind=audio, id=SA1)
+Stats graphs for transport (iceState=connected, dtlsState=connected, id=T01)

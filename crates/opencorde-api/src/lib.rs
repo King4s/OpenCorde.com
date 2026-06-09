@@ -46,6 +46,7 @@ pub mod jwt;
 pub mod middleware;
 pub mod push_sender;
 pub mod routes;
+pub mod scheduled_delivery;
 pub mod ws;
 
 use crate::middleware::rate_limit::RateLimitState;

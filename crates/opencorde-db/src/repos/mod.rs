@@ -4,9 +4,11 @@
 //! Each module exports functions as `async fn(pool: &PgPool, ...) -> Result<T, sqlx::Error>`.
 //! All functions are instrumented with tracing for structured logging.
 
+pub mod app_repo;
 pub mod audit_repo;
 pub mod automod_repo;
 pub mod ban_repo;
+pub mod bot_user_repo;
 pub mod channel_override_repo;
 pub mod channel_repo;
 pub mod dm_federated_repo;
@@ -24,6 +26,7 @@ pub mod read_state_repo;
 pub mod refresh_token_repo;
 pub mod relationship_repo;
 pub mod role_repo;
+pub mod scheduled_message_repo;
 pub mod server_repo;
 pub mod slash_command_repo;
 pub mod stage_repo;

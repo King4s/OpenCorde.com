@@ -6,9 +6,9 @@
 //! - GET /api/v1/channels/{channel_id}/messages — List channel messages (paginated)
 //! - PATCH /api/v1/messages/{id} — Edit message (author only)
 //! - DELETE /api/v1/messages/{id} — Delete message (author only)
-//! - POST /api/v1/channels/{channel_id}/typing — Send typing indicator
-//!
-//! ## Modules
+//! - POST /api/v1/messages/{id} — Edit/delete message
+//! - POST /api/v1/channels/{channel_id}/typing — Typing indicator
+//! - POST /api/v1/messages/{id}/forward — Forward message to another channel
 //! - `handlers` — Route handler functions and router
 //! - `send_list` — Send and list message handlers
 //! - `edit_delete` — Edit, delete, and typing indicator handlers
@@ -22,15 +22,19 @@
 //! - crate::middleware::auth::AuthUser (authentication)
 //! - crate::AppState (application state)
 
+//! - POST /api/v1/messages/{id}/forward — Forward message to another channel
+
 mod edit_delete;
+mod forward;
 mod handlers;
 pub mod send_list;
 pub mod types;
-mod validation;
-
+pub mod validation;
 pub use handlers::router;
 pub use send_list::message_row_to_response;
-pub use types::{EditMessageRequest, MessageQuery, MessageResponse, SendMessageRequest};
+pub use types::{
+    EditMessageRequest, ForwardMessageRequest, MessageQuery, MessageResponse, SendMessageRequest,
+};
 
 #[cfg(test)]
 mod tests {
