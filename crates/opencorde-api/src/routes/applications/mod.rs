@@ -18,6 +18,7 @@ mod create;
 mod delete;
 mod get;
 mod install;
+mod commands;
 mod list;
 mod tokens;
 mod types;
@@ -41,6 +42,8 @@ pub fn router() -> Router<AppState> {
         .route("/api/v1/applications/{id}/bot", post(bot_create::create_bot_user))
         .route("/api/v1/applications/{id}/bot/tokens", post(tokens::create_token).get(tokens::list_tokens))
         .route("/api/v1/applications/{id}/bot/tokens/{tid}", delete(tokens::revoke_token))
+        .route("/api/v1/applications/{id}/commands", post(commands::create_command).get(commands::list_commands))
+        .route("/api/v1/applications/{id}/commands/{cid}", delete(commands::delete_command))
         .route("/api/v1/applications/{id}/install", post(install::install_app))
         .route("/api/v1/servers/{id}/apps", get(install::list_server_apps))
         .route("/api/v1/servers/{id}/apps/{aid}", delete(install::uninstall_app))

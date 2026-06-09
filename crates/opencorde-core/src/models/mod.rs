@@ -25,3 +25,4 @@ pub use user::{User, UserProfile, UserStatus};
 pub use voice_state::VoiceState;
 pub mod oauth_client_secret;
 pub mod bot_token;
+pub mod application_command;

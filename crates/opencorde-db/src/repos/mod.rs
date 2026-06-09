@@ -22,6 +22,7 @@ pub mod member_repo;
 pub mod mesh_peer_repo;
 pub mod message_repo;
 pub mod oauth_client_secret_repo;
+pub mod app_command_repo;
 pub mod app_install_repo;
 pub mod pin_repo;
 pub mod reaction_repo;
