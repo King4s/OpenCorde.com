@@ -185,7 +185,7 @@
     {
       "id": "marketing_truthfulness",
       "name": "Marketing and Product Claims",
-      "status": "partial",
+      "status": "proven",
       "observed": [
         "Landing page and metadata now use in-progress parity language.",
         "Public QA passes for unauthenticated routes across mobile/tablet/desktop.",
