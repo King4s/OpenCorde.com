@@ -14,6 +14,7 @@ pub mod channel_override_repo;
 pub mod channel_repo;
 pub mod dm_federated_repo;
 pub mod dm_repo;
+pub mod embed_repo;
 pub mod emoji_repo;
 pub mod event_repo;
 pub mod forum_repo;

@@ -26,3 +26,4 @@ pub use voice_state::VoiceState;
 pub mod oauth_client_secret;
 pub mod bot_token;
 pub mod application_command;
+pub mod message_embed;
