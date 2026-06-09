@@ -45,6 +45,7 @@ pub mod mesh;
 pub mod messages;
 pub mod moderation;
 pub mod notification_settings;
+pub mod oauth2;
 pub mod onboarding;
 pub mod permission_check;
 pub mod permissions;
@@ -114,6 +115,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(data_export::router())
         .merge(e2ee::router())
         .merge(notification_settings::router())
+        .merge(oauth2::router())
         .merge(unfurl::router())
         .merge(push::router())
         .merge(bridge::router())
