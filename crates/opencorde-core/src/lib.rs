@@ -48,3 +48,4 @@ pub use models::{
 pub use password::{hash_password, verify_password};
 pub use permissions::{OverwriteType, PermissionOverwrite, Permissions};
 pub use snowflake::{Snowflake, SnowflakeGenerator};
+pub mod bot_gateway;

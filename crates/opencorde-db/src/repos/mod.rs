@@ -8,6 +8,7 @@ pub mod app_repo;
 pub mod audit_repo;
 pub mod automod_repo;
 pub mod ban_repo;
+pub mod bot_token_repo;
 pub mod bot_user_repo;
 pub mod channel_override_repo;
 pub mod channel_repo;

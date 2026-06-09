@@ -6,10 +6,9 @@
 //! GET    /api/v1/applications/{id}   — get an application by ID
 //! PATCH  /api/v1/applications/{id}   — update an application (owner only)
 //! DELETE /api/v1/applications/{id}   — delete an application (owner only)
-//! POST   /api/v1/applications/{id}/bot — create a bot user (owner only)
-//! POST   /api/v1/applications/{id}/install — install app to server
-//! GET    /api/v1/servers/{id}/apps   — list installed apps on server
-//! DELETE /api/v1/servers/{id}/apps/{aid} — uninstall app
+//! POST   /api/v1/applications/{id}/bot/tokens — create bot token
+//! GET    /api/v1/applications/{id}/bot/tokens — list bot tokens
+//! DELETE /api/v1/applications/{id}/bot/tokens/{tid} — revoke bot token
 
 use axum::{Router, routing::{delete, get, post}};
 use crate::AppState;
@@ -20,6 +19,7 @@ mod delete;
 mod get;
 mod install;
 mod list;
+mod tokens;
 mod types;
 mod update;
 
@@ -39,6 +39,8 @@ pub fn router() -> Router<AppState> {
                 .patch(update::update_application)
                 .delete(delete::delete_application))
         .route("/api/v1/applications/{id}/bot", post(bot_create::create_bot_user))
+        .route("/api/v1/applications/{id}/bot/tokens", post(tokens::create_token).get(tokens::list_tokens))
+        .route("/api/v1/applications/{id}/bot/tokens/{tid}", delete(tokens::revoke_token))
         .route("/api/v1/applications/{id}/install", post(install::install_app))
         .route("/api/v1/servers/{id}/apps", get(install::list_server_apps))
         .route("/api/v1/servers/{id}/apps/{aid}", delete(install::uninstall_app))
