@@ -51,3 +51,28 @@ pub async fn revoke_secret(
     .execute(pool).await?;
     Ok(result.rows_affected() > 0)
 }
+
+/// Verify a client secret against all active (non-revoked) secrets for an application.
+/// Returns true if the plaintext secret matches any stored Argon2id hash.
+pub async fn verify_client_secret(
+    pool: &PgPool,
+    application_id: Snowflake,
+    plaintext_secret: &str,
+) -> Result<bool, sqlx::Error> {
+    let rows: Vec<ClientSecretRow> = sqlx::query_as::<_, ClientSecretRow>(
+        "SELECT * FROM oauth_client_secrets
+         WHERE application_id = $1 AND revoked_at IS NULL
+         ORDER BY created_at DESC"
+    )
+    .bind(application_id.as_i64())
+    .fetch_all(pool).await?;
+
+    for row in &rows {
+        let valid = opencorde_core::password::verify_password(plaintext_secret, &row.secret_hash)
+            .map_err(|e| sqlx::Error::Protocol(format!("hash verify failed: {e}")))?;
+        if valid {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}

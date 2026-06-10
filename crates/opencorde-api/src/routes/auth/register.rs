@@ -20,7 +20,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use opencorde_core::{SnowflakeGenerator, generate_keypair, password};
-use opencorde_db::repos::user_repo;
+use opencorde_db::repos::{invite_repo, user_repo};
 use rand::RngCore;
 
 use super::types::{AuthResponse, RegisterRequest, UserInfo};
@@ -45,21 +45,45 @@ pub async fn register(
             return Err(ApiError::Forbidden);
         }
         RegistrationMode::InviteOnly => {
-            match (&state.config.registration_invite_code, &req.invite_code) {
-                (Some(expected), Some(provided)) if expected == provided => {
-                    tracing::info!("invite-only: valid invite code accepted");
-                }
-                (Some(_), Some(_)) => {
-                    tracing::warn!("invite-only: invalid invite code provided");
-                    return Err(ApiError::BadRequest("invalid invite code".into()));
-                }
-                _ => {
-                    tracing::warn!("invite-only: no invite code provided");
-                    return Err(ApiError::BadRequest(
-                        "registration requires an invite code".into(),
-                    ));
+            // Validate invite code against the database invite system
+            let code = req.invite_code.as_deref().ok_or_else(|| {
+                tracing::warn!("invite-only: no invite code provided");
+                ApiError::BadRequest("INVALID_INVITE".into())
+            })?;
+
+            let invite = invite_repo::get_by_code(&state.db, code)
+                .await
+                .map_err(ApiError::Database)?
+                .ok_or_else(|| {
+                    tracing::warn!(code = %code, "invite-only: unknown invite code");
+                    ApiError::BadRequest("INVALID_INVITE".into())
+                })?;
+
+            // Check expiry
+            if let Some(expires_at) = invite.expires_at {
+                if chrono::Utc::now() > expires_at {
+                    tracing::warn!(code = %code, "invite-only: expired invite code");
+                    return Err(ApiError::BadRequest("INVALID_INVITE".into()));
                 }
             }
+
+            // Check max uses
+            if let Some(max) = invite.max_uses {
+                if invite.uses >= max {
+                    tracing::warn!(code = %code, uses = invite.uses, max, "invite-only: invite exhausted");
+                    return Err(ApiError::BadRequest("INVALID_INVITE".into()));
+                }
+            }
+
+            // Atomic: increment invite uses before proceeding
+            invite_repo::increment_uses(&state.db, code)
+                .await
+                .map_err(|e| {
+                    tracing::error!(code = %code, error = %e, "failed to increment invite uses");
+                    ApiError::Database(e)
+                })?;
+
+            tracing::info!(code = %code, server_id = invite.server_id, "invite-only: valid invite accepted");
         }
         RegistrationMode::Open => {}
     }
@@ -147,6 +171,7 @@ pub async fn register(
         &req.username,
         &state.config.jwt_secret,
         state.config.jwt_access_expiry,
+        None,
     )
     .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
 
@@ -155,6 +180,7 @@ pub async fn register(
         &req.username,
         &state.config.jwt_secret,
         state.config.jwt_refresh_expiry,
+        None,
     )
     .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
 

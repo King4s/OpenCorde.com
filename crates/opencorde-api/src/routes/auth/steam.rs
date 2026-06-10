@@ -134,6 +134,7 @@ pub async fn steam_callback(
         &user_row.username,
         &state.config.jwt_secret,
         state.config.jwt_access_expiry,
+        None,
     )
     .map_err(|e| ApiError::Internal(anyhow!("token creation failed: {}", e)))?;
 
@@ -142,6 +143,7 @@ pub async fn steam_callback(
         &user_row.username,
         &state.config.jwt_secret,
         state.config.jwt_refresh_expiry,
+        None,
     )
     .map_err(|e| ApiError::Internal(anyhow!("token creation failed: {}", e)))?;
 

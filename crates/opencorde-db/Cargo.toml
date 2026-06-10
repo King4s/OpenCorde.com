@@ -15,3 +15,4 @@ thiserror = { workspace = true }     # Error handling
 anyhow = { workspace = true }        # Flexible error handling
 chrono = { workspace = true }        # DateTime handling with timezone
 serde_json = "1.0"                   # JSON serialization for attachments
+uuid = { workspace = true }          # UUID v4 generation for auth codes

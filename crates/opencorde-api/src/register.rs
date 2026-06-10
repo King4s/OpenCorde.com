@@ -44,8 +44,9 @@ pub async fn register(
             return Err(ApiError::Forbidden);
         }
         RegistrationMode::InviteOnly => {
-            // TODO: validate invite code once invite system supports this mode
-            tracing::warn!("invite-only mode: open registration blocked");
+            // Invite validation is handled in routes/auth/register.rs (the active handler).
+            // This module is retained as a reference; the active route uses DB-backed invite checks.
+            tracing::warn!("invite-only mode: open registration blocked (use routes/auth/register)");
             return Err(ApiError::BadRequest("registration requires an invite code".into()));
         }
         RegistrationMode::Open => {}
@@ -113,6 +114,7 @@ pub async fn register(
         &req.username,
         &state.config.jwt_secret,
         state.config.jwt_access_expiry,
+        None,
     )
     .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
 
@@ -121,6 +123,7 @@ pub async fn register(
         &req.username,
         &state.config.jwt_secret,
         state.config.jwt_refresh_expiry,
+        None,
     )
     .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
 
