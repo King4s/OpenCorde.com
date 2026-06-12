@@ -18,6 +18,7 @@ import {
 } from "livekit-client";
 import { invoke } from "@tauri-apps/api/core";
 import { getGroupState, hexToBytes } from "./e2ee";
+import { toastError } from "$lib/stores/toasts.svelte";
 
 export const inVoice = writable(false);
 export const currentVoiceChannelId = writable<string | null>(null);
