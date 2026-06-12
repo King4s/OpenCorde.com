@@ -40,3 +40,15 @@ pub async fn list_by_server(
         "SELECT * FROM integration_logs WHERE server_id = $1 ORDER BY created_at DESC LIMIT $2"
     ).bind(server_id.as_i64()).bind(limit).fetch_all(pool).await
 }
+
+/// List integration logs with optional application_id filter.
+pub async fn list_by_server_and_app(
+    pool: &PgPool,
+    server_id: Snowflake,
+    application_id: Snowflake,
+    limit: i64,
+) -> Result<Vec<IntegrationLogRow>, sqlx::Error> {
+    sqlx::query_as::<_, IntegrationLogRow>(
+        "SELECT * FROM integration_logs WHERE server_id = $1 AND application_id = $2 ORDER BY created_at DESC LIMIT $3"
+    ).bind(server_id.as_i64()).bind(application_id.as_i64()).bind(limit).fetch_all(pool).await
+}

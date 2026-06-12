@@ -39,6 +39,7 @@ pub mod forum;
 pub mod friends;
 pub mod health;
 pub mod helpers;
+pub mod integration_logs;
 pub mod interactions;
 pub mod invites;
 pub mod members;
@@ -89,6 +90,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(emojis::router())
         .merge(forum::router())
         .merge(invites::router())
+        .merge(integration_logs::router())
         .merge(interactions::router())
         .merge(members::router())
         .merge(mesh::router())
