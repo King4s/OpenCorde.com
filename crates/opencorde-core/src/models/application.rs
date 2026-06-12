@@ -77,7 +77,7 @@ mod tests {
         let deserialized: Application = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.id, app.id);
         assert_eq!(deserialized.name, app.name);
-        assert_eq!(deserialized.is_public, false);
+        assert!(!deserialized.is_public);
         assert!(deserialized.redirect_uris.is_empty());
     }
 

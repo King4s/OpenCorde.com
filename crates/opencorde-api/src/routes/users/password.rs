@@ -7,7 +7,7 @@ use crate::error::ApiError;
 use crate::middleware::AuthUser;
 use crate::AppState;
 use opencorde_core::password;
-use opencorde_db::repos::{refresh_token_repo, user_repo};
+use opencorde_db::repos::user_repo;
 
 #[derive(Debug, Deserialize)]
 pub struct ChangePasswordRequest {

@@ -2,7 +2,7 @@
 
 use crate::snowflake::Snowflake;
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 #[derive(Debug, Clone)]
 pub struct BotToken {

@@ -1,8 +1,8 @@
 //! App install — install application to server, list, uninstall.
 
 use axum::{extract::{Path, State}, http::StatusCode, Json};
-use opencorde_core::snowflake::{Snowflake, SnowflakeGenerator};
-use opencorde_db::repos::{app_repo, app_install_repo, bot_user_repo, member_repo, server_repo};
+use opencorde_core::snowflake::Snowflake;
+use opencorde_db::repos::{app_repo, app_install_repo, server_repo};
 use serde::{Deserialize, Serialize};
 
 use crate::routes::helpers::parse_snowflake;
@@ -11,12 +11,14 @@ use crate::routes::permission_check;
 use opencorde_core::permissions::Permissions;
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct InstallAppRequest {
     pub scopes: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
-pub struct InstallAppResponse {
+#[allow(dead_code)]
+pub struct AppInstallResponse {
     pub id: i64,
     pub application_id: i64,
     pub server_id: i64,
@@ -35,12 +37,12 @@ pub struct ServerAppResponse {
 }
 
 pub async fn install_app(
-    State(state): State<AppState>,
-    auth: AuthUser,
+    State(_state): State<AppState>,
+    _auth: AuthUser,
     Path(app_id_str): Path<String>,
-    Json(req): Json<InstallAppRequest>,
-) -> Result<(StatusCode, Json<InstallAppResponse>), ApiError> {
-    let app_id = parse_snowflake(&app_id_str)?;
+    Json(_req): Json<InstallAppRequest>,
+) -> Result<(StatusCode, Json<AppInstallResponse>), ApiError> {
+    let _app_id = parse_snowflake(&app_id_str)?;
     // Server ID comes from request — we need it in the body
     // For now, require server_id as query param
     Err(ApiError::BadRequest("server_id required as query parameter".into()))
@@ -48,7 +50,7 @@ pub async fn install_app(
 
 pub async fn list_server_apps(
     State(state): State<AppState>,
-    auth: AuthUser,
+    _auth: AuthUser,
     Path(server_id_str): Path<String>,
 ) -> Result<Json<Vec<ServerAppResponse>>, ApiError> {
     let server_id = parse_snowflake(&server_id_str)?;

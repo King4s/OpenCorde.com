@@ -7,10 +7,10 @@
 //! ## Revocation
 //! `POST /oauth2/revoke` revokes a refresh token (JTI lookup + mark revoked).
 
-use axum::{Extension, Json};
+use axum::Json;
 use axum::extract::State;
 use chrono::{Duration, Utc};
-use opencorde_core::snowflake::{Snowflake, SnowflakeGenerator};
+use opencorde_core::snowflake::Snowflake;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
@@ -45,6 +45,7 @@ pub struct TokenResponse {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct RevokeRequest {
     pub client_id: String,
     pub client_secret: String,
@@ -133,7 +134,7 @@ async fn handle_authorization_code(
 
     // 4. Issue tokens
     let scope = Some(code_row.scope.as_str());
-    let (access_token, refresh_token, jti) = issue_token_pair(state, user_id, &user_row.username, scope).await?;
+    let (access_token, refresh_token, _jti) = issue_token_pair(state, user_id, &user_row.username, scope).await?;
 
     let expires_in = state.config.jwt_access_expiry as u32;
 
@@ -149,7 +150,7 @@ async fn handle_authorization_code(
 /// Rotate a refresh token for a new token pair.
 async fn handle_refresh_token(
     state: &AppState,
-    application_id: Snowflake,
+    _application_id: Snowflake,
     req: &TokenRequest,
 ) -> Result<Json<TokenResponse>, ApiError> {
     // 2. Validate the refresh token JWT

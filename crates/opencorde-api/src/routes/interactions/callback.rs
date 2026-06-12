@@ -2,7 +2,6 @@
 
 use axum::{extract::{Path, State}, http::StatusCode, Json};
 use opencorde_core::password::hash_password;
-use opencorde_core::snowflake::SnowflakeGenerator;
 use opencorde_db::repos::interaction_repo;
 use serde::Deserialize;
 
@@ -10,6 +9,7 @@ use crate::routes::helpers::parse_snowflake;
 use crate::{AppState, error::ApiError};
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct InteractionCallback {
     pub r#type: i16,
     #[serde(default)]
@@ -17,6 +17,7 @@ pub struct InteractionCallback {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct InteractionCallbackData {
     pub content: Option<String>,
     pub embeds: Option<Vec<serde_json::Value>>,

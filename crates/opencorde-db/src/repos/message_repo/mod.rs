@@ -36,6 +36,7 @@ mod tests {
             reply_author_username: None,
             reply_content_preview: None,
             thread_id: None,
+            forwarded_from_id: None,
         };
 
         assert_eq!(row.id, 777888999);

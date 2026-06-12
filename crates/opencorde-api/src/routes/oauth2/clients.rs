@@ -28,7 +28,7 @@ pub struct ListSecretsResponse {
 fn generate_secret() -> String {
     use std::collections::hash_map::RandomState;
     use std::hash::{BuildHasher, Hasher};
-    let mut r = RandomState::new();
+    let r = RandomState::new();
     let parts: Vec<String> = (0..4).map(|_| {
         let h = r.build_hasher().finish();
         format!("{:016x}", h)

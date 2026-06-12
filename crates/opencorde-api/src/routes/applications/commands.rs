@@ -1,7 +1,7 @@
 //! Application commands — create, list, delete for apps.
 
 use axum::{extract::{Path, State}, http::StatusCode, Json};
-use opencorde_core::snowflake::{Snowflake, SnowflakeGenerator};
+use opencorde_core::snowflake::SnowflakeGenerator;
 use opencorde_core::models::application_command::ApplicationCommandResponse;
 use opencorde_db::repos::{app_repo, app_command_repo};
 use serde::Deserialize;
@@ -52,7 +52,7 @@ pub async fn create_command(
 }
 
 pub async fn list_commands(
-    State(state): State<AppState>, auth: AuthUser,
+    State(state): State<AppState>, _auth: AuthUser,
     Path(app_id_str): Path<String>,
 ) -> Result<Json<Vec<ApplicationCommandResponse>>, ApiError> {
     let app_id = parse_snowflake(&app_id_str)?;

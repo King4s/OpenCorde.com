@@ -3,6 +3,13 @@ name = "opencorde-api"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+lints.workspace = true
+
+[lints.clippy]
+too-many-arguments = "allow"
+collapsible-if = "allow"
+type-complexity = "allow"
+manual-clamp = "allow"
 
 # Axum REST API + WebSocket gateway
 

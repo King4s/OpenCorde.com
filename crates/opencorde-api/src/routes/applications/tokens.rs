@@ -5,7 +5,6 @@ use opencorde_core::snowflake::{Snowflake, SnowflakeGenerator};
 use opencorde_core::password::hash_password;
 use opencorde_core::models::bot_token::{BotTokenCreated, BotTokenPublic};
 use opencorde_db::repos::{app_repo, bot_token_repo};
-use serde::Serialize;
 
 use crate::routes::helpers::parse_snowflake;
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
@@ -13,7 +12,7 @@ use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 fn gen_token() -> String {
     use std::collections::hash_map::RandomState;
     use std::hash::{BuildHasher, Hasher};
-    let mut r = RandomState::new();
+    let r = RandomState::new();
     let parts: Vec<String> = (0..4).map(|_| format!("{:016x}", r.build_hasher().finish())).collect();
     format!("ocb_{}", parts.join(""))
 }

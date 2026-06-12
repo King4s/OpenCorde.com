@@ -3,6 +3,10 @@ name = "opencorde-db"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+lints.workspace = true
+
+[lints.clippy]
+too-many-arguments = "allow"
 
 # PostgreSQL database layer via sqlx
 
