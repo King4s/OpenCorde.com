@@ -3,7 +3,9 @@ name = "opencorde-search"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-lints.workspace = true
+
+[lints]
+workspace = true
 
 # Full-text search using Tantivy
 

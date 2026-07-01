@@ -31,6 +31,8 @@ impl Snowflake {
     }
 
     /// Converts the Snowflake timestamp to a UTC DateTime.
+    #[allow(clippy::expect_used)] // i64 millis derived from a 42-bit field is always
+    // within chrono's ~262,000-year representable range — cannot panic.
     pub fn created_at(&self) -> DateTime<Utc> {
         let millis = self.timestamp() + EPOCH_MILLIS;
         DateTime::from_timestamp_millis(millis).expect("valid timestamp")

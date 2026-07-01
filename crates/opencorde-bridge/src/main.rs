@@ -23,6 +23,10 @@
 //! - crate::config (env config)
 //! - crate::discord (bridge implementation)
 
+// workspace.lints.clippy denies unwrap_used/expect_used to catch panics in
+// production code; test code legitimately relies on both for assertions.
+#![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
+
 mod config;
 mod discord;
 
@@ -35,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "opencorde_bridge=info,warn".parse().unwrap()),
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("opencorde_bridge=info,warn")),
         )
         .init();
 

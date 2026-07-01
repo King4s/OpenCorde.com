@@ -3,7 +3,9 @@ name = "opencorde-core"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-lints.workspace = true
+
+[lints]
+workspace = true
 
 # Shared domain types, models, and permission system
 

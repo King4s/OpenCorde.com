@@ -1,12 +1,8 @@
 //! Mention notification dispatch — target resolution, mute/suppression checks.
 
 use chrono::Utc;
-use opencorde_core::snowflake::Snowflake;
-use sqlx::PgPool;
 
 use crate::error::ApiError;
-use crate::push_sender;
-use super::validation::MentionSet;
 
 async fn resolve_notification_targets(
     pool: &sqlx::PgPool,

@@ -3,8 +3,11 @@ name = "opencorde-db"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-lints.workspace = true
 
+# Cargo doesn't support mixing `lints.workspace = true` with local overrides
+# below (cannot override workspace.lints in lints) — the workspace's deny
+# rules are enforced via `cargo clippy --workspace -- -D warnings` (see
+# quality-gate.md) instead of manifest-level inheritance.
 [lints.clippy]
 too-many-arguments = "allow"
 

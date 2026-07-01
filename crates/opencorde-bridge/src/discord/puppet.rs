@@ -24,7 +24,11 @@ use std::sync::Mutex;
 static GENERATOR: Mutex<Option<SnowflakeGenerator>> = Mutex::new(None);
 
 fn next_id() -> i64 {
-    let mut guard = GENERATOR.lock().expect("snowflake generator poisoned");
+    // A poisoned lock still holds a valid counter — recover it instead of
+    // panicking, so one earlier panic doesn't cascade into every ghost-user creation.
+    let mut guard = GENERATOR
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     let sg = guard.get_or_insert_with(|| SnowflakeGenerator::new(1, 1));
     sg.next_id().as_i64()
 }

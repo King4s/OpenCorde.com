@@ -3,7 +3,9 @@ name = "opencorde-crypto"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-lints.workspace = true
+
+[lints]
+workspace = true
 
 # E2EE layer using OpenMLS (RFC 9420)
 

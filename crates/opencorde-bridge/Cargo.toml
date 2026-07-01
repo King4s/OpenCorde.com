@@ -3,7 +3,9 @@ name = "opencorde-bridge"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-lints.workspace = true
+
+[lints]
+workspace = true
 
 # Bridge service for connecting to external platforms (Discord, Steam)
 
