@@ -29,6 +29,7 @@
 
 mod handlers;
 mod password_reset;
+mod qr;
 mod register;
 mod steam;
 mod steam_verify;
@@ -69,6 +70,7 @@ pub fn router() -> Router<AppState> {
         .route("/api/v1/auth/2fa/enable", post(totp::enable))
         .route("/api/v1/auth/2fa/verify", post(totp::verify))
         .route("/api/v1/auth/2fa", axum::routing::delete(totp::disable))
+        .merge(qr::router())
 }
 
 #[cfg(test)]

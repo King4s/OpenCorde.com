@@ -1,13 +1,14 @@
 <script lang="ts">
 	/**
 	 * @file Login page
-	 * @purpose Email + password authentication with forgot password link, Steam OpenID option
-	 * @depends stores/auth
-	 * @version 3.1.0
+	 * @purpose Email + password authentication with forgot password link, Steam OpenID, and QR code device handoff
+	 * @depends stores/auth, qrcode
+	 * @version 3.2.0
 	 */
 	import { goto } from '$app/navigation';
 	import { establishSession, login } from '$lib/stores/auth';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
+	import QRCode from 'qrcode';
 
 	let email = $state('');
 	let password = $state('');
@@ -16,6 +17,16 @@
 	let showForgotPassword = $state(false);
 	let showTotp = $state(false);
 	let totpCode = $state('');
+
+	// QR login state
+	let showQrLogin = $state(false);
+	let qrToken = $state('');
+	let qrExpiresAt = $state(0);
+	let qrError = $state('');
+	let qrLoading = $state(false);
+	let qrConfirmed = $state(false);
+	let qrPollTimer: ReturnType<typeof setInterval> | null = null;
+	let qrCanvas: HTMLCanvasElement | null = $state(null);
 
 	// Handle OAuth-style callback from Steam
 	onMount(async () => {
@@ -38,6 +49,10 @@
 				error = 'Failed to store tokens';
 			}
 		}
+	});
+
+	onDestroy(() => {
+		stopQrPolling();
 	});
 
 	async function handleSubmit(e: Event) {
@@ -89,6 +104,98 @@
 		} finally {
 			forgotLoading = false;
 		}
+	}
+
+	// --- QR Login ---
+
+	async function startQrLogin() {
+		qrError = '';
+		qrLoading = true;
+		showQrLogin = true;
+
+		try {
+			const res = await fetch('/api/v1/auth/qr/request', { method: 'POST' });
+			if (!res.ok) {
+				throw new Error('Failed to create QR session');
+			}
+			const data = await res.json();
+			qrToken = data.token;
+			qrExpiresAt = data.expires_at * 1000;
+
+			// Render QR code
+			await tick();
+			if (qrCanvas) {
+				await QRCode.toCanvas(qrCanvas, qrToken, { width: 200, margin: 2 });
+			}
+
+			// Start polling
+			startQrPolling();
+		} catch (e: any) {
+			qrError = e.message || 'QR login failed';
+			showQrLogin = false;
+		} finally {
+			qrLoading = false;
+		}
+	}
+
+	function startQrPolling() {
+		stopQrPolling();
+		qrPollTimer = setInterval(pollQrStatus, 2000);
+	}
+
+	function stopQrPolling() {
+		if (qrPollTimer) {
+			clearInterval(qrPollTimer);
+			qrPollTimer = null;
+		}
+	}
+
+	async function pollQrStatus() {
+		if (!qrToken || qrConfirmed) return;
+
+		// Check expiry
+		if (Date.now() > qrExpiresAt) {
+			stopQrPolling();
+			qrError = 'QR code expired. Please generate a new one.';
+			return;
+		}
+
+		try {
+			const res = await fetch(`/api/v1/auth/qr/${qrToken}`);
+			if (res.status === 404) {
+				stopQrPolling();
+				qrError = 'QR code expired. Please generate a new one.';
+				return;
+			}
+			if (!res.ok) return;
+
+			const data = await res.json();
+			if (data.status === 'confirmed') {
+				stopQrPolling();
+				qrConfirmed = true;
+
+				const authData = data.data;
+				// Store tokens and establish session
+				if (authData.access_token) {
+					await establishSession(authData.access_token);
+					window.location.href = '/servers';
+				}
+			}
+		} catch {
+			// Network error — will retry on next poll
+		}
+	}
+
+	function cancelQrLogin() {
+		stopQrPolling();
+		showQrLogin = false;
+		qrToken = '';
+		qrError = '';
+	}
+
+	// Helper to wait for DOM update
+	function tick(): Promise<void> {
+		return new Promise((resolve) => setTimeout(resolve, 0));
 	}
 </script>
 
@@ -195,6 +302,57 @@
 			</svg>
 			Sign in with Steam
 		</a>
+
+		<!-- QR Code Login -->
+		<div class="mt-3">
+			{#if showQrLogin}
+				<div class="border border-gray-700 rounded-lg p-4 text-center">
+					<h3 class="text-sm font-medium text-gray-300 mb-2">Scan QR Code</h3>
+					<p class="text-xs text-gray-500 mb-3">
+						Scan this code with an already logged-in device to sign in instantly.
+					</p>
+
+					{#if qrError}
+						<div role="alert" class="bg-red-900/30 border border-red-700/40 text-red-300 p-2 rounded mb-3 text-xs">{qrError}</div>
+					{/if}
+
+					{#if qrConfirmed}
+						<div class="bg-green-900/30 border border-green-700/40 text-green-300 p-2 rounded mb-3 text-xs">
+							Login confirmed! Redirecting...
+						</div>
+					{/if}
+
+					<div class="inline-block bg-white p-2 rounded">
+						<canvas bind:this={qrCanvas} width="200" height="200"></canvas>
+					</div>
+
+					{#if qrToken}
+						<p class="text-xs text-gray-600 mt-2 font-mono select-all">{qrToken}</p>
+					{/if}
+
+					<button
+						onclick={cancelQrLogin}
+						class="mt-3 text-xs text-gray-400 hover:text-white transition-colors underline"
+					>
+						← Back to password login
+					</button>
+				</div>
+			{:else}
+				<button
+					onclick={startQrLogin}
+					disabled={qrLoading}
+					class="w-full py-2.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-gray-300 hover:text-white font-medium rounded transition-colors flex items-center justify-center gap-2 text-sm"
+				>
+					<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<rect x="3" y="3" width="7" height="7" rx="1" />
+						<rect x="14" y="3" width="7" height="7" rx="1" />
+						<rect x="3" y="14" width="7" height="7" rx="1" />
+						<rect x="14" y="14" width="7" height="7" rx="1" />
+					</svg>
+					{qrLoading ? 'Generating QR…' : 'Log in with QR code'}
+				</button>
+			{/if}
+		</div>
 
 		{#if showForgotPassword}
 			<form onsubmit={handleForgotSubmit} class="mt-6 space-y-4 border-t border-gray-700 pt-6">

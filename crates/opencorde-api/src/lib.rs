@@ -51,6 +51,7 @@ pub mod ws;
 
 use crate::middleware::rate_limit::RateLimitState;
 use axum::extract::FromRef;
+use redis::aio::ConnectionManager as RedisConnectionManager;
 use sqlx::PgPool;
 use std::sync::Arc;
 use tokio::sync::broadcast;
@@ -82,6 +83,8 @@ pub struct AppState {
     pub unfurl_cache: routes::unfurl::UnfurlCache,
     /// Shared rate limiter state — allows admin API to read/update live config
     pub rate_limit_state: Arc<RateLimitState>,
+    /// Redis connection manager for caching and ephemeral data (QR auth, etc.)
+    pub redis_conn: RedisConnectionManager,
 }
 
 /// Allow extracting Arc<Config> from AppState.
