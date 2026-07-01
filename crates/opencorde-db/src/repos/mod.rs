@@ -40,6 +40,7 @@ pub mod slash_command_repo;
 pub mod stage_repo;
 pub mod thread_repo;
 pub mod totp_recovery_repo;
+pub mod user_oauth_authorization_repo;
 pub mod user_repo;
 pub mod voice_state_repo;
 pub mod webhook_repo;

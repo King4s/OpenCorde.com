@@ -140,12 +140,26 @@ pub async fn approve(
         return Err(Html("<h1>Error</h1><p>Unknown application.</p>".into()));
     }
 
-    // Generate authorization code
+    // Record the authorization grant (so it shows in authorized-apps list)
     let scope = body.scope.clone();
     let redirect_uri = body.redirect_uri.clone();
 
     let mut generator = SnowflakeGenerator::new(10, 0);
     let code_id = generator.next_id();
+    let auth_id = generator.next_id();
+
+    // Upsert the user-authorization record — idempotent if already authorized
+    if let Err(e) = repos::user_oauth_authorization_repo::upsert(
+        &state.db,
+        auth_id,
+        auth.user_id,
+        app_id,
+        &scope,
+    )
+    .await
+    {
+        tracing::error!(?e, "failed to record OAuth authorization");
+    }
 
     let (plaintext_code, _row) = repos::oauth_auth_code_repo::create_auth_code(
         &state.db,

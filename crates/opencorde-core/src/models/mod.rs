@@ -27,3 +27,4 @@ pub mod oauth_client_secret;
 pub mod bot_token;
 pub mod application_command;
 pub mod message_embed;
+pub mod user_oauth_authorization;
