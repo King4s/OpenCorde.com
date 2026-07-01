@@ -129,21 +129,22 @@ pub async fn steam_callback(
 
     // Generate JWT tokens
     let user_id = Snowflake::new(user_row.id);
-    let access_token = jwt::create_access_token(
-        user_id,
-        &user_row.username,
-        &state.config.jwt_secret,
-        state.config.jwt_access_expiry,
-        None,
-    )
-    .map_err(|e| ApiError::Internal(anyhow!("token creation failed: {}", e)))?;
-
     let (refresh_token, jti) = jwt::create_refresh_token(
         user_id,
         &user_row.username,
         &state.config.jwt_secret,
         state.config.jwt_refresh_expiry,
         None,
+    )
+    .map_err(|e| ApiError::Internal(anyhow!("token creation failed: {}", e)))?;
+
+    let access_token = jwt::create_access_token(
+        user_id,
+        &user_row.username,
+        &state.config.jwt_secret,
+        state.config.jwt_access_expiry,
+        None,
+        Some(&jti),
     )
     .map_err(|e| ApiError::Internal(anyhow!("token creation failed: {}", e)))?;
 

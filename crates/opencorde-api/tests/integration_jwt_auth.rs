@@ -10,7 +10,7 @@ fn test_jwt_create_and_validate() {
     const USERNAME: &str = "testuser";
 
     let user_id = Snowflake::new(USER_ID);
-    let token = create_access_token(user_id, USERNAME, SECRET, 3600, None)
+    let token = create_access_token(user_id, USERNAME, SECRET, 3600, None, None)
         .expect("token creation should succeed");
 
     let claims = validate_access_token(&token, SECRET).expect("validation should succeed");
@@ -28,7 +28,7 @@ fn test_jwt_wrong_secret() {
     const USERNAME: &str = "testuser";
 
     let user_id = Snowflake::new(USER_ID);
-    let token = create_access_token(user_id, USERNAME, SECRET, 3600, None)
+    let token = create_access_token(user_id, USERNAME, SECRET, 3600, None, None)
         .expect("token creation should succeed");
 
     let result = validate_access_token(&token, WRONG_SECRET);

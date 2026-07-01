@@ -103,6 +103,34 @@ pub async fn revoke_all_for_user(pool: &PgPool, user_id: i64) -> Result<u64, sql
     Ok(count)
 }
 
+/// Revoke every non-revoked refresh token for a user except the one matching `keep_jti`.
+///
+/// Used by "log out other sessions" — keeps the caller's own session active.
+///
+/// # Errors
+/// Returns `sqlx::Error` on update failure.
+#[tracing::instrument(skip(pool))]
+pub async fn revoke_all_for_user_except(
+    pool: &PgPool,
+    user_id: i64,
+    keep_jti: &str,
+) -> Result<u64, sqlx::Error> {
+    let result = sqlx::query(
+        "UPDATE refresh_tokens SET revoked = TRUE WHERE user_id = $1 AND revoked = FALSE AND jti != $2",
+    )
+    .bind(user_id)
+    .bind(keep_jti)
+    .execute(pool)
+    .await?;
+    let count = result.rows_affected();
+    tracing::info!(
+        user_id = user_id,
+        tokens_revoked = count,
+        "other refresh tokens revoked for user"
+    );
+    Ok(count)
+}
+
 /// Delete all expired refresh token rows.
 ///
 /// Safe to call on a schedule (e.g., hourly). Returns the number of rows deleted.
@@ -117,6 +145,19 @@ pub async fn cleanup_expired(pool: &PgPool) -> Result<u64, sqlx::Error> {
     let count = result.rows_affected();
     tracing::info!(deleted = count, "expired refresh tokens cleaned up");
     Ok(count)
+}
+
+/// List all active (non-revoked, non-expired) refresh tokens for a user.
+pub async fn list_active_for_user(
+    pool: &PgPool,
+    user_id: i64,
+) -> Result<Vec<RefreshTokenRow>, sqlx::Error> {
+    sqlx::query_as::<_, RefreshTokenRow>(
+        "SELECT * FROM refresh_tokens WHERE user_id = $1 AND revoked = FALSE AND expires_at > NOW() ORDER BY created_at DESC"
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await
 }
 
 #[cfg(test)]

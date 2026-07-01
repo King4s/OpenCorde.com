@@ -14,7 +14,7 @@ const USERNAME: &str = "testuser";
 #[test]
 fn test_create_and_validate_access_token() {
     let user_id = Snowflake::new(USER_ID);
-    let token = create_access_token(user_id, USERNAME, TEST_SECRET, 3600, None)
+    let token = create_access_token(user_id, USERNAME, TEST_SECRET, 3600, None, None)
         .expect("token creation should succeed");
 
     let claims =
@@ -45,7 +45,7 @@ fn test_create_and_validate_refresh_token() {
 #[test]
 fn test_access_token_rejected_as_refresh() {
     let user_id = Snowflake::new(USER_ID);
-    let token = create_access_token(user_id, USERNAME, TEST_SECRET, 3600, None)
+    let token = create_access_token(user_id, USERNAME, TEST_SECRET, 3600, None, None)
         .expect("token creation should succeed");
 
     let result = validate_refresh_token(&token, TEST_SECRET);
@@ -71,7 +71,7 @@ fn test_refresh_token_rejected_as_access() {
 #[test]
 fn test_wrong_secret_fails() {
     let user_id = Snowflake::new(USER_ID);
-    let token = create_access_token(user_id, USERNAME, TEST_SECRET, 3600, None)
+    let token = create_access_token(user_id, USERNAME, TEST_SECRET, 3600, None, None)
         .expect("token creation should succeed");
 
     let wrong_secret = "wrong-secret-key-min-32-chars-long!!!";
@@ -90,9 +90,9 @@ fn test_different_users_different_tokens() {
     let user1 = Snowflake::new(111);
     let user2 = Snowflake::new(222);
 
-    let token1 = create_access_token(user1, USERNAME, TEST_SECRET, 3600, None)
+    let token1 = create_access_token(user1, USERNAME, TEST_SECRET, 3600, None, None)
         .expect("token1 creation should succeed");
-    let token2 = create_access_token(user2, USERNAME, TEST_SECRET, 3600, None)
+    let token2 = create_access_token(user2, USERNAME, TEST_SECRET, 3600, None, None)
         .expect("token2 creation should succeed");
 
     assert_ne!(token1, token2);

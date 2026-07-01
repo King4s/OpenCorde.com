@@ -55,6 +55,9 @@ pub struct AuthUser {
     pub user_id: Snowflake,
     /// Username (from token claims, for convenience)
     pub username: String,
+    /// JTI of the refresh token this access token was issued alongside, if any.
+    /// Identifies "the current session" for the sessions API.
+    pub session_jti: Option<String>,
 }
 
 impl<S> FromRequestParts<S> for AuthUser
@@ -106,6 +109,7 @@ where
         Ok(AuthUser {
             user_id,
             username: claims.username,
+            session_jti: claims.jti,
         })
     }
 }
@@ -122,6 +126,7 @@ mod tests {
         let auth = AuthUser {
             user_id,
             username: username.clone(),
+            session_jti: None,
         };
 
         assert_eq!(auth.user_id.as_i64(), 123456789);
@@ -134,6 +139,7 @@ mod tests {
         let auth1 = AuthUser {
             user_id,
             username: "user".to_string(),
+            session_jti: Some("test-jti".to_string()),
         };
 
         let auth2 = auth1.clone();

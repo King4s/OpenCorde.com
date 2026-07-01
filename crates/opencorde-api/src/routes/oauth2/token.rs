@@ -245,21 +245,22 @@ async fn issue_token_pair(
     username: &str,
     scope: Option<&str>,
 ) -> Result<(String, String, String), ApiError> {
-    let access_token = jwt::create_access_token(
-        user_id,
-        username,
-        &state.config.jwt_secret,
-        state.config.jwt_access_expiry,
-        scope,
-    )
-    .map_err(|e| ApiError::InternalServerError(format!("token creation failed: {e}")))?;
-
     let (refresh_token, jti) = jwt::create_refresh_token(
         user_id,
         username,
         &state.config.jwt_secret,
         state.config.jwt_refresh_expiry,
         scope,
+    )
+    .map_err(|e| ApiError::InternalServerError(format!("token creation failed: {e}")))?;
+
+    let access_token = jwt::create_access_token(
+        user_id,
+        username,
+        &state.config.jwt_secret,
+        state.config.jwt_access_expiry,
+        scope,
+        Some(&jti),
     )
     .map_err(|e| ApiError::InternalServerError(format!("token creation failed: {e}")))?;
 
