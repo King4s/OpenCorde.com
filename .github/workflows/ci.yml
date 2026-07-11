@@ -31,7 +31,7 @@ jobs:
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/opencorde
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -47,7 +47,7 @@ jobs:
     name: Frontend (type-check + lint)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -65,7 +65,7 @@ jobs:
     name: Tauri build check (Linux)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - uses: swatinem/rust-cache@v2
         with:
