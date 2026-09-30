@@ -15,5 +15,7 @@ CREATE TABLE oauth_authorization_codes (
 );
 
 CREATE INDEX idx_auth_codes_app ON oauth_authorization_codes (application_id);
+-- NOW() is not IMMUTABLE and thus not allowed in index predicates;
+-- expiry is filtered at query time (expires_at > NOW() in WHERE clauses).
 CREATE INDEX idx_auth_codes_active ON oauth_authorization_codes (application_id)
-    WHERE used_at IS NULL AND expires_at > NOW();
+    WHERE used_at IS NULL;
