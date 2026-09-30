@@ -55,8 +55,5 @@ pub async fn request_qr(
 
     tracing::info!(token = %token, expires_at, "QR login token created");
 
-    Ok(Json(QrRequestResponse {
-        token,
-        expires_at,
-    }))
+    Ok(Json(QrRequestResponse { token, expires_at }))
 }

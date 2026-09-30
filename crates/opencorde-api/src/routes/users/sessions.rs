@@ -12,9 +12,9 @@ use axum::{
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 
+use crate::AppState;
 use crate::error::ApiError;
 use crate::middleware::auth::AuthUser;
-use crate::AppState;
 use opencorde_db::repos::refresh_token_repo;
 
 #[derive(Debug, Serialize)]

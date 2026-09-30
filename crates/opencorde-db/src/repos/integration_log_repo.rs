@@ -18,9 +18,14 @@ pub struct IntegrationLogRow {
 }
 
 pub async fn log_event(
-    pool: &PgPool, id: Snowflake, server_id: Option<Snowflake>,
-    application_id: Option<Snowflake>, actor_bot_user_id: Option<Snowflake>,
-    action_type: &str, status: &str, metadata: &Value,
+    pool: &PgPool,
+    id: Snowflake,
+    server_id: Option<Snowflake>,
+    application_id: Option<Snowflake>,
+    actor_bot_user_id: Option<Snowflake>,
+    action_type: &str,
+    status: &str,
+    metadata: &Value,
 ) -> Result<IntegrationLogRow, sqlx::Error> {
     sqlx::query_as::<_, IntegrationLogRow>(
         "INSERT INTO integration_logs (id,server_id,application_id,actor_bot_user_id,action_type,status,metadata)
@@ -34,11 +39,17 @@ pub async fn log_event(
 }
 
 pub async fn list_by_server(
-    pool: &PgPool, server_id: Snowflake, limit: i64,
+    pool: &PgPool,
+    server_id: Snowflake,
+    limit: i64,
 ) -> Result<Vec<IntegrationLogRow>, sqlx::Error> {
     sqlx::query_as::<_, IntegrationLogRow>(
-        "SELECT * FROM integration_logs WHERE server_id = $1 ORDER BY created_at DESC LIMIT $2"
-    ).bind(server_id.as_i64()).bind(limit).fetch_all(pool).await
+        "SELECT * FROM integration_logs WHERE server_id = $1 ORDER BY created_at DESC LIMIT $2",
+    )
+    .bind(server_id.as_i64())
+    .bind(limit)
+    .fetch_all(pool)
+    .await
 }
 
 /// List integration logs with optional application_id filter.

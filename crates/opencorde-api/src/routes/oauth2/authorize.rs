@@ -33,9 +33,7 @@ pub struct ApproveBody {
 ///
 /// Renders an authorization prompt. In production this should be a full page
 /// with app name, icon, and requested scopes. For now, a minimal HTML form.
-pub async fn authorize_page(
-    Query(params): Query<AuthorizeParams>,
-) -> Html<String> {
+pub async fn authorize_page(Query(params): Query<AuthorizeParams>) -> Html<String> {
     let client_name = &params.client_id; // In production: look up app name from DB
     let scope = params.scope.as_deref().unwrap_or("identify");
     let state = params.state.as_deref().unwrap_or("");
@@ -123,9 +121,10 @@ pub async fn approve(
     }
 
     // Parse client_id
-    let application_id: i64 = body.client_id.parse().map_err(|_| {
-        Html("<h1>Error</h1><p>Invalid client ID.</p>".into())
-    })?;
+    let application_id: i64 = body
+        .client_id
+        .parse()
+        .map_err(|_| Html("<h1>Error</h1><p>Invalid client ID.</p>".into()))?;
     let app_id = opencorde_core::snowflake::Snowflake::new(application_id);
 
     // Verify the application exists

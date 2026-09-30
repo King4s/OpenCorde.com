@@ -15,31 +15,47 @@ pub struct AppInstallRow {
 }
 
 pub async fn create_install(
-    pool: &PgPool, id: Snowflake, application_id: Snowflake,
-    server_id: Snowflake, installed_by: Snowflake, scopes: &[String],
+    pool: &PgPool,
+    id: Snowflake,
+    application_id: Snowflake,
+    server_id: Snowflake,
+    installed_by: Snowflake,
+    scopes: &[String],
 ) -> Result<AppInstallRow, sqlx::Error> {
     sqlx::query_as::<_, AppInstallRow>(
         "INSERT INTO app_installs (id, application_id, server_id, installed_by, scopes)
-         VALUES ($1, $2, $3, $4, $5) RETURNING *"
+         VALUES ($1, $2, $3, $4, $5) RETURNING *",
     )
-    .bind(id.as_i64()).bind(application_id.as_i64())
-    .bind(server_id.as_i64()).bind(installed_by.as_i64()).bind(scopes)
-    .fetch_one(pool).await
+    .bind(id.as_i64())
+    .bind(application_id.as_i64())
+    .bind(server_id.as_i64())
+    .bind(installed_by.as_i64())
+    .bind(scopes)
+    .fetch_one(pool)
+    .await
 }
 
 pub async fn list_by_server(
-    pool: &PgPool, server_id: Snowflake,
+    pool: &PgPool,
+    server_id: Snowflake,
 ) -> Result<Vec<AppInstallRow>, sqlx::Error> {
     sqlx::query_as::<_, AppInstallRow>(
-        "SELECT * FROM app_installs WHERE server_id = $1 ORDER BY created_at DESC"
-    ).bind(server_id.as_i64()).fetch_all(pool).await
+        "SELECT * FROM app_installs WHERE server_id = $1 ORDER BY created_at DESC",
+    )
+    .bind(server_id.as_i64())
+    .fetch_all(pool)
+    .await
 }
 
 pub async fn delete_install(
-    pool: &PgPool, application_id: Snowflake, server_id: Snowflake,
+    pool: &PgPool,
+    application_id: Snowflake,
+    server_id: Snowflake,
 ) -> Result<bool, sqlx::Error> {
     let r = sqlx::query("DELETE FROM app_installs WHERE application_id = $1 AND server_id = $2")
-        .bind(application_id.as_i64()).bind(server_id.as_i64())
-        .execute(pool).await?;
+        .bind(application_id.as_i64())
+        .bind(server_id.as_i64())
+        .execute(pool)
+        .await?;
     Ok(r.rows_affected() > 0)
 }

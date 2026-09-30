@@ -1,8 +1,8 @@
 //! # Domain Models
 //! One model per file. Each defines a primary struct + serialization.
 
-pub mod application;
 pub mod app_install;
+pub mod application;
 pub mod bot_user;
 pub mod channel;
 pub mod invite;
@@ -23,8 +23,8 @@ pub use role::Role;
 pub use server::Server;
 pub use user::{User, UserProfile, UserStatus};
 pub use voice_state::VoiceState;
-pub mod oauth_client_secret;
-pub mod bot_token;
 pub mod application_command;
+pub mod bot_token;
 pub mod message_embed;
+pub mod oauth_client_secret;
 pub mod user_oauth_authorization;

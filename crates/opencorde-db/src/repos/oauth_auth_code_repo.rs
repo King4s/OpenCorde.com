@@ -60,10 +60,11 @@ pub async fn consume_auth_code(
     let candidates: Vec<AuthCodeRow> = sqlx::query_as::<_, AuthCodeRow>(
         "SELECT * FROM oauth_authorization_codes
          WHERE application_id = $1 AND used_at IS NULL AND expires_at > NOW()
-         ORDER BY created_at DESC LIMIT 10"
+         ORDER BY created_at DESC LIMIT 10",
     )
     .bind(application_id.as_i64())
-    .fetch_all(pool).await?;
+    .fetch_all(pool)
+    .await?;
 
     for row in candidates {
         let valid = password::verify_password(plaintext_code, &row.code_hash)
@@ -77,10 +78,11 @@ pub async fn consume_auth_code(
             // Atomic consumption — only one caller wins
             let result = sqlx::query(
                 "UPDATE oauth_authorization_codes SET used_at = NOW()
-                 WHERE id = $1 AND used_at IS NULL"
+                 WHERE id = $1 AND used_at IS NULL",
             )
             .bind(row.id)
-            .execute(pool).await?;
+            .execute(pool)
+            .await?;
 
             if result.rows_affected() == 0 {
                 return Ok(None);

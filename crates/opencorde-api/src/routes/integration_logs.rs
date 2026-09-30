@@ -2,7 +2,11 @@
 //! List integration logs for a server, with optional application_id filter.
 //! Gated on server:VIEW_AUDIT_LOG permission.
 
-use axum::{extract::{Path, Query, State}, Json, Router, routing::get};
+use axum::{
+    Json, Router,
+    extract::{Path, Query, State},
+    routing::get,
+};
 use opencorde_core::permissions::Permissions;
 use serde::{Deserialize, Serialize};
 
@@ -12,8 +16,10 @@ use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
 use opencorde_db::repos::integration_log_repo;
 
 pub fn router() -> Router<AppState> {
-    Router::new()
-        .route("/api/v1/servers/{server_id}/integration-logs", get(list_logs))
+    Router::new().route(
+        "/api/v1/servers/{server_id}/integration-logs",
+        get(list_logs),
+    )
 }
 
 #[derive(Debug, Deserialize)]
@@ -58,8 +64,12 @@ pub async fn list_logs(
 
     // Require VIEW_AUDIT_LOG permission
     permission_check::require_server_perm(
-        &state.db, auth.user_id, server_id, Permissions::VIEW_AUDIT_LOG,
-    ).await?;
+        &state.db,
+        auth.user_id,
+        server_id,
+        Permissions::VIEW_AUDIT_LOG,
+    )
+    .await?;
 
     let limit = query.limit.unwrap_or(50).min(100);
 

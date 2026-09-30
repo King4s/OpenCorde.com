@@ -3,9 +3,9 @@
 use axum::{Json, extract::State, http::StatusCode};
 use serde::Deserialize;
 
+use crate::AppState;
 use crate::error::ApiError;
 use crate::middleware::AuthUser;
-use crate::AppState;
 use opencorde_core::password;
 use opencorde_db::repos::user_repo;
 
@@ -25,7 +25,9 @@ pub async fn change_password(
     Json(req): Json<ChangePasswordRequest>,
 ) -> Result<StatusCode, ApiError> {
     if req.new_password.len() < 8 {
-        return Err(ApiError::BadRequest("password must be at least 8 characters".into()));
+        return Err(ApiError::BadRequest(
+            "password must be at least 8 characters".into(),
+        ));
     }
 
     // Fetch user with password hash
@@ -35,9 +37,10 @@ pub async fn change_password(
         .ok_or_else(|| ApiError::Unauthorized)?;
 
     // Verify current password
-    let current_hash = user.password_hash.as_deref().ok_or_else(|| {
-        ApiError::BadRequest("account has no password set".into())
-    })?;
+    let current_hash = user
+        .password_hash
+        .as_deref()
+        .ok_or_else(|| ApiError::BadRequest("account has no password set".into()))?;
 
     let valid = password::verify_password(&req.current_password, current_hash)
         .map_err(|e| ApiError::InternalServerError(format!("password verification failed: {e}")))?;

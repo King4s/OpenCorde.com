@@ -15,8 +15,11 @@ pub struct EmbedRow {
 }
 
 pub async fn create_embed(
-    pool: &PgPool, id: Snowflake, message_id: Snowflake,
-    position: i16, payload: &Value,
+    pool: &PgPool,
+    id: Snowflake,
+    message_id: Snowflake,
+    position: i16,
+    payload: &Value,
 ) -> Result<EmbedRow, sqlx::Error> {
     sqlx::query_as::<_, EmbedRow>(
         "INSERT INTO message_embeds (id, message_id, position, payload) VALUES ($1,$2,$3,$4) RETURNING *"
@@ -25,9 +28,13 @@ pub async fn create_embed(
 }
 
 pub async fn get_embeds(
-    pool: &PgPool, message_id: Snowflake,
+    pool: &PgPool,
+    message_id: Snowflake,
 ) -> Result<Vec<EmbedRow>, sqlx::Error> {
     sqlx::query_as::<_, EmbedRow>(
-        "SELECT * FROM message_embeds WHERE message_id = $1 ORDER BY position"
-    ).bind(message_id.as_i64()).fetch_all(pool).await
+        "SELECT * FROM message_embeds WHERE message_id = $1 ORDER BY position",
+    )
+    .bind(message_id.as_i64())
+    .fetch_all(pool)
+    .await
 }

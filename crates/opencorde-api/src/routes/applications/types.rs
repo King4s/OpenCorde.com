@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
 use opencorde_core::models::application::Application;
 use opencorde_core::models::bot_user::BotUser;
+use serde::{Deserialize, Serialize};
 
 // === Request types ===
 

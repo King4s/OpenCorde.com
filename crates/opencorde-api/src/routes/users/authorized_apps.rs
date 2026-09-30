@@ -11,9 +11,9 @@ use axum::{
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 
+use crate::AppState;
 use crate::error::ApiError;
 use crate::middleware::auth::AuthUser;
-use crate::AppState;
 use opencorde_db::repos::user_oauth_authorization_repo;
 
 /// Public-facing authorized app entry.

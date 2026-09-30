@@ -3,5 +3,5 @@
 //! from the specific modules directly.
 
 pub use super::helpers::message_row_to_response;
-pub use super::send::send_message;
 pub use super::list::list_messages;
+pub use super::send::send_message;

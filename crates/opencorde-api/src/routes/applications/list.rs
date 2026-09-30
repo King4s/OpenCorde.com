@@ -1,8 +1,8 @@
 //! GET /api/v1/applications/@me and GET /api/v1/applications/public
 
-use axum::{extract::State, Json};
-use opencorde_db::repos::app_repo;
+use axum::{Json, extract::State};
 use opencorde_core::snowflake::Snowflake;
+use opencorde_db::repos::app_repo;
 
 use super::types::{ApplicationResponse, ListMineResponse, ListPublicResponse};
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
@@ -43,9 +43,8 @@ pub async fn list_my_applications(
 pub async fn list_public_applications(
     State(state): State<AppState>,
 ) -> Result<Json<ListPublicResponse>, ApiError> {
-    
     let rows: Vec<app_repo::ApplicationRow> = sqlx::query_as::<_, app_repo::ApplicationRow>(
-        "SELECT * FROM applications WHERE is_public = true ORDER BY created_at DESC LIMIT 100"
+        "SELECT * FROM applications WHERE is_public = true ORDER BY created_at DESC LIMIT 100",
     )
     .fetch_all(&state.db)
     .await

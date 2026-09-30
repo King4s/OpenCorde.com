@@ -24,10 +24,17 @@ pub struct InteractionRow {
 }
 
 pub async fn create_interaction(
-    pool: &PgPool, id: Snowflake, application_id: Snowflake,
-    token_hash: &str, interaction_type: i16, command_id: Option<Snowflake>,
-    server_id: Option<Snowflake>, channel_id: Option<Snowflake>,
-    user_id: Snowflake, data: &Value, expires_at: DateTime<Utc>,
+    pool: &PgPool,
+    id: Snowflake,
+    application_id: Snowflake,
+    token_hash: &str,
+    interaction_type: i16,
+    command_id: Option<Snowflake>,
+    server_id: Option<Snowflake>,
+    channel_id: Option<Snowflake>,
+    user_id: Snowflake,
+    data: &Value,
+    expires_at: DateTime<Utc>,
 ) -> Result<InteractionRow, sqlx::Error> {
     sqlx::query_as::<_, InteractionRow>(
         "INSERT INTO interactions (id,application_id,token_hash,interaction_type,command_id,server_id,channel_id,user_id,data,expires_at)
@@ -41,7 +48,9 @@ pub async fn create_interaction(
 }
 
 pub async fn find_by_token(
-    pool: &PgPool, interaction_id: Snowflake, token_hash: &str,
+    pool: &PgPool,
+    interaction_id: Snowflake,
+    token_hash: &str,
 ) -> Result<Option<InteractionRow>, sqlx::Error> {
     sqlx::query_as::<_, InteractionRow>(
         "SELECT * FROM interactions WHERE id = $1 AND token_hash = $2 AND response_state = 'pending' AND expires_at > NOW()"
@@ -49,7 +58,9 @@ pub async fn find_by_token(
 }
 
 pub async fn mark_responded(
-    pool: &PgPool, interaction_id: Snowflake, state: &str,
+    pool: &PgPool,
+    interaction_id: Snowflake,
+    state: &str,
 ) -> Result<bool, sqlx::Error> {
     let r = sqlx::query(
         "UPDATE interactions SET response_state = $2, responded_at = NOW() WHERE id = $1 AND response_state = 'pending'"

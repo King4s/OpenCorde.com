@@ -17,8 +17,12 @@ pub struct ClientSecretRow {
 }
 
 pub async fn create_secret(
-    pool: &PgPool, id: Snowflake, application_id: Snowflake,
-    secret_prefix: &str, secret_hash: &str, created_by: Snowflake,
+    pool: &PgPool,
+    id: Snowflake,
+    application_id: Snowflake,
+    secret_prefix: &str,
+    secret_hash: &str,
+    created_by: Snowflake,
     label: Option<&str>,
 ) -> Result<ClientSecretRow, sqlx::Error> {
     sqlx::query_as::<_, ClientSecretRow>(
@@ -32,23 +36,30 @@ pub async fn create_secret(
 }
 
 pub async fn list_secrets(
-    pool: &PgPool, application_id: Snowflake,
+    pool: &PgPool,
+    application_id: Snowflake,
 ) -> Result<Vec<ClientSecretRow>, sqlx::Error> {
     sqlx::query_as::<_, ClientSecretRow>(
-        "SELECT * FROM oauth_client_secrets WHERE application_id = $1 ORDER BY created_at DESC"
+        "SELECT * FROM oauth_client_secrets WHERE application_id = $1 ORDER BY created_at DESC",
     )
-    .bind(application_id.as_i64()).fetch_all(pool).await
+    .bind(application_id.as_i64())
+    .fetch_all(pool)
+    .await
 }
 
 pub async fn revoke_secret(
-    pool: &PgPool, secret_id: Snowflake, application_id: Snowflake,
+    pool: &PgPool,
+    secret_id: Snowflake,
+    application_id: Snowflake,
 ) -> Result<bool, sqlx::Error> {
     let result = sqlx::query(
         "UPDATE oauth_client_secrets SET revoked_at = NOW()
-         WHERE id = $1 AND application_id = $2 AND revoked_at IS NULL"
+         WHERE id = $1 AND application_id = $2 AND revoked_at IS NULL",
     )
-    .bind(secret_id.as_i64()).bind(application_id.as_i64())
-    .execute(pool).await?;
+    .bind(secret_id.as_i64())
+    .bind(application_id.as_i64())
+    .execute(pool)
+    .await?;
     Ok(result.rows_affected() > 0)
 }
 
@@ -62,10 +73,11 @@ pub async fn verify_client_secret(
     let rows: Vec<ClientSecretRow> = sqlx::query_as::<_, ClientSecretRow>(
         "SELECT * FROM oauth_client_secrets
          WHERE application_id = $1 AND revoked_at IS NULL
-         ORDER BY created_at DESC"
+         ORDER BY created_at DESC",
     )
     .bind(application_id.as_i64())
-    .fetch_all(pool).await?;
+    .fetch_all(pool)
+    .await?;
 
     for row in &rows {
         let valid = opencorde_core::password::verify_password(plaintext_secret, &row.secret_hash)

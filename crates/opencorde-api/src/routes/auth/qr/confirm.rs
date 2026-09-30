@@ -12,12 +12,7 @@ use axum::{Json, extract::State};
 use redis::AsyncCommands;
 use serde::Deserialize;
 
-use crate::{
-    AppState,
-    error::ApiError,
-    jwt,
-    middleware::auth::AuthUser,
-};
+use crate::{AppState, error::ApiError, jwt, middleware::auth::AuthUser};
 
 /// Short TTL after confirmation (60s — enough for the poller to pick up).
 const CONFIRMED_TTL_SECS: u64 = 60;
@@ -102,12 +97,7 @@ pub async fn confirm_qr(
         expires_at,
     )
     .await
-    .map_err(|e| {
-        ApiError::Internal(anyhow::anyhow!(
-            "failed to store refresh token JTI: {}",
-            e
-        ))
-    })?;
+    .map_err(|e| ApiError::Internal(anyhow::anyhow!("failed to store refresh token JTI: {}", e)))?;
 
     // Build the auth payload to deliver to the polling device
     let payload = serde_json::json!({

@@ -40,11 +40,12 @@ pub async fn generate_codes(
             .map_err(|e| sqlx::Error::Protocol(format!("hashing failed: {e}")))?;
 
         let id = generator.next_id();
-        sqlx::query(
-            "INSERT INTO totp_recovery_codes (id, user_id, code_hash) VALUES ($1, $2, $3)"
-        )
-        .bind(id.as_i64()).bind(user_id.as_i64()).bind(&code_hash)
-        .execute(pool).await?;
+        sqlx::query("INSERT INTO totp_recovery_codes (id, user_id, code_hash) VALUES ($1, $2, $3)")
+            .bind(id.as_i64())
+            .bind(user_id.as_i64())
+            .bind(&code_hash)
+            .execute(pool)
+            .await?;
 
         plaintext_codes.push(plaintext);
     }
@@ -73,10 +74,11 @@ pub async fn consume_code(
         if valid {
             // Atomic consumption — UPDATE WHERE used_at IS NULL
             let result = sqlx::query(
-                "UPDATE totp_recovery_codes SET used_at = NOW() WHERE id = $1 AND used_at IS NULL"
+                "UPDATE totp_recovery_codes SET used_at = NOW() WHERE id = $1 AND used_at IS NULL",
             )
             .bind(row.id)
-            .execute(pool).await?;
+            .execute(pool)
+            .await?;
 
             return Ok(result.rows_affected() > 0);
         }
@@ -91,25 +93,30 @@ pub async fn list_codes(
     user_id: Snowflake,
 ) -> Result<Vec<RecoveryCodeInfo>, sqlx::Error> {
     let rows: Vec<RecoveryCodeRow> = sqlx::query_as::<_, RecoveryCodeRow>(
-        "SELECT * FROM totp_recovery_codes WHERE user_id = $1 ORDER BY created_at"
+        "SELECT * FROM totp_recovery_codes WHERE user_id = $1 ORDER BY created_at",
     )
     .bind(user_id.as_i64())
-    .fetch_all(pool).await?;
+    .fetch_all(pool)
+    .await?;
 
-    Ok(rows.into_iter().map(|r| RecoveryCodeInfo {
-        id: r.id,
-        used: r.used_at.is_some(),
-        created_at: r.created_at,
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(|r| RecoveryCodeInfo {
+            id: r.id,
+            used: r.used_at.is_some(),
+            created_at: r.created_at,
+        })
+        .collect())
 }
 
 /// Count unused recovery codes remaining for a user.
 pub async fn count_remaining(pool: &PgPool, user_id: Snowflake) -> Result<i64, sqlx::Error> {
     let row: (i64,) = sqlx::query_as(
-        "SELECT COUNT(*) FROM totp_recovery_codes WHERE user_id = $1 AND used_at IS NULL"
+        "SELECT COUNT(*) FROM totp_recovery_codes WHERE user_id = $1 AND used_at IS NULL",
     )
     .bind(user_id.as_i64())
-    .fetch_one(pool).await?;
+    .fetch_one(pool)
+    .await?;
     Ok(row.0)
 }
 
@@ -117,6 +124,7 @@ pub async fn count_remaining(pool: &PgPool, user_id: Snowflake) -> Result<i64, s
 pub async fn clear_codes(pool: &PgPool, user_id: Snowflake) -> Result<(), sqlx::Error> {
     sqlx::query("DELETE FROM totp_recovery_codes WHERE user_id = $1")
         .bind(user_id.as_i64())
-        .execute(pool).await?;
+        .execute(pool)
+        .await?;
     Ok(())
 }

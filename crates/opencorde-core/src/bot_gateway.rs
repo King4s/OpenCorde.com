@@ -18,13 +18,21 @@ impl GatewayIntents {
     pub const MESSAGE_CONTENT: i64 = 1 << 15;
     pub const INTEGRATIONS: i64 = 1 << 20;
 
-    pub const fn new(bits: i64) -> Self { Self(bits) }
-    pub fn contains(&self, intent: i64) -> bool { self.0 & intent != 0 }
-    pub fn bits(&self) -> i64 { self.0 }
+    pub const fn new(bits: i64) -> Self {
+        Self(bits)
+    }
+    pub fn contains(&self, intent: i64) -> bool {
+        self.0 & intent != 0
+    }
+    pub fn bits(&self) -> i64 {
+        self.0
+    }
 }
 
 impl Default for GatewayIntents {
-    fn default() -> Self { Self(Self::GUILDS | Self::GUILD_MESSAGES) }
+    fn default() -> Self {
+        Self(Self::GUILDS | Self::GUILD_MESSAGES)
+    }
 }
 
 /// Gateway opcode envelope (Discord-compatible).

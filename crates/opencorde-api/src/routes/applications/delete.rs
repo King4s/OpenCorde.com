@@ -1,6 +1,9 @@
 //! DELETE /api/v1/applications/{id} — delete application (owner only).
 
-use axum::{extract::{Path, State}, http::StatusCode};
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+};
 use opencorde_db::repos::app_repo;
 
 use crate::routes::helpers::parse_snowflake;

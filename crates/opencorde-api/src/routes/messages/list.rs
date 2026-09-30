@@ -8,9 +8,7 @@ use opencorde_core::permissions::Permissions;
 use opencorde_db::repos::message_repo;
 use tracing::instrument;
 
-use crate::{
-    AppState, error::ApiError, middleware::auth::AuthUser, routes::permission_check,
-};
+use crate::{AppState, error::ApiError, middleware::auth::AuthUser, routes::permission_check};
 
 use super::helpers::message_row_to_response;
 use super::types::{MessageQuery, MessageResponse};

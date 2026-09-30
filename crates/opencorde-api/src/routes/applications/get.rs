@@ -1,8 +1,11 @@
 //! GET /api/v1/applications/{id} — get application by ID.
 
-use axum::{extract::{Path, State}, Json};
-use opencorde_db::repos::app_repo;
+use axum::{
+    Json,
+    extract::{Path, State},
+};
 use opencorde_core::snowflake::Snowflake;
+use opencorde_db::repos::app_repo;
 
 use super::types::ApplicationResponse;
 use crate::routes::helpers::parse_snowflake;

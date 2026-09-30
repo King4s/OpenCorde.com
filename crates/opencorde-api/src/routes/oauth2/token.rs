@@ -14,9 +14,9 @@ use opencorde_core::snowflake::Snowflake;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
+use crate::AppState;
 use crate::error::ApiError;
 use crate::jwt;
-use crate::AppState;
 use opencorde_db::repos;
 
 // ── Request / Response types ──────────────────────────────────────────
@@ -108,10 +108,7 @@ async fn handle_authorization_code(
     application_id: Snowflake,
     req: &TokenRequest,
 ) -> Result<Json<TokenResponse>, ApiError> {
-    let redirect_uri = req
-        .redirect_uri
-        .as_deref()
-        .unwrap_or("");
+    let redirect_uri = req.redirect_uri.as_deref().unwrap_or("");
 
     // 2. Validate + consume the authorization code
     let code_row = repos::oauth_auth_code_repo::consume_auth_code(
@@ -134,7 +131,8 @@ async fn handle_authorization_code(
 
     // 4. Issue tokens
     let scope = Some(code_row.scope.as_str());
-    let (access_token, refresh_token, _jti) = issue_token_pair(state, user_id, &user_row.username, scope).await?;
+    let (access_token, refresh_token, _jti) =
+        issue_token_pair(state, user_id, &user_row.username, scope).await?;
 
     let expires_in = state.config.jwt_access_expiry as u32;
 
@@ -195,7 +193,8 @@ async fn handle_refresh_token(
 
     // 6. Issue new token pair
     let scope = claims.scope.as_deref();
-    let (access_token, refresh_token, _new_jti) = issue_token_pair(state, user_id, &user_row.username, scope).await?;
+    let (access_token, refresh_token, _new_jti) =
+        issue_token_pair(state, user_id, &user_row.username, scope).await?;
 
     let expires_in = state.config.jwt_access_expiry as u32;
 

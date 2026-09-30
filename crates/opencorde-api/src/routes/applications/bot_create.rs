@@ -1,9 +1,13 @@
 //! POST /api/v1/applications/{id}/bot — create a bot user.
 
-use axum::{extract::{Path, State}, http::StatusCode, Json};
+use axum::{
+    Json,
+    extract::{Path, State},
+    http::StatusCode,
+};
+use opencorde_core::models::bot_user::BotUser;
 use opencorde_core::snowflake::{Snowflake, SnowflakeGenerator};
 use opencorde_db::repos::{app_repo, bot_user_repo};
-use opencorde_core::models::bot_user::BotUser;
 
 use super::types::{BotUserResponse, CreateBotRequest};
 use crate::routes::helpers::parse_snowflake;

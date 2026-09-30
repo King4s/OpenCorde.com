@@ -151,7 +151,9 @@ pub async fn verify(
     // Generate 10 one-time recovery codes
     let mut generator = opencorde_core::snowflake::SnowflakeGenerator::new(10, 1);
     let recovery_codes = opencorde_db::repos::totp_recovery_repo::generate_codes(
-        &state.db, auth.user_id, &mut generator,
+        &state.db,
+        auth.user_id,
+        &mut generator,
     )
     .await
     .map_err(ApiError::Database)?;
@@ -165,9 +167,12 @@ pub async fn verify(
         auth.user_id.as_i64(),
     )
     .await;
-    Ok((StatusCode::OK, Json(TotpVerifyResponse {
-        recovery_codes: Some(recovery_codes),
-    })))
+    Ok((
+        StatusCode::OK,
+        Json(TotpVerifyResponse {
+            recovery_codes: Some(recovery_codes),
+        }),
+    ))
 }
 
 /// DELETE /api/v1/auth/2fa — Disable 2FA.

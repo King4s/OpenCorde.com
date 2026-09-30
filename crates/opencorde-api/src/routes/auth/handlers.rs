@@ -91,14 +91,16 @@ pub async fn login(
                 if !valid {
                     // Try recovery code as fallback (32-char uppercase hex)
                     let uid = Snowflake::new(user_row.id);
-                    let consumed = opencorde_db::repos::totp_recovery_repo::consume_code(
-                        &state.db, uid, code,
-                    )
-                    .await
-                    .map_err(ApiError::Database)?;
+                    let consumed =
+                        opencorde_db::repos::totp_recovery_repo::consume_code(&state.db, uid, code)
+                            .await
+                            .map_err(ApiError::Database)?;
 
                     if !consumed {
-                        tracing::warn!(user_id = user_row.id, "invalid TOTP/recovery code at login");
+                        tracing::warn!(
+                            user_id = user_row.id,
+                            "invalid TOTP/recovery code at login"
+                        );
                         return Err(ApiError::Unauthorized);
                     }
                     tracing::info!(user_id = user_row.id, "recovery code consumed for login");

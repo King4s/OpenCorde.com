@@ -96,22 +96,21 @@ pub async fn list_for_user(
 /// # Errors
 /// Returns `sqlx::Error` on delete failure.
 #[tracing::instrument(skip(pool))]
-pub async fn revoke(
-    pool: &PgPool,
-    id: i64,
-    user_id: i64,
-) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query(
-        "DELETE FROM user_oauth_authorizations WHERE id = $1 AND user_id = $2",
-    )
-    .bind(id)
-    .bind(user_id)
-    .execute(pool)
-    .await?;
+pub async fn revoke(pool: &PgPool, id: i64, user_id: i64) -> Result<bool, sqlx::Error> {
+    let result =
+        sqlx::query("DELETE FROM user_oauth_authorizations WHERE id = $1 AND user_id = $2")
+            .bind(id)
+            .bind(user_id)
+            .execute(pool)
+            .await?;
 
     let deleted = result.rows_affected() > 0;
     if deleted {
-        tracing::info!(auth_id = id, user_id = user_id, "OAuth authorization revoked");
+        tracing::info!(
+            auth_id = id,
+            user_id = user_id,
+            "OAuth authorization revoked"
+        );
     }
     Ok(deleted)
 }

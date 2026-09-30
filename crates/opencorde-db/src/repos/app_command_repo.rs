@@ -2,8 +2,8 @@
 
 use chrono::{DateTime, Utc};
 use opencorde_core::snowflake::Snowflake;
-use sqlx::PgPool;
 use serde_json::Value;
+use sqlx::PgPool;
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 pub struct AppCommandRow {
@@ -22,9 +22,14 @@ pub struct AppCommandRow {
 }
 
 pub async fn create_command(
-    pool: &PgPool, id: Snowflake, application_id: Snowflake,
-    server_id: Option<Snowflake>, name: &str, description: &str,
-    command_type: i16, options: &Value,
+    pool: &PgPool,
+    id: Snowflake,
+    application_id: Snowflake,
+    server_id: Option<Snowflake>,
+    name: &str,
+    description: &str,
+    command_type: i16,
+    options: &Value,
 ) -> Result<AppCommandRow, sqlx::Error> {
     sqlx::query_as::<_, AppCommandRow>(
         "INSERT INTO application_commands (id, application_id, server_id, name, description, command_type, options)
@@ -37,7 +42,9 @@ pub async fn create_command(
 }
 
 pub async fn list_commands(
-    pool: &PgPool, application_id: Snowflake, server_id: Option<Snowflake>,
+    pool: &PgPool,
+    application_id: Snowflake,
+    server_id: Option<Snowflake>,
 ) -> Result<Vec<AppCommandRow>, sqlx::Error> {
     if let Some(sid) = server_id {
         sqlx::query_as::<_, AppCommandRow>(
@@ -51,10 +58,14 @@ pub async fn list_commands(
 }
 
 pub async fn delete_command(
-    pool: &PgPool, command_id: Snowflake, application_id: Snowflake,
+    pool: &PgPool,
+    command_id: Snowflake,
+    application_id: Snowflake,
 ) -> Result<bool, sqlx::Error> {
-    let r = sqlx::query(
-        "DELETE FROM application_commands WHERE id = $1 AND application_id = $2"
-    ).bind(command_id.as_i64()).bind(application_id.as_i64()).execute(pool).await?;
+    let r = sqlx::query("DELETE FROM application_commands WHERE id = $1 AND application_id = $2")
+        .bind(command_id.as_i64())
+        .bind(application_id.as_i64())
+        .execute(pool)
+        .await?;
     Ok(r.rows_affected() > 0)
 }

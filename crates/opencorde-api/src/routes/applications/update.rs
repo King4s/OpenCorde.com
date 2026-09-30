@@ -1,8 +1,11 @@
 //! PATCH /api/v1/applications/{id} — update application (owner only).
 
-use axum::{extract::{Path, State}, Json};
-use opencorde_db::repos::app_repo;
+use axum::{
+    Json,
+    extract::{Path, State},
+};
 use opencorde_core::snowflake::Snowflake;
+use opencorde_db::repos::app_repo;
 
 use super::types::{ApplicationResponse, UpdateApplicationRequest};
 use crate::routes::helpers::parse_snowflake;
@@ -45,9 +48,9 @@ pub async fn update_application(
     let description = req.description.or(row.description);
     let icon_url = req.icon_url.or(row.icon_url);
     let is_public = req.is_public.unwrap_or(row.is_public);
-    let redirect_uris: Vec<String> = req.redirect_uris.unwrap_or_else(|| {
-        serde_json::from_value(row.redirect_uris.clone()).unwrap_or_default()
-    });
+    let redirect_uris: Vec<String> = req
+        .redirect_uris
+        .unwrap_or_else(|| serde_json::from_value(row.redirect_uris.clone()).unwrap_or_default());
 
     app_repo::update_application(
         &state.db,
