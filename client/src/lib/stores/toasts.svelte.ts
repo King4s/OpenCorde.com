@@ -4,7 +4,7 @@
  * @used-by ToastContainer.svelte, api/client.ts permission-denied handling
  */
 
-export type ToastType = 'info' | 'error' | 'warning' | 'success';
+export type ToastType = "info" | "error" | "warning" | "success";
 
 export interface Toast {
   id: string;
@@ -24,12 +24,12 @@ function makeId(): string {
 /** Show a new toast. Returns the toast id so it can be dismissed early. */
 export function addToast(
   message: string,
-  opts?: { type?: ToastType; title?: string; durationMs?: number }
+  opts?: { type?: ToastType; title?: string; durationMs?: number },
 ): string {
   const id = makeId();
   const toast: Toast = {
     id,
-    type: opts?.type ?? 'info',
+    type: opts?.type ?? "info",
     title: opts?.title,
     message,
     durationMs: opts?.durationMs ?? 5000,
@@ -53,14 +53,14 @@ export function getToasts(): Toast[] {
 
 /** Convenience helpers */
 export function toastError(message: string, title?: string) {
-  return addToast(message, { type: 'error', title, durationMs: 6000 });
+  return addToast(message, { type: "error", title, durationMs: 6000 });
 }
 export function toastWarning(message: string, title?: string) {
-  return addToast(message, { type: 'warning', title, durationMs: 5000 });
+  return addToast(message, { type: "warning", title, durationMs: 5000 });
 }
 export function toastSuccess(message: string, title?: string) {
-  return addToast(message, { type: 'success', title, durationMs: 3000 });
+  return addToast(message, { type: "success", title, durationMs: 3000 });
 }
 export function toastInfo(message: string, title?: string) {
-  return addToast(message, { type: 'info', title, durationMs: 4000 });
+  return addToast(message, { type: "info", title, durationMs: 4000 });
 }

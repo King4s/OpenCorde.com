@@ -48,7 +48,10 @@ async function decryptContent(
     // Toast once per channel per session to avoid spamming
     if (!decryptionToastShown.has(channelId)) {
       decryptionToastShown.add(channelId);
-      toastError("Some messages could not be decrypted. History may be incomplete.", "Encryption Error");
+      toastError(
+        "Some messages could not be decrypted. History may be incomplete.",
+        "Encryption Error",
+      );
     }
     return "[Decryption failed]";
   }

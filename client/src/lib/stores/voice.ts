@@ -32,33 +32,47 @@ export const voiceE2EEActive = writable(false);
 
 /** Bitrate quality tiers — always prefer highest possible */
 const BITRATE_TIERS = {
-  excellent: { maxBitrate: 192_000, label: '192kbps', maxLossPct: 1, maxRtt: 50 },
-  good:      { maxBitrate: 128_000, label: '128kbps', maxLossPct: 3, maxRtt: 100 },
-  fair:      { maxBitrate: 64_000,  label: '64kbps',  maxLossPct: 8, maxRtt: 200 },
-  poor:      { maxBitrate: 32_000,  label: '32kbps',  maxLossPct: Infinity, maxRtt: Infinity },
+  excellent: {
+    maxBitrate: 192_000,
+    label: "192kbps",
+    maxLossPct: 1,
+    maxRtt: 50,
+  },
+  good: { maxBitrate: 128_000, label: "128kbps", maxLossPct: 3, maxRtt: 100 },
+  fair: { maxBitrate: 64_000, label: "64kbps", maxLossPct: 8, maxRtt: 200 },
+  poor: {
+    maxBitrate: 32_000,
+    label: "32kbps",
+    maxLossPct: Infinity,
+    maxRtt: Infinity,
+  },
 } as const;
 
 type TierName = keyof typeof BITRATE_TIERS;
 
 /** Current bitrate state exposed for debugging */
-export const bitrateTier = writable<TierName>('excellent');
+export const bitrateTier = writable<TierName>("excellent");
 export const bitrateStats = writable<{
-  packetsLost: number; packetsSent: number; rtt: number; lossPct: number;
-  availableBitrate: number; currentBitrate: number;
+  packetsLost: number;
+  packetsSent: number;
+  rtt: number;
+  lossPct: number;
+  availableBitrate: number;
+  currentBitrate: number;
 } | null>(null);
 
 let bitrateInterval: ReturnType<typeof setInterval> | null = null;
-let tierSamples: TierName[] = [];       // hysteresis: 3 consecutive samples required
-let currentTier: TierName = 'excellent';
+let tierSamples: TierName[] = []; // hysteresis: 3 consecutive samples required
+let currentTier: TierName = "excellent";
 let audioSender: RTCRtpSender | null = null;
 
 function pickTier(lossPct: number, rtt: number): TierName {
-  const tiers: TierName[] = ['excellent', 'good', 'fair', 'poor'];
+  const tiers: TierName[] = ["excellent", "good", "fair", "poor"];
   for (const tier of tiers) {
     const cfg = BITRATE_TIERS[tier];
     if (lossPct <= cfg.maxLossPct && rtt <= cfg.maxRtt) return tier;
   }
-  return 'poor';
+  return "poor";
 }
 
 async function applyBitrate(sender: RTCRtpSender, bitrate: number) {
@@ -68,46 +82,66 @@ async function applyBitrate(sender: RTCRtpSender, bitrate: number) {
     params.encodings[0].maxBitrate = bitrate;
     await sender.setParameters(params);
   } catch (e) {
-    console.warn('[BitrateCtrl] setParameters failed:', e);
+    console.warn("[BitrateCtrl] setParameters failed:", e);
   }
 }
 
 async function tickBitrate(room: Room) {
   if (!audioSender) return;
   try {
-    const pc = (room as any).engine?.publisher?.pc as RTCPeerConnection | undefined;
-    if (!pc) { findSenderFromTrack(); return; }
+    const pc = (room as any).engine?.publisher?.pc as
+      | RTCPeerConnection
+      | undefined;
+    if (!pc) {
+      findSenderFromTrack();
+      return;
+    }
 
     const report = await pc.getStats(null);
-    let packetsLost = 0, packetsSent = 0, rtt = 0, availableBitrate = 0;
+    let packetsLost = 0,
+      packetsSent = 0,
+      rtt = 0,
+      availableBitrate = 0;
 
-    report.forEach(stat => {
-      if (stat.type === 'outbound-rtp' && stat.kind === 'audio') {
+    report.forEach((stat) => {
+      if (stat.type === "outbound-rtp" && stat.kind === "audio") {
         packetsLost = stat.packetsLost ?? 0;
         packetsSent = stat.packetsSent ?? 0;
       }
-      if (stat.type === 'candidate-pair' && stat.state === 'succeeded') {
+      if (stat.type === "candidate-pair" && stat.state === "succeeded") {
         rtt = Math.round(stat.currentRoundTripTime * 1000) || 0;
         availableBitrate = stat.availableOutgoingBitrate ?? 0;
       }
     });
 
-    const lossPct = packetsSent > 0 ? (packetsLost / (packetsSent + packetsLost)) * 100 : 0;
+    const lossPct =
+      packetsSent > 0 ? (packetsLost / (packetsSent + packetsLost)) * 100 : 0;
     const tier = pickTier(lossPct, rtt);
     const cfg = BITRATE_TIERS[tier];
 
     // Update stats store for debugging
-    bitrateStats.set({ packetsLost, packetsSent, rtt, lossPct, availableBitrate, currentBitrate: cfg.maxBitrate });
+    bitrateStats.set({
+      packetsLost,
+      packetsSent,
+      rtt,
+      lossPct,
+      availableBitrate,
+      currentBitrate: cfg.maxBitrate,
+    });
 
     // Hysteresis: require 3 consecutive samples in the same tier
     tierSamples.push(tier);
     if (tierSamples.length > 5) tierSamples.shift();
 
     const last3 = tierSamples.slice(-3);
-    const stableTier = last3.every(t => t === last3[0]) ? last3[0] : currentTier;
+    const stableTier = last3.every((t) => t === last3[0])
+      ? last3[0]
+      : currentTier;
 
     if (stableTier !== currentTier) {
-      console.log(`[BitrateCtrl] Switching: ${currentTier}(${BITRATE_TIERS[currentTier].label}) → ${stableTier}(${cfg.label}) loss=${lossPct.toFixed(1)}% rtt=${rtt}ms`);
+      console.log(
+        `[BitrateCtrl] Switching: ${currentTier}(${BITRATE_TIERS[currentTier].label}) → ${stableTier}(${cfg.label}) loss=${lossPct.toFixed(1)}% rtt=${rtt}ms`,
+      );
       currentTier = stableTier;
       bitrateTier.set(stableTier);
       await applyBitrate(audioSender, BITRATE_TIERS[stableTier].maxBitrate);
@@ -132,12 +166,14 @@ function findSenderFromTrack() {
       // (limited — can't easily enumerate PCs from window scope)
     }
     for (const s of senders) {
-      if (s.track?.kind === 'audio') {
+      if (s.track?.kind === "audio") {
         audioSender = s;
         break;
       }
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 }
 
 function startBitrateController(room: Room) {
@@ -145,22 +181,26 @@ function startBitrateController(room: Room) {
   setTimeout(() => {
     if (!audioSender) {
       try {
-        const pub = (room.localParticipant as any).getTrackPublication?.('microphone');
+        const pub = (room.localParticipant as any).getTrackPublication?.(
+          "microphone",
+        );
         const sender = pub?.audioTrack?.sender;
         if (sender) audioSender = sender;
-      } catch { /* internal API, may fail */ }
+      } catch {
+        /* internal API, may fail */
+      }
     }
     if (!audioSender) findSenderFromTrack();
 
     if (audioSender) {
-      console.log('[BitrateCtrl] Controller active, starting at 128kbps');
+      console.log("[BitrateCtrl] Controller active, starting at 128kbps");
       // Start at 128kbps (good tier) and let monitoring adjust
       applyBitrate(audioSender, 128_000);
-      tierSamples = ['good', 'good', 'good', 'good', 'good'];
-      currentTier = 'good';
-      bitrateTier.set('good');
+      tierSamples = ["good", "good", "good", "good", "good"];
+      currentTier = "good";
+      bitrateTier.set("good");
     } else {
-      console.warn('[BitrateCtrl] No audio sender found, controller idle');
+      console.warn("[BitrateCtrl] No audio sender found, controller idle");
     }
   }, 2000);
 
@@ -175,8 +215,8 @@ function stopBitrateController() {
   }
   audioSender = null;
   tierSamples = [];
-  currentTier = 'excellent';
-  bitrateTier.set('excellent');
+  currentTier = "excellent";
+  bitrateTier.set("excellent");
   bitrateStats.set(null);
 }
 

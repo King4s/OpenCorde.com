@@ -15,7 +15,9 @@ const TS = Date.now().toString();
 try {
   let src = readFileSync(SW_DEST, "utf-8");
   if (!src.includes("__BUILD_TIMESTAMP__")) {
-    console.log("[pwa-version] No placeholder found — already injected or not a prod build");
+    console.log(
+      "[pwa-version] No placeholder found — already injected or not a prod build",
+    );
     process.exit(0);
   }
   src = src.replace(/__BUILD_TIMESTAMP__/g, TS);

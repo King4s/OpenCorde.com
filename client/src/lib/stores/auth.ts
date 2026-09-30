@@ -30,7 +30,9 @@ async function getStoredToken(): Promise<string | null> {
         tokenType: "access_token",
       });
     } catch {
-      console.debug("[auth] Keychain read unavailable, falling back to localStorage");
+      console.debug(
+        "[auth] Keychain read unavailable, falling back to localStorage",
+      );
     }
   }
   return localStorage.getItem("opencorde_token");
@@ -48,7 +50,9 @@ async function persistToken(token: string | null): Promise<void> {
       }
       return;
     } catch {
-      console.debug("[auth] Keychain write unavailable, falling back to localStorage");
+      console.debug(
+        "[auth] Keychain write unavailable, falling back to localStorage",
+      );
     }
   }
   if (token) {

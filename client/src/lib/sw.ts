@@ -51,17 +51,27 @@ function notify() {
 export function subscribe(fn: () => void): () => void {
   _subscribers.add(fn);
   fn(); // immediate first call
-  return () => { _subscribers.delete(fn); };
+  return () => {
+    _subscribers.delete(fn);
+  };
 }
 
 // ---------------------------------------------------------------------------
 // Getters
 // ---------------------------------------------------------------------------
 
-export function isUpdateAvailable() { return _updateAvailable; }
-export function isOnline() { return _online; }
-export function pendingVersion() { return _pendingVersion; }
-export function activeVersion() { return _activeVersion; }
+export function isUpdateAvailable() {
+  return _updateAvailable;
+}
+export function isOnline() {
+  return _online;
+}
+export function pendingVersion() {
+  return _pendingVersion;
+}
+export function activeVersion() {
+  return _activeVersion;
+}
 
 // ---------------------------------------------------------------------------
 // Internal helpers — each mutates state AND notifies subscribers
@@ -89,7 +99,10 @@ function setupUpdateDetection(reg: ServiceWorkerRegistration) {
     if (!installing) return;
 
     installing.addEventListener("statechange", () => {
-      if (installing.state === "installed" && navigator.serviceWorker.controller) {
+      if (
+        installing.state === "installed" &&
+        navigator.serviceWorker.controller
+      ) {
         setUpdateAvailable(true);
         console.info("[sw] update available — waiting to activate");
       }

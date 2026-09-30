@@ -5,7 +5,11 @@
  */
 import { writable, derived, get } from "svelte/store";
 import api from "$lib/api/client";
-import type { StageSession, StageParticipant, StageDetail } from "$lib/api/types";
+import type {
+  StageSession,
+  StageParticipant,
+  StageDetail,
+} from "$lib/api/types";
 
 // ─── Stores ────────────────────────────────────────────────────────────────
 
@@ -33,7 +37,9 @@ export const handCount = derived(handsRaised, ($h) => $h.length);
 // ─── API Helpers ────────────────────────────────────────────────────────────
 
 /** Fetch current stage state for a channel */
-export async function fetchStage(channelId: string): Promise<StageDetail | null> {
+export async function fetchStage(
+  channelId: string,
+): Promise<StageDetail | null> {
   try {
     const detail = await api.get<StageDetail>(`/channels/${channelId}/stage`);
     stageSession.set(detail.session);
