@@ -97,6 +97,10 @@ pub fn should_dispatch(
                 .unwrap_or(false)
         }
         "ChannelAck" | "PresenceUpdate" | "MemberJoin" | "MemberLeave" => true,
+        // Event lifecycle events — broadcast to all, client filters by
+        // server membership (EventStatusUpdate) or recipient list
+        // (EventReminder).
+        "EventReminder" | "EventStatusUpdate" => true,
         _ => false,
     }
 }

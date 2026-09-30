@@ -5,9 +5,32 @@
 //! Format: `{ "type": "event_name", "data": {...} }`
 
 use crate::models::{Channel, Message, Server, UserProfile, VoiceState};
+use crate::models::event::Event;
 use crate::snowflake::Snowflake;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+
+/// Stage session data for gateway events.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StageSessionData {
+    pub id: Snowflake,
+    pub channel_id: Snowflake,
+    pub topic: Option<String>,
+    pub started_by: Snowflake,
+    pub started_at: DateTime<Utc>,
+}
+
+/// Stage participant data for gateway events.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StageParticipantData {
+    pub id: Snowflake,
+    pub channel_id: Snowflake,
+    pub user_id: Snowflake,
+    pub username: String,
+    pub role: String,
+    pub hand_raised: bool,
+    pub joined_at: DateTime<Utc>,
+}
 
 /// Gateway lifecycle and data events.
 /// Serializes with `type` field and nested `data` object.
@@ -86,4 +109,38 @@ pub enum GatewayEvent {
         server_id: Snowflake,
         user_id: Snowflake,
     },
+
+    // Scheduled event events
+    /// New scheduled event created
+    EventCreate { event: Event },
+    /// Event status updated
+    EventUpdate { event: Event },
+    /// Event deleted
+    EventDelete {
+        server_id: Snowflake,
+        event_id: Snowflake,
+    },
+    /// RSVP count changed (user RSVP'd or un-RSVP'd)
+    EventRsvpUpdate {
+        event_id: Snowflake,
+        server_id: Snowflake,
+        rsvp_count: i64,
+    },
+
+    // Stage channel events
+    /// Stage session started
+    StageSessionStart { session: StageSessionData },
+    /// Stage session ended
+    StageSessionEnd {
+        channel_id: Snowflake,
+    },
+    /// Participant joined stage
+    StageParticipantJoin { participant: StageParticipantData },
+    /// Participant left stage
+    StageParticipantLeave {
+        channel_id: Snowflake,
+        user_id: Snowflake,
+    },
+    /// Participant updated (role change, hand raise/lower)
+    StageParticipantUpdate { participant: StageParticipantData },
 }
