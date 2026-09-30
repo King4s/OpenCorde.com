@@ -23,3 +23,7 @@ anyhow = { workspace = true }        # Flexible error handling
 chrono = { workspace = true }        # DateTime handling with timezone
 serde_json = "1.0"                   # JSON serialization for attachments
 uuid = { workspace = true }          # UUID v4 generation for auth codes
+
+[dev-dependencies]
+testcontainers-modules = { version = "0.15.0", features = ["postgres"] }  # Ephemeral Postgres for repo integration tests (needs Docker)
+sqlx = { workspace = true, features = ["migrate"] }  # sqlx::migrate! to apply the migration chain in tests
