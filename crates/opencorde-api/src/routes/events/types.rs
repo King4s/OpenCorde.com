@@ -45,7 +45,6 @@ pub struct EventResponse {
 
 /// Request body for creating an event.
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 pub struct CreateEventRequest {
     /// Event title (1-100 chars)
     pub title: String,

@@ -1,8 +1,8 @@
 # Unwired draft components
 
 Parked here on 2026-09-30 while getting CI green again. These components were
-added in commit 0790f50 (2026-06-09) but were never imported by any route or
-component, and they reference API types, store exports and backend endpoints
+added in commit 0790f50 (2026-06-09) but were never rendered anywhere (ProfileTab
+only had an unused import of StatusPicker, since removed), and they reference API types, store exports and backend endpoints
 that do not exist yet (`Poll`, `MeshPeer`, `InstanceHealth`, presence custom
 status, etc.). Living under `src/` they broke `pnpm check` with 39 type errors.
 
