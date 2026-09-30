@@ -12,6 +12,7 @@ import api from "$lib/api/client";
 import { gateway } from "$lib/api/websocket";
 import type { AuthResponse, UserProfile } from "$lib/api/types";
 import { browser } from "$app/environment";
+import { toastError } from "$lib/stores/toasts.svelte";
 
 // Detect Tauri context (window.__TAURI_INTERNALS__ is injected by Tauri runtime)
 function isTauri(): boolean {
@@ -29,7 +30,9 @@ async function getStoredToken(): Promise<string | null> {
         tokenType: "access_token",
       });
     } catch {
-      // Fall through to localStorage
+      console.debug(
+        "[auth] Keychain read unavailable, falling back to localStorage",
+      );
     }
   }
   return localStorage.getItem("opencorde_token");
@@ -47,7 +50,9 @@ async function persistToken(token: string | null): Promise<void> {
       }
       return;
     } catch {
-      // Fall through to localStorage
+      console.debug(
+        "[auth] Keychain write unavailable, falling back to localStorage",
+      );
     }
   }
   if (token) {
@@ -101,6 +106,8 @@ export async function restoreSession(): Promise<boolean> {
     gateway.connect(token);
     return true;
   } catch {
+    console.debug("[auth] Session restore failed, logging out");
+    toastError("Session expired. Please log in again.");
     logout();
     return false;
   }
@@ -142,6 +149,8 @@ export async function refreshToken(): Promise<void> {
     const res = await api.post<AuthResponse>("/auth/refresh");
     accessToken.set(res.access_token);
   } catch {
+    console.debug("[auth] Token refresh failed, logging out");
+    toastError("Session expired. Please log in again.");
     logout();
   }
 }

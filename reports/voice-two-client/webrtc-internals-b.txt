@@ -1,0 +1,75 @@
+Create a WebRTC-Internals dump
+Create diagnostic audio recordings
+Create diagnostic packet recordings
+Create DataChannel message recordings
+
+https://opencorde.com/servers/322465729712619521 [ rid: 24, lid: 1, pid: 32856 ]https://opencorde.com/servers/322465729712619521 [ rid: 26, lid: 1, pid: 22404 ]getUserMedia/getDisplayMedia
+
+https://opencorde.com/servers/322465729712619521, {"iceServers":[{"urls":["stun:global.stun.twilio.com:3478","stun:stun.l.google.com:19302","stun:stun1.l.google.com:19302"]}],"alwaysNegotiateDataChannels":false},
+
+ICE connection state: new => "completed" => "completed"
+Connection state: new => "connected" => "connected"
+Signaling state: new => "stable" => "stable"
+ICE Candidate pair: 192.168.140.1:49317 <=>2.108.189.148:50093
+ICE candidate grid
+Time	Event
+8.6.2026, 22.35.38	
+setLocalDescription (type: "offer", 4 sections)
+
+8.6.2026, 22.35.38	
+setRemoteDescription (type: "answer", 4 sections)
+
+8.6.2026, 22.35.38	
+onsignalingstatechange
+
+8.6.2026, 22.35.38	
+oniceconnectionstatechange
+
+8.6.2026, 22.35.38	
+onconnectionstatechange
+
+8.6.2026, 22.35.45	
+setLocalDescription (type: "offer", 4 sections)
+
+8.6.2026, 22.35.45	
+setRemoteDescription (type: "answer", 4 sections)
+
+8.6.2026, 22.35.45	
+onsignalingstatechange
+
+8.6.2026, 22.35.45	
+oniceconnectionstatechange
+
+8.6.2026, 22.35.45	
+onconnectionstatechange
+Stats Tables
+Filter statistics by type including 
+outbound-rtp (kind=audio, mid=1, ssrc=1477750350, active=true, [codec]=opus (111, minptime=10;usedtx=1;useinbandfec=1), id=OT01A1477750350)
+inbound-rtp (kind=audio, mid=2, ssrc=82498926, [codec]=opus (111, minptime=10;stereo=1;useinbandfec=1), id=IT01A82498926)
+media-playout (kind=audio, id=AP)
+certificate (id=CF5A:0E:5B:89:E0:73:3E:71:2B:E7:8D:62:8A:EC:43:E5:C3:7E:3C:A1:FA:18:F2:50:76:0C:25:61:0C:C8:D2:A9)
+certificate (id=CFEA:D2:2A:6E:4E:7E:F6:F6:A3:D4:E6:B0:00:8E:B1:A0:63:F9:40:CE:E0:9A:9C:55:C7:5D:A5:BD:F3:B0:8C:E3)
+codec (mimeType=audio/opus, payloadType=111, id=CIT01_111_minptime=10;stereo=1;useinbandfec=1)
+codec (mimeType=audio/opus, payloadType=111, id=COT01_111_minptime=10;usedtx=1;useinbandfec=1)
+candidate-pair (state=succeeded, id=CPkOxtueCg_NVp1PA4c)
+data-channel (label=_lossy, state=open, id=D1)
+data-channel (label=_reliable, state=open, id=D2)
+remote-candidate (candidateType=host, id=INVp1PA4c)
+local-candidate (candidateType=prflx, id=IkOxtueCg)
+peer-connection (id=P)
+remote-inbound-rtp (kind=audio, ssrc=1477750350, id=RIA1477750350)
+remote-outbound-rtp (kind=audio, ssrc=82498926, id=ROA82498926)
+media-source (kind=audio, id=SA1)
+transport (iceState=connected, dtlsState=connected, id=T01)
+Filter statistics graphs by type including 
+Stats graphs for outbound-rtp (kind=audio, mid=1, ssrc=1477750350, active=true, [codec]=opus (111, minptime=10;usedtx=1;useinbandfec=1), id=OT01A1477750350)
+Stats graphs for inbound-rtp (kind=audio, mid=2, ssrc=82498926, [codec]=opus (111, minptime=10;stereo=1;useinbandfec=1), id=IT01A82498926)
+Stats graphs for media-playout (kind=audio, id=AP)
+Stats graphs for candidate-pair (state=succeeded, id=CPkOxtueCg_NVp1PA4c)
+Stats graphs for data-channel (label=_lossy, state=open, id=D1)
+Stats graphs for data-channel (label=_reliable, state=open, id=D2)
+Stats graphs for peer-connection (id=P)
+Stats graphs for remote-inbound-rtp (kind=audio, ssrc=1477750350, id=RIA1477750350)
+Stats graphs for remote-outbound-rtp (kind=audio, ssrc=82498926, id=ROA82498926)
+Stats graphs for media-source (kind=audio, id=SA1)
+Stats graphs for transport (iceState=connected, dtlsState=connected, id=T01)

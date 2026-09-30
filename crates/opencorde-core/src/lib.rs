@@ -28,6 +28,10 @@
 //! - `ed25519-dalek` — Ed25519 keypair generation
 //! - `hex` — Hex encoding for public key serialization
 
+// workspace.lints.clippy denies unwrap_used/expect_used to catch panics in
+// production code; test code legitimately relies on both for assertions.
+#![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
+
 pub mod events;
 pub mod gateway;
 pub mod keypair;
@@ -48,3 +52,4 @@ pub use models::{
 pub use password::{hash_password, verify_password};
 pub use permissions::{OverwriteType, PermissionOverwrite, Permissions};
 pub use snowflake::{Snowflake, SnowflakeGenerator};
+pub mod bot_gateway;

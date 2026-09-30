@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-06-02T00:24:20.121287Z",
+  "base_url": "https://opencorde.com",
+  "summary": {
+    "total": 19,
+    "passed": 19,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0
+  },
+  "test_user": {
+    "email": "qa-auth-59860@opencorde.local",
+    "username": "qa_auth_59860"
+  },
+  "checks": [
+    {
+      "status": "pass",
+      "http": 201,
+      "detail": "created",
+      "has_token": true,
+      "check": "POST /auth/register \u2192 201 + tokens"
+    },
+    {
+      "status": "pass",
+      "http": 409,
+      "check": "POST /auth/register duplicate email \u2192 409"
+    },
+    {
+      "status": "pass",
+      "http": 409,
+      "check": "POST /auth/register duplicate username \u2192 409"
+    },
+    {
+      "status": "pass",
+      "http": 200,
+      "detail": "ok",
+      "check": "POST /auth/login correct creds \u2192 200"
+    },
+    {
+      "status": "pass",
+      "http": 401,
+      "check": "POST /auth/login wrong password \u2192 401"
+    },
+    {
+      "status": "pass",
+      "http": 401,
+      "check": "POST /auth/login nonexistent email \u2192 401"
+    },
+    {
+      "status": "pass",
+      "http": 401,
+      "check": "POST /auth/refresh no cookie \u2192 401"
+    },
+    {
+      "status": "pass",
+      "http": 200,
+      "anti_enumeration": true,
+      "check": "POST /auth/forgot-password unknown email \u2192 200 anti-enum"
+    },
+    {
+      "status": "pass",
+      "http": 200,
+      "real_email": true,
+      "check": "POST /auth/forgot-password real email \u2192 200"
+    },
+    {
+      "status": "pass",
+      "http": 400,
+      "check": "POST /auth/reset-password bad token \u2192 400"
+    },
+    {
+      "status": "pass",
+      "http": 400,
+      "check": "POST /auth/reset-password short password \u2192 400"
+    },
+    {
+      "status": "pass",
+      "http": 400,
+      "check": "GET /auth/verify-email bad token \u2192 400"
+    },
+    {
+      "status": "pass",
+      "http": 401,
+      "check": "POST /auth/resend-verification no auth \u2192 401"
+    },
+    {
+      "status": "pass",
+      "http": 200,
+      "success": true,
+      "check": "POST /auth/resend-verification authed \u2192 200"
+    },
+    {
+      "status": "pass",
+      "http": 200,
+      "has_otpauth": true,
+      "has_secret": true,
+      "check": "POST /auth/2fa/enable authed \u2192 200 + secret"
+    },
+    {
+      "status": "pass",
+      "http": 401,
+      "check": "POST /auth/2fa/verify no auth \u2192 401"
+    },
+    {
+      "status": "pass",
+      "http": 401,
+      "check": "DELETE /auth/2fa no auth \u2192 401"
+    },
+    {
+      "status": "pass",
+      "http": 200,
+      "note": "unexpectedly followed redirect",
+      "check": "GET /auth/steam \u2192 redirect"
+    },
+    {
+      "status": "pass",
+      "http": 401,
+      "note": "expected error for invalid steam params",
+      "check": "GET /auth/steam/callback bad params \u2192 error"
+    }
+  ]
+}

@@ -21,6 +21,7 @@
 //! - crate::AppState (application state)
 
 pub mod admin;
+pub mod applications;
 pub mod audit_log;
 pub mod auth;
 pub mod automod;
@@ -38,12 +39,15 @@ pub mod forum;
 pub mod friends;
 pub mod health;
 pub mod helpers;
+pub mod integration_logs;
+pub mod interactions;
 pub mod invites;
 pub mod members;
 pub mod mesh;
 pub mod messages;
 pub mod moderation;
 pub mod notification_settings;
+pub mod oauth2;
 pub mod onboarding;
 pub mod permission_check;
 pub mod permissions;
@@ -74,6 +78,7 @@ use crate::AppState;
 pub fn api_router() -> Router<AppState> {
     Router::new()
         .merge(admin::router())
+        .merge(applications::router())
         .merge(health::router())
         .merge(auth::router())
         .merge(users::router())
@@ -85,6 +90,8 @@ pub fn api_router() -> Router<AppState> {
         .merge(emojis::router())
         .merge(forum::router())
         .merge(invites::router())
+        .merge(integration_logs::router())
+        .merge(interactions::router())
         .merge(members::router())
         .merge(mesh::router())
         .merge(federation::router())
@@ -112,6 +119,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(data_export::router())
         .merge(e2ee::router())
         .merge(notification_settings::router())
+        .merge(oauth2::router())
         .merge(unfurl::router())
         .merge(push::router())
         .merge(bridge::router())

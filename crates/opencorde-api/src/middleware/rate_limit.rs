@@ -87,7 +87,9 @@ impl StrictPathLimits {
             Some(self.login.clone())
         } else if path == "/api/v1/auth/register" {
             Some(self.register.clone())
-        } else if path.starts_with("/api/v1/auth/password") {
+        } else if path.starts_with("/api/v1/auth/forgot-password")
+            || path.starts_with("/api/v1/auth/reset-password")
+        {
             Some(self.password_reset.clone())
         } else if path.ends_with("/messages") {
             Some(self.send_message.clone())
@@ -215,10 +217,16 @@ mod tests {
                 .limiter_for(&Method::POST, "/api/v1/auth/register")
                 .is_some()
         );
-        // Password reset
+        // Password reset (forgot-password)
         assert!(
             limits
-                .limiter_for(&Method::POST, "/api/v1/auth/password-reset")
+                .limiter_for(&Method::POST, "/api/v1/auth/forgot-password")
+                .is_some()
+        );
+        // Password reset (reset-password)
+        assert!(
+            limits
+                .limiter_for(&Method::POST, "/api/v1/auth/reset-password")
                 .is_some()
         );
         // Message send

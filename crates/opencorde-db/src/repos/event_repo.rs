@@ -27,6 +27,14 @@ pub struct EventRow {
     pub updated_at: DateTime<Utc>,
     pub rsvp_count: i64,
     pub creator_username: String,
+    /// JSONB recurrence rule (e.g. {"freq":"weekly","interval":1,"by_day":["mon"]})
+    pub recurrence_rule: Option<serde_json::Value>,
+    /// When the recurrence ends (inclusive)
+    pub recurrence_end_date: Option<DateTime<Utc>>,
+    /// Parent event ID for generated instances
+    pub parent_event_id: Option<i64>,
+    /// Whether this event is a recurring template
+    pub is_recurring: bool,
 }
 
 /// Create a new event in a server.
@@ -43,6 +51,8 @@ pub struct EventRow {
 /// * `location_name` - Optional specific location name
 /// * `starts_at` - Event start timestamp
 /// * `ends_at` - Optional event end timestamp
+/// * `recurrence_rule` - Optional JSONB recurrence rule
+/// * `recurrence_end_date` - Optional recurrence end date
 ///
 /// # Errors
 /// Returns sqlx::Error if the insert fails.
@@ -60,6 +70,8 @@ pub async fn create_event(
     location_name: Option<&str>,
     starts_at: DateTime<Utc>,
     ends_at: Option<DateTime<Utc>>,
+    recurrence_rule: Option<&serde_json::Value>,
+    recurrence_end_date: Option<DateTime<Utc>>,
 ) -> Result<EventRow, sqlx::Error> {
     tracing::info!(
         title = %title,
@@ -68,10 +80,13 @@ pub async fn create_event(
         "creating event"
     );
 
+    let is_recurring = recurrence_rule.is_some();
+
     sqlx::query(
         "INSERT INTO server_events \
-         (id, server_id, channel_id, creator_id, title, description, location_type, location_name, starts_at, ends_at) \
-         VALUES ($1, $2, $3, $4, $5, $6, $7::event_location_type, $8, $9, $10)"
+         (id, server_id, channel_id, creator_id, title, description, location_type, location_name, \
+          starts_at, ends_at, recurrence_rule, recurrence_end_date, is_recurring) \
+         VALUES ($1, $2, $3, $4, $5, $6, $7::event_location_type, $8, $9, $10, $11, $12, $13)",
     )
     .bind(id.as_i64())
     .bind(server_id.as_i64())
@@ -83,6 +98,9 @@ pub async fn create_event(
     .bind(location_name)
     .bind(starts_at)
     .bind(ends_at)
+    .bind(recurrence_rule)
+    .bind(recurrence_end_date)
+    .bind(is_recurring)
     .execute(pool)
     .await?;
 
@@ -90,6 +108,66 @@ pub async fn create_event(
 
     tracing::info!(event_id = event.id, "event created successfully");
     Ok(event)
+}
+
+/// Insert a generated recurring event instance into `event_instances`.
+///
+/// # Errors
+/// Returns sqlx::Error if the insert fails.
+#[tracing::instrument(skip(pool))]
+pub async fn create_event_instance(
+    pool: &PgPool,
+    id: Snowflake,
+    parent_event_id: Snowflake,
+    server_id: Snowflake,
+    starts_at: DateTime<Utc>,
+    ends_at: Option<DateTime<Utc>>,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "INSERT INTO event_instances (id, parent_event_id, server_id, starts_at, ends_at) \
+         VALUES ($1, $2, $3, $4, $5) \
+         ON CONFLICT DO NOTHING",
+    )
+    .bind(id.as_i64())
+    .bind(parent_event_id.as_i64())
+    .bind(server_id.as_i64())
+    .bind(starts_at)
+    .bind(ends_at)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// List all instances of a recurring event.
+///
+/// # Errors
+/// Returns sqlx::Error if the query fails.
+#[tracing::instrument(skip(pool))]
+pub async fn list_instances(
+    pool: &PgPool,
+    parent_event_id: Snowflake,
+) -> Result<Vec<EventInstanceRow>, sqlx::Error> {
+    sqlx::query_as::<_, EventInstanceRow>(
+        "SELECT id, parent_event_id, server_id, starts_at, ends_at, status::text, created_at \
+         FROM event_instances \
+         WHERE parent_event_id = $1 \
+         ORDER BY starts_at ASC",
+    )
+    .bind(parent_event_id.as_i64())
+    .fetch_all(pool)
+    .await
+}
+
+/// Row type for event_instances table.
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct EventInstanceRow {
+    pub id: i64,
+    pub parent_event_id: i64,
+    pub server_id: i64,
+    pub starts_at: DateTime<Utc>,
+    pub ends_at: Option<DateTime<Utc>>,
+    pub status: String,
+    pub created_at: DateTime<Utc>,
 }
 
 /// Get an event by its Snowflake ID.
@@ -102,6 +180,7 @@ pub async fn get_by_id(pool: &PgPool, id: Snowflake) -> Result<Option<EventRow>,
         "SELECT e.id, e.server_id, e.channel_id, e.creator_id, e.title, e.description, \
                 e.location_type::text, e.location_name, e.starts_at, e.ends_at, \
                 e.status::text, e.cover_image_url, e.created_at, e.updated_at, \
+                e.recurrence_rule, e.recurrence_end_date, e.parent_event_id, e.is_recurring, \
                 COUNT(r.user_id)::bigint as rsvp_count, \
                 u.username as creator_username \
          FROM server_events e \
@@ -143,6 +222,7 @@ pub async fn list_by_server(
             "SELECT e.id, e.server_id, e.channel_id, e.creator_id, e.title, e.description, \
                     e.location_type::text, e.location_name, e.starts_at, e.ends_at, \
                     e.status::text, e.cover_image_url, e.created_at, e.updated_at, \
+                e.recurrence_rule, e.recurrence_end_date, e.parent_event_id, e.is_recurring, \
                     COUNT(r.user_id)::bigint as rsvp_count, \
                     u.username as creator_username \
              FROM server_events e \
@@ -160,6 +240,7 @@ pub async fn list_by_server(
             "SELECT e.id, e.server_id, e.channel_id, e.creator_id, e.title, e.description, \
                     e.location_type::text, e.location_name, e.starts_at, e.ends_at, \
                     e.status::text, e.cover_image_url, e.created_at, e.updated_at, \
+                e.recurrence_rule, e.recurrence_end_date, e.parent_event_id, e.is_recurring, \
                     COUNT(r.user_id)::bigint as rsvp_count, \
                     u.username as creator_username \
              FROM server_events e \
@@ -294,4 +375,121 @@ pub async fn get_rsvp_status(
     .await?;
 
     Ok(result.0)
+}
+
+// ---------------------------------------------------------------------------
+// Lifecycle queries — used by the event_lifecycle background worker.
+// ---------------------------------------------------------------------------
+
+/// Lightweight row for the lifecycle worker — only fields needed for
+/// transitions and reminder dispatch.
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct LifecycleEventRow {
+    pub id: i64,
+    pub server_id: i64,
+    pub channel_id: Option<i64>,
+    pub creator_id: i64,
+    pub title: String,
+    pub starts_at: DateTime<Utc>,
+    pub ends_at: Option<DateTime<Utc>>,
+    pub status: String,
+}
+
+/// Fetch scheduled events that start within the next `window_minutes` minutes
+/// and have not yet been reminded.
+///
+/// # Errors
+/// Returns sqlx::Error if the query fails.
+#[tracing::instrument(skip(pool))]
+pub async fn fetch_events_to_remind(
+    pool: &PgPool,
+    window_minutes: i64,
+) -> Result<Vec<LifecycleEventRow>, sqlx::Error> {
+    sqlx::query_as::<_, LifecycleEventRow>(
+        "SELECT id, server_id, channel_id, creator_id, title, starts_at, ends_at, status::text \
+         FROM server_events \
+         WHERE status = 'scheduled' \
+           AND reminded_at IS NULL \
+           AND starts_at <= NOW() + ($1 || ' minutes')::INTERVAL \
+           AND starts_at > NOW() \
+         ORDER BY starts_at ASC",
+    )
+    .bind(window_minutes)
+    .fetch_all(pool)
+    .await
+}
+
+/// Fetch scheduled events whose `starts_at` has passed and should be
+/// transitioned to `active`.
+///
+/// # Errors
+/// Returns sqlx::Error if the query fails.
+#[tracing::instrument(skip(pool))]
+pub async fn fetch_events_to_activate(
+    pool: &PgPool,
+) -> Result<Vec<LifecycleEventRow>, sqlx::Error> {
+    sqlx::query_as::<_, LifecycleEventRow>(
+        "SELECT id, server_id, channel_id, creator_id, title, starts_at, ends_at, status::text \
+         FROM server_events \
+         WHERE status = 'scheduled' AND starts_at <= NOW() \
+         ORDER BY starts_at ASC",
+    )
+    .fetch_all(pool)
+    .await
+}
+
+/// Fetch active events whose `ends_at` has passed and should be transitioned
+/// to `completed`. Events without an `ends_at` are skipped (they must be
+/// manually completed or cancelled).
+///
+/// # Errors
+/// Returns sqlx::Error if the query fails.
+#[tracing::instrument(skip(pool))]
+pub async fn fetch_events_to_complete(
+    pool: &PgPool,
+) -> Result<Vec<LifecycleEventRow>, sqlx::Error> {
+    sqlx::query_as::<_, LifecycleEventRow>(
+        "SELECT id, server_id, channel_id, creator_id, title, starts_at, ends_at, status::text \
+         FROM server_events \
+         WHERE status = 'active' AND ends_at IS NOT NULL AND ends_at <= NOW() \
+         ORDER BY ends_at ASC",
+    )
+    .fetch_all(pool)
+    .await
+}
+
+/// Mark an event as reminded (sets `reminded_at = NOW()`).
+///
+/// # Errors
+/// Returns sqlx::Error if the update fails.
+#[tracing::instrument(skip(pool))]
+pub async fn mark_reminded(pool: &PgPool, id: Snowflake) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE server_events SET reminded_at = NOW() WHERE id = $1")
+        .bind(id.as_i64())
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+/// Fetch the user IDs of all server members who should receive an event
+/// reminder — i.e. every member with `event_reminders_enabled = true` (or no
+/// row yet, which defaults to true).
+///
+/// # Errors
+/// Returns sqlx::Error if the query fails.
+#[tracing::instrument(skip(pool))]
+pub async fn fetch_reminder_recipients(
+    pool: &PgPool,
+    server_id: Snowflake,
+) -> Result<Vec<i64>, sqlx::Error> {
+    let rows: Vec<(i64,)> = sqlx::query_as(
+        "SELECT sm.user_id FROM server_members sm \
+         LEFT JOIN user_notification_settings uns ON sm.user_id = uns.user_id \
+         WHERE sm.server_id = $1 \
+           AND (uns.event_reminders_enabled IS NULL OR uns.event_reminders_enabled = true)",
+    )
+    .bind(server_id.as_i64())
+    .fetch_all(pool)
+    .await?;
+    Ok(rows.into_iter().map(|(id,)| id).collect())
 }

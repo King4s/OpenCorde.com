@@ -10,7 +10,10 @@
 //! - `sub` — User ID (as string)
 //! - `username` — Username (for convenience)
 //! - `token_type` — Either "access" or "refresh"
-//! - `jti` — JWT ID (UUID v4, refresh tokens only) used for rotation and theft detection
+//! - `jti` — Session identifier (UUID v4). On refresh tokens this is the token's
+//!   own ID, used for rotation and theft detection. Access tokens carry the same
+//!   value as the refresh token issued alongside them, so a request's session can
+//!   be correlated to a `refresh_tokens` row (see `routes/users/sessions.rs`).
 //!
 //! ## Features
 //! - `create_access_token` — Generate short-lived access token
@@ -46,6 +49,9 @@ pub struct Claims {
     /// Used to track issued tokens in the DB for rotation and theft detection.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub jti: Option<String>,
+    /// OAuth2 scope — space-delimited scopes, present on OAuth2-issued tokens.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scope: Option<String>,
     /// Issued at (Unix timestamp)
     pub iat: i64,
     /// Expires at (Unix timestamp)
@@ -59,6 +65,10 @@ pub struct Claims {
 /// * `username` — Username for logging/debugging
 /// * `secret` — JWT signing secret
 /// * `expiry_seconds` — Token lifetime in seconds
+/// * `scope` — Optional OAuth2 scope (space-delimited)
+/// * `session_jti` — JTI of the refresh token issued alongside this access token,
+///   if any (used to identify "the current session" in the sessions API). Pass
+///   `None` for access tokens not paired with a refresh token (e.g. some OAuth2 grants).
 ///
 /// # Returns
 /// The encoded JWT token as a string.
@@ -71,13 +81,16 @@ pub fn create_access_token(
     username: &str,
     secret: &str,
     expiry_seconds: u64,
+    scope: Option<&str>,
+    session_jti: Option<&str>,
 ) -> Result<String, jsonwebtoken::errors::Error> {
     let now = Utc::now();
     let claims = Claims {
         sub: user_id.as_i64().to_string(),
         username: username.to_string(),
         token_type: "access".to_string(),
-        jti: None,
+        jti: session_jti.map(|s| s.to_string()),
+        scope: scope.map(|s| s.to_string()),
         iat: now.timestamp(),
         exp: (now + Duration::seconds(expiry_seconds as i64)).timestamp(),
     };
@@ -103,6 +116,7 @@ pub fn create_access_token(
 /// * `username` — Username for logging/debugging
 /// * `secret` — JWT signing secret
 /// * `expiry_seconds` — Token lifetime in seconds
+/// * `scope` — Optional OAuth2 scope (space-delimited)
 ///
 /// # Returns
 /// A tuple `(token, jti)` where `token` is the encoded JWT string and
@@ -116,6 +130,7 @@ pub fn create_refresh_token(
     username: &str,
     secret: &str,
     expiry_seconds: u64,
+    scope: Option<&str>,
 ) -> Result<(String, String), jsonwebtoken::errors::Error> {
     let jti = Uuid::new_v4().to_string();
     let now = Utc::now();
@@ -124,6 +139,7 @@ pub fn create_refresh_token(
         username: username.to_string(),
         token_type: "refresh".to_string(),
         jti: Some(jti.clone()),
+        scope: scope.map(|s| s.to_string()),
         iat: now.timestamp(),
         exp: (now + Duration::seconds(expiry_seconds as i64)).timestamp(),
     };
@@ -224,7 +240,7 @@ mod tests {
     #[test]
     fn test_access_token_roundtrip() {
         let uid = Snowflake::new(123);
-        let tok = create_access_token(uid, "user", SECRET, 3600).unwrap();
+        let tok = create_access_token(uid, "user", SECRET, 3600, None, None).unwrap();
         let c = validate_access_token(&tok, SECRET).unwrap();
         assert_eq!(c.sub, "123");
         assert_eq!(c.token_type, "access");
@@ -233,7 +249,7 @@ mod tests {
     #[test]
     fn test_refresh_token_roundtrip() {
         let uid = Snowflake::new(456);
-        let (tok, jti) = create_refresh_token(uid, "user", SECRET, 604800).unwrap();
+        let (tok, jti) = create_refresh_token(uid, "user", SECRET, 604800, None).unwrap();
         assert!(!jti.is_empty());
         let c = validate_refresh_token(&tok, SECRET).unwrap();
         assert_eq!(c.sub, "456");
@@ -242,18 +258,27 @@ mod tests {
     }
 
     #[test]
-    fn test_access_token_has_no_jti() {
+    fn test_access_token_without_session_jti_has_no_jti() {
         let uid = Snowflake::new(1);
-        let tok = create_access_token(uid, "u", SECRET, 3600).unwrap();
+        let tok = create_access_token(uid, "u", SECRET, 3600, None, None).unwrap();
         let c = validate_access_token(&tok, SECRET).unwrap();
         assert!(c.jti.is_none());
     }
 
     #[test]
+    fn test_access_token_carries_session_jti() {
+        let uid = Snowflake::new(1);
+        let (_refresh, jti) = create_refresh_token(uid, "u", SECRET, 604800, None).unwrap();
+        let tok = create_access_token(uid, "u", SECRET, 3600, None, Some(&jti)).unwrap();
+        let c = validate_access_token(&tok, SECRET).unwrap();
+        assert_eq!(c.jti.as_deref(), Some(jti.as_str()));
+    }
+
+    #[test]
     fn test_type_enforcement() {
         let uid = Snowflake::new(1);
-        let access = create_access_token(uid, "u", SECRET, 3600).unwrap();
-        let (refresh, _jti) = create_refresh_token(uid, "u", SECRET, 3600).unwrap();
+        let access = create_access_token(uid, "u", SECRET, 3600, None, None).unwrap();
+        let (refresh, _jti) = create_refresh_token(uid, "u", SECRET, 3600, None).unwrap();
         assert!(validate_refresh_token(&access, SECRET).is_err());
         assert!(validate_access_token(&refresh, SECRET).is_err());
     }
@@ -261,7 +286,7 @@ mod tests {
     #[test]
     fn test_wrong_secret() {
         let uid = Snowflake::new(1);
-        let tok = create_access_token(uid, "u", SECRET, 3600).unwrap();
+        let tok = create_access_token(uid, "u", SECRET, 3600, None, None).unwrap();
         assert!(validate_token(&tok, "wrong-secret-key-min-32-chars!!!!!").is_err());
     }
 

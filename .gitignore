@@ -47,3 +47,6 @@ data/
 search-index/
 .env.bridge
 .opencorde.key
+
+# Stale SvelteKit build backup (accidentally committed once)
+client/.svelte-kit.bak/

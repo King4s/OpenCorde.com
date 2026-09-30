@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "base": "https://opencorde.com",
+  "emma_account": "configured",
+  "credential_source": "/home/mb/.hermes/opencorde/emma-bot.env",
+  "server_id": "293907048062648321",
+  "channel_id": "293907048134082561",
+  "scenarios": {
+    "status_dnd": "PASS",
+    "post_message": "PASS",
+    "cleanup": "PASS"
+  },
+  "screenshot": "reports/parity-screenshots/emma-bot/01-presence.png",
+  "console_errors": [],
+  "page_errors": [],
+  "failed_requests": [
+    "POST https://opencorde.com/api/v1/channels/293907048134082561/ack: net::ERR_ABORTED",
+    "POST https://opencorde.com/api/v1/channels/293907048134082561/ack: net::ERR_ABORTED",
+    "POST https://opencorde.com/api/v1/channels/293907048134082561/ack: net::ERR_ABORTED",
+    "POST https://opencorde.com/api/v1/channels/293907048134082561/ack: net::ERR_ABORTED",
+    "DELETE https://opencorde.com/api/v1/messages/315533330378784769: net::ERR_ABORTED",
+    "POST https://opencorde.com/api/v1/channels/293907048134082561/ack: net::ERR_ABORTED",
+    "POST https://opencorde.com/api/v1/channels/293907048134082561/ack: net::ERR_ABORTED"
+  ]
+}

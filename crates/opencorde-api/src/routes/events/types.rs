@@ -45,7 +45,6 @@ pub struct EventResponse {
 
 /// Request body for creating an event.
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 pub struct CreateEventRequest {
     /// Event title (1-100 chars)
     pub title: String,
@@ -61,6 +60,12 @@ pub struct CreateEventRequest {
     pub starts_at: DateTime<Utc>,
     /// Optional event end timestamp
     pub ends_at: Option<DateTime<Utc>>,
+    /// Optional JSONB recurrence rule, e.g. {"freq":"weekly","interval":1,"by_day":["mon"]}
+    #[serde(default)]
+    pub recurrence_rule: Option<serde_json::Value>,
+    /// Optional end of the recurrence (inclusive)
+    #[serde(default)]
+    pub recurrence_end_date: Option<DateTime<Utc>>,
 }
 
 /// Request body for updating event status.

@@ -68,3 +68,13 @@ reqwest = { version = "0.12", features = ["json"] }
 
 # Cryptography — Ed25519 signing for mesh federation identity
 ed25519-dalek = { version = "2", features = ["rand_core"] }
+
+[workspace.lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+unused_async = "warn"
+too-many-arguments = "allow"
+
+[workspace.lints.rust]
+unused_must_use = "warn"
+unused_imports = "warn"

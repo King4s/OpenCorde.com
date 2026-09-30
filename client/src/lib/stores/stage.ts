@@ -1,220 +1,136 @@
 /**
- * @file Stage store — manages stage channel sessions and participants
- * @purpose Fetch/manage stage sessions, control speaker roles, raise hands
- * @depends api/client, api/types
+ * @file Stage store — manages stage channel sessions (speakers + audience)
+ * @purpose Start/end stage, join/leave, raise hand, promote/demote speakers
+ * @depends api/client, stores/auth
  */
-import { writable, derived } from "svelte/store";
+import { writable, derived, get } from "svelte/store";
 import api from "$lib/api/client";
 import type {
   StageSession,
-  StageDetail,
   StageParticipant,
+  StageDetail,
 } from "$lib/api/types";
+
+// ─── Stores ────────────────────────────────────────────────────────────────
 
 export const stageSession = writable<StageSession | null>(null);
 export const stageParticipants = writable<StageParticipant[]>([]);
-export const stageLoading = writable(false);
-export const stageError = writable<string | null>(null);
 
-// Derived stores for UI convenience
+/** Participants with role "speaker" */
 export const speakers = derived(stageParticipants, ($p) =>
-  $p
-    .filter((p) => p.role === "speaker")
-    .sort(
-      (a, b) =>
-        new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime(),
-    ),
+  $p.filter((p) => p.role === "speaker"),
 );
 
+/** Participants with role "audience" */
 export const audience = derived(stageParticipants, ($p) =>
-  $p
-    .filter((p) => p.role === "audience")
-    .sort(
-      (a, b) =>
-        new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime(),
-    ),
+  $p.filter((p) => p.role === "audience"),
 );
 
+/** Audience members with hand raised */
 export const handsRaised = derived(audience, ($a) =>
   $a.filter((p) => p.hand_raised),
 );
 
-/// Fetch current stage session and participants.
-export async function fetchStage(channelId: string): Promise<void> {
-  stageLoading.set(true);
-  stageError.set(null);
+/** Number of raised hands (for badge display) */
+export const handCount = derived(handsRaised, ($h) => $h.length);
+
+// ─── API Helpers ────────────────────────────────────────────────────────────
+
+/** Fetch current stage state for a channel */
+export async function fetchStage(
+  channelId: string,
+): Promise<StageDetail | null> {
   try {
     const detail = await api.get<StageDetail>(`/channels/${channelId}/stage`);
     stageSession.set(detail.session);
     stageParticipants.set(detail.participants);
+    return detail;
   } catch (e: any) {
-    stageError.set(e.message || "Failed to fetch stage");
-  } finally {
-    stageLoading.set(false);
+    // 404 = no active stage — normal state
+    if (e?.status !== 404) {
+      console.warn("[Stage] fetch failed:", e);
+    }
+    stageSession.set(null);
+    stageParticipants.set([]);
+    return null;
   }
 }
 
-/// Start a new stage session on a channel.
+// ─── Public API ─────────────────────────────────────────────────────────────
+
+/** Start a stage session (server owner / moderator) */
 export async function startStage(
   channelId: string,
   topic?: string,
 ): Promise<void> {
-  stageLoading.set(true);
-  stageError.set(null);
-  try {
-    const session = await api.post<StageSession>(
-      `/channels/${channelId}/stage/start`,
-      {
-        topic: topic || null,
-      },
-    );
-    stageSession.set(session);
-    // Fetch to populate participants
-    await fetchStage(channelId);
-  } catch (e: any) {
-    stageError.set(e.message || "Failed to start stage");
-    throw e;
-  } finally {
-    stageLoading.set(false);
-  }
+  const res = await api.post<{ session: StageSession }>(
+    `/channels/${channelId}/stage/start`,
+    { topic: topic ?? null },
+  );
+  // Fetch full detail to get participant list
+  await fetchStage(channelId);
 }
 
-/// End the current stage session.
+/** End the active stage session */
 export async function endStage(channelId: string): Promise<void> {
-  stageLoading.set(true);
-  stageError.set(null);
-  try {
-    await api.delete(`/channels/${channelId}/stage`);
-    stageSession.set(null);
-    stageParticipants.set([]);
-  } catch (e: any) {
-    stageError.set(e.message || "Failed to end stage");
-    throw e;
-  } finally {
-    stageLoading.set(false);
-  }
+  await api.delete(`/channels/${channelId}/stage`);
+  stageSession.set(null);
+  stageParticipants.set([]);
 }
 
-/// Join the stage as an audience member.
+/** Join stage as audience */
 export async function joinStage(channelId: string): Promise<void> {
-  stageLoading.set(true);
-  stageError.set(null);
-  try {
-    const participant = await api.post<StageParticipant>(
-      `/channels/${channelId}/stage/join`,
-      {},
-    );
-    // Add or update participant
-    stageParticipants.update((list) => {
-      const existing = list.find((p) => p.user_id === participant.user_id);
-      if (existing) {
-        return list.map((p) =>
-          p.user_id === participant.user_id ? participant : p,
-        );
-      }
-      return [...list, participant];
-    });
-  } catch (e: any) {
-    stageError.set(e.message || "Failed to join stage");
-    throw e;
-  } finally {
-    stageLoading.set(false);
-  }
+  await api.post(`/channels/${channelId}/stage/join`);
+  await fetchStage(channelId);
 }
 
-/// Leave the stage.
+/** Leave stage */
 export async function leaveStage(channelId: string): Promise<void> {
-  stageLoading.set(true);
-  stageError.set(null);
-  try {
-    await api.delete(`/channels/${channelId}/stage/leave`);
-    // Remove self from participants
-    stageParticipants.update((list) =>
-      list.filter((p) => p.role !== "audience" || p.hand_raised),
-    );
-  } catch (e: any) {
-    stageError.set(e.message || "Failed to leave stage");
-    throw e;
-  } finally {
-    stageLoading.set(false);
-  }
+  await api.delete(`/channels/${channelId}/stage/leave`);
+  await fetchStage(channelId);
 }
 
-/// Raise hand to request speaking privileges.
+/** Raise hand to request speaking */
 export async function raiseHand(channelId: string): Promise<void> {
-  stageError.set(null);
-  try {
-    await api.post(`/channels/${channelId}/stage/hand`, { raised: true });
-    stageParticipants.update((list) =>
-      list.map((p) =>
-        p.role === "audience" ? { ...p, hand_raised: true } : p,
-      ),
-    );
-  } catch (e: any) {
-    stageError.set(e.message || "Failed to raise hand");
-  }
+  await api.post(`/channels/${channelId}/stage/hand`, { raised: true });
+  await fetchStage(channelId);
 }
 
-/// Lower hand (cancel speaking request).
+/** Lower hand */
 export async function lowerHand(channelId: string): Promise<void> {
-  stageError.set(null);
-  try {
-    await api.post(`/channels/${channelId}/stage/hand`, { raised: false });
-    stageParticipants.update((list) =>
-      list.map((p) =>
-        p.role === "audience" ? { ...p, hand_raised: false } : p,
-      ),
-    );
-  } catch (e: any) {
-    stageError.set(e.message || "Failed to lower hand");
-  }
+  await api.post(`/channels/${channelId}/stage/hand`, { raised: false });
+  await fetchStage(channelId);
 }
 
-/// Promote a participant to speaker.
+/** Promote audience member to speaker */
 export async function promoteSpeaker(
   channelId: string,
   userId: string,
 ): Promise<void> {
-  stageError.set(null);
-  try {
-    await api.patch(`/channels/${channelId}/stage/speakers/${userId}`, {
-      speaker: true,
-    });
-    stageParticipants.update((list) =>
-      list.map((p) =>
-        p.user_id === userId
-          ? { ...p, role: "speaker" as const, hand_raised: false }
-          : p,
-      ),
-    );
-  } catch (e: any) {
-    stageError.set(e.message || "Failed to promote speaker");
-  }
+  await api.patch(`/channels/${channelId}/stage/speakers/${userId}`, {
+    speaker: true,
+  });
+  await fetchStage(channelId);
 }
 
-/// Demote a speaker to audience.
+/** Demote speaker to audience */
 export async function demoteSpeaker(
   channelId: string,
   userId: string,
 ): Promise<void> {
-  stageError.set(null);
-  try {
-    await api.patch(`/channels/${channelId}/stage/speakers/${userId}`, {
-      speaker: false,
-    });
-    stageParticipants.update((list) =>
-      list.map((p) =>
-        p.user_id === userId ? { ...p, role: "audience" as const } : p,
-      ),
-    );
-  } catch (e: any) {
-    stageError.set(e.message || "Failed to demote speaker");
-  }
+  await api.patch(`/channels/${channelId}/stage/speakers/${userId}`, {
+    speaker: false,
+  });
+  await fetchStage(channelId);
 }
 
-/// Clear stage state (when channel changes or session ends).
-export function clearStage(): void {
+/** Refresh stage state (call on mount or WebSocket event) */
+export async function refreshStage(channelId: string): Promise<void> {
+  await fetchStage(channelId);
+}
+
+/** Clear all stage state (call when leaving channel/server) */
+export function clearStage() {
   stageSession.set(null);
   stageParticipants.set([]);
-  stageError.set(null);
 }

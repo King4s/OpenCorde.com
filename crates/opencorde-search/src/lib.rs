@@ -22,6 +22,10 @@
 //! - tracing — Structured logging
 //! - serde — Result serialization
 
+// workspace.lints.clippy denies unwrap_used/expect_used to catch panics in
+// production code; test code legitimately relies on both for assertions.
+#![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
+
 pub mod indexer;
 pub mod schema;
 pub mod searcher;

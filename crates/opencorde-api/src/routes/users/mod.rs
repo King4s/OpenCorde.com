@@ -7,14 +7,17 @@
 
 use axum::{
     Router,
-    routing::{get, post},
+    routing::{delete, get, patch, post},
 };
 
 use crate::AppState;
 
+mod authorized_apps;
 mod avatar;
 mod delete;
 mod get;
+mod password;
+mod sessions;
 mod update;
 
 pub use avatar::upload_avatar;
@@ -31,6 +34,26 @@ pub fn router() -> Router<AppState> {
                 .delete(delete::delete_account),
         )
         .route("/api/v1/users/@me/avatar", post(upload_avatar))
+        .route(
+            "/api/v1/users/@me/password",
+            patch(password::change_password),
+        )
+        .route(
+            "/api/v1/users/@me/sessions",
+            get(sessions::list_sessions).delete(sessions::revoke_other_sessions),
+        )
+        .route(
+            "/api/v1/users/@me/sessions/{jti}",
+            delete(sessions::revoke_session),
+        )
+        .route(
+            "/api/v1/users/@me/authorized-apps",
+            get(authorized_apps::list_authorized_apps),
+        )
+        .route(
+            "/api/v1/users/@me/authorized-apps/{app_id}",
+            delete(authorized_apps::revoke_authorized_app),
+        )
         .route("/api/v1/users/{id}", get(get::get_user_profile))
 }
 

@@ -34,6 +34,8 @@
 	let showCommandAutocomplete = $state(false);
 	let commandPrefix = $state('');
 	let dispatchingCommand = $state(false);
+	let showSchedulePicker = $state(false);
+	let scheduleTime = $state('');
 
 	function getMatchingCommands(prefix: string) {
 		return slashCommandsStore.commands.filter(c =>
@@ -72,11 +74,32 @@
 			}
 		}
 
+		// Schedule mode: send as scheduled message
+		if (showSchedulePicker && scheduleTime) {
+			try {
+				const body: any = { content: content.trim(), scheduled_at: scheduleTime };
+				if (replyTo?.id) body.reply_to_id = replyTo.id;
+				if (pendingAttachments.length > 0) body.attachments = pendingAttachments;
+				await api.post(`/channels/${channelId}/scheduled-messages`, body);
+				content = '';
+				pendingAttachments = [];
+				uploadError = '';
+				showSchedulePicker = false;
+				scheduleTime = '';
+				inputElement?.focus();
+			} catch (err: any) {
+				uploadError = err.message ?? 'Schedule failed';
+			}
+			return;
+		}
+
 		// Regular message
 		onSend(content.trim(), replyTo?.id, pendingAttachments.length > 0 ? [...pendingAttachments] : undefined);
 		content = '';
 		pendingAttachments = [];
 		uploadError = '';
+		showSchedulePicker = false;
+		scheduleTime = '';
 		inputElement?.focus();
 	}
 
@@ -87,6 +110,9 @@
 		} else if (e.key === 'Escape') {
 			if (showCommandAutocomplete) {
 				showCommandAutocomplete = false;
+			} else if (showSchedulePicker) {
+				showSchedulePicker = false;
+				scheduleTime = '';
 			} else if (replyTo) {
 				onCancelReply?.();
 			}
@@ -218,7 +244,22 @@
 	{/if}
 
 	<form onsubmit={handleSubmit}>
-		<div class="flex items-center bg-gray-700 {replyTo || pendingAttachments.length > 0 || showCommandAutocomplete ? 'rounded-b-lg' : 'rounded-lg'} px-1.5 sm:px-2 py-1.5 sm:py-2">
+		{#if showSchedulePicker}
+			<div class="flex items-center gap-2 px-3 py-1.5 mb-1 bg-indigo-700/30 rounded-t-lg border-b border-indigo-600/30 text-xs">
+				<span class="text-indigo-300">⏰ Schedule for:</span>
+				<input
+					type="datetime-local"
+					bind:value={scheduleTime}
+					class="bg-gray-700 text-white text-xs px-2 py-1 rounded border border-gray-600 focus:border-indigo-400 focus:outline-none"
+				/>
+				<button
+					type="button"
+					onclick={() => { showSchedulePicker = false; scheduleTime = ''; }}
+					class="text-gray-500 hover:text-gray-300 ml-auto"
+				>✕</button>
+			</div>
+		{/if}
+		<div class="flex items-center bg-gray-700 {replyTo || pendingAttachments.length > 0 || showCommandAutocomplete || showSchedulePicker ? 'rounded-b-lg' : 'rounded-lg'} px-1.5 sm:px-2 py-1.5 sm:py-2">
 			<!-- File upload button -->
 			<button
 				type="button"
@@ -246,6 +287,17 @@
 				😊
 			</button>
 
+			<!-- Schedule button -->
+			<button
+				type="button"
+				onclick={() => (showSchedulePicker = !showSchedulePicker)}
+				class="mr-1 h-7 w-7 flex-shrink-0 rounded hover:bg-gray-600/50 flex items-center justify-center text-gray-400 hover:text-gray-200 transition-colors sm:h-8 sm:w-8 {showSchedulePicker ? 'text-indigo-300 bg-gray-600/50' : ''}"
+				title="Schedule message"
+				aria-label="Schedule message"
+			>
+				⏰
+			</button>
+
 			<input
 				type="text"
 				bind:value={content}
@@ -259,7 +311,7 @@
 				disabled={(!content.trim() && pendingAttachments.length === 0) || dispatchingCommand}
 				class="ml-2 text-gray-400 hover:text-gray-300 disabled:text-gray-600 transition-colors text-[13px] sm:text-sm font-medium"
 			>
-				{dispatchingCommand ? 'Executing...' : 'Send'}
+				{dispatchingCommand ? 'Executing...' : showSchedulePicker ? 'Schedule' : 'Send'}
 			</button>
 		</div>
 	</form>

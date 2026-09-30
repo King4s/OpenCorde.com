@@ -31,6 +31,7 @@ use aws_sdk_s3::config::{Credentials as S3Credentials, Region as S3Region};
 use opencorde_api::middleware::rate_limit::{RateLimitConfig, RateLimitState};
 use opencorde_api::{AppState, config::Config, middleware, routes};
 use opencorde_search::SearchEngine;
+use redis::aio::ConnectionManager as RedisConnectionManager;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -146,6 +147,22 @@ async fn main() -> anyhow::Result<()> {
         identity.clone(),
     );
 
+    // Spawn scheduled message delivery worker (checks every 15s)
+    opencorde_api::scheduled_delivery::spawn_delivery_worker(
+        pool.clone(),
+        event_tx.clone(),
+        search.clone(),
+    );
+
+    // Initialize Redis connection manager for caching and ephemeral data
+    tracing::debug!("initializing Redis connection manager");
+    let redis_client = redis::Client::open(config.redis_url.as_str())
+        .map_err(|e| anyhow::anyhow!("failed to connect to Redis: {}", e))?;
+    let redis_conn = RedisConnectionManager::new(redis_client)
+        .await
+        .map_err(|e| anyhow::anyhow!("failed to create Redis connection manager: {}", e))?;
+    tracing::info!("Redis connection manager initialized");
+
     // Build application state
     let state = AppState {
         db: pool,
@@ -157,6 +174,7 @@ async fn main() -> anyhow::Result<()> {
         identity,
         unfurl_cache: opencorde_api::routes::unfurl::new_cache(),
         rate_limit_state: rate_limit_state.clone(),
+        redis_conn,
     };
 
     // Build router with middleware

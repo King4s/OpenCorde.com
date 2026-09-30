@@ -268,3 +268,23 @@ pub async fn list_pending_outgoing(
     .fetch_all(pool)
     .await
 }
+
+/// Check if either user has blocked the other.
+#[tracing::instrument(skip(pool))]
+pub async fn is_blocked(
+    pool: &PgPool,
+    user_a: Snowflake,
+    user_b: Snowflake,
+) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(
+            SELECT 1 FROM relationships
+            WHERE status = 'blocked'
+            AND ((from_user = $1 AND to_user = $2) OR (from_user = $2 AND to_user = $1))
+        )",
+    )
+    .bind(user_a.as_i64())
+    .bind(user_b.as_i64())
+    .fetch_one(pool)
+    .await
+}

@@ -26,9 +26,12 @@ use serde_json::json;
 use std::time::Duration;
 
 use crate::{AppState, error::ApiError, middleware::auth::AuthUser};
-use opencorde_db::repos::{dm_federated_repo, dm_repo, user_repo};
+use opencorde_db::repos::{dm_federated_repo, dm_repo, relationship_repo, user_repo};
 
-use super::types::{DmChannelResponse, DmMessageResponse, MessageListQuery, SendDmRequest};
+use super::types::{
+    DmChannelResponse, DmChannelWithStatusResponse, DmMessageResponse, MessageListQuery,
+    MessageRequestAction, SendDmRequest,
+};
 
 /// GET /api/v1/users/@me/channels — List DM channels for current user.
 ///
@@ -98,13 +101,59 @@ pub async fn open_dm(
         .map_err(|_| ApiError::BadRequest("invalid recipient_id format".into()))
         .map(Snowflake::new)?;
 
-    let dm_id_result = dm_repo::get_or_create_dm(&state.db, dm_id, auth.user_id, recipient_id)
+    // Check if either user has blocked the other
+    let rel = relationship_repo::get_between(&state.db, auth.user_id, recipient_id)
         .await
         .map_err(|e| {
-            tracing::error!(error = %e, "failed to get or create dm");
-            ApiError::InternalServerError("failed to get or create dm".into())
+            tracing::error!(error = %e, "failed to check relationship");
+            ApiError::InternalServerError("failed to check relationship".into())
         })?;
+    if matches!(rel.as_ref().map(|r| r.status.as_str()), Some("blocked")) {
+        tracing::warn!(user_id = %auth.user_id, recipient_id = %recipient_id.as_i64(), "blocked user attempted DM");
+        return Err(ApiError::Forbidden);
+    }
 
+    // Check recipient's privacy settings
+    let who_can_dm: Option<String> =
+        sqlx::query_scalar("SELECT who_can_dm FROM users WHERE id = $1")
+            .bind(recipient_id.as_i64())
+            .fetch_optional(&state.db)
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, "failed to check privacy settings");
+                ApiError::InternalServerError("failed to check privacy settings".into())
+            })?
+            .flatten();
+
+    let is_friend = matches!(rel.as_ref().map(|r| r.status.as_str()), Some("accepted"));
+
+    if who_can_dm.as_deref() == Some("friends_only") && !is_friend {
+        tracing::info!(recipient_id = %recipient_id.as_i64(), "DM blocked by privacy setting");
+        return Err(ApiError::Forbidden);
+    }
+
+    // Determine message_request_status for each user
+    let (sender_status, recipient_status) = if is_friend {
+        ("accepted", "accepted")
+    } else {
+        ("accepted", "pending")
+    };
+
+    let dm_id_result = dm_repo::get_or_create_dm_with_request_status(
+        &state.db,
+        dm_id,
+        auth.user_id,
+        recipient_id,
+        sender_status,
+        recipient_status,
+    )
+    .await
+    .map_err(|e| {
+        tracing::error!(error = %e, "failed to get or create dm");
+        ApiError::InternalServerError("failed to get or create dm".into())
+    })?;
+
+    // Re-fetch the channel with status info
     let channels = dm_repo::list_dms_for_user(&state.db, auth.user_id)
         .await
         .map_err(|e| {
@@ -405,4 +454,93 @@ pub async fn send_dm_message(
     }
 
     Ok((StatusCode::CREATED, Json(response)))
+}
+
+/// GET /api/v1/users/@me/channels/requests — List pending message requests.
+///
+/// Returns DM channels where the current user's message_request_status is 'pending'.
+/// These are DMs from non-friends that have not yet been accepted or dismissed.
+///
+/// Requires authentication.
+#[tracing::instrument(skip(state, auth), fields(user_id = %auth.user_id))]
+pub async fn list_message_requests(
+    State(state): State<AppState>,
+    auth: AuthUser,
+) -> Result<Json<Vec<DmChannelWithStatusResponse>>, ApiError> {
+    tracing::info!("listing message requests");
+
+    let requests = dm_repo::list_message_requests(&state.db, auth.user_id)
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, "failed to list message requests");
+            ApiError::InternalServerError("failed to list message requests".into())
+        })?;
+
+    let responses = requests
+        .into_iter()
+        .map(|ch| DmChannelWithStatusResponse {
+            id: ch.id.to_string(),
+            other_user_id: ch.other_user_id.to_string(),
+            other_username: ch.other_username,
+            last_read_id: ch.last_read_id.to_string(),
+            message_request_status: ch.message_request_status,
+        })
+        .collect();
+
+    Ok(Json(responses))
+}
+
+/// PUT /api/v1/channels/@dms/{dm_id}/request — Accept, ignore, or mark as spam a message request.
+///
+/// Body: `{ \"action\": \"accept\" | \"ignore\" | \"spam\" }`
+///
+/// Requires authentication and DM channel membership.
+#[tracing::instrument(skip(state, auth, req), fields(user_id = %auth.user_id))]
+pub async fn handle_message_request(
+    State(state): State<AppState>,
+    auth: AuthUser,
+    Path(dm_id): Path<String>,
+    Json(req): Json<MessageRequestAction>,
+) -> Result<StatusCode, ApiError> {
+    tracing::info!(dm_id = %dm_id, action = %req.action, "handling message request");
+
+    let dm_id_sf = dm_id
+        .parse::<i64>()
+        .map_err(|_| ApiError::BadRequest("invalid dm_id format".into()))
+        .map(Snowflake::new)?;
+
+    // Validate action
+    let status = match req.action.as_str() {
+        "accept" => "accepted",
+        "ignore" => "ignored",
+        "spam" => "spam",
+        _ => {
+            return Err(ApiError::BadRequest(
+                "action must be accept, ignore, or spam".into(),
+            ));
+        }
+    };
+
+    // Check membership
+    let is_member = dm_repo::is_dm_member(&state.db, dm_id_sf, auth.user_id)
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, "failed to check dm membership");
+            ApiError::InternalServerError("failed to check membership".into())
+        })?;
+
+    if !is_member {
+        tracing::warn!(dm_id = dm_id_sf.as_i64(), "user not a member of dm");
+        return Err(ApiError::Forbidden);
+    }
+
+    dm_repo::update_message_request_status(&state.db, dm_id_sf, auth.user_id, status)
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, "failed to update message request status");
+            ApiError::InternalServerError("failed to update message request".into())
+        })?;
+
+    tracing::info!(dm_id = dm_id_sf.as_i64(), %status, "message request updated");
+    Ok(StatusCode::NO_CONTENT)
 }

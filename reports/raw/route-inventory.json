@@ -1,35 +1,35 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-05-14",
+  "generated_at": "2026-06-09",
   "source": {
     "entry_points": [
       "crates/opencorde-api/src/routes/mod.rs",
       "crates/opencorde-api/src/ws/handler/mod.rs"
     ],
-    "modules_walked": 116
+    "modules_walked": 118
   },
   "summary": {
-    "total_routes": 169,
+    "total_routes": 176,
     "by_method": {
-      "DELETE": 33,
-      "GET": 61,
-      "PATCH": 13,
-      "POST": 51,
-      "PUT": 11
+      "DELETE": 34,
+      "GET": 63,
+      "PATCH": 14,
+      "POST": 53,
+      "PUT": 12
     },
     "by_auth_class": {
       "admin": 7,
       "public": 18,
-      "user": 144
+      "user": 151
     },
     "by_path_kind": {
       "admin": 7,
       "auth": 12,
       "federation": 4,
-      "generic": 120,
+      "generic": 125,
       "infrastructure": 3,
       "mesh": 4,
-      "own_resource": 19
+      "own_resource": 21
     },
     "by_permission": {
       "channel:ADD_REACTIONS": 1,
@@ -40,15 +40,16 @@
       "channel:MANAGE_MESSAGES": 1,
       "channel:MANAGE_ROLES": 1,
       "channel:MANAGE_WEBHOOKS": 3,
+      "channel:MENTION_EVERYONE": 1,
       "channel:MUTE_MEMBERS": 3,
       "channel:PIN_MESSAGES": 2,
-      "channel:READ_MESSAGE_HISTORY": 1,
+      "channel:READ_MESSAGE_HISTORY": 2,
       "channel:REQUEST_TO_SPEAK": 1,
-      "channel:SEND_MESSAGES": 8,
+      "channel:SEND_MESSAGES": 10,
       "channel:SEND_MESSAGES_IN_THREADS": 1,
       "channel:SPEAK": 4,
       "channel:USE_APPLICATION_COMMANDS": 1,
-      "channel:VIEW_CHANNEL": 36,
+      "channel:VIEW_CHANNEL": 37,
       "server:BAN_MEMBERS": 3,
       "server:CREATE_EVENTS": 1,
       "server:CREATE_INVITE": 2,
@@ -63,13 +64,23 @@
       "server:VIEW_CHANNEL": 15
     },
     "unresolved_handlers": 0,
-    "needs_review": 6
+    "needs_review": 8
   },
   "needs_review_routes": [
     {
       "method": "DELETE",
       "path": "/api/v1/channels/{channel_id}/stage/leave",
       "handler_file": "crates/opencorde-api/src/routes/stage/handlers.rs"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/scheduled-messages/{id}",
+      "handler_file": "crates/opencorde-api/src/routes/scheduled_messages.rs"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/scheduled-messages/{id}",
+      "handler_file": "crates/opencorde-api/src/routes/scheduled_messages.rs"
     },
     {
       "method": "GET",
@@ -443,6 +454,22 @@
       "needs_review": false
     },
     {
+      "method": "PUT",
+      "path": "/api/v1/channels/@dms/{dm_id}/request",
+      "handler": "handlers::handle_message_request",
+      "handler_file": "crates/opencorde-api/src/routes/dms/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/dms/mod.rs",
+      "auth": "user",
+      "path_kind": "generic",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [
+        "dm_participant"
+      ],
+      "auth_required": true,
+      "needs_review": false
+    },
+    {
       "method": "POST",
       "path": "/api/v1/channels/{channel_id}/ack",
       "handler": "mark_channel_read",
@@ -568,6 +595,7 @@
       "auth": "user",
       "path_kind": "generic",
       "permissions": [
+        "channel:MENTION_EVERYONE",
         "channel:SEND_MESSAGES"
       ],
       "inspects_effective": [],
@@ -734,6 +762,22 @@
       "permissions": [
         "channel:SEND_MESSAGES",
         "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true,
+      "needs_review": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/channels/{channel_id}/scheduled-messages",
+      "handler": "schedule_message",
+      "handler_file": "crates/opencorde-api/src/routes/scheduled_messages.rs",
+      "declared_in": "crates/opencorde-api/src/routes/scheduled_messages.rs",
+      "auth": "user",
+      "path_kind": "generic",
+      "permissions": [
+        "channel:SEND_MESSAGES"
       ],
       "inspects_effective": [],
       "flags": [],
@@ -1454,6 +1498,24 @@
       "needs_review": false
     },
     {
+      "method": "POST",
+      "path": "/api/v1/messages/{id}/forward",
+      "handler": "forward::forward_message",
+      "handler_file": "crates/opencorde-api/src/routes/messages/forward.rs",
+      "declared_in": "crates/opencorde-api/src/routes/messages/handlers.rs",
+      "auth": "user",
+      "path_kind": "generic",
+      "permissions": [
+        "channel:READ_MESSAGE_HISTORY",
+        "channel:SEND_MESSAGES",
+        "channel:VIEW_CHANNEL"
+      ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true,
+      "needs_review": false
+    },
+    {
       "method": "GET",
       "path": "/api/v1/messages/{message_id}/reactions",
       "handler": "list_reactions",
@@ -1598,6 +1660,34 @@
       ],
       "auth_required": true,
       "needs_review": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/scheduled-messages/{id}",
+      "handler": "cancel_scheduled",
+      "handler_file": "crates/opencorde-api/src/routes/scheduled_messages.rs",
+      "declared_in": "crates/opencorde-api/src/routes/scheduled_messages.rs",
+      "auth": "user",
+      "path_kind": "generic",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true,
+      "needs_review": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/scheduled-messages/{id}",
+      "handler": "edit_scheduled",
+      "handler_file": "crates/opencorde-api/src/routes/scheduled_messages.rs",
+      "declared_in": "crates/opencorde-api/src/routes/scheduled_messages.rs",
+      "auth": "user",
+      "path_kind": "generic",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true,
+      "needs_review": true
     },
     {
       "method": "GET",
@@ -2537,6 +2627,20 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/users/@me/channels/requests",
+      "handler": "handlers::list_message_requests",
+      "handler_file": "crates/opencorde-api/src/routes/dms/handlers.rs",
+      "declared_in": "crates/opencorde-api/src/routes/dms/mod.rs",
+      "auth": "user",
+      "path_kind": "own_resource",
+      "permissions": [],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true,
+      "needs_review": false
+    },
+    {
+      "method": "GET",
       "path": "/api/v1/users/@me/export",
       "handler": "export_user_data",
       "handler_file": "crates/opencorde-api/src/routes/data_export.rs",
@@ -2574,6 +2678,20 @@
       "permissions": [
         "channel:VIEW_CHANNEL"
       ],
+      "inspects_effective": [],
+      "flags": [],
+      "auth_required": true,
+      "needs_review": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/@me/scheduled-messages",
+      "handler": "list_scheduled",
+      "handler_file": "crates/opencorde-api/src/routes/scheduled_messages.rs",
+      "declared_in": "crates/opencorde-api/src/routes/scheduled_messages.rs",
+      "auth": "user",
+      "path_kind": "own_resource",
+      "permissions": [],
       "inspects_effective": [],
       "flags": [],
       "auth_required": true,

@@ -56,6 +56,30 @@ pub struct MessageListQuery {
     pub limit: Option<i64>,
 }
 
+/// Request to mark a DM channel as read.
+#[derive(Debug, Deserialize)]
+pub struct MarkDmReadRequest {
+    /// ID of the last message read (as string to preserve Snowflake format).
+    pub message_id: String,
+}
+
+/// Response for a DM channel including message request status.
+#[derive(Debug, Serialize)]
+pub struct DmChannelWithStatusResponse {
+    pub id: String,
+    pub other_user_id: String,
+    pub other_username: String,
+    pub last_read_id: String,
+    pub message_request_status: String,
+}
+
+/// Action to perform on a message request.
+#[derive(Debug, Deserialize)]
+pub struct MessageRequestAction {
+    /// Action: "accept", "ignore", or "spam"
+    pub action: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

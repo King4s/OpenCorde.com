@@ -72,13 +72,12 @@ mod tests {
     #[test]
     fn test_admin_override() {
         let admin_base = Permissions::ADMINISTRATOR;
-        let mut overwrites = Vec::new();
-        overwrites.push(PermissionOverwrite {
+        let overwrites = vec![PermissionOverwrite {
             id: Snowflake::new(123),
             target_type: OverwriteType::Member,
             allow: Permissions::empty(),
             deny: Permissions::all_permissions(),
-        });
+        }];
 
         let result = compute_permissions(
             admin_base,

@@ -14,6 +14,7 @@
 //! - RoleCreate/Update/Delete: dispatched if user is a member of the server
 //! - MemberUpdate: dispatched if user is a member of the server
 //! - ServerUpdate: dispatched if user is a member of the server
+//! - EventReminder/EventStatusUpdate: dispatched if user is a member of the server
 //! - ChannelAck: dispatched to all connected users (client filters by user_id)
 //! - PresenceUpdate/MemberJoin/MemberLeave: dispatched to all connected users
 
@@ -97,6 +98,18 @@ pub fn should_dispatch(
                 .unwrap_or(false)
         }
         "ChannelAck" | "PresenceUpdate" | "MemberJoin" | "MemberLeave" => true,
+        // Event lifecycle events: server members only. EventReminder also carries
+        // a `recipients` list the client uses to decide whether to notify.
+        "EventReminder" | "EventStatusUpdate" => {
+            let server_id = event
+                .get("data")
+                .and_then(|d| d.get("server_id"))
+                .and_then(|s| s.as_str())
+                .and_then(|s| s.parse::<i64>().ok());
+            server_id
+                .map(|id| member_server_ids.contains(&id))
+                .unwrap_or(false)
+        }
         _ => false,
     }
 }
@@ -107,6 +120,39 @@ mod tests {
 
     fn empty_sets() -> (HashSet<i64>, HashSet<i64>) {
         (HashSet::new(), HashSet::new())
+    }
+
+    #[test]
+    fn test_should_dispatch_event_lifecycle_server_members_only() {
+        let channels = HashSet::new();
+        let mut servers = HashSet::new();
+        servers.insert(42_i64);
+
+        for kind in ["EventReminder", "EventStatusUpdate"] {
+            let member = serde_json::json!({
+                "type": kind,
+                "data": { "event_id": "7", "server_id": "42", "title": "Standup" }
+            });
+            assert!(
+                should_dispatch(&member, &channels, &servers),
+                "{kind} to member"
+            );
+
+            let outsider = serde_json::json!({
+                "type": kind,
+                "data": { "event_id": "7", "server_id": "99", "title": "Standup" }
+            });
+            assert!(
+                !should_dispatch(&outsider, &channels, &servers),
+                "{kind} to outsider"
+            );
+
+            let missing = serde_json::json!({ "type": kind, "data": { "event_id": "7" } });
+            assert!(
+                !should_dispatch(&missing, &channels, &servers),
+                "{kind} without server_id"
+            );
+        }
     }
 
     #[test]

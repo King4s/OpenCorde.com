@@ -46,6 +46,14 @@ pub struct TotpVerifyRequest {
     pub code: String,
 }
 
+/// Response body for the 2FA verify endpoint — includes recovery codes on first enable.
+#[derive(Debug, Serialize)]
+pub struct TotpVerifyResponse {
+    /// One-time recovery codes — shown once, store securely.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recovery_codes: Option<Vec<String>>,
+}
+
 /// Request body for the 2FA disable endpoint.
 #[derive(Debug, Deserialize)]
 pub struct TotpDisableRequest {
@@ -111,7 +119,7 @@ pub async fn verify(
     State(state): State<AppState>,
     auth: AuthUser,
     Json(req): Json<TotpVerifyRequest>,
-) -> Result<StatusCode, ApiError> {
+) -> Result<(StatusCode, Json<TotpVerifyResponse>), ApiError> {
     tracing::info!("verifying TOTP code for 2FA activation");
 
     let user = user_repo::get_by_id(&state.db, auth.user_id)
@@ -140,7 +148,17 @@ pub async fn verify(
         .await
         .map_err(ApiError::Database)?;
 
-    tracing::info!(user_id = %auth.user_id, "2FA successfully enabled");
+    // Generate 10 one-time recovery codes
+    let mut generator = opencorde_core::snowflake::SnowflakeGenerator::new(10, 1);
+    let recovery_codes = opencorde_db::repos::totp_recovery_repo::generate_codes(
+        &state.db,
+        auth.user_id,
+        &mut generator,
+    )
+    .await
+    .map_err(ApiError::Database)?;
+
+    tracing::info!(user_id = %auth.user_id, "2FA successfully enabled with {} recovery codes", recovery_codes.len());
     log_mod_action(
         &state,
         opencorde_core::Snowflake::new(0),
@@ -149,7 +167,12 @@ pub async fn verify(
         auth.user_id.as_i64(),
     )
     .await;
-    Ok(StatusCode::NO_CONTENT)
+    Ok((
+        StatusCode::OK,
+        Json(TotpVerifyResponse {
+            recovery_codes: Some(recovery_codes),
+        }),
+    ))
 }
 
 /// DELETE /api/v1/auth/2fa — Disable 2FA.
@@ -194,6 +217,11 @@ pub async fn disable(
     }
 
     user_repo::disable_totp(&state.db, auth.user_id)
+        .await
+        .map_err(ApiError::Database)?;
+
+    // Clear any remaining recovery codes
+    opencorde_db::repos::totp_recovery_repo::clear_codes(&state.db, auth.user_id)
         .await
         .map_err(ApiError::Database)?;
 

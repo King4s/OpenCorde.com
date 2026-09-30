@@ -4,6 +4,13 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+# Cargo doesn't support mixing `lints.workspace = true` with local overrides
+# below (cannot override workspace.lints in lints) — the workspace's deny
+# rules are enforced via `cargo clippy --workspace -- -D warnings` (see
+# quality-gate.md) instead of manifest-level inheritance.
+[lints.clippy]
+too-many-arguments = "allow"
+
 # PostgreSQL database layer via sqlx
 
 [dependencies]
@@ -15,3 +22,8 @@ thiserror = { workspace = true }     # Error handling
 anyhow = { workspace = true }        # Flexible error handling
 chrono = { workspace = true }        # DateTime handling with timezone
 serde_json = "1.0"                   # JSON serialization for attachments
+uuid = { workspace = true }          # UUID v4 generation for auth codes
+
+[dev-dependencies]
+testcontainers-modules = { version = "0.15.0", features = ["postgres"] }  # Ephemeral Postgres for repo integration tests (needs Docker)
+sqlx = { workspace = true, features = ["migrate"] }  # sqlx::migrate! to apply the migration chain in tests

@@ -89,29 +89,47 @@ pub async fn login(
                     totp::APP_NAME,
                 )?;
                 if !valid {
-                    tracing::warn!(user_id = user_row.id, "invalid TOTP code at login");
-                    return Err(ApiError::Unauthorized);
+                    // Try recovery code as fallback (32-char uppercase hex)
+                    let uid = Snowflake::new(user_row.id);
+                    let consumed =
+                        opencorde_db::repos::totp_recovery_repo::consume_code(&state.db, uid, code)
+                            .await
+                            .map_err(ApiError::Database)?;
+
+                    if !consumed {
+                        tracing::warn!(
+                            user_id = user_row.id,
+                            "invalid TOTP/recovery code at login"
+                        );
+                        return Err(ApiError::Unauthorized);
+                    }
+                    tracing::info!(user_id = user_row.id, "recovery code consumed for login");
+                } else {
+                    tracing::debug!(user_id = user_row.id, "TOTP code verified");
                 }
-                tracing::debug!(user_id = user_row.id, "TOTP code verified");
             }
         }
     }
 
-    // Generate tokens
+    // Generate tokens. Refresh token first so its JTI can be embedded in the
+    // access token too, letting the sessions API identify "the current session".
     let user_id = Snowflake::new(user_row.id);
-    let access_token = jwt::create_access_token(
-        user_id,
-        &user_row.username,
-        &state.config.jwt_secret,
-        state.config.jwt_access_expiry,
-    )
-    .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
-
     let (refresh_token, jti) = jwt::create_refresh_token(
         user_id,
         &user_row.username,
         &state.config.jwt_secret,
         state.config.jwt_refresh_expiry,
+        None,
+    )
+    .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
+
+    let access_token = jwt::create_access_token(
+        user_id,
+        &user_row.username,
+        &state.config.jwt_secret,
+        state.config.jwt_access_expiry,
+        None,
+        Some(&jti),
     )
     .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
 
@@ -247,19 +265,22 @@ pub async fn refresh(
         .map_err(ApiError::Database)?;
 
     // Generate new tokens
-    let new_access_token = jwt::create_access_token(
-        user_id,
-        &user_row.username,
-        &state.config.jwt_secret,
-        state.config.jwt_access_expiry,
-    )
-    .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
-
     let (new_refresh_token, new_jti) = jwt::create_refresh_token(
         user_id,
         &user_row.username,
         &state.config.jwt_secret,
         state.config.jwt_refresh_expiry,
+        None,
+    )
+    .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
+
+    let new_access_token = jwt::create_access_token(
+        user_id,
+        &user_row.username,
+        &state.config.jwt_secret,
+        state.config.jwt_access_expiry,
+        None,
+        Some(&new_jti),
     )
     .map_err(|e| ApiError::Internal(anyhow::anyhow!("token creation failed: {}", e)))?;
 

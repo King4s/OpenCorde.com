@@ -228,6 +228,60 @@ pub fn member_leave(server_id: &str, user_id: &str) -> String {
     .to_string()
 }
 
+/// Create an EVENT_REMINDER event.
+///
+/// Fired 15 minutes before a scheduled event starts. Dispatched to all server
+/// members who have event reminders enabled. The `recipients` list allows the
+/// dispatch filter to target specific user IDs.
+pub fn event_reminder(
+    event_id: &str,
+    server_id: &str,
+    title: &str,
+    starts_at: &str,
+    creator_id: &str,
+    recipients: &[i64],
+) -> String {
+    json!({
+        "type": "EventReminder",
+        "data": {
+            "event_id": event_id,
+            "server_id": server_id,
+            "title": title,
+            "starts_at": starts_at,
+            "creator_id": creator_id,
+            "recipients": recipients
+        }
+    })
+    .to_string()
+}
+
+/// Create an EVENT_STATUS_UPDATE event.
+///
+/// Fired when an event's status changes automatically (scheduled→active,
+/// active→completed). Dispatched to all server members. The `creator_id`
+/// field lets the client surface a notification to the event creator.
+pub fn event_status_update(
+    event_id: &str,
+    server_id: &str,
+    title: &str,
+    old_status: &str,
+    new_status: &str,
+    creator_id: &str,
+) -> String {
+    json!({
+        "type": "EventStatusUpdate",
+        "data": {
+            "event_id": event_id,
+            "server_id": server_id,
+            "title": title,
+            "old_status": old_status,
+            "new_status": new_status,
+            "creator_id": creator_id
+        }
+    })
+    .to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

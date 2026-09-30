@@ -2,7 +2,7 @@
 	/**
 	 * @file Message list component
 	 * @purpose Displays messages with markdown, grouping, timestamps, reply context, reactions
-	 * @version 2.3.0 — adds compact message style support
+	 * @version 2.4.0 — adds message forwarding support
 	 */
 	import { tick } from 'svelte';
 	import { get } from 'svelte/store';
@@ -11,10 +11,12 @@
 	import MarkdownContent from './MarkdownContent.svelte';
 	import EmojiPicker from './EmojiPicker.svelte';
 	import MessageContextMenu from './MessageContextMenu.svelte';
+	import ChannelPicker from '$lib/components/modals/ChannelPicker.svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { currentChannelId } from '$lib/stores/channels';
 	import { getGroupState } from '$lib/stores/e2ee';
 	import UserProfilePopover from '$lib/components/user/UserProfilePopover.svelte';
+	import api from '$lib/api/client';
 
 	const messageStyle = themeStore.messageStyle;
 
@@ -42,6 +44,21 @@
 	let editContent = $state('');
 	let popoverUserId = $state<string | null>(null);
 	let popoverAnchorRect = $state<DOMRect | null>(null);
+
+	let forwardMsg = $state<Message | null>(null);
+	let forwardError = $state('');
+
+	async function handleForward(targetChannelId: string, _targetChannelName: string) {
+		if (!forwardMsg) return;
+		forwardError = '';
+		try {
+			await api.post(`/messages/${forwardMsg.id}/forward`, { target_channel_id: targetChannelId });
+			forwardMsg = null;
+		} catch (e: any) {
+			forwardError = e.message || 'Failed to forward message';
+			setTimeout(() => { forwardError = ''; }, 4000);
+		}
+	}
 
 	function openProfilePopover(userId: string, e: MouseEvent) {
 		const el = e.currentTarget as HTMLElement;
@@ -421,7 +438,9 @@
 			</div>
 
 			<MessageContextMenu {msg} {currentUserId} {spaceId} {onReply} {onPin} {onOpenThread} {onDelete}
-				onStartEdit={startEdit} />
+				onStartEdit={startEdit}
+				onForward={() => { forwardMsg = msg; }}
+			/>
 		</div>
 	{/each}
 </div>
@@ -433,6 +452,19 @@
 		anchorRect={popoverAnchorRect}
 		onClose={() => { popoverUserId = null; popoverAnchorRect = null; }}
 	/>
+{/if}
+
+{#if forwardMsg}
+	<ChannelPicker
+		onSelect={(channelId, channelName) => handleForward(channelId, channelName)}
+		onClose={() => { forwardMsg = null; }}
+	/>
+{/if}
+
+{#if forwardError}
+	<div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm">
+		{forwardError}
+	</div>
 {/if}
 
 

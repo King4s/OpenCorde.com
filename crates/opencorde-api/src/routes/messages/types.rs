@@ -29,6 +29,13 @@ pub struct EditMessageRequest {
     pub content: String,
 }
 
+/// Request body for forwarding a message.
+#[derive(Debug, Deserialize)]
+pub struct ForwardMessageRequest {
+    /// Snowflake channel ID of the target channel
+    pub target_channel_id: String,
+}
+
 /// Query parameters for listing messages (cursor-based pagination).
 #[derive(Debug, Deserialize)]
 pub struct MessageQuery {
@@ -49,6 +56,19 @@ pub struct ReplyContextResponse {
     pub author_username: String,
     /// Content preview of the replied-to message (first 100 chars)
     pub content: String,
+}
+
+/// Context of a forwarded message (source attribution).
+#[derive(Debug, Serialize, Clone)]
+pub struct ForwardContextResponse {
+    /// Snowflake message ID of the forwarded message
+    pub id: String,
+    /// Username of the original author
+    pub author_username: String,
+    /// Content preview of the forwarded message (first 100 chars)
+    pub content: String,
+    /// Snowflake channel ID of the source channel
+    pub channel_id: String,
 }
 
 /// Message response body.
@@ -76,6 +96,9 @@ pub struct MessageResponse {
     /// Inline reply context (author + content preview) for the replied-to message
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reply_to: Option<ReplyContextResponse>,
+    /// Inline forwarded-from context (source attribution) for forwarded messages
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub forwarded_from: Option<ForwardContextResponse>,
 }
 
 #[cfg(test)]
@@ -137,6 +160,7 @@ mod tests {
             created_at: now,
             reply_to_id: None,
             reply_to: None,
+            forwarded_from: None,
         };
 
         let json = serde_json::to_string(&response).unwrap();
@@ -161,6 +185,7 @@ mod tests {
             created_at: now,
             reply_to_id: None,
             reply_to: None,
+            forwarded_from: None,
         };
 
         let json = serde_json::to_string(&response).unwrap();
@@ -187,6 +212,7 @@ mod tests {
                 author_username: "origauthor".to_string(),
                 content: "Original content".to_string(),
             }),
+            forwarded_from: None,
         };
 
         let json = serde_json::to_string(&response).unwrap();

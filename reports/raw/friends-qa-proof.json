@@ -1,0 +1,75 @@
+{
+  "ok": false,
+  "base": "https://opencorde.com",
+  "auth": {
+    "method": "fixture_login",
+    "tokensStoredInReport": false
+  },
+  "generated_at": "2026-06-01T22:25:06Z",
+  "checks": [
+    {
+      "name": "search",
+      "passed": true,
+      "detail": "searched 'messaging_second', found target user"
+    },
+    {
+      "name": "send-request",
+      "passed": true,
+      "detail": "POST /friends/request \u2192 201, rel_id=319964603519995905"
+    },
+    {
+      "name": "incoming-visible",
+      "passed": true,
+      "detail": "User B sees 1 incoming, rel_id=319964603519995905 present=True"
+    },
+    {
+      "name": "accept",
+      "passed": true,
+      "detail": "PUT /friends/319964603519995905/accept \u2192 204"
+    },
+    {
+      "name": "friendship-visible",
+      "passed": true,
+      "detail": "A sees=True (1 friends), B sees=True (1 friends)"
+    },
+    {
+      "name": "block",
+      "passed": true,
+      "detail": "POST /friends/block \u2192 201, rel_id=319964603519995905, status=blocked"
+    },
+    {
+      "name": "block-prevents-friendship",
+      "passed": true,
+      "detail": "after block, old friendship rel_id 319964603519995905 present=False (expect False)"
+    },
+    {
+      "name": "blocked-blocks-request",
+      "passed": false,
+      "detail": "B\u2192A request after block \u2192 201 (expect 400/403/409; 201=backend gap: request handler doesn't check blocked relationships)"
+    },
+    {
+      "name": "unblock",
+      "passed": true,
+      "detail": "DELETE /friends/319964603519995905 \u2192 204"
+    }
+  ],
+  "fixture": {
+    "userA": {
+      "id": "319964464449323009",
+      "username": "browsertest"
+    },
+    "userB": {
+      "id": "313325503312297985",
+      "username": "messaging_second"
+    }
+  },
+  "cleanup": {
+    "relationshipsRemoved": 0,
+    "finalRemoved": 0
+  },
+  "summary": {
+    "total": 9,
+    "passed": 8,
+    "failed": 1
+  }
+}

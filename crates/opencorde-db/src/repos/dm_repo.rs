@@ -22,6 +22,7 @@ pub struct DmChannelRow {
     pub other_user_id: i64,
     pub other_username: String,
     pub last_read_id: i64,
+    pub message_request_status: String,
 }
 
 /// Row type for reading DM messages.
@@ -103,6 +104,76 @@ pub async fn get_or_create_dm(
     Ok(dm_id_val)
 }
 
+/// Get or create a DM channel with per-member message_request_status.
+///
+/// Like get_or_create_dm, but when creating a NEW channel, sets each member's
+/// message_request_status. When the channel already exists, returns the existing ID
+/// without modifying statuses.
+///
+/// # Arguments
+/// * `pool` - Database connection pool
+/// * `dm_id` - Snowflake ID for the new DM channel (if creating)
+/// * `user_a` - First user's Snowflake ID
+/// * `user_b` - Second user's Snowflake ID
+/// * `user_a_status` - message_request_status for user_a: "accepted" or "pending"
+/// * `user_b_status` - message_request_status for user_b: "accepted" or "pending"
+#[tracing::instrument(skip(pool))]
+pub async fn get_or_create_dm_with_request_status(
+    pool: &PgPool,
+    dm_id: Snowflake,
+    user_a: Snowflake,
+    user_b: Snowflake,
+    user_a_status: &str,
+    user_b_status: &str,
+) -> Result<i64, sqlx::Error> {
+    let user_a_id = user_a.as_i64();
+    let user_b_id = user_b.as_i64();
+    let dm_id_val = dm_id.as_i64();
+
+    // Check for existing DM where both users are members
+    let existing = sqlx::query_scalar::<_, i64>(
+        "SELECT d.id FROM dm_channels d \
+         JOIN dm_channel_members m1 ON m1.dm_channel_id = d.id AND m1.user_id = $1 \
+         JOIN dm_channel_members m2 ON m2.dm_channel_id = d.id AND m2.user_id = $2 \
+         LIMIT 1",
+    )
+    .bind(user_a_id)
+    .bind(user_b_id)
+    .fetch_optional(pool)
+    .await?;
+
+    if let Some(dm_id) = existing {
+        tracing::info!(dm_id = dm_id, "found existing dm channel");
+        return Ok(dm_id);
+    }
+
+    // Create new DM channel and add both members with specified statuses
+    let mut tx = pool.begin().await?;
+
+    sqlx::query("INSERT INTO dm_channels (id) VALUES ($1)")
+        .bind(dm_id_val)
+        .execute(&mut *tx)
+        .await?;
+
+    sqlx::query(
+        "INSERT INTO dm_channel_members (dm_channel_id, user_id, last_read_id, message_request_status) \
+         VALUES ($1, $2, 0, $5::message_request_status), ($1, $4, 0, $6::message_request_status)",
+    )
+    .bind(dm_id_val)
+    .bind(user_a_id)
+    .bind(0i64)
+    .bind(user_b_id)
+    .bind(user_a_status)
+    .bind(user_b_status)
+    .execute(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+
+    tracing::info!(dm_id = dm_id_val, user_a_status = %user_a_status, user_b_status = %user_b_status, "created new dm channel with request statuses");
+    Ok(dm_id_val)
+}
+
 /// List all DM channels for a user.
 ///
 /// Returns DM channels with the other participant's username
@@ -121,15 +192,18 @@ pub async fn list_dms_for_user(
 
     // LEFT JOINs allow federated DMs where only the local user is in dm_channel_members.
     // COALESCE falls back to remote_peer_address for the federated participant's display name.
+    // Only returns channels where the user's message_request_status is 'accepted' (regular DMs).
     sqlx::query_as::<_, DmChannelRow>(
         "SELECT d.id, \
                 COALESCE(m2.user_id, 0) as other_user_id, \
                 COALESCE(u.username, d.remote_peer_address, '') as other_username, \
-                m.last_read_id \
+                m.last_read_id, \
+                m.message_request_status::text as message_request_status \
          FROM dm_channels d \
          JOIN dm_channel_members m ON m.dm_channel_id = d.id AND m.user_id = $1 \
          LEFT JOIN dm_channel_members m2 ON m2.dm_channel_id = d.id AND m2.user_id != $1 \
          LEFT JOIN users u ON u.id = m2.user_id \
+         WHERE m.message_request_status = 'accepted' \
          ORDER BY d.id DESC",
     )
     .bind(user_id_val)
@@ -172,6 +246,16 @@ pub async fn send_dm_message(
     .bind(author_id.as_i64())
     .bind(content)
     .fetch_one(pool)
+    .await?;
+
+    // Update sender's last_read_id so their own message is "read" for them
+    sqlx::query(
+        "UPDATE dm_channel_members SET last_read_id = $1 WHERE dm_channel_id = $2 AND user_id = $3",
+    )
+    .bind(id.as_i64())
+    .bind(dm_id.as_i64())
+    .bind(author_id.as_i64())
+    .execute(pool)
     .await?;
 
     tracing::info!(message_id = row.id, "dm message sent successfully");
@@ -261,6 +345,83 @@ pub async fn is_dm_member(
     Ok(exists)
 }
 
+/// List all DM channel IDs for a user.
+///
+/// # Errors
+/// Returns sqlx::Error if the query fails.
+#[tracing::instrument(skip(pool))]
+pub async fn list_dm_ids_for_user(
+    pool: &PgPool,
+    user_id: Snowflake,
+) -> Result<Vec<i64>, sqlx::Error> {
+    sqlx::query_scalar::<_, i64>("SELECT dm_channel_id FROM dm_channel_members WHERE user_id = $1")
+        .bind(user_id.as_i64())
+        .fetch_all(pool)
+        .await
+}
+
+/// List DM channels where the user's message_request_status is 'pending' (message requests).
+///
+/// # Errors
+/// Returns sqlx::Error if the query fails.
+#[tracing::instrument(skip(pool))]
+pub async fn list_message_requests(
+    pool: &PgPool,
+    user_id: Snowflake,
+) -> Result<Vec<DmChannelRow>, sqlx::Error> {
+    let user_id_val = user_id.as_i64();
+
+    tracing::info!("listing message requests");
+
+    sqlx::query_as::<_, DmChannelRow>(
+        "SELECT d.id, \
+                COALESCE(m2.user_id, 0) as other_user_id, \
+                COALESCE(u.username, d.remote_peer_address, '') as other_username, \
+                m.last_read_id, \
+                m.message_request_status::text as message_request_status \
+         FROM dm_channels d \
+         JOIN dm_channel_members m ON m.dm_channel_id = d.id AND m.user_id = $1 \
+         LEFT JOIN dm_channel_members m2 ON m2.dm_channel_id = d.id AND m2.user_id != $1 \
+         LEFT JOIN users u ON u.id = m2.user_id \
+         WHERE m.message_request_status = 'pending' \
+         ORDER BY d.id DESC",
+    )
+    .bind(user_id_val)
+    .fetch_all(pool)
+    .await
+}
+
+/// Update a user's message_request_status for a DM channel.
+///
+/// Used for accept, ignore, or mark-as-spam actions.
+///
+/// # Arguments
+/// * `pool` - Database connection pool
+/// * `dm_id` - Snowflake ID of the DM channel
+/// * `user_id` - User's Snowflake ID
+/// * `status` - New status: "accepted", "ignored", or "spam"
+#[tracing::instrument(skip(pool))]
+pub async fn update_message_request_status(
+    pool: &PgPool,
+    dm_id: Snowflake,
+    user_id: Snowflake,
+    status: &str,
+) -> Result<(), sqlx::Error> {
+    tracing::info!(dm_id = dm_id.as_i64(), user_id = user_id.as_i64(), %status, "updating message request status");
+
+    sqlx::query(
+        "UPDATE dm_channel_members SET message_request_status = $3::message_request_status \
+         WHERE dm_channel_id = $1 AND user_id = $2",
+    )
+    .bind(dm_id.as_i64())
+    .bind(user_id.as_i64())
+    .bind(status)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -272,6 +433,7 @@ mod tests {
             other_user_id: 444555666,
             other_username: "alice".to_string(),
             last_read_id: 999888777,
+            message_request_status: "accepted".to_string(),
         };
 
         assert_eq!(row.id, 111222333);

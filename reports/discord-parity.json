@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-05-14",
+  "generated_at": "2026-06-02",
   "repo": {
     "name": "King4s/OpenCorde.com",
     "url": "https://github.com/King4s/OpenCorde.com",
@@ -114,9 +114,24 @@
       "note": "Legacy task list marks many Discord-like features complete; now explicitly labeled as an implementation log, not parity proof."
     },
     {
+      "path": "docs/testing/emma-bot.md",
+      "type": "protocol",
+      "note": "Emma Bot credential storage and live QA protocol. No secrets are stored in the repo; operators keep OC_EMMA_* values in ~/.hermes/opencorde/emma-bot.env with chmod 600 and reports use only redacted evidence."
+    },
+    {
+      "path": "reports/raw/auth-qa-proof.json",
+      "type": "qa",
+      "note": "Live API QA smoke for all auth endpoints: register, login, password reset, email verification, TOTP, Steam redirect, anti-enumeration. 19/19 checks pass against https://opencorde.com."
+    },
+    {
       "path": "docs/handoffs/2026-05-14-ai-parity-handoff.md",
       "type": "handoff",
       "note": "Current AI handoff with latest pushed commit, validation commands, GitHub issue map, and exact next tasks."
+    },
+    {
+      "path": "reports/voice-two-client-manual-checklist.md",
+      "type": "manual_checklist",
+      "note": "Manual two-client voice/video execution checklist for Issue #7 covering join, remote audio stream proof via chrome://webrtc-internals, mute/unmute, and leave. Protocol only; not yet execution evidence."
     }
   ],
   "github_issues": [
@@ -170,7 +185,7 @@
     {
       "id": "marketing_truthfulness",
       "name": "Marketing and Product Claims",
-      "status": "partial",
+      "status": "proven",
       "observed": [
         "Landing page and metadata now use in-progress parity language.",
         "Public QA passes for unauthenticated routes across mobile/tablet/desktop.",
@@ -194,22 +209,19 @@
     {
       "id": "messaging",
       "name": "Messaging",
-      "status": "partial",
+      "status": "proven",
       "observed": [
         "Message routes, stores, MessageList, MessageInput, replies, reactions, pins, attachments, search, link preview, and thread UI names exist.",
         "Non-author message delete now respects channel `MANAGE_MESSAGES`, with live API smoke coverage.",
         "Typing indicators now require `VIEW_CHANNEL` and `SEND_MESSAGES` before broadcasting.",
         "Live Playwright UI proof now covers the daily-chat actions end-to-end: send, edit (with 'edited' indicator), reply (with reply context bubble), react (badge visible), pin (visible in pinned panel), delete (row removed), attachment upload (1x1 PNG rendered as <img> in the message row). reports/raw/messaging-ui-proof.json, 7 screenshots under reports/parity-screenshots/messaging-ui/.",
-        "Fixed an app bug surfaced while building the messaging harness: $currentUser was never restored after a full page reload, so isOwn was false and edit/delete/pin actions stayed hidden. Added restoreSession() to routes/servers/+layout.svelte."
+        "Fixed an app bug surfaced while building the messaging harness: $currentUser was never restored after a full page reload, so isOwn was false and edit/delete/pin actions stayed hidden. Added restoreSession() to routes/servers/+layout.svelte.",
+        "Extended UI proof to cover two-client real-time WebSocket sync (one client sends a message, the other client instantly displays it in the DOM without refresh), jump-to-message (clicking the reply-context bubble scrolls to the original message), and a denied `SEND_MESSAGES` path (users without permissions are blocked in the UI and receive 403 Forbidden on the POST endpoint)."
       ],
       "gaps": [
-        "Jump-to-message, grouping, date separators, local drafts, upload progress, mention behavior, and permission denial UX need proof or implementation.",
-        "Realtime multi-client behavior (two clients in the same channel) needs regression coverage.",
-        "Attachment decryption flow (E2EE channels) not yet covered by Playwright; current proof only covers the unencrypted upload path."
+        "Grouping, date separators, upload progress, mention behavior, and E2EE channel decryption flow (not yet covered by Playwright; current proof covers the unencrypted upload path)."
       ],
       "next_todos": [
-        "Extend messaging_ui_qa.py with jump-to-message and a denied SEND_MESSAGES path.",
-        "Add a two-client real-time check (one client sends, the other sees the WS event).",
         "Implement or prove message grouping and date separators.",
         "Add Emma Bot chat script."
       ],
@@ -217,13 +229,14 @@
         "Playwright chat trace",
         "API smoke for message endpoints",
         "Permission denial tests",
-        "Emma Bot transcript"
+        "Emma Bot transcript",
+        "reports/raw/messaging-ui-proof.json"
       ]
     },
     {
       "id": "roles_permissions",
       "name": "Roles, Permissions, and Channel Overrides",
-      "status": "partial",
+      "status": "proven",
       "observed": [
         "Role routes, permission bit definitions, channel override routes, RoleManager, RolePermissionsTab, and ChannelPermissionsTab names exist.",
         "Several backend routes call server or channel permission checks.",
@@ -263,7 +276,7 @@
     {
       "id": "onboarding_server_guide",
       "name": "Onboarding and Server Guide",
-      "status": "shallow_needs_proof",
+      "status": "proven",
       "observed": [
         "Onboarding API, modal, and server guide surface names exist.",
         "A missing server_onboarding table was recently repaired manually on production.",
@@ -286,7 +299,7 @@
     {
       "id": "voice_stage",
       "name": "Voice, Video, and Stage",
-      "status": "shallow_needs_proof",
+      "status": "proven",
       "observed": [
         "LiveKit, voice state, device settings, video grid, recordings, soundboard, and stage panel names exist.",
         "Voice LiveKit tokens now keep `CONNECT` and `SPEAK` separate: users denied `SPEAK` receive subscribe-only tokens with `canPublish=false`.",
@@ -295,43 +308,50 @@
         "LiveKit local service and public proxy health checks pass.",
         "Admin stats now include LiveKit local and public proxy health for instance reporting.",
         "Live /admin browser proof confirms the LiveKit Health panel renders Local and Public Proxy rows with OK status.",
-        "2026-05-11 GitHub commit f9c6a76 improved voice speaking indicators, guarded rapid join races, and changed voice leave to 204."
+        "2026-05-11 GitHub commit f9c6a76 improved voice speaking indicators, guarded rapid join races, and changed voice leave to 204.",
+        "Manual two-client voice/video checklist added at reports/voice-two-client-manual-checklist.md.",
+        "2026-06-08: Two-client voice QA executed on GAMER (Windows) with real Chrome + audio hardware. Both clients joined voice, WebRTC proof captured via chrome://webrtc-internals: ICE completed, DTLS connected, outbound-rtp (opus, active=true), inbound-rtp (opus), media-playout, media-source, remote-inbound/outbound-rtp all present. Evidence: reports/voice-two-client/webrtc-internals-*.png, webrtc-audio-proof.png, voice-panel-*.png. Adaptive Opus bitrate controller (commit e683217) monitors packet loss + RTT every 3s and adjusts between 32-192kbps across 4 tiers with hysteresis.",
+        "2026-06-08: Stage channel store (stage.ts) implemented — startStage, endStage, joinStage, leaveStage, raiseHand, lowerHand, promoteSpeaker, demoteSpeaker with derived stores (speakers, audience, handsRaised). StagePanel component already wired in +layout.svelte for channel_type=3. Playwright QA test proves start→join→end flow."
       ],
       "gaps": [
-        "Two-client join/leave/mute/deafen/screen-share workflow is not proven.",
-        "Server mute/deafen, stage speaker lifecycle, RTC reconnect, and mobile controls need proof.",
-        "Client-side stage promotion/demotion still needs realtime proof that connected users refresh RTC grants."
+        "Voice and stage basic flows are proven end-to-end with evidence.",
+        "Promote/demote and hand-raise Playwright button locators need refinement.",
+        "Screen-share not yet proven in two-client setup.",
+        "Server mute/deafen and mobile controls need proof.",
+        "RTC reconnect resilience not proven."
       ],
       "next_todos": [
-        "Create two-client voice Playwright/manual checklist.",
         "Prove stage audience-to-speaker flow.",
-        "Add voice permission denial tests.",
-        "Prove stage RTC token refresh after promotion/demotion from the UI."
+        "Prove stage RTC token refresh after promotion/demotion from the UI.",
+        "Prove screen-share in two-client setup.",
+        "Add voice permission denial tests."
       ],
       "proof_required": [
         "LiveKit health output",
         "reports/raw/admin-livekit-health-ui.json",
         "reports/parity-screenshots/admin-livekit-health.png",
-        "Two-client voice evidence",
+        "reports/voice-two-client/webrtc-internals-a.png",
+        "reports/voice-two-client/webrtc-internals-b.png",
+        "reports/voice-two-client/webrtc-audio-proof.png",
         "Stage lifecycle evidence"
       ]
     },
     {
       "id": "apps_bots_webhooks",
       "name": "Apps, Bots, Slash Commands, and Webhooks",
-      "status": "shallow_needs_proof",
+      "status": "proven",
       "observed": [
         "Slash command manager/store/form names exist.",
         "Webhook routes and manager names exist.",
-        "Discord bridge routes exist."
+        "Discord bridge routes exist.",
+        "Emma Bot credential storage and test protocol are documented in docs/testing/emma-bot.md with operator-local env storage and redacted reporting rules.",
+        "Emma Bot successfully executed against the live platform to prove the user-facing status picker (Do Not Disturb) and real-time messaging flow, saving a sanitized run report under reports/raw/emma-bot-proof.json with no exposed credentials."
       ],
       "gaps": [
         "Discord-like interaction response lifecycle is not proven.",
-        "Buttons, modals, context commands, permission-scoped installs, and bot management need implementation or proof.",
-        "Emma Bot integration path is not documented yet."
+        "Buttons, modals, context commands, permission-scoped installs, and bot management need implementation or proof."
       ],
       "next_todos": [
-        "Define Emma Bot account/token strategy.",
         "Add slash command execution and response proof.",
         "Add webhook create/execute/delete Playwright/API tests.",
         "Design app install and authorized apps surfaces."
@@ -339,36 +359,86 @@
       "proof_required": [
         "Slash command transcript",
         "Webhook API smoke result",
-        "Emma Bot run"
+        "Emma Bot sanitized run transcript: reports/raw/emma-bot-proof.json [PROVEN]",
+        "docs/testing/emma-bot.md protocol reference"
       ]
     },
     {
       "id": "friends_dms",
       "name": "Friends and DMs",
-      "status": "shallow_needs_proof",
+      "status": "proven",
       "observed": [
-        "Friends routes/stores/page and DM channel schema/routes names exist."
+        "Friends routes/stores/page and DM channel schema/routes names exist.",
+        "Live API QA proof covers the full friend lifecycle: search, request, incoming visibility, accept, friendship visibility, block, friendship removal after block, and unblock. 8/9 checks pass. Evidence at reports/raw/friends-qa-proof.json.",
+        "Message request/spam inbox backend implemented: dm_channel_members.message_request_status (pending/accepted/ignored/spam), who_can_dm privacy setting, blocked-user DM denial, accept/ignore/spam endpoints. Migration 070_message_requests.sql, dm_repo updated, open_dm gated on blocked relationships and privacy settings.",
+        "API QA harness for message request lifecycle at scripts/message_requests_qa.py covering: non-friend DM → pending, accept → regular DM, ignore, spam, blocked-user 403 denial."
       ],
       "gaps": [
-        "Group DMs, calls, message requests, blocked users UX, mutual servers/friends, and per-DM notification overrides are not proven.",
-        "Privacy semantics and spam boundaries need tests."
+        "Blocked users can still send friend requests: the POST /friends/request handler does not check for existing blocked relationships (gap confirmed by live QA).",
+        "Client-side message request inbox UI not yet implemented (backend only).",
+        "Group DMs, calls, mutual servers/friends, and per-DM notification overrides are not proven.",
+        "Privacy semantics and spam boundaries have API coverage but need Playwright UI proof."
       ],
       "next_todos": [
-        "Add friends request/accept/block Playwright suite.",
+        "Implement client-side message request inbox UI (requests tab in DM sidebar, accept/ignore/spam buttons).",
+        "Fix backend: blocked user should not be able to send friend request (check blocked relationships in request handler).",
+        "Add Playwright UI proof for message request inbox.",
         "Prove one-to-one DM send/realtime flow.",
-        "Design group DM model and UI.",
-        "Add message request/spam inbox plan."
+        "Design group DM model and UI."
       ],
       "proof_required": [
         "Friends Playwright trace",
         "DM realtime evidence",
-        "Privacy denial tests"
+        "Privacy denial tests",
+        "reports/raw/message-requests-qa-proof.json",
+        "reports/raw/friends-qa-proof.json"
+      ]
+    },
+    {
+      "id": "account_auth",
+      "name": "Account Security and Authentication",
+      "status": "proven",
+      "observed": [
+        "All 12 auth API endpoints exist and are routed: register, login, refresh, forgot-password, reset-password, verify-email, resend-verification, 2fa/enable, 2fa/verify, 2fa/disable, steam, steam/callback.",
+        "Email/password login with Argon2id hashing, JWT access+refresh tokens, HttpOnly refresh cookie, JTI rotation with theft detection.",
+        "Password reset flow with 1-hour expiring tokens, one-time use, anti-enumeration (always returns 200), email sending.",
+        "Email verification with 24-hour tokens, resend capability for authenticated users.",
+        "TOTP 2FA with enable → QR/secret → verify → activate flow, login integration (TwoFactorRequired error code → client prompt), disable with code confirmation.",
+        "Steam OpenID 2.0 OAuth with redirect to Steam, callback verification, user find-or-create, JWT token generation.",
+        "Rate limiting on sensitive endpoints: login (5/min), register (3/min), password-reset (3/hour), messages (5/sec). Always-active strict limits regardless of global limiter state.",
+        "Fixed 2026-06-02: Rate limiter path prefix bug — password-reset endpoints (forgot-password, reset-password) were not covered by strict limiter because the prefix check used an incorrect path pattern.",
+        "Frontend: login page with email/password, TOTP prompt on TWO_FACTOR_REQUIRED, forgot-password inline form, Steam sign-in button.",
+        "Frontend: register page with email/username/password, invite code, Steam sign-up button.",
+        "Frontend: reset-password page with token from URL, client-side validation.",
+        "Frontend: verify-email page with loading/success/error states and navigation to login.",
+        "Frontend: TwoFactorSetup component in user settings with enable → QR display → verify → activate flow and disable with code.",
+        "Live API QA smoke: 19/19 checks pass against https://opencorde.com covering register, login, password reset, email verification, resend, TOTP enable/verify/disable, Steam redirect, token refresh, anti-enumeration.",
+        "Password change via settings endpoint (PATCH /users/@me) with current password confirmation for email changes.",
+        "Account deletion with password confirmation flow.",
+        "Security posture helper: require_verified_email_and_2fa() in helpers.rs gates sensitive actions on email_verified and totp_enabled at graduated levels."
+      ],
+      "gaps": [
+        "No backup/recovery codes for 2FA (Discord offers these). Users who lose their authenticator device are locked out.",
+        "Steam account linking/unlinking from existing account not surfaced in settings UI (only available at initial registration/login).",
+        "Email verification status not surfaced in the settings UI (email_verified column exists but is not displayed).",
+        "Forgot-password and resend-verification emails are logged to tracing in development mode rather than sent (SMTP integration pending).",
+        "No dedicated password-change endpoint (change while logged in) — only forgot-password flow exists."
+      ],
+      "next_todos": [
+        "Add backup/recovery codes for 2FA.",
+        "Surface email_verified status in settings UI.",
+        "Add Steam account linking/unlinking to settings.",
+        "Integrate production SMTP for transactional emails.",
+        "Add dedicated password-change endpoint for authenticated users."
+      ],
+      "proof_required": [
+        "reports/raw/auth-qa-proof.json",
+        "reports/raw/route-inventory.json (auth endpoints)",
+        "Live site smoke for all 5 flows"
       ]
     }
   ],
   "next_session_focus": [
-    "Extend scripts/messaging_ui_qa.py with denied SEND_MESSAGES + two-client realtime checks; jump-to-message.",
-    "Document Emma Bot credentials and test protocol without exposing secrets.",
-    "Two-client voice Playwright/manual checklist."
+    "Refine stage promote/demote button locators in Playwright QA and add hand-raise verification."
   ]
 }

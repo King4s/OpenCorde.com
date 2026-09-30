@@ -238,6 +238,25 @@ pub async fn disable_totp(pool: &PgPool, id: Snowflake) -> Result<(), sqlx::Erro
     Ok(())
 }
 
+/// Update the password hash for a user.
+///
+/// # Errors
+/// Returns sqlx::Error if the update fails.
+#[tracing::instrument(skip(pool, new_hash))]
+pub async fn set_password_hash(
+    pool: &PgPool,
+    id: Snowflake,
+    new_hash: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2")
+        .bind(new_hash)
+        .bind(id.as_i64())
+        .execute(pool)
+        .await?;
+    tracing::info!(user_id = id.as_i64(), "password hash updated");
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -22,7 +22,8 @@ pub async fn get_by_id(pool: &PgPool, id: Snowflake) -> Result<Option<MessageRow
     sqlx::query_as::<_, MessageRow>(
         "SELECT m.id, m.channel_id, m.author_id, m.content, m.attachments, m.edited_at, m.created_at, \
                 u.username as author_username, m.reply_to_id, \
-                ru.username as reply_author_username, LEFT(rm.content, 100) as reply_content_preview, m.thread_id \
+                ru.username as reply_author_username, LEFT(rm.content, 100) as reply_content_preview, m.thread_id, \
+                m.forwarded_from_id \
          FROM messages m \
          JOIN users u ON m.author_id = u.id \
          LEFT JOIN messages rm ON m.reply_to_id = rm.id \
@@ -79,7 +80,7 @@ pub async fn list_by_channel(
             sqlx::query_as::<_, MessageRow>(
                 "SELECT m.id, m.channel_id, m.author_id, m.content, m.attachments, m.edited_at, m.created_at, \
                         u.username as author_username, m.reply_to_id, \
-                        ru.username as reply_author_username, LEFT(rm.content, 100) as reply_content_preview, m.thread_id \
+                        ru.username as reply_author_username, LEFT(rm.content, 100) as reply_content_preview, m.thread_id, m.forwarded_from_id \
                  FROM messages m \
                  JOIN users u ON m.author_id = u.id \
                  LEFT JOIN messages rm ON m.reply_to_id = rm.id \
@@ -97,7 +98,7 @@ pub async fn list_by_channel(
             sqlx::query_as::<_, MessageRow>(
                 "SELECT m.id, m.channel_id, m.author_id, m.content, m.attachments, m.edited_at, m.created_at, \
                         u.username as author_username, m.reply_to_id, \
-                        ru.username as reply_author_username, LEFT(rm.content, 100) as reply_content_preview, m.thread_id \
+                        ru.username as reply_author_username, LEFT(rm.content, 100) as reply_content_preview, m.thread_id, m.forwarded_from_id \
                  FROM messages m \
                  JOIN users u ON m.author_id = u.id \
                  LEFT JOIN messages rm ON m.reply_to_id = rm.id \
@@ -115,7 +116,7 @@ pub async fn list_by_channel(
             sqlx::query_as::<_, MessageRow>(
                 "SELECT m.id, m.channel_id, m.author_id, m.content, m.attachments, m.edited_at, m.created_at, \
                         u.username as author_username, m.reply_to_id, \
-                        ru.username as reply_author_username, LEFT(rm.content, 100) as reply_content_preview, m.thread_id \
+                        ru.username as reply_author_username, LEFT(rm.content, 100) as reply_content_preview, m.thread_id, m.forwarded_from_id \
                  FROM messages m \
                  JOIN users u ON m.author_id = u.id \
                  LEFT JOIN messages rm ON m.reply_to_id = rm.id \
@@ -160,7 +161,7 @@ pub async fn list_by_thread(
     let messages = sqlx::query_as::<_, MessageRow>(
         "SELECT m.id, m.channel_id, m.author_id, m.content, m.attachments, m.edited_at, m.created_at, \
                 u.username as author_username, m.reply_to_id, \
-                ru.username as reply_author_username, LEFT(rm.content, 100) as reply_content_preview, m.thread_id \
+                ru.username as reply_author_username, LEFT(rm.content, 100) as reply_content_preview, m.thread_id, m.forwarded_from_id \
          FROM messages m \
          JOIN users u ON m.author_id = u.id \
          LEFT JOIN messages rm ON m.reply_to_id = rm.id \

@@ -1,0 +1,54 @@
+[2026-06-08T20:14:27.669Z] START: === Two-client voice QA v2 ===
+[2026-06-08T20:14:27.671Z] INFO: Server: Voice QA Server, Channel: Voice QA VC
+[2026-06-08T20:14:27.884Z] STEP: 1. Login
+[2026-06-08T20:14:27.885Z] LOGIN: Logging in as voicetest_a
+[2026-06-08T20:14:32.044Z] LOGIN: voicetest_a url: https://opencorde.com/servers
+[2026-06-08T20:14:32.103Z] LOGIN: Logging in as voicetest_b
+[2026-06-08T20:14:36.240Z] LOGIN: voicetest_b url: https://opencorde.com/servers
+[2026-06-08T20:14:36.283Z] STEP: 2. Navigate to server
+[2026-06-08T20:14:36.283Z] NAV: Going to server 322465729712619521
+[2026-06-08T20:14:38.878Z] NAV: Going to server 322465729712619521
+[2026-06-08T20:14:41.588Z] STEP: 3. Client A joins voice
+[2026-06-08T20:14:41.589Z] VOICE: a - looking for voice channel: Voice QA VC
+[2026-06-08T20:14:42.600Z] VOICE: a - found channel with: text="Voice QA VC"
+[2026-06-08T20:14:44.627Z] VOICE: a - voice panel found: "Voice Connected"
+[2026-06-08T20:14:45.692Z] WEBRTC: a-joined: 0 connections found
+[2026-06-08T20:14:45.693Z] STEP: 4. Client B joins voice
+[2026-06-08T20:14:45.693Z] VOICE: b - looking for voice channel: Voice QA VC
+[2026-06-08T20:14:46.705Z] VOICE: b - found channel with: text="Voice QA VC"
+[2026-06-08T20:14:48.734Z] VOICE: b - voice panel found: "Voice Connected"
+[2026-06-08T20:14:50.840Z] WEBRTC: b-joined: 0 connections found
+[2026-06-08T20:14:50.841Z] STEP: 5. Wait for WebRTC connection
+[2026-06-08T20:14:53.851Z] WEBRTC: a-connected: 0 connections found
+[2026-06-08T20:14:53.853Z] WEBRTC: b-connected: 0 connections found
+[2026-06-08T20:14:53.920Z] STEP: 6. Mute/Unmute
+[2026-06-08T20:14:54.506Z] WEBRTC: a-muted: 0 connections found
+[2026-06-08T20:14:55.052Z] WEBRTC: a-unmuted: 0 connections found
+[2026-06-08T20:14:55.053Z] STEP: 7. Final webrtc stats
+[2026-06-08T20:14:55.054Z] WEBRTC: a-final: 0 connections found
+[2026-06-08T20:14:55.056Z] WEBRTC: b-final: 0 connections found
+[2026-06-08T20:14:55.057Z] STEP: 8. Disconnect
+[2026-06-08T20:14:56.111Z] LEAVE: A disconnected
+[2026-06-08T20:14:58.219Z] LEAVE: B disconnected
+[2026-06-08T20:14:58.219Z] DONE: Screenshots: 12, WebRTC reports: 8
+[2026-06-08T20:14:58.220Z] FILE: 01-a-logged-in.png
+[2026-06-08T20:14:58.220Z] FILE: 01-b-logged-in.png
+[2026-06-08T20:14:58.220Z] FILE: 02-a-server.png
+[2026-06-08T20:14:58.221Z] FILE: 02-b-server.png
+[2026-06-08T20:14:58.221Z] FILE: 03-a-after-join-click.png
+[2026-06-08T20:14:58.221Z] FILE: 04-a-sees-participants.png
+[2026-06-08T20:14:58.222Z] FILE: 04-b-after-join-click.png
+[2026-06-08T20:14:58.222Z] FILE: 05-a-voice-state.png
+[2026-06-08T20:14:58.222Z] FILE: 05-b-voice-state.png
+[2026-06-08T20:14:58.222Z] FILE: 06-a-muted.png
+[2026-06-08T20:14:58.223Z] FILE: 08-a-disconnected.png
+[2026-06-08T20:14:58.223Z] FILE: 08-b-after-a-left.png
+[2026-06-08T20:14:58.223Z] FILE: webrtc-a-connected.json
+[2026-06-08T20:14:58.224Z] FILE: webrtc-a-final.json
+[2026-06-08T20:14:58.224Z] FILE: webrtc-a-joined.json
+[2026-06-08T20:14:58.224Z] FILE: webrtc-a-muted.json
+[2026-06-08T20:14:58.225Z] FILE: webrtc-a-unmuted.json
+[2026-06-08T20:14:58.225Z] FILE: webrtc-b-connected.json
+[2026-06-08T20:14:58.225Z] FILE: webrtc-b-final.json
+[2026-06-08T20:14:58.225Z] FILE: webrtc-b-joined.json
+[2026-06-08T20:14:58.271Z] END: Browser closed
