@@ -180,6 +180,7 @@ pub async fn get_by_id(pool: &PgPool, id: Snowflake) -> Result<Option<EventRow>,
         "SELECT e.id, e.server_id, e.channel_id, e.creator_id, e.title, e.description, \
                 e.location_type::text, e.location_name, e.starts_at, e.ends_at, \
                 e.status::text, e.cover_image_url, e.created_at, e.updated_at, \
+                e.recurrence_rule, e.recurrence_end_date, e.parent_event_id, e.is_recurring, \
                 COUNT(r.user_id)::bigint as rsvp_count, \
                 u.username as creator_username \
          FROM server_events e \
@@ -221,6 +222,7 @@ pub async fn list_by_server(
             "SELECT e.id, e.server_id, e.channel_id, e.creator_id, e.title, e.description, \
                     e.location_type::text, e.location_name, e.starts_at, e.ends_at, \
                     e.status::text, e.cover_image_url, e.created_at, e.updated_at, \
+                e.recurrence_rule, e.recurrence_end_date, e.parent_event_id, e.is_recurring, \
                     COUNT(r.user_id)::bigint as rsvp_count, \
                     u.username as creator_username \
              FROM server_events e \
@@ -238,6 +240,7 @@ pub async fn list_by_server(
             "SELECT e.id, e.server_id, e.channel_id, e.creator_id, e.title, e.description, \
                     e.location_type::text, e.location_name, e.starts_at, e.ends_at, \
                     e.status::text, e.cover_image_url, e.created_at, e.updated_at, \
+                e.recurrence_rule, e.recurrence_end_date, e.parent_event_id, e.is_recurring, \
                     COUNT(r.user_id)::bigint as rsvp_count, \
                     u.username as creator_username \
              FROM server_events e \

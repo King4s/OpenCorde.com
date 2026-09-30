@@ -12,5 +12,6 @@ mod common;
 mod bot_tokens;
 mod dm;
 mod embeds;
+mod events;
 mod integration_logs;
 mod interactions;
