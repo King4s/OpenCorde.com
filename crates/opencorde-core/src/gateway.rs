@@ -4,8 +4,8 @@
 //! All gateway events use serde's tag + content for clean JSON encoding.
 //! Format: `{ "type": "event_name", "data": {...} }`
 
-use crate::models::{Channel, Message, Server, UserProfile, VoiceState};
 use crate::models::event::Event;
+use crate::models::{Channel, Message, Server, UserProfile, VoiceState};
 use crate::snowflake::Snowflake;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -131,9 +131,7 @@ pub enum GatewayEvent {
     /// Stage session started
     StageSessionStart { session: StageSessionData },
     /// Stage session ended
-    StageSessionEnd {
-        channel_id: Snowflake,
-    },
+    StageSessionEnd { channel_id: Snowflake },
     /// Participant joined stage
     StageParticipantJoin { participant: StageParticipantData },
     /// Participant left stage

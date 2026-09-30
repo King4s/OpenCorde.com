@@ -225,6 +225,8 @@ async fn create_event(
         req.location_name.as_deref(),
         req.starts_at,
         req.ends_at,
+        req.recurrence_rule.as_ref(),
+        req.recurrence_end_date,
     )
     .await
     .map_err(ApiError::Database)?;

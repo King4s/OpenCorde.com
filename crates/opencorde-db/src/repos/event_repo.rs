@@ -86,7 +86,7 @@ pub async fn create_event(
         "INSERT INTO server_events \
          (id, server_id, channel_id, creator_id, title, description, location_type, location_name, \
           starts_at, ends_at, recurrence_rule, recurrence_end_date, is_recurring) \
-         VALUES ($1, $2, $3, $4, $5, $6, $7::event_location_type, $8, $9, $10, $11, $12, $13)"
+         VALUES ($1, $2, $3, $4, $5, $6, $7::event_location_type, $8, $9, $10, $11, $12, $13)",
     )
     .bind(id.as_i64())
     .bind(server_id.as_i64())
@@ -126,7 +126,7 @@ pub async fn create_event_instance(
     sqlx::query(
         "INSERT INTO event_instances (id, parent_event_id, server_id, starts_at, ends_at) \
          VALUES ($1, $2, $3, $4, $5) \
-         ON CONFLICT DO NOTHING"
+         ON CONFLICT DO NOTHING",
     )
     .bind(id.as_i64())
     .bind(parent_event_id.as_i64())

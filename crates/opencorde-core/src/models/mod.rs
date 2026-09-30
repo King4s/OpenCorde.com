@@ -5,6 +5,7 @@ pub mod app_install;
 pub mod application;
 pub mod bot_user;
 pub mod channel;
+pub mod event;
 pub mod invite;
 pub mod member;
 pub mod message;
