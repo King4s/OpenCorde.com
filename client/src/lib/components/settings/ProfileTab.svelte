@@ -7,7 +7,6 @@
 	import { currentUser } from '$lib/stores/auth';
 	import api from '$lib/api/client';
 	import type { UserProfile } from '$lib/api/types';
-	import StatusPicker from '$lib/components/user/StatusPicker.svelte';
 	import AccountSwitcher from '$lib/components/settings/AccountSwitcher.svelte';
 	import ActivityStatusPicker from '$lib/components/settings/ActivityStatusPicker.svelte';
 	import UserBadges from '$lib/components/settings/UserBadges.svelte';
