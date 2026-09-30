@@ -133,16 +133,25 @@ mod tests {
                 "type": kind,
                 "data": { "event_id": "7", "server_id": "42", "title": "Standup" }
             });
-            assert!(should_dispatch(&member, &channels, &servers), "{kind} to member");
+            assert!(
+                should_dispatch(&member, &channels, &servers),
+                "{kind} to member"
+            );
 
             let outsider = serde_json::json!({
                 "type": kind,
                 "data": { "event_id": "7", "server_id": "99", "title": "Standup" }
             });
-            assert!(!should_dispatch(&outsider, &channels, &servers), "{kind} to outsider");
+            assert!(
+                !should_dispatch(&outsider, &channels, &servers),
+                "{kind} to outsider"
+            );
 
             let missing = serde_json::json!({ "type": kind, "data": { "event_id": "7" } });
-            assert!(!should_dispatch(&missing, &channels, &servers), "{kind} without server_id");
+            assert!(
+                !should_dispatch(&missing, &channels, &servers),
+                "{kind} without server_id"
+            );
         }
     }
 
