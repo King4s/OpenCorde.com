@@ -1,0 +1,3 @@
+[submodule "server-registry"]
+	path = server-registry
+	url = https://github.com/King4s/opencorde-servers.git
