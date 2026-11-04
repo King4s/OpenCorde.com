@@ -12,6 +12,7 @@ $phase1Edits = @(
     'crates/opencorde-api/src/routes/dms/handlers.rs', 'crates/opencorde-api/src/routes/federation/handlers.rs',
     'crates/opencorde-api/src/routes/slash_commands/dispatch.rs', 'crates/opencorde-api/src/routes/unfurl.rs',
     'crates/opencorde-api/tests/persistent_websocket.rs', 'crates/opencorde-bridge/src/main.rs',
+    'crates/opencorde-db/src/repos/message_repo/mod.rs',
     'crates/opencorde-search/src/lib.rs', 'scripts/run-rust-on-thor.ps1',
     'tests/client/login-smoke.mjs'
 )

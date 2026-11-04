@@ -139,7 +139,7 @@ rustc() { qa_rust rustc "$@"; }
 cargo --version
 rustc --version
 # Complete the default suite before creating the disposable database.
-cargo test --locked -p opencorde-api
+cargo test --workspace --locked
 # No mounts or production configuration; credentials belong only to this empty DB.
 container_id=$(docker run -d --rm --name "$container_name" \
   --label "opencorde.qa.owner=$owner" --tmpfs /var/lib/postgresql/data:rw \
@@ -168,8 +168,6 @@ cargo test --locked -p opencorde-api routes::messages::send::tests::timeouts_gat
 cargo test --locked -p opencorde-api --test persistent_websocket persistent_websocket_rechecks_current_authorization -- --ignored --exact --nocapture --test-threads=1
 cargo test --locked -p opencorde-api --test offline_maintenance -- --ignored --test-threads=1
 cargo test --locked -p opencorde-api maintenance::tests::object_inventory_includes_avatars_and_files_across_keyset_batches -- --ignored --exact --test-threads=1
-cargo test --locked -p opencorde-search
-cargo check --locked -p opencorde-bridge
 '@
     $remote = $remote.Replace('__BASE__', $remoteBase).Replace('__SNAPSHOT__', $snapshot).Replace('__UPLOAD__', $upload).Replace('__HASH__', $hash).Replace('__HASH16__', $hash.Substring(0,16)).Replace('__RUNID__', $runId)
     # Send script on stdin, avoiding multi-line command quoting by Windows OpenSSH.
