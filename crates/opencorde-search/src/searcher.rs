@@ -51,7 +51,7 @@ fn extract_text(doc: &TantivyDocument, field: tantivy::schema::Field) -> anyhow:
 }
 
 /// Executes search queries against the Tantivy index.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SearchEngine {
     index: Index,
     schema: SearchSchema,

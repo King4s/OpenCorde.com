@@ -62,7 +62,8 @@ pub struct SteamCallbackParams {
 
 /// GET /api/v1/auth/steam — Redirect to Steam OpenID login endpoint.
 #[tracing::instrument(skip(state))]
-pub async fn steam_login(State(state): State<AppState>) -> Redirect {
+pub async fn steam_login(State(state): State<AppState>) -> Result<Redirect, ApiError> {
+    state.config.require_external_integrations()?;
     tracing::info!("steam login initiated");
 
     let return_to = format!("{}/api/v1/auth/steam/callback", state.config.base_url);
@@ -93,7 +94,7 @@ pub async fn steam_login(State(state): State<AppState>) -> Redirect {
 
     tracing::info!(url = %steam_login_url, "redirecting to steam");
 
-    Redirect::to(&steam_login_url)
+    Ok(Redirect::to(&steam_login_url))
 }
 
 /// GET /api/v1/auth/steam/callback — Verify Steam response and authenticate user.
@@ -102,6 +103,7 @@ pub async fn steam_callback(
     State(state): State<AppState>,
     Query(params): Query<SteamCallbackParams>,
 ) -> Result<Redirect, ApiError> {
+    state.config.require_external_integrations()?;
     tracing::info!("steam callback received");
 
     // Verify the OpenID response from Steam

@@ -8,7 +8,11 @@ import api from "$lib/api/client";
 import { gateway } from "$lib/api/websocket";
 import type { Message, ReactionCount, Attachment } from "$lib/api/types";
 import { getGroupState, setGroupState } from "./e2ee";
+import { toastError } from "$lib/stores/toasts.svelte";
 import { browser } from "$app/environment";
+
+// Track channels that have already shown a decryption-failure toast (one per channel per session)
+const decryptionToastShown = new Set<string>();
 
 function isTauri(): boolean {
   return (
@@ -41,6 +45,14 @@ async function decryptContent(
     setGroupState(channelId, result.group_state_hex);
     return result.plaintext ?? "[MLS control message]";
   } catch {
+    // Toast once per channel per session to avoid spamming
+    if (!decryptionToastShown.has(channelId)) {
+      decryptionToastShown.add(channelId);
+      toastError(
+        "Some messages could not be decrypted. History may be incomplete.",
+        "Encryption Error",
+      );
+    }
     return "[Decryption failed]";
   }
 }

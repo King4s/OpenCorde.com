@@ -170,6 +170,43 @@ pub async fn effective_channel_perms(
     ))
 }
 
+/// Reject active server timeouts before a member sends a channel message.
+///
+/// The owner is exempt, matching moderation's protected-target policy. An
+/// administrator is not exempt: the owner or a higher-role moderator can time
+/// them out. This is separate from channel permissions so ADMINISTRATOR cannot
+/// bypass a timeout. Expired and removed timeouts do not restrict sending.
+/// Call after the normal channel permission/membership check.
+pub async fn require_not_timed_out(
+    pool: &PgPool,
+    user_id: Snowflake,
+    server_id: Snowflake,
+) -> Result<(), ApiError> {
+    let owner_id: i64 = sqlx::query_scalar("SELECT owner_id FROM servers WHERE id = $1")
+        .bind(server_id.as_i64())
+        .fetch_optional(pool)
+        .await
+        .map_err(ApiError::Database)?
+        .ok_or_else(|| ApiError::NotFound("server not found".into()))?;
+    if owner_id == user_id.as_i64() {
+        return Ok(());
+    }
+
+    let active: bool = sqlx::query_scalar(
+        "SELECT EXISTS(SELECT 1 FROM member_timeouts \
+         WHERE server_id = $1 AND user_id = $2 AND timeout_until > CURRENT_TIMESTAMP)",
+    )
+    .bind(server_id.as_i64())
+    .bind(user_id.as_i64())
+    .fetch_one(pool)
+    .await
+    .map_err(ApiError::Database)?;
+    if active {
+        return Err(ApiError::Forbidden);
+    }
+    Ok(())
+}
+
 pub async fn resolve_channel_server(
     pool: &PgPool,
     channel_id: Snowflake,

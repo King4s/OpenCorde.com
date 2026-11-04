@@ -1,0 +1,31 @@
+# syntax=docker/dockerfile:1.7
+FROM rust:1.97.1-bookworm@sha256:0e2bcaef56d041a486784e54104a81aebe0da44bd03019bd70bc0401e42e4a97 AS build
+WORKDIR /src
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+ARG CARGO_BUILD_JOBS=2
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/src/target \
+    cargo build --release --locked -p opencorde-api --bin opencorde-api --bin opencorde-maintenance && \
+    install -Dm755 /src/target/release/opencorde-api /out/opencorde-api && \
+    install -Dm755 /src/target/release/opencorde-maintenance /out/opencorde-maintenance
+
+FROM debian:bookworm-slim@sha256:99c0b25c46d0214d5a2091092e7908907dcaecd6a962cde0ac700acee222b6f3
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates curl libssl3 zlib1g && \
+    rm -rf /var/lib/apt/lists/* && \
+    groupadd --gid 10001 opencorde && \
+    useradd --uid 10001 --gid 10001 --home-dir /data --no-create-home --shell /usr/sbin/nologin opencorde && \
+    mkdir -p /data /search && chown 10001:10001 /data /search
+COPY --from=build /out/opencorde-api /usr/local/bin/opencorde-api
+COPY --from=build /out/opencorde-maintenance /usr/local/bin/opencorde-maintenance
+ENV API_HOST=0.0.0.0 API_PORT=3000 \
+    IDENTITY_KEY_PATH=/data/identity.key SEARCH_INDEX_PATH=/search/index
+USER 10001:10001
+EXPOSE 3000
+VOLUME ["/data", "/search"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=3 \
+    CMD curl --fail --silent --show-error --max-time 4 http://127.0.0.1:3000/api/v1/health | grep -Eq '"database"[[:space:]]*:[[:space:]]*"connected"'
+CMD ["/usr/local/bin/opencorde-api"]

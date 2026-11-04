@@ -1,223 +1,95 @@
-//! # Event Dispatch Filtering
-//! Determines which WebSocket events should be delivered to each connected client
-//! based on channel accessibility and event type.
-//!
-//! ## Rationale
-//! Users should only receive events for channels they can access. This module
-//! centralizes the dispatch logic to ensure consistent filtering across all event types.
-//!
-//! ## Event Types
-//! - MessageCreate/Update/Delete: dispatched if user can access the message's channel
-//! - TypingStart: dispatched if user can access the channel
-//! - ReactionAdd/ReactionRemove: dispatched if user can access the message's channel
-//! - ChannelCreate/Update/Delete: dispatched if user is a member of the server
-//! - RoleCreate/Update/Delete: dispatched if user is a member of the server
-//! - MemberUpdate: dispatched if user is a member of the server
-//! - ServerUpdate: dispatched if user is a member of the server
-//! - ChannelAck: dispatched to all connected users (client filters by user_id)
-//! - PresenceUpdate/MemberJoin/MemberLeave: dispatched to all connected users
+//! Authorize event delivery against current database state, never connection snapshots.
+//! Deleted channels fail closed: their ACL no longer exists, so ChannelDelete is
+//! suppressed and clients must refresh their channel list to remove stale entries.
 
-use std::collections::HashSet;
+use opencorde_core::{Snowflake, permissions::Permissions};
+use opencorde_db::repos::{dm_repo, member_repo};
+use sqlx::PgPool;
 
-/// Check if an event should be dispatched to a WebSocket session.
-///
-/// Different event types have different access requirements:
-/// - MessageCreate/Update/Delete: visible only in accessible channels
-/// - TypingStart: visible only in accessible channels
-/// - ChannelCreate/Update/Delete/RoleCreate/Update/Delete/MemberUpdate/ServerUpdate: server members only
-/// - PresenceUpdate/MemberJoin/MemberLeave/ChannelAck: broadcast to all connected users
-///
-/// # Arguments
-/// * `event` - The event JSON object with "type" and "data" fields
-/// * `accessible_channels` - Set of channel IDs this user can access
-/// * `member_server_ids` - Set of server IDs this user is a member of
-///
-/// # Returns
-/// true if the event should be sent to this client, false otherwise
-pub fn should_dispatch(
-    event: &serde_json::Value,
-    accessible_channels: &HashSet<i64>,
-    member_server_ids: &HashSet<i64>,
-) -> bool {
-    let event_type = event.get("type").and_then(|v| v.as_str()).unwrap_or("");
+use crate::{error::ApiError, routes::permission_check::effective_channel_perms};
 
-    match event_type {
-        "MessageCreate" | "MessageUpdate" => {
-            let channel_id = event
-                .get("data")
-                .and_then(|d| d.get("message"))
-                .and_then(|m| m.get("channel_id"))
-                .and_then(|c| c.as_str())
-                .and_then(|c| c.parse::<i64>().ok());
-            channel_id
-                .map(|id| accessible_channels.contains(&id))
-                .unwrap_or(false)
+#[derive(Debug, PartialEq)]
+enum Audience {
+    Channel(i64),
+    Dm(i64),
+    Server(i64),
+    User(i64),
+    Public,
+    Deny,
+}
+
+fn audience(event: &serde_json::Value) -> Audience {
+    let id = |path: &str| event.pointer(path)?.as_str()?.parse::<i64>().ok();
+    let channel = |path| id(path).map(Audience::Channel).unwrap_or(Audience::Deny);
+    let server = |path| id(path).map(Audience::Server).unwrap_or(Audience::Deny);
+    match event.get("type").and_then(|v| v.as_str()) {
+        Some("MessageCreate" | "MessageUpdate") => channel("/data/message/channel_id"),
+        Some(
+            "MessageDelete" | "TypingStart" | "ReactionAdd" | "ReactionRemove" | "ChannelDelete",
+        ) => channel("/data/channel_id"),
+        Some("ChannelCreate" | "ChannelUpdate") => channel("/data/channel/id"),
+        Some("RoleCreate" | "RoleUpdate" | "RoleDelete" | "MemberUpdate") => {
+            server("/data/server_id")
         }
-        "MessageDelete" | "TypingStart" | "ReactionAdd" | "ReactionRemove" => {
-            let channel_id = event
-                .get("data")
-                .and_then(|d| d.get("channel_id"))
-                .and_then(|c| c.as_str())
-                .and_then(|c| c.parse::<i64>().ok());
-            channel_id
-                .map(|id| accessible_channels.contains(&id))
-                .unwrap_or(false)
+        Some("ServerUpdate") => server("/data/server/id"),
+        Some("DmMessageCreate") => id("/data/message/dm_id")
+            .map(Audience::Dm)
+            .unwrap_or(Audience::Deny),
+        Some("ChannelAck") => id("/data/user_id")
+            .map(Audience::User)
+            .unwrap_or(Audience::Deny),
+        // Existing presence/member broadcast policy is outside channel delivery.
+        Some("PresenceUpdate" | "MemberJoin" | "MemberLeave") => Audience::Public,
+        _ => Audience::Deny,
+    }
+}
+
+/// Re-check membership and VIEW_CHANNEL for every event, including metadata.
+/// Missing resources and all lookup failures deny delivery.
+pub async fn should_dispatch(event: &serde_json::Value, pool: &PgPool, user: Snowflake) -> bool {
+    match authorize(audience(event), pool, user).await {
+        Ok(allowed) => allowed,
+        Err(_) => {
+            tracing::debug!(
+                user_id = user.as_i64(),
+                "WebSocket authorization lookup failed; event withheld"
+            );
+            false
         }
-        // Server-scoped events: dispatch only to members of the server
-        "ChannelCreate" | "ChannelUpdate" => {
-            let server_id = event
-                .get("data")
-                .and_then(|d| d.get("channel"))
-                .and_then(|c| c.get("server_id"))
-                .and_then(|s| s.as_str())
-                .and_then(|s| s.parse::<i64>().ok());
-            server_id
-                .map(|id| member_server_ids.contains(&id))
-                .unwrap_or(false)
+    }
+}
+
+async fn authorize(audience: Audience, pool: &PgPool, user: Snowflake) -> Result<bool, ApiError> {
+    match audience {
+        Audience::Public => Ok(true),
+        Audience::Deny => Ok(false),
+        Audience::User(id) => Ok(id == user.as_i64()),
+        Audience::Server(id) => Ok(member_repo::get_member(pool, user, Snowflake::new(id))
+            .await?
+            .is_some()),
+        Audience::Dm(id) => Ok(dm_repo::is_dm_member(pool, Snowflake::new(id), user).await?),
+        Audience::Channel(id) => {
+            let server: Option<i64> =
+                sqlx::query_scalar("SELECT server_id FROM channels WHERE id = $1")
+                    .bind(id)
+                    .fetch_optional(pool)
+                    .await?;
+            let Some(server_id) = server else {
+                return Ok(false);
+            };
+            // Check membership explicitly even for the owner bypass in permission computation.
+            if member_repo::get_member(pool, user, Snowflake::new(server_id))
+                .await?
+                .is_none()
+            {
+                return Ok(false);
+            }
+            Ok(effective_channel_perms(pool, user, Snowflake::new(id))
+                .await?
+                .contains(Permissions::VIEW_CHANNEL))
         }
-        "ChannelDelete" | "RoleCreate" | "RoleUpdate" | "RoleDelete" | "MemberUpdate" => {
-            let server_id = event
-                .get("data")
-                .and_then(|d| d.get("server_id"))
-                .and_then(|s| s.as_str())
-                .and_then(|s| s.parse::<i64>().ok());
-            server_id
-                .map(|id| member_server_ids.contains(&id))
-                .unwrap_or(false)
-        }
-        "ServerUpdate" => {
-            let server_id = event
-                .get("data")
-                .and_then(|d| d.get("server"))
-                .and_then(|s| s.get("id"))
-                .and_then(|s| s.as_str())
-                .and_then(|s| s.parse::<i64>().ok());
-            server_id
-                .map(|id| member_server_ids.contains(&id))
-                .unwrap_or(false)
-        }
-        "ChannelAck" | "PresenceUpdate" | "MemberJoin" | "MemberLeave" => true,
-        _ => false,
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn empty_sets() -> (HashSet<i64>, HashSet<i64>) {
-        (HashSet::new(), HashSet::new())
-    }
-
-    #[test]
-    fn test_should_dispatch_message_create() {
-        let mut channels = HashSet::new();
-        channels.insert(12345_i64);
-        let servers = HashSet::new();
-
-        let event = serde_json::json!({
-            "type": "MessageCreate",
-            "data": { "message": { "channel_id": "12345", "content": "hello" } }
-        });
-        assert!(should_dispatch(&event, &channels, &servers));
-
-        let event_other = serde_json::json!({
-            "type": "MessageCreate",
-            "data": { "message": { "channel_id": "99999", "content": "hello" } }
-        });
-        assert!(!should_dispatch(&event_other, &channels, &servers));
-    }
-
-    #[test]
-    fn test_should_dispatch_typing_start() {
-        let mut channels = HashSet::new();
-        channels.insert(12345_i64);
-        let servers = HashSet::new();
-
-        let event = serde_json::json!({
-            "type": "TypingStart",
-            "data": { "channel_id": "12345", "user_id": "999" }
-        });
-        assert!(should_dispatch(&event, &channels, &servers));
-
-        let event_other = serde_json::json!({
-            "type": "TypingStart",
-            "data": { "channel_id": "99999", "user_id": "999" }
-        });
-        assert!(!should_dispatch(&event_other, &channels, &servers));
-    }
-
-    #[test]
-    fn test_should_dispatch_presence_update() {
-        let (channels, servers) = empty_sets();
-        let event = serde_json::json!({
-            "type": "PresenceUpdate",
-            "data": { "user_id": "999", "status": "online" }
-        });
-        assert!(should_dispatch(&event, &channels, &servers));
-    }
-
-    #[test]
-    fn test_should_dispatch_channel_create() {
-        let channels = HashSet::new();
-        let mut servers = HashSet::new();
-        servers.insert(42_i64);
-
-        let event = serde_json::json!({
-            "type": "ChannelCreate",
-            "data": { "channel": { "server_id": "42", "id": "999", "name": "new-channel" } }
-        });
-        assert!(should_dispatch(&event, &channels, &servers));
-
-        let event_other = serde_json::json!({
-            "type": "ChannelCreate",
-            "data": { "channel": { "server_id": "99", "id": "998", "name": "other" } }
-        });
-        assert!(!should_dispatch(&event_other, &channels, &servers));
-    }
-
-    #[test]
-    fn test_should_dispatch_role_create() {
-        let channels = HashSet::new();
-        let mut servers = HashSet::new();
-        servers.insert(42_i64);
-
-        let event = serde_json::json!({
-            "type": "RoleCreate",
-            "data": { "server_id": "42", "role": { "id": "1", "name": "Admin" } }
-        });
-        assert!(should_dispatch(&event, &channels, &servers));
-
-        let event_other = serde_json::json!({
-            "type": "RoleCreate",
-            "data": { "server_id": "99", "role": { "id": "2", "name": "Mod" } }
-        });
-        assert!(!should_dispatch(&event_other, &channels, &servers));
-    }
-
-    #[test]
-    fn test_should_dispatch_server_update() {
-        let channels = HashSet::new();
-        let mut servers = HashSet::new();
-        servers.insert(42_i64);
-
-        let event = serde_json::json!({
-            "type": "ServerUpdate",
-            "data": { "server": { "id": "42", "name": "Updated Server" } }
-        });
-        assert!(should_dispatch(&event, &channels, &servers));
-
-        let event_other = serde_json::json!({
-            "type": "ServerUpdate",
-            "data": { "server": { "id": "99", "name": "Other" } }
-        });
-        assert!(!should_dispatch(&event_other, &channels, &servers));
-    }
-
-    #[test]
-    fn test_should_dispatch_unknown_type() {
-        let (channels, servers) = empty_sets();
-        let event = serde_json::json!({"type": "Unknown", "data": {}});
-        assert!(!should_dispatch(&event, &channels, &servers));
-    }
-}
+mod tests;

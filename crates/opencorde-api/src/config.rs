@@ -11,9 +11,14 @@
 //! - anyhow (error handling)
 
 use std::env;
+use std::net::IpAddr;
 
 #[derive(Clone, Debug)]
 pub struct Config {
+    /// Permit outbound optional integrations; internal S3/LiveKit remain available.
+    pub allow_external_integrations: bool,
+    /// Opt in to public peer discovery (also requires external integrations).
+    pub public_registry_sync: bool,
     /// PostgreSQL connection string
     pub database_url: String,
     /// Redis connection string
@@ -70,6 +75,8 @@ pub struct Config {
     pub rate_limit_rps: u32,
     /// Rate limiter: maximum burst capacity per IP (default 200)
     pub rate_limit_burst: u32,
+    /// Exact reverse proxy address permitted to supply X-Real-IP.
+    pub trusted_proxy_ip: Option<IpAddr>,
     /// Steam Web API key (optional, for fetching player summaries)
     pub steam_api_key: Option<String>,
     /// Firebase Cloud Messaging server key (optional, for Android push notifications)
@@ -104,6 +111,16 @@ impl Config {
     /// # Errors
     /// Returns anyhow::Error if required variables are missing or invalid.
     pub fn from_env() -> anyhow::Result<Self> {
+        let allow_external_integrations = strict_flag("ALLOW_EXTERNAL_INTEGRATIONS")?;
+        let public_registry_sync = strict_flag("PUBLIC_REGISTRY_SYNC")?;
+        let trusted_proxy_ip = match env::var("TRUSTED_PROXY_IP") {
+            Ok(value) => Some(value.parse::<IpAddr>().map_err(|_| {
+                anyhow::anyhow!("TRUSTED_PROXY_IP must be one IPv4 or IPv6 address")
+            })?),
+            Err(env::VarError::NotPresent) => None,
+            Err(_) => anyhow::bail!("TRUSTED_PROXY_IP must be one IPv4 or IPv6 address"),
+        };
+
         // Detect environment
         let env_var = env::var("ENVIRONMENT").unwrap_or_else(|_| "development".to_string());
         let environment = match env_var.to_lowercase().as_str() {
@@ -202,6 +219,8 @@ impl Config {
         let vapid_private_key = env::var("VAPID_PRIVATE_KEY").ok();
 
         let config = Config {
+            allow_external_integrations,
+            public_registry_sync,
             database_url,
             redis_url,
             api_host,
@@ -230,6 +249,7 @@ impl Config {
             registration_mode,
             rate_limit_rps,
             rate_limit_burst,
+            trusted_proxy_ip,
             steam_api_key,
             registration_invite_code,
             search_index_path,
@@ -265,9 +285,40 @@ impl Config {
         Ok(config)
     }
 
+    pub fn registry_sync_enabled(&self) -> bool {
+        self.allow_external_integrations && self.public_registry_sync
+    }
+
+    pub fn require_external_integrations(&self) -> Result<(), crate::error::ApiError> {
+        if self.allow_external_integrations {
+            Ok(())
+        } else {
+            Err(crate::error::ApiError::ServiceUnavailable(
+                "external integrations are disabled".into(),
+            ))
+        }
+    }
+
     /// Check if running in production mode.
     pub fn is_production(&self) -> bool {
         self.environment == Environment::Production
+    }
+}
+
+/// Privacy switches accept only literal true/false; missing means false.
+fn strict_flag(name: &str) -> anyhow::Result<bool> {
+    match env::var(name) {
+        Ok(value) => parse_flag(name, Some(&value)),
+        Err(env::VarError::NotPresent) => Ok(false),
+        Err(_) => anyhow::bail!("{name} must be true or false"),
+    }
+}
+
+fn parse_flag(name: &str, value: Option<&str>) -> anyhow::Result<bool> {
+    match value {
+        None | Some("false") => Ok(false),
+        Some("true") => Ok(true),
+        _ => anyhow::bail!("{name} must be true or false"),
     }
 }
 
@@ -283,6 +334,18 @@ fn mask_secret(secret: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn privacy_flags_are_strict_and_default_off() {
+        for name in ["PUBLIC_REGISTRY_SYNC", "ALLOW_EXTERNAL_INTEGRATIONS"] {
+            assert!(!parse_flag(name, None).unwrap());
+            assert!(!parse_flag(name, Some("false")).unwrap());
+            assert!(parse_flag(name, Some("true")).unwrap());
+            for invalid in ["", "FALSE", "1", "yes", " true", "false "] {
+                assert!(parse_flag(name, Some(invalid)).is_err());
+            }
+        }
+    }
 
     #[test]
     fn test_mask_secret() {

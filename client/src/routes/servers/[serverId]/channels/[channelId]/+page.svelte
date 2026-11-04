@@ -30,6 +30,7 @@
 	import SearchModal from '$lib/components/chat/SearchModal.svelte';
 	import PinsPanel from '$lib/components/chat/PinsPanel.svelte';
 	import ThreadPanel from '$lib/components/chat/ThreadPanel.svelte';
+	import ScheduledMessagesPanel from '$lib/components/chat/ScheduledMessagesPanel.svelte';
 	import ChannelSettingsModal from '$lib/components/modals/ChannelSettingsModal.svelte';
 	import { threadStore } from '$lib/stores/threads.svelte';
 import RecordingsPanel from '$lib/components/voice/RecordingsPanel.svelte';
@@ -45,6 +46,7 @@ import RecordingsPanel from '$lib/components/voice/RecordingsPanel.svelte';
 	let showChannelSettings = $state(false);
 	let showRecordings = $state(false);
 	let startEditMsgId = $state<string | null>(null);
+	let showScheduled = $state(false);
 
 	if (browser) {
 		const serverMatch = window.location.pathname.match(/\/servers\/([^/]+)/);
@@ -199,6 +201,12 @@ import RecordingsPanel from '$lib/components/voice/RecordingsPanel.svelte';
 			aria-label="Recordings"
 		>🎥</button>
 		<button
+			onclick={() => showScheduled = !showScheduled}
+			class="text-gray-400 hover:text-white p-1 rounded hover:bg-gray-700/50 transition-colors {showScheduled ? 'text-white bg-gray-700/50' : ''}"
+			title="Scheduled messages"
+			aria-label="Scheduled messages"
+		>⏰</button>
+		<button
 			onclick={() => showSearch = true}
 			class="text-gray-400 hover:text-white p-1 rounded hover:bg-gray-700/50 transition-colors"
 			title="Search messages"
@@ -251,6 +259,9 @@ import RecordingsPanel from '$lib/components/voice/RecordingsPanel.svelte';
 	{/if}
 	{#if showRecordings}
 		<RecordingsPanel {channelId} onClose={() => showRecordings = false} />
+	{/if}
+	{#if showScheduled}
+		<ScheduledMessagesPanel onClose={() => showScheduled = false} />
 	{/if}
 </div>
 

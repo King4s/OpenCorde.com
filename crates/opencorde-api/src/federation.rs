@@ -44,6 +44,9 @@ struct RegistryEntry {
 
 /// Spawn a background task that syncs the peer registry every 24h.
 pub fn spawn_registry_sync(db: PgPool, config: Arc<Config>, identity: Arc<ServerIdentity>) {
+    if !config.registry_sync_enabled() {
+        return;
+    }
     tokio::spawn(async move {
         let client = Client::builder()
             .timeout(Duration::from_secs(15))
@@ -69,6 +72,9 @@ async fn sync_registry(
     config: &Config,
     identity: &ServerIdentity,
 ) -> anyhow::Result<()> {
+    if !config.registry_sync_enabled() {
+        return Ok(());
+    }
     tracing::info!(url = REGISTRY_URL, "syncing peer registry");
 
     let entries: Vec<RegistryEntry> = client.get(REGISTRY_URL).send().await?.json().await?;
@@ -106,6 +112,9 @@ pub async fn introduce_to_peer(
     identity: &ServerIdentity,
     peer_hostname: &str,
 ) -> anyhow::Result<()> {
+    if !config.allow_external_integrations {
+        anyhow::bail!("external integrations are disabled");
+    }
     let timestamp = chrono::Utc::now().timestamp();
     let signed_msg = format!("{}:{}", config.mesh_hostname, timestamp);
     let signature = identity.sign(signed_msg.as_bytes());
@@ -168,6 +177,7 @@ pub async fn introduce_to_peer(
 /// destination server needs to receive the event.
 /// Failures are logged but do not block the local operation.
 pub async fn forward_event_to(
+    config: &Config,
     db: &PgPool,
     identity: &ServerIdentity,
     origin: &str,
@@ -175,6 +185,9 @@ pub async fn forward_event_to(
     event_type: &str,
     payload: serde_json::Value,
 ) {
+    if !config.allow_external_integrations {
+        return;
+    }
     let peer = match mesh_peer_repo::get_by_hostname(db, target_hostname).await {
         Ok(Some(p)) if p.status == 1i16 => p,
         Ok(_) => {
@@ -227,12 +240,16 @@ pub async fn forward_event_to(
 /// Called after creating a message in a federated channel.
 /// Failures are logged but do not block the local operation.
 pub async fn forward_event(
+    config: &Config,
     db: &PgPool,
     identity: &ServerIdentity,
     origin: &str,
     event_type: &str,
     payload: serde_json::Value,
 ) {
+    if !config.allow_external_integrations {
+        return;
+    }
     let peers = match mesh_peer_repo::list_active(db).await {
         Ok(p) => p,
         Err(e) => {

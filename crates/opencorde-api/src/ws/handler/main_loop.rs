@@ -3,7 +3,8 @@
 
 use axum::extract::ws::Message;
 use futures::{SinkExt, StreamExt};
-use std::collections::HashSet;
+use opencorde_core::Snowflake;
+use sqlx::PgPool;
 use std::time::Duration;
 use tokio::time::interval;
 
@@ -23,8 +24,8 @@ pub async fn run_main_loop(
     mut receiver: futures::stream::SplitStream<axum::extract::ws::WebSocket>,
     mut event_rx: tokio::sync::broadcast::Receiver<serde_json::Value>,
     user_id_str: String,
-    accessible_channels: HashSet<i64>,
-    member_server_ids: HashSet<i64>,
+    user_id: Snowflake,
+    pool: PgPool,
     event_tx: tokio::sync::broadcast::Sender<serde_json::Value>,
 ) {
     // Main event loop: heartbeats + event fan-out + client messages
@@ -52,7 +53,7 @@ pub async fn run_main_loop(
                 match result {
                     Ok(event) => {
                         let event_type = event.get("type").and_then(|v| v.as_str()).unwrap_or("?");
-                        let dispatch = should_dispatch(&event, &accessible_channels, &member_server_ids);
+                        let dispatch = should_dispatch(&event, &pool, user_id).await;
                         tracing::debug!(user_id = %user_id_str, event_type, dispatch, "event received from broadcast");
                         // Only forward events for channels this user can access
                         if dispatch

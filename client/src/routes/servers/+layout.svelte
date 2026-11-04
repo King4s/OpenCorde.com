@@ -3,37 +3,41 @@
 	 * @file App layout — server list sidebar + content area
 	 * @purpose Main navigation structure for authenticated users
 	 */
-	import { browser } from '$app/environment';
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { spaces, fetchSpaces, selectSpace, currentSpaceId } from '$lib/stores/servers';
 	import { serverHasUnread } from '$lib/stores/unread';
-	import { hasAnyDmUnread, initDmListener } from '$lib/stores/dms';
+	import { hasAnyDmUnread, initDmListener, resetDmState } from '$lib/stores/dms';
 	import { restoreSession } from '$lib/stores/auth';
 	import ServerIcon from '$lib/components/layout/ServerIcon.svelte';
 	import api from '$lib/api/client';
 
 	let { children } = $props();
 
-	if (browser) {
+	onMount(() => {
 		const token = localStorage.getItem('opencorde_token');
 		if (!token) {
-			window.location.href = '/login';
+			// Keep the boot document alive so root-layout PWA registration can finish.
+			void goto('/login', { replaceState: true });
 		} else {
 			// Hydrate $currentUser from the stored token. Without this the
 			// in-memory user is null after every full reload, which breaks any
 			// UI gated on isOwn (edit/delete buttons, owner-only panels, …).
 			restoreSession().catch(() => {});
 			fetchSpaces().catch(() => {});
-			initDmListener();
+			const cleanupDmListener = initDmListener();
 			// Sync currentSpaceId from URL
 			const match = window.location.pathname.match(/\/servers\/([^/]+)/);
 			if (match) {
 				currentSpaceId.set(match[1]);
 			}
+			return cleanupDmListener;
 		}
-	}
+	});
 
 	function handleLogout() {
 		localStorage.removeItem('opencorde_token');
+		resetDmState();
 		window.location.href = '/login';
 	}
 </script>

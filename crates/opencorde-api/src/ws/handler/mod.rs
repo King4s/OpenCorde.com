@@ -60,26 +60,4 @@ mod tests {
         assert_eq!(lifecycle::IDENTIFY_TIMEOUT_SECS, 10);
         assert_eq!(main_loop::HEARTBEAT_INTERVAL_SECS, 30);
     }
-
-    #[test]
-    fn test_should_dispatch_delegates_to_dispatch_module() {
-        use crate::ws::dispatch::should_dispatch;
-        use std::collections::HashSet;
-
-        // Verify handler uses dispatch module's should_dispatch
-        let mut channels = HashSet::new();
-        channels.insert(12345_i64);
-        let servers: HashSet<i64> = HashSet::new();
-        let event = serde_json::json!({
-            "type": "MessageCreate",
-            "data": { "message": { "channel_id": "12345", "content": "hello" } }
-        });
-        assert!(should_dispatch(&event, &channels, &servers));
-        // PresenceUpdate always dispatched
-        let presence = serde_json::json!({"type":"PresenceUpdate","data":{}});
-        assert!(should_dispatch(&presence, &channels, &servers));
-        // ChannelAck always dispatched
-        let ack = serde_json::json!({"type":"ChannelAck","data":{}});
-        assert!(should_dispatch(&ack, &channels, &servers));
-    }
 }

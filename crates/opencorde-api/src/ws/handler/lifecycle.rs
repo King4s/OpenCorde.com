@@ -4,8 +4,6 @@
 use axum::extract::ws::{Message, WebSocket};
 use futures::{SinkExt, StreamExt};
 use opencorde_core::Snowflake;
-use opencorde_db::repos::{channel_repo, server_repo};
-use std::collections::HashSet;
 use std::time::Duration;
 use tracing::instrument;
 
@@ -21,7 +19,7 @@ pub const HEARTBEAT_INTERVAL_SECS: u64 = 30;
 /// 2. Wait for IDENTIFY (with timeout)
 /// 3. Validate JWT token
 /// 4. Send READY with user info
-/// 5. Subscribe to broadcast channel, load accessible channel IDs
+/// 5. Subscribe to broadcast channel
 /// 6. Main loop: heartbeats + event dispatch + client messages
 #[instrument(skip(socket, state))]
 pub async fn handle_connection(socket: WebSocket, state: AppState) {
@@ -138,35 +136,14 @@ pub async fn handle_connection(socket: WebSocket, state: AppState) {
     };
     let user_snowflake = Snowflake::new(user_id_i64);
 
-    let accessible_channels: HashSet<i64> =
-        channel_repo::list_ids_by_user(&state.db, user_snowflake)
-            .await
-            .unwrap_or_default()
-            .into_iter()
-            .collect();
-
-    let member_server_ids: HashSet<i64> = server_repo::list_by_user(&state.db, user_snowflake)
-        .await
-        .unwrap_or_default()
-        .into_iter()
-        .map(|s| s.id)
-        .collect();
-
-    tracing::debug!(
-        user_id = %user_id_str,
-        channel_count = accessible_channels.len(),
-        server_count = member_server_ids.len(),
-        "loaded accessible channels and servers for WebSocket session"
-    );
-
     // 6. Run main event loop
     run_main_loop(
         sender,
         receiver,
         event_rx,
         user_id_str.clone(),
-        accessible_channels,
-        member_server_ids,
+        user_snowflake,
+        state.db.clone(),
         (*state.event_tx).clone(),
     )
     .await;

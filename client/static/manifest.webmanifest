@@ -1,12 +1,16 @@
 {
+  "id": "opencorde-pwa",
   "name": "OpenCorde",
   "short_name": "OpenCorde",
   "description": "Self-hosted Discord alternative with chat, voice, video, and E2EE.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#313338",
   "theme_color": "#313338",
+  "categories": ["social", "productivity", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/app-icon-192.png",

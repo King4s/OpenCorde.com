@@ -31,30 +31,26 @@ jobs:
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/opencorde
     steps:
-      - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
+      - uses: actions/checkout@v4
+      - run: rustup component add clippy
       - uses: swatinem/rust-cache@v2
       - run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev pkg-config
       - run: cargo install sqlx-cli --no-default-features --features postgres --locked
       - run: sqlx migrate run
         working-directory: crates/opencorde-db
-      - run: cargo test --workspace
-      - run: cargo clippy --workspace -- -D warnings
+      - run: cargo test --workspace --locked
+      - run: cargo clippy --workspace --locked -- -D warnings
 
   frontend:
     name: Frontend (type-check + lint)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - run: pnpm install
+          node-version: '22'
+      - run: corepack enable && corepack prepare pnpm@10.32.1 --activate
+      - run: pnpm install --frozen-lockfile --ignore-scripts
         working-directory: client
       - run: pnpm check
         working-directory: client
@@ -65,8 +61,8 @@ jobs:
     name: Tauri build check (Linux)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@v4
+      - run: rustc --version
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: './client/src-tauri -> target'
@@ -75,13 +71,11 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsecret-1-dev pkg-config
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - run: pnpm install
+          node-version: '22'
+      - run: corepack enable && corepack prepare pnpm@10.32.1 --activate
+      - run: pnpm install --frozen-lockfile --ignore-scripts
         working-directory: client
       - run: pnpm build
         working-directory: client
-      - run: cargo check
+      - run: cargo check --locked
         working-directory: client/src-tauri

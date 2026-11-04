@@ -24,6 +24,8 @@ pub struct MessageRow {
     pub reply_content_preview: Option<String>,
     /// Optional thread ID if message is part of a thread
     pub thread_id: Option<i64>,
+    /// Optional forwarded-from message ID if this is a forwarded message
+    pub forwarded_from_id: Option<i64>,
 }
 
 /// Create a new message in a channel.
@@ -37,6 +39,7 @@ pub struct MessageRow {
 /// * `reply_to_id` - Optional Snowflake ID of the message being replied to
 /// * `attachments` - Attachment metadata JSON array
 /// * `thread_id` - Optional Snowflake ID of the thread this message belongs to
+/// * `forwarded_from_id` - Optional Snowflake ID of the source message if this is a forward
 ///
 /// # Errors
 /// Returns sqlx::Error if the insert fails.
@@ -51,24 +54,26 @@ pub async fn create_message(
     reply_to_id: Option<Snowflake>,
     attachments: serde_json::Value,
     thread_id: Option<Snowflake>,
+    forwarded_from_id: Option<Snowflake>,
 ) -> Result<MessageRow, sqlx::Error> {
     tracing::info!(
         channel_id = channel_id.as_i64(),
         author_id = author_id.as_i64(),
         reply_to_id = ?reply_to_id,
         thread_id = ?thread_id,
+        forwarded_from_id = ?forwarded_from_id,
         "creating message"
     );
 
     // Use CTE to insert and join with users in one query to get author_username and reply context
     let row = sqlx::query_as::<_, MessageRow>(
         "WITH inserted AS ( \
-             INSERT INTO messages (id, channel_id, author_id, content, attachments, reply_to_id, thread_id) \
-             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING * \
+             INSERT INTO messages (id, channel_id, author_id, content, attachments, reply_to_id, thread_id, forwarded_from_id) \
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING * \
          ) \
          SELECT i.id, i.channel_id, i.author_id, i.content, i.attachments, i.edited_at, i.created_at, \
                 u.username as author_username, i.reply_to_id, \
-                ru.username as reply_author_username, LEFT(rm.content, 100) as reply_content_preview, i.thread_id \
+                ru.username as reply_author_username, LEFT(rm.content, 100) as reply_content_preview, i.thread_id, i.forwarded_from_id \
          FROM inserted i \
          JOIN users u ON i.author_id = u.id \
          LEFT JOIN messages rm ON i.reply_to_id = rm.id \
@@ -81,6 +86,7 @@ pub async fn create_message(
     .bind(sqlx::types::Json(attachments))
     .bind(reply_to_id.map(|sf| sf.as_i64()))
     .bind(thread_id.map(|sf| sf.as_i64()))
+    .bind(forwarded_from_id.map(|sf| sf.as_i64()))
     .fetch_one(pool)
     .await?;
 

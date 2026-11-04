@@ -85,6 +85,7 @@ async fn list_mappings(
     auth: AuthUser,
     Path(server_id): Path<String>,
 ) -> Result<Json<Vec<BridgeMappingResponse>>, ApiError> {
+    state.config.require_external_integrations()?;
     let sid = parse_snowflake(&server_id)?;
     let server = server_repo::get_by_id(&state.db, sid)
         .await
@@ -133,6 +134,7 @@ async fn create_mapping(
     Path(server_id): Path<String>,
     Json(req): Json<CreateBridgeMappingRequest>,
 ) -> Result<(StatusCode, Json<BridgeMappingResponse>), ApiError> {
+    state.config.require_external_integrations()?;
     let sid = parse_snowflake(&server_id)?;
     let server = server_repo::get_by_id(&state.db, sid)
         .await
@@ -216,6 +218,7 @@ async fn update_mapping(
     Path((server_id, mapping_id)): Path<(String, i64)>,
     Json(req): Json<UpdateBridgeMappingRequest>,
 ) -> Result<Json<BridgeMappingResponse>, ApiError> {
+    state.config.require_external_integrations()?;
     let sid = parse_snowflake(&server_id)?;
     let server = server_repo::get_by_id(&state.db, sid)
         .await
@@ -261,6 +264,7 @@ async fn delete_mapping(
     auth: AuthUser,
     Path((server_id, mapping_id)): Path<(String, i64)>,
 ) -> Result<StatusCode, ApiError> {
+    state.config.require_external_integrations()?;
     let sid = parse_snowflake(&server_id)?;
     let server = server_repo::get_by_id(&state.db, sid)
         .await

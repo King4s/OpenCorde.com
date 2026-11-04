@@ -64,6 +64,13 @@ export interface ReplyContext {
   content: string;
 }
 
+export interface ForwardContext {
+  id: string;
+  author_username: string;
+  content: string;
+  channel_id: string;
+}
+
 export interface Message {
   id: string;
   channel_id: string;
@@ -76,6 +83,7 @@ export interface Message {
   reply_to_id?: string | null;
   reply_to?: ReplyContext | null;
   reactions?: ReactionCount[];
+  forwarded_from?: ForwardContext | null;
 }
 
 export interface Attachment {
@@ -202,3 +210,14 @@ export interface AdminServerRow {
 }
 
 export type AdminSpaceRow = AdminServerRow;
+
+export interface ScheduledMessage {
+  id: string;
+  channel_id: string;
+  content: string;
+  attachments: Attachment[];
+  reply_to_id: string | null;
+  scheduled_at: string;
+  created_at: string;
+  delivered: boolean;
+}

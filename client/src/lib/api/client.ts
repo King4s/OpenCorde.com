@@ -17,6 +17,8 @@ function getApiBase(): string {
 }
 
 class ApiClient {
+  private sessionRedirectPending = false;
+
   setToken(token: string | null) {
     if (typeof localStorage !== "undefined") {
       if (token) {
@@ -56,9 +58,21 @@ class ApiClient {
     });
 
     if (!response.ok) {
-      if (response.status === 401 && typeof localStorage !== "undefined") {
+      // Rejected credentials (including TOTP retries) belong to the login form.
+      // All other 401s still invalidate the session and return to login.
+      const isLoginAttempt = method === "POST" && path === "/auth/login";
+      if (
+        response.status === 401 &&
+        !isLoginAttempt &&
+        typeof localStorage !== "undefined"
+      ) {
         localStorage.removeItem("opencorde_token");
-        window.location.href = "/login";
+        // Concurrent protected requests can all reject an expired token. Only
+        // the first response should navigate; later ones must not abort it.
+        if (!this.sessionRedirectPending) {
+          this.sessionRedirectPending = true;
+          window.location.replace("/login");
+        }
         throw { code: "UNAUTHORIZED", message: "Session expired" } as ApiError;
       }
       const text = await response.text();

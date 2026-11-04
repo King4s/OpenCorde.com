@@ -1,0 +1,232 @@
+name: ${COMPOSE_PROJECT_NAME:-opencorde}
+
+x-guard: &guard
+  image: ${NETGUARD_IMAGE:?Set a pinned NETGUARD_IMAGE in .env}
+  cap_drop: [ALL]
+  cap_add: [NET_ADMIN]
+  security_opt: [no-new-privileges:true]
+  read_only: true
+  tmpfs: [/tmp]
+  dns: [127.0.0.1]
+  restart: "no"
+  healthcheck:
+    test: [CMD, python3, /usr/local/bin/netguard, health]
+    interval: 5s
+    timeout: 3s
+    retries: 10
+
+services:
+  backendguard:
+    <<: *guard
+    environment:
+      GUARD_ROLE: backend
+      BACKEND_IP: ${BACKEND_IP:-172.30.90.10}
+      MEDIA_IP: ${MEDIA_IP:-172.30.90.30}
+    networks:
+      private:
+        ipv4_address: ${BACKEND_IP:-172.30.90.10}
+  webguard:
+    <<: *guard
+    environment:
+      GUARD_ROLE: web
+      BACKEND_IP: ${BACKEND_IP:-172.30.90.10}
+      MEDIA_IP: ${MEDIA_IP:-172.30.90.30}
+    networks:
+      private:
+        ipv4_address: ${WEB_IP:-172.30.90.20}
+      edge: {}
+    ports:
+      - "${BIND_IP:-0.0.0.0}:${HTTPS_PORT:-443}:8443"
+  mediaguard:
+    <<: *guard
+    environment:
+      GUARD_ROLE: media
+      BACKEND_IP: ${BACKEND_IP:-172.30.90.10}
+      MEDIA_IP: ${MEDIA_IP:-172.30.90.30}
+      MEDIA_EGRESS: ${MEDIA_EGRESS:-false}
+      MEDIA_CLIENT_CIDRS: ${MEDIA_CLIENT_CIDRS:-0.0.0.0/0}
+    networks:
+      private:
+        ipv4_address: ${MEDIA_IP:-172.30.90.30}
+      edge: {}
+    ports:
+      - "${BIND_IP:-0.0.0.0}:${RTC_TCP_PORT:-7881}:7881"
+      - "${BIND_IP:-0.0.0.0}:${TURN_UDP_PORT:-3478}:3478/udp"
+      - "${BIND_IP:-0.0.0.0}:50000-50100:50000-50100/udp"
+  volume-init:
+    image: ${NETGUARD_IMAGE:?Set NETGUARD_IMAGE}
+    network_mode: none
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER]
+    security_opt: [no-new-privileges:true]
+    entrypoint: [sh, -ec]
+    command: ["chown 10001:10001 /identity /search /objects; chmod 700 /identity /search /objects"]
+    volumes:
+      - identity:/identity
+      - search:/search
+      - objects:/objects
+    restart: "no"
+  postgres:
+    image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
+    network_mode: service:backendguard
+    depends_on:
+      backendguard: {condition: service_healthy}
+    environment:
+      POSTGRES_USER: opencorde
+      POSTGRES_DB: opencorde
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Generate POSTGRES_PASSWORD}
+    volumes: ["postgres:/var/lib/postgresql/data"]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [NET_RAW, NET_ADMIN]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U opencorde -d opencorde"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: "no"
+  redis:
+    image: redis:7-alpine@sha256:8da19c7399dca900c6822a1cf30f9d2285585e2c4b457ff4095b0f4500054d3f
+    user: "999:999"
+    network_mode: service:backendguard
+    depends_on:
+      backendguard: {condition: service_healthy}
+    command: [redis-server, --save, "", --appendonly, "no"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/data]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: "no"
+  minio:
+    image: ${MINIO_IMAGE:?Set a pinned MINIO_IMAGE}
+    user: "10001:10001"
+    network_mode: service:backendguard
+    depends_on:
+      backendguard: {condition: service_healthy}
+      volume-init: {condition: service_completed_successfully}
+    command: [server, /data, --address, ":9000", --console-address, "127.0.0.1:9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:?Generate MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?Generate MINIO_SECRET_KEY}
+      MINIO_UPDATE: "off"
+      MINIO_BROWSER: "off"
+    volumes: ["objects:/data"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+    healthcheck:
+      test: [CMD, curl, -fsS, http://127.0.0.1:9000/minio/health/live]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: "no"
+  api:
+    image: ${API_IMAGE:?Set a pinned API_IMAGE}
+    user: "10001:10001"
+    network_mode: service:backendguard
+    depends_on:
+      backendguard: {condition: service_healthy}
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      minio: {condition: service_healthy}
+    environment: &api-env
+      DATABASE_URL: postgresql://opencorde:${POSTGRES_PASSWORD}@127.0.0.1:5432/opencorde
+      REDIS_URL: redis://127.0.0.1:6379
+      API_HOST: 0.0.0.0
+      API_PORT: "3000"
+      TRUSTED_PROXY_IP: ${WEB_IP:-172.30.90.20}
+      ENVIRONMENT: production
+      JWT_SECRET: ${JWT_SECRET:?Generate JWT_SECRET}
+      BASE_URL: https://${DOMAIN:?Set DOMAIN}
+      FILES_PUBLIC_URL: https://${DOMAIN}/files
+      MINIO_ENDPOINT: http://127.0.0.1:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: opencorde
+      LIVEKIT_URL: http://${MEDIA_IP:-172.30.90.30}:7880
+      LIVEKIT_PUBLIC_URL: wss://${DOMAIN}/livekit
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:?Generate LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?Generate LIVEKIT_API_SECRET}
+      IDENTITY_KEY_PATH: /data/server.key
+      SEARCH_INDEX_PATH: /search/index
+      PUBLIC_REGISTRY_SYNC: ${PUBLIC_REGISTRY_SYNC:-false}
+      ALLOW_EXTERNAL_INTEGRATIONS: "false"
+      REGISTRATION_MODE: ${REGISTRATION_MODE:-invite_only}
+      REGISTRATION_INVITE_CODE: ${REGISTRATION_INVITE_CODE:?Generate registration invite code}
+      ADMIN_USER_IDS: ${ADMIN_USER_IDS:-}
+      RUST_LOG: info
+    volumes: ["identity:/data", "search:/search"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+    healthcheck:
+      test: [CMD-SHELL, "curl -fsS --max-time 3 http://127.0.0.1:3000/api/v1/health | grep -Eq '\"database\"[[:space:]]*:[[:space:]]*\"connected\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: "no"
+    stop_grace_period: 45s
+  maintenance:
+    image: ${API_IMAGE}
+    user: "10001:10001"
+    profiles: [maintenance]
+    network_mode: service:backendguard
+    entrypoint: [opencorde-maintenance]
+    environment: *api-env
+    volumes: ["identity:/data", "search:/search"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+  web:
+    image: ${WEB_IMAGE:?Set a pinned WEB_IMAGE}
+    network_mode: service:webguard
+    depends_on:
+      webguard: {condition: service_healthy}
+      api: {condition: service_healthy}
+    environment:
+      BACKEND_IP: ${BACKEND_IP:-172.30.90.10}
+      MEDIA_IP: ${MEDIA_IP:-172.30.90.30}
+      TURN_DOMAIN: ${TURN_DOMAIN:?Set a distinct TURN_DOMAIN covered by the TLS certificate}
+    volumes:
+      - ./secrets/tls:/etc/opencorde/tls:ro
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: "no"
+  livekit:
+    image: livekit/livekit-server:v1.13.11@sha256:25cd902de7cacbd5f1f779f6a6ac1eae20ba8f56b0935934ce6b0ab80d1e3d20
+    user: "10001:10001"
+    network_mode: service:mediaguard
+    depends_on:
+      mediaguard: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    command: [--config, /etc/livekit.yaml]
+    volumes:
+      - ./secrets/livekit.yaml:/etc/livekit.yaml:ro
+      - ./secrets/tls:/etc/opencorde/tls:ro
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+    restart: "no"
+
+networks:
+  private:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${PRIVATE_SUBNET:-172.30.90.0/24}
+  edge: {}
+volumes:
+  postgres: {}
+  objects: {}
+  identity: {}
+  search: {}

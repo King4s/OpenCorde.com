@@ -1,10 +1,14 @@
 //! # Domain Models
 //! One model per file. Each defines a primary struct + serialization.
 
+pub mod application;
+pub mod app_install;
+pub mod bot_user;
 pub mod channel;
 pub mod invite;
 pub mod member;
 pub mod message;
+pub mod oauth_scope;
 pub mod role;
 pub mod server;
 pub mod user;

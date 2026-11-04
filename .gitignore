@@ -1,7 +1,6 @@
 # Rust
 /target/
 **/*.rs.bk
-Cargo.lock
 
 # Node / SvelteKit
 node_modules/
@@ -45,5 +44,14 @@ data/
 .env.bridge
 .opencorde.key
 search-index/
+secrets/
+backups/
+.phase1-installation.json
+.restore-verified.json
+.restore-pending.json
+.operations.lock
+reports/phase1-runtime.json
+__pycache__/
+*.pyc
 .env.bridge
 .opencorde.key

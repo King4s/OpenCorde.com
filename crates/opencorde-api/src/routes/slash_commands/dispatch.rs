@@ -21,6 +21,7 @@ pub async fn dispatch_command(
     Path(channel_id): Path<String>,
     Json(req): Json<InteractRequest>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
+    state.config.require_external_integrations()?;
     tracing::info!("dispatching slash command");
 
     // Parse channel ID
@@ -123,6 +124,7 @@ pub async fn dispatch_command(
         &handler_response.content,
         None,
         serde_json::json!([]),
+        None,
         None,
     )
     .await

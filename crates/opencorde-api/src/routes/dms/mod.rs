@@ -4,6 +4,8 @@
 //! ## Endpoints
 //! - GET /api/v1/users/@me/channels — List DM channels for current user
 //! - POST /api/v1/users/@me/channels — Open DM with a user
+//! - GET /api/v1/users/@me/channels/requests — List pending message requests
+//! - PUT /api/v1/channels/@dms/{dm_id}/request — Accept/ignore/spam a message request
 //! - GET /api/v1/channels/@dms/{dm_id}/messages — List DM messages
 //! - POST /api/v1/channels/@dms/{dm_id}/messages — Send DM message
 //!
@@ -25,7 +27,10 @@
 mod handlers;
 pub mod types;
 
-use axum::{Router, routing::get};
+use axum::{
+    Router,
+    routing::{get, put},
+};
 
 use crate::AppState;
 
@@ -37,8 +42,16 @@ pub fn router() -> Router<AppState> {
             get(handlers::list_dms).post(handlers::open_dm),
         )
         .route(
+            "/api/v1/users/@me/channels/requests",
+            get(handlers::list_message_requests),
+        )
+        .route(
             "/api/v1/channels/@dms/{dm_id}/messages",
             get(handlers::list_dm_messages).post(handlers::send_dm_message),
+        )
+        .route(
+            "/api/v1/channels/@dms/{dm_id}/request",
+            put(handlers::handle_message_request),
         )
 }
 

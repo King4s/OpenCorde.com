@@ -1,0 +1,51 @@
+# Rebuilds the archived official MinIO release from its immutable source commit.
+# The source archive is checksum-verified and included in the runtime image with
+# its AGPL-3.0 license text.
+FROM golang:1.24.2-bookworm@sha256:79390b5e5af9ee6e7b1173ee3eac7fadf6751a545297672916b59bfa0ecf6f71 AS build
+
+ARG TARGETOS
+ARG TARGETARCH
+
+WORKDIR /src
+ADD --checksum=sha256:0f3bf040af4df742aee317a86482195930bed2bd121efc95fbf3c538760f6d3c https://github.com/minio/minio/archive/4021d8c8e2ef026aeda624c25ff3fffdbd112b09.tar.gz /tmp/minio-source.tar.gz
+
+RUN tar -xzf /tmp/minio-source.tar.gz --strip-components=1 -C /src \
+    && test "$(awk '$1 == "go" { print $2 }' go.mod)" = "1.24.0" \
+    && test "$(awk '$1 == "toolchain" { print $2 }' go.mod)" = "go1.24.2"
+
+ENV GOTOOLCHAIN=local
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    export CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} \
+    && mkdir -p /out \
+    && go build -mod=readonly -tags=kqueue -trimpath \
+      -ldflags="-s -w -X github.com/minio/minio/cmd.Version=2025-07-18T21:56:31Z -X github.com/minio/minio/cmd.CopyrightYear=2025 -X github.com/minio/minio/cmd.ReleaseTag=RELEASE.2025-07-18T21-56-31Z -X github.com/minio/minio/cmd.CommitID=4021d8c8e2ef026aeda624c25ff3fffdbd112b09 -X github.com/minio/minio/cmd.ShortCommitID=4021d8c8e2e" \
+      -o /out/minio .
+
+FROM debian:bookworm-slim@sha256:99c0b25c46d0214d5a2091092e7908907dcaecd6a962cde0ac700acee222b6f3 AS runtime
+
+LABEL org.opencontainers.image.source="https://github.com/minio/minio" \
+      org.opencontainers.image.revision="4021d8c8e2ef026aeda624c25ff3fffdbd112b09" \
+      org.opencontainers.image.version="RELEASE.2025-07-18T21-56-31Z" \
+      org.opencontainers.image.licenses="AGPL-3.0-or-later"
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 10001 minio \
+    && useradd --uid 10001 --gid minio --home-dir /home/minio --create-home --shell /usr/sbin/nologin minio \
+    && install -d --owner=10001 --group=10001 /data /usr/share/src/minio /usr/share/licenses/minio
+
+COPY --from=build /out/minio /usr/bin/minio
+COPY --from=build /src/LICENSE /usr/share/licenses/minio/LICENSE
+COPY --from=build /tmp/minio-source.tar.gz /usr/share/src/minio/minio-source.tar.gz
+
+USER 10001:10001
+VOLUME ["/data"]
+EXPOSE 9000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD ["curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:9000/minio/health/live"]
+ENTRYPOINT ["/usr/bin/minio"]
+CMD ["server", "/data", "--address", ":9000"]
