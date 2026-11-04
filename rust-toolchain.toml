@@ -1,4 +1,4 @@
-# Match the API and QA images. OpenMLS 0.5 has ambiguous imports on Rust 1.99.
+# Match the API and QA images. OpenMLS compatibility is tested on this compiler.
 [toolchain]
-channel = "1.97.1"
+channel = "1.99.1"
 profile = "minimal"
