@@ -3,28 +3,30 @@
 	 * @file DM layout — wraps @me pages with sidebar
 	 * @purpose Shows server list sidebar + DM content area
 	 */
-import { browser } from '$app/environment';
+import { onMount } from 'svelte';
 import { goto } from '$app/navigation';
 import { spaces, fetchSpaces, selectSpace, currentSpaceId } from '$lib/stores/servers';
-import { initDmListener, hasAnyDmUnread } from '$lib/stores/dms';
+import { initDmListener, hasAnyDmUnread, resetDmState } from '$lib/stores/dms';
 import { initPresenceListener } from '$lib/stores/presence';
 import ServerIcon from '$lib/components/layout/ServerIcon.svelte';
 
 	let { children } = $props();
 
-	if (browser) {
+	onMount(() => {
 		const token=localStorage.getItem('opencorde_token');
 		if (!token) {
 			window.location.href = '/login';
 		} else {
 			fetchSpaces().catch(() => {});
-			initDmListener();
+			const cleanupDmListener = initDmListener();
 			initPresenceListener();
+			return cleanupDmListener;
 		}
-	}
+	});
 
 	function handleLogout() {
 		localStorage.removeItem('opencorde_token');
+		resetDmState();
 		window.location.href = '/login';
 	}
 </script>

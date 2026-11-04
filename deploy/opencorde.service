@@ -1,0 +1,17 @@
+[Unit]
+Description=OpenCorde ordered private deployment
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+RequiresMountsFor=/opt/opencorde
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/opencorde
+ExecStart=/usr/bin/python3 /opt/opencorde/scripts/ops.py up
+TimeoutStartSec=600
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

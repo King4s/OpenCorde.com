@@ -32,6 +32,7 @@ pub async fn lookup_user(
     State(state): State<AppState>,
     Path(username): Path<String>,
 ) -> Result<Json<UserLookupResponse>, ApiError> {
+    state.config.require_external_integrations()?;
     let user = user_repo::get_by_username(&state.db, &username)
         .await
         .map_err(ApiError::Database)?
@@ -48,13 +49,16 @@ pub async fn lookup_user(
 ///
 /// Public endpoint. Returns this server's cryptographic identity so
 /// peers can verify our signatures and register us in their mesh_peers.
-pub async fn get_identity(State(state): State<AppState>) -> Json<IdentityResponse> {
-    Json(IdentityResponse {
+pub async fn get_identity(
+    State(state): State<AppState>,
+) -> Result<Json<IdentityResponse>, ApiError> {
+    state.config.require_external_integrations()?;
+    Ok(Json(IdentityResponse {
         hostname: state.config.mesh_hostname.clone(),
         public_key: state.identity.public_key_hex.clone(),
         server_name: state.config.mesh_hostname.clone(),
         version: env!("CARGO_PKG_VERSION"),
-    })
+    }))
 }
 
 /// POST /api/v1/federation/introduce
@@ -67,6 +71,7 @@ pub async fn introduce(
     State(state): State<AppState>,
     Json(req): Json<IntroduceRequest>,
 ) -> Result<(StatusCode, Json<IntroduceResponse>), ApiError> {
+    state.config.require_external_integrations()?;
     // Replay protection: reject timestamps older than 5 minutes
     let now = chrono::Utc::now().timestamp();
     if (now - req.timestamp).abs() > REPLAY_WINDOW_SECS {
@@ -153,6 +158,7 @@ pub async fn receive_event(
     State(state): State<AppState>,
     Json(event): Json<FederatedEvent>,
 ) -> Result<StatusCode, ApiError> {
+    state.config.require_external_integrations()?;
     // 1. Replay protection
     let now = chrono::Utc::now().timestamp();
     if (now - event.timestamp).abs() > REPLAY_WINDOW_SECS {

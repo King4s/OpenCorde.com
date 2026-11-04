@@ -114,7 +114,8 @@ async fn main() -> anyhow::Result<()> {
         config.smtp_password.clone(),
         config.smtp_from.clone(),
         config.base_url.clone(),
-    );
+    )
+    .with_delivery_enabled(config.allow_external_integrations);
     tracing::debug!(
         smtp_configured = %email_service.is_configured(),
         "email service initialized"
@@ -122,11 +123,14 @@ async fn main() -> anyhow::Result<()> {
 
     // Initialize per-IP rate limiter from config
     tracing::debug!("initializing rate limiter");
-    let rate_limit_state = RateLimitState::new(RateLimitConfig {
-        requests_per_second: config.rate_limit_rps,
-        burst_size: config.rate_limit_burst,
-        enabled: true,
-    });
+    let rate_limit_state = RateLimitState::with_trusted_proxy(
+        RateLimitConfig {
+            requests_per_second: config.rate_limit_rps,
+            burst_size: config.rate_limit_burst,
+            enabled: true,
+        },
+        config.trusted_proxy_ip,
+    );
     tracing::info!(
         rps = config.rate_limit_rps,
         burst = config.rate_limit_burst,
@@ -140,10 +144,19 @@ async fn main() -> anyhow::Result<()> {
     );
 
     // Spawn registry sync background task
-    opencorde_api::federation::spawn_registry_sync(
+    if config.registry_sync_enabled() {
+        opencorde_api::federation::spawn_registry_sync(
+            pool.clone(),
+            Arc::new(config.clone()),
+            identity.clone(),
+        );
+    }
+
+    // Spawn scheduled message delivery worker (checks every 15s)
+    opencorde_api::scheduled_delivery::spawn_delivery_worker(
         pool.clone(),
-        Arc::new(config.clone()),
-        identity.clone(),
+        event_tx.clone(),
+        search.clone(),
     );
 
     // Build application state

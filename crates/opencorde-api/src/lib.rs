@@ -44,8 +44,10 @@ pub mod federation;
 pub mod identity;
 pub mod jwt;
 pub mod middleware;
+pub mod maintenance;
 pub mod push_sender;
 pub mod routes;
+pub mod scheduled_delivery;
 pub mod ws;
 
 use crate::middleware::rate_limit::RateLimitState;

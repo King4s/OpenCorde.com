@@ -39,6 +39,13 @@ async fn main() -> anyhow::Result<()> {
         )
         .init();
 
+    // No credentials or database connection needed when the optional bridge is off.
+    match std::env::var("ALLOW_EXTERNAL_INTEGRATIONS") {
+        Err(std::env::VarError::NotPresent) => return Ok(()),
+        Ok(value) if value == "false" => return Ok(()),
+        Ok(value) if value == "true" => {}
+        _ => anyhow::bail!("ALLOW_EXTERNAL_INTEGRATIONS must be true or false"),
+    }
     let config = config::BridgeConfig::from_env()?;
 
     tracing::info!("connecting to database");

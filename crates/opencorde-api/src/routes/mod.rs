@@ -21,6 +21,7 @@
 //! - crate::AppState (application state)
 
 pub mod admin;
+pub mod applications;
 pub mod audit_log;
 pub mod auth;
 pub mod automod;
@@ -74,6 +75,7 @@ use crate::AppState;
 pub fn api_router() -> Router<AppState> {
     Router::new()
         .merge(admin::router())
+        .merge(applications::router())
         .merge(health::router())
         .merge(auth::router())
         .merge(users::router())

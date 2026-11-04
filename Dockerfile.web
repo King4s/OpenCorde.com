@@ -1,0 +1,22 @@
+# syntax=docker/dockerfile:1.7
+FROM node:22-bookworm-slim@sha256:4b150b48b4116e2a22f2c39cc27025fbf4f153e2078fd3b14d159fdb5c7279da AS build
+WORKDIR /src/client
+COPY client/package.json client/pnpm-lock.yaml ./
+RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --ignore-scripts
+COPY client/scripts ./scripts
+COPY client/src ./src
+COPY client/static ./static
+COPY client/svelte.config.js client/tsconfig.json client/vite.config.ts ./
+ENV VITE_ENABLE_QR_LOGIN=false
+RUN pnpm build
+
+FROM nginxinc/nginx-unprivileged:stable@sha256:ec0f7ecb1fbd84959ac114e65fb36074ffc97d4d51db0f18ee925162d889dcef
+COPY --from=build /src/client/build /usr/share/nginx/html
+COPY deploy/nginx/nginx.conf.template /etc/opencorde/nginx.conf.template
+COPY --chmod=555 deploy/nginx/entrypoint.sh /usr/local/bin/opencorde-web
+ENV BACKEND_IP=172.30.90.10 MEDIA_IP=172.30.90.30
+ENTRYPOINT ["/usr/local/bin/opencorde-web"]
+CMD ["nginx", "-c", "/tmp/opencorde-nginx.conf", "-g", "daemon off;"]
+EXPOSE 8443

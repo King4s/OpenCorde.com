@@ -15,9 +15,10 @@
 		onOpenThread?: (msgId: string) => void;
 		onStartEdit?: (msg: Message) => void;
 		onDelete?: (msgId: string) => void;
+		onForward?: (msg: Message) => void;
 	}
 
-	let { msg, currentUserId, spaceId, onReply, onPin, onOpenThread, onStartEdit, onDelete }: Props = $props();
+	let { msg, currentUserId, spaceId, onReply, onPin, onOpenThread, onStartEdit, onDelete, onForward }: Props = $props();
 
 	const isOwn = $derived(currentUserId === msg.author_id);
 
@@ -61,6 +62,10 @@
 	{/if}
 	<button class="text-gray-500 hover:text-gray-300 text-xs px-1.5 py-0.5 rounded bg-gray-800/80 transition-colors"
 		onclick={copyText} title="Copy text" aria-label="Copy message text">{copied ? '✓' : '⎘'}</button>
+	{#if onForward}
+		<button class="text-gray-500 hover:text-gray-300 text-xs px-1.5 py-0.5 rounded bg-gray-800/80 transition-colors"
+			onclick={() => onForward?.(msg)} title="Forward" aria-label="Forward message">↗</button>
+	{/if}
 	<button class="text-gray-500 hover:text-gray-300 text-xs px-1.5 py-0.5 rounded bg-gray-800/80 transition-colors"
 		onclick={copyLink} title="Copy message link" aria-label="Copy link to message">🔗</button>
 </div>

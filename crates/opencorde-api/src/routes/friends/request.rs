@@ -37,6 +37,14 @@ pub async fn send_request(
             ApiError::NotFound("user not found".into())
         })?;
 
+    // Check if either user has blocked the other
+    if relationship_repo::is_blocked(&state.db, auth.user_id, target_id)
+        .await
+        .unwrap_or(false)
+    {
+        return Err(ApiError::Forbidden);
+    }
+
     let mut generator = SnowflakeGenerator::new(1, 1);
     let rel_id = generator.next_id();
 

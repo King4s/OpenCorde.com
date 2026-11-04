@@ -40,8 +40,11 @@ struct PushToken {
 /// * `user_id` — recipient user Snowflake ID
 /// * `title`   — notification title
 /// * `body`    — notification body text
-#[instrument(skip(pool, config), fields(user_id = user_id))]
+#[instrument(skip(pool, config, title, body), fields(user_id = user_id))]
 pub async fn send_push(pool: &PgPool, config: &Config, user_id: i64, title: &str, body: &str) {
+    if !config.allow_external_integrations {
+        return;
+    }
     // Fetch all tokens registered for this user
     let tokens: Vec<PushToken> = match sqlx::query_as::<_, PushToken>(
         "SELECT token, platform FROM push_tokens WHERE user_id = $1",

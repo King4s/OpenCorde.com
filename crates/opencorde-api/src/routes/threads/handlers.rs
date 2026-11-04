@@ -263,6 +263,7 @@ async fn send_thread_message(
         None,
         serde_json::json!([]),
         Some(thread_id_sf),
+        None,
     )
     .await
     .map_err(|e| {

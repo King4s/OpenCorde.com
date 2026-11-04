@@ -23,7 +23,7 @@ use std::sync::Arc;
 use axum::{
     body::Body,
     extract::{ConnectInfo, State},
-    http::{Method, Request, StatusCode},
+    http::{HeaderMap, Method, Request, StatusCode},
     middleware::Next,
     response::Response,
 };
@@ -87,7 +87,9 @@ impl StrictPathLimits {
             Some(self.login.clone())
         } else if path == "/api/v1/auth/register" {
             Some(self.register.clone())
-        } else if path.starts_with("/api/v1/auth/password") {
+        } else if path.starts_with("/api/v1/auth/forgot-password")
+            || path.starts_with("/api/v1/auth/reset-password")
+        {
             Some(self.password_reset.clone())
         } else if path.ends_with("/messages") {
             Some(self.send_message.clone())
@@ -99,6 +101,8 @@ impl StrictPathLimits {
 
 /// Shared rate limiter state stored in AppState.
 pub struct RateLimitState {
+    /// Immutable transport peer trusted to overwrite X-Real-IP.
+    trusted_proxy_ip: Option<IpAddr>,
     /// Current global configuration (admin-writeable)
     pub config: RwLock<RateLimitConfig>,
     /// Active global limiter — replaced atomically when config changes
@@ -110,12 +114,40 @@ pub struct RateLimitState {
 impl RateLimitState {
     /// Create a new RateLimitState from an initial config.
     pub fn new(config: RateLimitConfig) -> Arc<Self> {
+        Self::with_trusted_proxy(config, None)
+    }
+
+    pub fn with_trusted_proxy(
+        config: RateLimitConfig,
+        trusted_proxy_ip: Option<IpAddr>,
+    ) -> Arc<Self> {
         let limiter = Arc::new(build_limiter(config.requests_per_second, config.burst_size));
         Arc::new(Self {
+            trusted_proxy_ip: trusted_proxy_ip.map(|ip| ip.to_canonical()),
             config: RwLock::new(config),
             limiter: RwLock::new(limiter),
             strict: StrictPathLimits::new(),
         })
+    }
+
+    fn client_ip(&self, peer: IpAddr, headers: &HeaderMap) -> IpAddr {
+        let peer = peer.to_canonical();
+        if Some(peer) != self.trusted_proxy_ip {
+            return peer;
+        }
+        // The trusted proxy supplies exactly one bare address. Ambiguous or
+        // malformed input shares the socket peer's bucket.
+        let real_ip = headers.get_all("x-real-ip");
+        let mut values = real_ip.iter();
+        let (Some(value), None) = (values.next(), values.next()) else {
+            return peer;
+        };
+        value
+            .to_str()
+            .ok()
+            .and_then(|text| text.parse::<IpAddr>().ok())
+            .map(|ip| ip.to_canonical())
+            .unwrap_or(peer)
     }
 
     /// Rebuild the global governor limiter from the current config.
@@ -153,7 +185,7 @@ pub async fn rate_limit_middleware(
     req: Request<Body>,
     next: Next,
 ) -> Result<Response, StatusCode> {
-    let ip = addr.ip();
+    let ip = rl.client_ip(addr.ip(), req.headers());
     let path = req.uri().path().to_owned();
     let method = req.method().clone();
 
@@ -185,6 +217,72 @@ pub async fn rate_limit_middleware(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use axum::{Router, middleware::from_fn_with_state, routing::post};
+    use tower::ServiceExt;
+
+    fn proxy_test_config() -> RateLimitConfig {
+        RateLimitConfig {
+            requests_per_second: 100,
+            burst_size: 200,
+            enabled: true,
+        }
+    }
+
+    #[tokio::test]
+    async fn login_quota_is_independent_for_clients_behind_the_trusted_proxy() {
+        let proxy: SocketAddr = "192.0.2.10:40000".parse().unwrap();
+        let state = RateLimitState::with_trusted_proxy(proxy_test_config(), Some(proxy.ip()));
+        let app = Router::new()
+            .route("/api/v1/auth/login", post(|| async { StatusCode::OK }))
+            .layer(from_fn_with_state(state, rate_limit_middleware));
+        let login = |client: &'static str| {
+            let app = app.clone();
+            async move {
+                let request = Request::post("/api/v1/auth/login")
+                    .extension(ConnectInfo(proxy))
+                    .header("x-real-ip", client)
+                    .header("x-forwarded-for", "203.0.113.99")
+                    .body(Body::empty())
+                    .unwrap();
+                app.oneshot(request).await.unwrap().status()
+            }
+        };
+        for _ in 0..5 {
+            assert_eq!(login("198.51.100.1").await, StatusCode::OK);
+        }
+        assert_eq!(
+            login("::ffff:198.51.100.1").await,
+            StatusCode::TOO_MANY_REQUESTS
+        );
+        assert_eq!(login("198.51.100.2").await, StatusCode::OK);
+    }
+
+    #[test]
+    fn untrusted_or_ambiguous_forwarded_addresses_use_the_socket_peer() {
+        let proxy: IpAddr = "192.0.2.10".parse().unwrap();
+        let direct: IpAddr = "192.0.2.11".parse().unwrap();
+        let state = RateLimitState::with_trusted_proxy(proxy_test_config(), Some(proxy));
+        let standalone = RateLimitState::new(proxy_test_config());
+        let mut headers = HeaderMap::new();
+        headers.insert("forwarded", "for=203.0.113.1".parse().unwrap());
+        headers.insert("x-forwarded-for", "203.0.113.1".parse().unwrap());
+        assert_eq!(state.client_ip(proxy, &headers), proxy);
+
+        headers.insert("x-real-ip", "203.0.113.1".parse().unwrap());
+        assert_eq!(state.client_ip(direct, &headers), direct);
+        assert_eq!(standalone.client_ip(proxy, &headers), proxy);
+        headers.append("x-real-ip", "203.0.113.2".parse().unwrap());
+        assert_eq!(state.client_ip(proxy, &headers), proxy);
+        for malformed in [
+            "",
+            "not-an-ip",
+            "203.0.113.1:80",
+            "203.0.113.1, 203.0.113.2",
+        ] {
+            headers.insert("x-real-ip", malformed.parse().unwrap());
+            assert_eq!(state.client_ip(proxy, &headers), proxy);
+        }
+    }
 
     #[test]
     fn test_build_limiter_does_not_panic() {
@@ -215,10 +313,16 @@ mod tests {
                 .limiter_for(&Method::POST, "/api/v1/auth/register")
                 .is_some()
         );
-        // Password reset
+        // Password reset (forgot-password)
         assert!(
             limits
-                .limiter_for(&Method::POST, "/api/v1/auth/password-reset")
+                .limiter_for(&Method::POST, "/api/v1/auth/forgot-password")
+                .is_some()
+        );
+        // Password reset (reset-password)
+        assert!(
+            limits
+                .limiter_for(&Method::POST, "/api/v1/auth/reset-password")
                 .is_some()
         );
         // Message send

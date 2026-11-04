@@ -1,0 +1,220 @@
+name: Server images
+
+# Publish deliberately after source verification; no runtime build occurs on the host.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'feat/phase1-loki-20261104'
+    tags:
+      - 'server-v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: server-images-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io/king4s
+
+jobs:
+  quality-rust:
+    name: Rust tests
+    runs-on: ubuntu-24.04
+    container:
+      image: rust:1.97.1-bookworm@sha256:0e2bcaef56d041a486784e54104a81aebe0da44bd03019bd70bc0401e42e4a97
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install native dependencies
+        run: apt-get update && apt-get install -y --no-install-recommends build-essential pkg-config libssl-dev
+      - name: Test locked Rust workspace
+        env:
+          CARGO_BUILD_JOBS: '2'
+        run: cargo test --workspace --locked
+
+  quality-web:
+    name: Web check and build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Set up Node 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - name: Install pinned pnpm
+        run: corepack enable && corepack prepare pnpm@10.32.1 --activate
+      - name: Install locked web dependencies
+        working-directory: client
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Check web types
+        working-directory: client
+        run: pnpm check
+      - name: Build web
+        working-directory: client
+        env:
+          VITE_ENABLE_QR_LOGIN: 'false'
+        run: pnpm build
+
+  build:
+    name: Build ${{ matrix.image }} (${{ matrix.arch }})
+    needs: [quality-rust, quality-web]
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [api, web, netguard, minio]
+        arch: [amd64, arm64]
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+      - name: Log in to GHCR
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push platform digest
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: Dockerfile.${{ matrix.image }}
+          platforms: linux/${{ matrix.arch }}
+          tags: ${{ env.REGISTRY }}/opencorde-${{ matrix.image }}
+          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
+          provenance: mode=max
+          sbom: true
+      - name: Save platform digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+          IMAGE: ${{ matrix.image }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          mkdir -p digests
+          test "${DIGEST#sha256:}" != "$DIGEST"
+          touch "digests/${DIGEST#sha256:}"
+      - name: Upload platform digest
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: digest-${{ matrix.image }}-${{ matrix.arch }}
+          path: digests/*
+          if-no-files-found: error
+          retention-days: 7
+
+  merge:
+    name: Multi-arch ${{ matrix.image }}
+    needs: build
+    strategy:
+      matrix:
+        image: [api, web, netguard, minio]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Download platform digests
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: digest-${{ matrix.image }}-*
+          path: digests
+          merge-multiple: true
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+      - name: Log in to GHCR
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create multi-arch manifest
+        env:
+          IMAGE_NAME: ${{ matrix.image }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          image="$REGISTRY/opencorde-$IMAGE_NAME"
+          mapfile -t hashes < <(find digests -maxdepth 1 -type f -printf '%f\n' | sort)
+          test "${#hashes[@]}" -eq 2
+          sources=()
+          for hash in "${hashes[@]}"; do
+            [[ "$hash" =~ ^[a-f0-9]{64}$ ]]
+            sources+=("$image@sha256:$hash")
+          done
+          tags=(--tag "$image:sha-$GITHUB_SHA")
+          if [[ "$REF_TYPE" == tag ]]; then
+            [[ "$REF_NAME" =~ ^server-v[0-9]+\.[0-9]+\.[0-9]+([.-][a-zA-Z0-9.-]+)?$ ]]
+            tags+=(--tag "$image:$REF_NAME")
+          fi
+          docker buildx imagetools create "${tags[@]}" "${sources[@]}"
+          digest=$(docker buildx imagetools inspect "$image:sha-$GITHUB_SHA" --format '{{printf "%s" .Manifest.Digest}}')
+          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
+          mkdir -p release
+          printf '%s@%s\n' "$image" "$digest" > "release/$IMAGE_NAME.txt"
+      - name: Upload image reference
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: image-${{ matrix.image }}
+          path: release/${{ matrix.image }}.txt
+          if-no-files-found: error
+          retention-days: 90
+
+  release-manifest:
+    name: Release manifest
+    needs: merge
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Download image references
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: image-*
+          path: release
+          merge-multiple: true
+      - name: Assemble digest manifest
+        run: |
+          set -euo pipefail
+          test "$(find release -maxdepth 1 -name '*.txt' | wc -l)" -eq 4
+          cat release/{api,web,netguard,minio}.txt > release/server-images.txt
+          python3 - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          image_dir = Path('release')
+          images = {}
+          for name in ('api', 'web', 'netguard', 'minio'):
+              ref = (image_dir / f'{name}.txt').read_text().strip()
+              if not re.fullmatch(r'ghcr\.io/king4s/opencorde-[a-z]+@sha256:[0-9a-f]{64}', ref):
+                  raise SystemExit(f'Invalid image digest for {name}')
+              images[name] = ref
+          (image_dir / 'release-images.json').write_text(
+              json.dumps(images, indent=2) + '\n', encoding='utf-8'
+          )
+          PY
+          cat release/server-images.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload digest manifest
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: server-images-${{ github.sha }}
+          path: |
+            release/server-images.txt
+            release/release-images.json
+          if-no-files-found: error
+          retention-days: 90

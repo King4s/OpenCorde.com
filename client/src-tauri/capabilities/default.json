@@ -24,6 +24,7 @@
     "autostart:allow-disable",
     "autostart:allow-is-enabled",
     "deep-link:default",
+    "updater:default",
     "os:allow-platform",
     "os:allow-version"
   ]

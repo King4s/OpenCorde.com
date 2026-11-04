@@ -34,6 +34,7 @@ use tracing::instrument;
 /// If SMTP is not configured, emails are logged to tracing::info() instead.
 #[derive(Clone, Debug)]
 pub struct EmailService {
+    delivery_enabled: bool,
     /// Whether SMTP is configured
     smtp_configured: bool,
     /// SMTP hostname
@@ -70,6 +71,7 @@ impl EmailService {
     ) -> Self {
         let smtp_configured = smtp_host.is_some();
         Self {
+            delivery_enabled: true,
             smtp_configured,
             smtp_host,
             smtp_port,
@@ -80,9 +82,15 @@ impl EmailService {
         }
     }
 
+    /// Disable delivery without falling back to logging private reset links.
+    pub fn with_delivery_enabled(mut self, enabled: bool) -> Self {
+        self.delivery_enabled = enabled;
+        self
+    }
+
     /// Check if SMTP is configured.
     pub fn is_configured(&self) -> bool {
-        self.smtp_configured
+        self.delivery_enabled && self.smtp_configured
     }
 
     /// Send an email verification email.
@@ -92,8 +100,11 @@ impl EmailService {
     /// # Arguments
     /// - `to`: Recipient email address
     /// - `token`: Email verification token
-    #[instrument(skip(self), fields(to, token = %token.chars().take(8).collect::<String>()))]
+    #[instrument(skip(self, to, token))]
     pub async fn send_verification_email(&self, to: &str, token: &str) -> anyhow::Result<()> {
+        if !self.delivery_enabled {
+            return Ok(());
+        }
         let verify_link = format!("{}/verify-email?token={}", self.base_url, token);
 
         if !self.smtp_configured {
@@ -124,8 +135,11 @@ impl EmailService {
     ///
     /// # Returns
     /// Ok(()) on success, Err if email sending fails.
-    #[instrument(skip(self), fields(to, token = %token.chars().take(8).collect::<String>()))]
+    #[instrument(skip(self, to, token))]
     pub async fn send_password_reset(&self, to: &str, token: &str) -> anyhow::Result<()> {
+        if !self.delivery_enabled {
+            return Ok(());
+        }
         let reset_link = format!("{}/reset-password?token={}", self.base_url, token);
 
         if !self.smtp_configured {
@@ -267,6 +281,28 @@ impl EmailService {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn disabled_delivery_does_not_attempt_smtp() {
+        let service = EmailService::new(
+            Some("127.0.0.1".into()),
+            1,
+            None,
+            None,
+            "invalid sender".into(),
+            "http://localhost".into(),
+        )
+        .with_delivery_enabled(false);
+        assert!(!service.is_configured());
+        service
+            .send_password_reset("invalid recipient", "fixture")
+            .await
+            .unwrap();
+        service
+            .send_verification_email("invalid recipient", "fixture")
+            .await
+            .unwrap();
+    }
 
     #[test]
     fn test_email_service_dev_mode() {

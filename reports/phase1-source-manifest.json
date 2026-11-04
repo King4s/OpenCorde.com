@@ -1,0 +1,2849 @@
+{
+  "schemaVersion": 1,
+  "baseCommit": "600a57cc46ea039af24c782313cdb7aca80aa1a7",
+  "rustRelease": "security-hotfix-20261103-01",
+  "rustArchiveSha256": "977376f3527a301bafd86908b921961a5e14debbf8409dcaea4d0e71325a8ba1",
+  "rustCargoLockSha256": "29d895a3de8393f6e28f2cd8638270b82554c5ecbb0eb51ddac06d44b09b2653",
+  "frontendRelease": "dm-hotfix-20261103-01",
+  "frontendHead": "62b25d374efd658b0aa56e71c6abfd5f7df321d5",
+  "frontendSourceListSha256": "12b48337bdaace1e06e4a19c02356eff6c39fea934b850844d01514c873cd973",
+  "migrationMaximum": 73,
+  "fileCount": 567,
+  "files": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "29d895a3de8393f6e28f2cd8638270b82554c5ecbb0eb51ddac06d44b09b2653",
+      "canonical_lf_sha256": "29d895a3de8393f6e28f2cd8638270b82554c5ecbb0eb51ddac06d44b09b2653"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "e341de7eb2e1d3eb3826d0e482031c201d8181b800d6e0e6dd6902330faecc18",
+      "canonical_lf_sha256": "4f5f8f8312ea21c57c2f91ce251221ccefc23150ed985634919e170c6c7f56f8"
+    },
+    {
+      "path": "client/.prettierignore",
+      "sha256": "fdbcc8d6be50bae5580afb14c15646eaabb5a878eddc42e3aa46514afff96e10",
+      "canonical_lf_sha256": "a36c0d69b710fdc557f55b98d326e0b0648e0dcb4804a2274e943f7269c2d45a"
+    },
+    {
+      "path": "client/INDEX.md",
+      "sha256": "464fa56d11b9699210d3e0710be2b25b3ca85bd8f285c45dbc74982687eb0883",
+      "canonical_lf_sha256": "7aa5d684b6691cda408b70aba2495967d184373239bb9c683cc031fd46d7310d"
+    },
+    {
+      "path": "client/MOBILE_BUILD.md",
+      "sha256": "15886f2cbfa9c66511607e21ec3e331025a23a885bf42582024394cdd26111fd",
+      "canonical_lf_sha256": "4afbdb0d715c35d8a1eafedad0beee4258836b5a0ad95e36c5fa78d9393b53ad"
+    },
+    {
+      "path": "client/NAVIGATION_MAP.md",
+      "sha256": "fdd250cf7699664757d76b40a927e61692c3240ead102d20d7113ebc4763e5ac",
+      "canonical_lf_sha256": "436a7e6b00b864f4dcbb8ad9865722b04c87ed96f37b2b25fc942e3e049dc8dd"
+    },
+    {
+      "path": "client/drafts/unwired-components/README.md",
+      "sha256": "163cb6fd011b2243cc092b7373c22c9c521bf99df2fbb9970b4ee81730085e8f",
+      "canonical_lf_sha256": "c4b084a3c26e04e43966b21f5815c605026e0818a548517848d1f7faad8778c1"
+    },
+    {
+      "path": "client/drafts/unwired-components/admin/BrandingPanel.svelte",
+      "sha256": "1ae02d07017ac3b3b43936c2a5531c25d0461c952271330368ce646ad26196a7",
+      "canonical_lf_sha256": "ebcdfa82c355bc717b8c171b59d9383a14d3cf92e5e7e678891d2ce8dab77fc9"
+    },
+    {
+      "path": "client/drafts/unwired-components/admin/FederationPanel.svelte",
+      "sha256": "95e30b9d938b98391adf02328bf31ae48c1603cf9a0f2c60bedf0ee11cea0096",
+      "canonical_lf_sha256": "a98e2b826e0ee65b28ef05d2e10ea4290ce9f007aa6efe5e5ab5542414550f96"
+    },
+    {
+      "path": "client/drafts/unwired-components/admin/HealthPanel.svelte",
+      "sha256": "f4344b443e57c40551f3b7752a495f3483b7ca8292f0d4679ad88ca44f11fa87",
+      "canonical_lf_sha256": "03c6f8687377b59b78150c09aff82edfafac02fd8e32b0512121d0a1e0173782"
+    },
+    {
+      "path": "client/drafts/unwired-components/admin/JobsPanel.svelte",
+      "sha256": "5ccfd393bf7167f8a2758683014ec3abc806f2e499a2c8c53d98de92745579d9",
+      "canonical_lf_sha256": "fbecfeb961460df84a8083561bbd0e6e56b89d7c82a687e7df6d3c9fec83c0cc"
+    },
+    {
+      "path": "client/drafts/unwired-components/admin/UpgradePanel.svelte",
+      "sha256": "08391db36880bdd3b64c17d6d219ca160ecbb85ebbaef8539058919211a05e24",
+      "canonical_lf_sha256": "05209b50c828192a83235f46451ba6948544303b083e687e2c21094517a4565c"
+    },
+    {
+      "path": "client/drafts/unwired-components/chat/PollComposer.svelte",
+      "sha256": "b989548d8280603b5af15bf23c3cf4bef93261fffb5313ec278e60c358ba69f2",
+      "canonical_lf_sha256": "8aae647149dda27ebd761e3fd4b508e2439427535558822f1a809bc0844e166c"
+    },
+    {
+      "path": "client/drafts/unwired-components/chat/PollDisplay.svelte",
+      "sha256": "68e52f041aeb0ce56363031fc5524a2afd6cf1ecd195cf7763f03b7b650d5a14",
+      "canonical_lf_sha256": "8e17d284aaa10c6fd426df9928994531d0a88dbe22b6496052cc4fc309383ea9"
+    },
+    {
+      "path": "client/drafts/unwired-components/chat/VoiceRecorder.svelte",
+      "sha256": "54d9457939956b8ebf456d23b6f13a72517f60aa6d96644063c8dc3072cc1168",
+      "canonical_lf_sha256": "2bd42582056d8171260a49b152dec1234dc442d9ee4be070215ec525974571fa"
+    },
+    {
+      "path": "client/drafts/unwired-components/user/StatusPicker.svelte",
+      "sha256": "6c939af8d31dd5f3dd6d6bd8b20cc7267975f6abffb2cb468a8a3baeb5f9d866",
+      "canonical_lf_sha256": "de81924f1fcf8d9e478aee82f5d263963160fd4f310d3e21ea655c8160b40fd9"
+    },
+    {
+      "path": "client/package-lock.json",
+      "sha256": "b513aef2e0806a1b33cf00c3d5f3af0b26a6eb076974e517cadfc98065295ce4",
+      "canonical_lf_sha256": "bbc6f3b157dbbc778e8929d54f01274a6dd7ce88bbf1be975d9014591eb91cec"
+    },
+    {
+      "path": "client/package.json",
+      "sha256": "ce4462c85ef58903c02aa06e961f1968f7535618f77f3e89630bcb645e0e0716",
+      "canonical_lf_sha256": "20076236e046af704d3f800497bbb3d6ac19b24af8bba52c66a61761c46d9538"
+    },
+    {
+      "path": "client/pnpm-lock.yaml",
+      "sha256": "4c728509b22c8356b063192d8ae3a4b09e7df20c090c6472013b97d5645bd865",
+      "canonical_lf_sha256": "2f9920da0996b0a07cad1d2343db5332ea9d52d1d2f9470ed3ed22f3d8107f73"
+    },
+    {
+      "path": "client/scripts/pwa-version.mjs",
+      "sha256": "0a1b0a6002b7b61e7ede84f1024b71cee6ee83de5b7cdf008469ed42232ef306",
+      "canonical_lf_sha256": "074417b9be1b1568a374cb408e3c65cb9da2c1cbc3f6ae805000560c3e6e311f"
+    },
+    {
+      "path": "client/src/app.css",
+      "sha256": "17af7b2405aaef467e49d6284590f2a28cda6d82b21ead7a374c4b7037a39998",
+      "canonical_lf_sha256": "68c6e1c8bf61de3c22830a93f008bc23a9d736843a71907c61ecd2548eae5b8a"
+    },
+    {
+      "path": "client/src/app.d.ts",
+      "sha256": "d333058747da20769c7a4d3d092dccea1c9a59c87f3223bbb4325bed5657ebbf",
+      "canonical_lf_sha256": "1075e103cef885c52da8040f3dc53625b63425a79518bbd48e9b25b3d1ef62c8"
+    },
+    {
+      "path": "client/src/app.html",
+      "sha256": "58f833af1d99c028a782cd79acf5a92e6942d89017899ab10244f619c563b7ee",
+      "canonical_lf_sha256": "c397bb3cc014f6b3fe6902edc8e3fe769fd26c1c251ed46128ee6a69be667554"
+    },
+    {
+      "path": "client/src/lib/INDEX.md",
+      "sha256": "64e738e75ce1e1811e3c5667f782626b26ceac2c49135ae533fb5460f6f45863",
+      "canonical_lf_sha256": "901c5a6610826102c779d5f50fc7f872fc09f7d3111aed7e22376f3a0518ec42"
+    },
+    {
+      "path": "client/src/lib/actions/edgeResize.ts",
+      "sha256": "9a2fe538d5f41211831816e8c0ac691790c6acfe567250e9b221e57ba49fab49",
+      "canonical_lf_sha256": "855896dbd77c97509a74152d12d05f0a187c676ac6d4163ae85764f9cd384da0"
+    },
+    {
+      "path": "client/src/lib/api/INDEX.md",
+      "sha256": "42d4a8bde5162293315ba03db5682ff2e34670e500b14d2aea02bc91388a12ce",
+      "canonical_lf_sha256": "89ff7ef02ab07caff9a0258e6f27b94cca5197e48ab81c0230aeb35cf9043a11"
+    },
+    {
+      "path": "client/src/lib/api/client.ts",
+      "sha256": "0182fc1d93e4821f4e696b385c6b50cbc1c25a806f1dba328336bf1dfc61bdd3",
+      "canonical_lf_sha256": "6119ccc5a1311ec4da931e2c6e59c36403ee559dfb37b1dbe9ef63f1759c67bc"
+    },
+    {
+      "path": "client/src/lib/api/types.ts",
+      "sha256": "24c55a5955e8084d89fe1b574ad4dfa9c22d3d3c0256d8c5ab0a0665bb0dcb2b",
+      "canonical_lf_sha256": "b8725b7081dd9f167b6575081079ead2b75691b38cbfc333c4662396183c84e4"
+    },
+    {
+      "path": "client/src/lib/api/websocket.ts",
+      "sha256": "b29ffd55a36622f773ac90a04a7d4d69a4472d0511b7352e69c1e6ed87447051",
+      "canonical_lf_sha256": "24b41217651d85fa2d2e08a7edebaa708844a76b505e5ce74bdde40464d10373"
+    },
+    {
+      "path": "client/src/lib/components/INDEX.md",
+      "sha256": "d5b18624c61b52398fa2c4faf8158f506ceb804c5084bdbc00794b0d233412c1",
+      "canonical_lf_sha256": "03bdb3b6c7d8535d3a41ec76871b88da75d40185acca7a07bc436d9dbf7eff43"
+    },
+    {
+      "path": "client/src/lib/components/chat/AttachmentPreview.svelte",
+      "sha256": "ccb2a04939a3d6cd0af0b26c75777c257dab84de4d61bcd577a604f1c5860d38",
+      "canonical_lf_sha256": "46ab50902741b576af3132641ea44bb8620422e9fbbe65230f9f2daed40d5057"
+    },
+    {
+      "path": "client/src/lib/components/chat/CommandAutocomplete.svelte",
+      "sha256": "3bedf1c980a627f3540e154beefd80a70b9d522cffc97cac06b7c3717cf99dd8",
+      "canonical_lf_sha256": "8c577969681f3d267f21975b3bfa649d965347da02729f5ac04d13a1ed1c34ba"
+    },
+    {
+      "path": "client/src/lib/components/chat/EmojiAutocomplete.svelte",
+      "sha256": "db872a956fccfa932ae06ef99870f29b507b3a79646b35ab03bf019689731a85",
+      "canonical_lf_sha256": "a6d74b93271073242f50013f4039333968c04a1a5acfc047e70da18f6a44fffd"
+    },
+    {
+      "path": "client/src/lib/components/chat/EmojiPicker.svelte",
+      "sha256": "f431924ec1b8a9b39e7e7a3edbfa29055fbe417d6a99efffbed2298995cabe9a",
+      "canonical_lf_sha256": "d27c1bf1619651a79c8982f36d5b2383ac1ffb6886dab8c5ad6be5ad944ca496"
+    },
+    {
+      "path": "client/src/lib/components/chat/INDEX.md",
+      "sha256": "4e4c7112107d00f305ff4fd7bf136af767ce26e1487158905995266ca7526224",
+      "canonical_lf_sha256": "c0cf18f2d8223b5696ea64d76727cc13ea1c8b7267e2743fe78019b9473c65b8"
+    },
+    {
+      "path": "client/src/lib/components/chat/LinkPreview.svelte",
+      "sha256": "d15d2cb41ebaf9fddfc7a531bf5227f5e59dbc4a53edcfa080958b30b93642e5",
+      "canonical_lf_sha256": "0992c54c3ba8153ed4c7c75b261bdbc1b09850d1608807d546c6d043fe77395e"
+    },
+    {
+      "path": "client/src/lib/components/chat/MarkdownContent.svelte",
+      "sha256": "6531b935f64fedd8a9d9190e33385a8c4bd14de459f7120a5833f2a622797ba6",
+      "canonical_lf_sha256": "f67d413046eaa45f4c7ba3145b4676c30bc6806a705dd01c0904785281b7fa41"
+    },
+    {
+      "path": "client/src/lib/components/chat/MentionAutocomplete.svelte",
+      "sha256": "cd21a9e067111d81607935e999a0cdaa1ecaddb87d72bf18792aeec1f38833f9",
+      "canonical_lf_sha256": "e3c777a377d826a36fe4ce9c55e7ed39465ef435ff8d3b24c71dddcc36fdf408"
+    },
+    {
+      "path": "client/src/lib/components/chat/MessageContextMenu.svelte",
+      "sha256": "83daefd76fa078ebc32b2bc7bb82661e8a2504ae769d21850d0762418650be8f",
+      "canonical_lf_sha256": "5b54beaf605d49d50b83a4013f315700af99d0b4042f6a8a50a873e4f800038c"
+    },
+    {
+      "path": "client/src/lib/components/chat/MessageInput.svelte",
+      "sha256": "56e8363d169ddbde609911bca4bb66f9161b4637c6fa4b8f5af4f975bbe095f6",
+      "canonical_lf_sha256": "c36d3b3b1597064f9eca5cae2b9f6a005f580c15b30a83762b4e70cd6226e9c7"
+    },
+    {
+      "path": "client/src/lib/components/chat/MessageInput.svelte.bak",
+      "sha256": "69ed5481cd70488aca8abf7e3fadf598603aa3c2c3060824d749b962f403ebac",
+      "canonical_lf_sha256": "b7a6786d5760d7d1da9d5e5c7f411506af23a0530a4e290cbe9014b7eb62fedc"
+    },
+    {
+      "path": "client/src/lib/components/chat/MessageList.svelte",
+      "sha256": "7e710caea9a923c083d0ff58984c961b8c7f072043d6fc814afed63f83806239",
+      "canonical_lf_sha256": "87e050188520d59bb2150aaf4e6ab4f9fd302f7592cea19fa20ef2526c5c3b93"
+    },
+    {
+      "path": "client/src/lib/components/chat/PinsPanel.svelte",
+      "sha256": "aa77f3147f803cd15981702697c68e08cce6d1762e0b1962e51a1188323f868f",
+      "canonical_lf_sha256": "15d2fc8f3e320a9947341e6c13117cf1c3342c09932ed8fd0ccf72e8d5a7c8f3"
+    },
+    {
+      "path": "client/src/lib/components/chat/ScheduledMessagesPanel.svelte",
+      "sha256": "34fb6f969b2183f3a9c33f0537d1417d44b010b7dba15f574672a297c544b849",
+      "canonical_lf_sha256": "830442dee1e89dafd1be7d7001167f0995b7548f2223ab621fb70f2087329408"
+    },
+    {
+      "path": "client/src/lib/components/chat/SearchModal.svelte",
+      "sha256": "fad4b7450b7079468700014f62fbf9aa0872e00cbea892a1e86b87fba1a9f156",
+      "canonical_lf_sha256": "eac371ce3316afc606739c31cf81060432ea813c793a2f930277d20f651fc4e5"
+    },
+    {
+      "path": "client/src/lib/components/chat/ThreadPanel.svelte",
+      "sha256": "7b81ff0ee65eefbcfbb52e78bd363a4d5f3b2fb7a66b83dbabbd8d27e835fb34",
+      "canonical_lf_sha256": "671aa20cbe366dccc6abb541912b16de070f0249fe6270e2f269f85782d314a4"
+    },
+    {
+      "path": "client/src/lib/components/chat/TypingIndicator.svelte",
+      "sha256": "8938ffd4841e5a6e9b30db62cd3f48523e95ab8d9490cc2fc28a62facade83a6",
+      "canonical_lf_sha256": "ccb5447662184298fc814a719dd5cf7c101ea704c9409cff7ae402b85fc134eb"
+    },
+    {
+      "path": "client/src/lib/components/chat/WaveformPlayer.svelte",
+      "sha256": "e03ed8a1e8757060c0a5be212ee66c535de9a3fc729a1bd399418a00c4097ae2",
+      "canonical_lf_sha256": "c1514a98b1423ff69af9c435e003e8477b2f2f8041d9a78d7cf3b934801c3ac0"
+    },
+    {
+      "path": "client/src/lib/components/chat/mentionUtils.ts",
+      "sha256": "fd221ff964fd0542ac6d69b41dce3d1fe6a14842fdb42fbb8aea92adbf379d28",
+      "canonical_lf_sha256": "68c38af7d39f65f6d8157f7018079dc60a9caf9e2f22de4a3121920fb88fafdd"
+    },
+    {
+      "path": "client/src/lib/components/events/EventCard.svelte",
+      "sha256": "c45ae108acaad9260de69a4eadbc12f8349a63c9c9dbbf619a90b1c74219f77a",
+      "canonical_lf_sha256": "34a24f8af5674d64011b2e03e5d7e37033049a195aed4d1e020c66414d3558de"
+    },
+    {
+      "path": "client/src/lib/components/layout/AddFriendForm.svelte",
+      "sha256": "ab9023b990f5695f79a7828f5bff0a228ea147eee54498ec8225a4d85e174e00",
+      "canonical_lf_sha256": "af943cc3a5c55a22d7628dbdc126d43645703960404f9aefccd1f2efea391e78"
+    },
+    {
+      "path": "client/src/lib/components/layout/ChannelList.svelte",
+      "sha256": "45410554ec42ae7c27c500456e184fe1ed6fc3e6506a07356361703db51a283d",
+      "canonical_lf_sha256": "c901a1b29d9b2e3df9bd6e222d3bed80a33aad5d7897f8eef753a749effa2888"
+    },
+    {
+      "path": "client/src/lib/components/layout/ChannelSidebar.svelte",
+      "sha256": "09d979eeceeb7bbabba8e442b8d2a8ecb3c908544a5991118a480b4a886fdb64",
+      "canonical_lf_sha256": "93878261f8e232a8cc25f8167f7b3fdf7f36d9a49e00171bea40aa8a8e970d8a"
+    },
+    {
+      "path": "client/src/lib/components/layout/FriendItem.svelte",
+      "sha256": "62a8eae1cb94d0de7626d3db92f5d6638f1cf45bcc832471db43e7dfa788e493",
+      "canonical_lf_sha256": "7af3c01be6029356e0c530dea9a605dd6dc4d7bd576b903cda89d9e60e3cd4cd"
+    },
+    {
+      "path": "client/src/lib/components/layout/INDEX.md",
+      "sha256": "78032e6e6f9f31f92f6dc175487d1af6b63873d707a0163e7d94ca0ab05ffa1d",
+      "canonical_lf_sha256": "15b30071ae92eda21867791528ccaa7a89e37fa377eae06ceb91a8c721bcd30e"
+    },
+    {
+      "path": "client/src/lib/components/layout/MemberList.svelte",
+      "sha256": "c88639a1894fcf3596dee3f9d4f9f04b2a20b03b41d7aaca3abc04f806ab8eed",
+      "canonical_lf_sha256": "0300ac75a3bb66312738ccc0643c6aec530177e76af6d5b74f95a3d738f79949"
+    },
+    {
+      "path": "client/src/lib/components/layout/ServerIcon.svelte",
+      "sha256": "61612ed986a8404b07b8f56214a30b6dc8c5e060af62d960e4b0e31c5d4294ad",
+      "canonical_lf_sha256": "8396cd74b42b0dc664ad1ed8d819a19e2050c6972f1402baed3068a3bf08fa53"
+    },
+    {
+      "path": "client/src/lib/components/layout/UserPanel.svelte",
+      "sha256": "575ba57bc5f3b28972f8c7178685ae5229b15b9960081ef241fc90e334f2bc5b",
+      "canonical_lf_sha256": "c6441756b9010be3523cf7871e44045af8f7cdca665c5bcccedff87ef36d8ac6"
+    },
+    {
+      "path": "client/src/lib/components/modals/AutomodManager.svelte",
+      "sha256": "9f9c79938bbecbea19aeacbacb18eb9965614a0b97707865090358c39a1ee1d9",
+      "canonical_lf_sha256": "e33c8afb84d2727a866e7cf796d403e166add5fb459665e2c3c59b9b9887723d"
+    },
+    {
+      "path": "client/src/lib/components/modals/AutomodRuleForm.svelte",
+      "sha256": "d8471f20268cfa11137949d770eebd2810058846139125751359b61a838cd34b",
+      "canonical_lf_sha256": "9f1e5da2ea522c4f02a7456c2ee596604ff64fd2caf4eaa2873756e57bfcd84b"
+    },
+    {
+      "path": "client/src/lib/components/modals/AutomodRuleItem.svelte",
+      "sha256": "c338a9546fb99e4c7cc3dbd10b3521f73a60b25fdda1dfb3f9a435a75f4d6fdd",
+      "canonical_lf_sha256": "b0bf36b778db46b345ecae2d770f139c2fbc80bd830bb491031522b09c1b047e"
+    },
+    {
+      "path": "client/src/lib/components/modals/ChannelPermissionsTab.svelte",
+      "sha256": "db746a00908dfc5993b03b1df41b03301c362eaab99bcfa6bf3dfb49cd114f67",
+      "canonical_lf_sha256": "c915ea1c470f4a8cadf092c206cbfbd2ff756e493d3eb858efb308eaa80447b3"
+    },
+    {
+      "path": "client/src/lib/components/modals/ChannelPicker.svelte",
+      "sha256": "1431473f99b47171507da8db1a730431dd99c0574d224cf014f802f9d4b0eb45",
+      "canonical_lf_sha256": "15450fd447f7fa3bf58547e98e373dd50331f34c4d3e00033a4ef794626bd4a0"
+    },
+    {
+      "path": "client/src/lib/components/modals/ChannelSettingsModal.svelte",
+      "sha256": "10e701d52af30ab924dca30ff7ce9723b8c42d95ea5f0d497b758f63e008d185",
+      "canonical_lf_sha256": "9ea5b312fd8deec34d2b38a388bccca929ec500d870727ae3260fed49c2feb69"
+    },
+    {
+      "path": "client/src/lib/components/modals/EmojiGrid.svelte",
+      "sha256": "4af361c37f276b01375f02174df453f0cf057bb6086157845142c837d640630b",
+      "canonical_lf_sha256": "be5b6bd5f15bfceb4fe7184c31399eb6f75181e83224ea36c6ab9e7e9a723aa0"
+    },
+    {
+      "path": "client/src/lib/components/modals/EmojiManager.svelte",
+      "sha256": "c2a24b72dc54fe888ed38290571decd0c7f76dd03a45380de67e94446950235a",
+      "canonical_lf_sha256": "25a17c08041b1dd518f2c23b0af8dd32b9d032604b982b493599d4e0ffb6092e"
+    },
+    {
+      "path": "client/src/lib/components/modals/EmojiUploadForm.svelte",
+      "sha256": "92a57d0069b7d0737843bff4e4ecd7c7e1592b9742d9801aa3abbea0049cd8ea",
+      "canonical_lf_sha256": "0ba50c39a8c64cc1900918c9ff35e084015c31f8b78b2d01e0e931ef45b3203e"
+    },
+    {
+      "path": "client/src/lib/components/modals/INDEX.md",
+      "sha256": "624d465fd897c1aef2f7545725110e4dc8efeaf7b01b0ab38ce501c8a4325f37",
+      "canonical_lf_sha256": "41cb415a2d58875c970ed2c6b76da5bbb53102638246e4f4210a937aecb441e7"
+    },
+    {
+      "path": "client/src/lib/components/modals/MemberContextMenu.svelte",
+      "sha256": "04c14115f9945b7456ff200c55fc0262afba9c9a0871612c4bbfd9bf04097c03",
+      "canonical_lf_sha256": "e20870768441d91d46fc702eac59f543a5ad0572b5578f3eaf5deb857725cf28"
+    },
+    {
+      "path": "client/src/lib/components/modals/OnboardingModal.svelte",
+      "sha256": "047a2d9a3c282fe8610869a2e4450c154a4fc01278e7ec8eabc86bc577898ac6",
+      "canonical_lf_sha256": "79368078c5f56e6725ac65503ea05ada316fe91a847a4fb8a1de78222e1a6732"
+    },
+    {
+      "path": "client/src/lib/components/modals/QuickSwitcher.svelte",
+      "sha256": "0710bd2f99eb3a3431208b7b783f53d4ae139fb26455b09370a8b056888138d8",
+      "canonical_lf_sha256": "904c8ac6884b7a401e6625ba32119af0695fb824b866707dc138b5e0ba2a8442"
+    },
+    {
+      "path": "client/src/lib/components/modals/RoleManager.svelte",
+      "sha256": "52f06133e9608e7533b8c5ded36853f08ac9c8ef0b0d37e44acdcdb13416dd27",
+      "canonical_lf_sha256": "628d15daf0afe87a10c6bf25e2cd30f1fc2855eaeb5165d0406a9c4f26342729"
+    },
+    {
+      "path": "client/src/lib/components/modals/RolePermissionsTab.svelte",
+      "sha256": "350d8d821c7345ac7c28430e0c85edc232b0e24347f2fb2d8bd8120768072f68",
+      "canonical_lf_sha256": "4b3c971cc86c1e84c57b7fb3e0a82ba6a715ddca162b66428b2325f8f1e4900b"
+    },
+    {
+      "path": "client/src/lib/components/modals/ServerSetup.svelte",
+      "sha256": "1899e250fc06176e0677fbcf58b3643bd08e07f53102631ba2d3c066fd100b3b",
+      "canonical_lf_sha256": "45a872cf0237c92c40963f1c0cebddac2387cbb8b52e5c7fbeda2305cb5146e1"
+    },
+    {
+      "path": "client/src/lib/components/modals/SlashCommandForm.svelte",
+      "sha256": "50be6db271dec120387046ebb8b9a1f76ee38247d733058efe292f02e57079a9",
+      "canonical_lf_sha256": "1426073266a0960a58bae8b960a31455f46a9352f896d34fdd54e238c9733a3c"
+    },
+    {
+      "path": "client/src/lib/components/modals/SlashCommandList.svelte",
+      "sha256": "2fa28cd5eeddd169a232948f05a837730c9a88b9279433fbb22693932dd81025",
+      "canonical_lf_sha256": "b8630f15b3e01a955ccf92cd699072878f8837d56e084e617324d01751325f2e"
+    },
+    {
+      "path": "client/src/lib/components/modals/SlashCommandManager.svelte",
+      "sha256": "0fad34f185c856fd74c9b1f3ebc5a39ba145da92130895abab98a74af2a6c88f",
+      "canonical_lf_sha256": "0ba24aefd3a333990c00bf378418776f0573fedf7205fbb9be9fa280e94635b2"
+    },
+    {
+      "path": "client/src/lib/components/modals/WebhookManager.svelte",
+      "sha256": "eca00cff2aacb695eb94102918e10986fcf72f44f2d96f8c27735427f1238bef",
+      "canonical_lf_sha256": "bb30bee8cb3b8910c3788dfdfd6181151b5109beff6c25ab683ec74d8997f442"
+    },
+    {
+      "path": "client/src/lib/components/settings/AccountSwitcher.svelte",
+      "sha256": "847bd6ccb4878c7352025f318aeba2abf0e7cafd4a07a2c432049403744a55b6",
+      "canonical_lf_sha256": "d9f6e189259385a1b85ddf8ef7df8d4e9fe3f42de895a24690daf7650036dfd1"
+    },
+    {
+      "path": "client/src/lib/components/settings/ActivityStatusPicker.svelte",
+      "sha256": "b74ac74ba296c03774a3218ca81fb3fbeac27216d2a94cdc2362f1b45f889f15",
+      "canonical_lf_sha256": "e4b0a954efe4b6e822a78055cffc7e5e9ece81d11ab2c71ef58fa2d1432e14dd"
+    },
+    {
+      "path": "client/src/lib/components/settings/AppearanceTab.svelte",
+      "sha256": "9cef756382b434f830c81c66d9dfa5a16bf076f5ef927845637cd79bc7f04655",
+      "canonical_lf_sha256": "8ba9488d2b537691d2fb846b126b62cc2c4534391bcd359387bbe9fdbf736373"
+    },
+    {
+      "path": "client/src/lib/components/settings/AuthorizedAppsPanel.svelte",
+      "sha256": "6a50d0ae495a15bc6c7ea49a73240b47ed24dd4e8f5243bd04d53542d11691c2",
+      "canonical_lf_sha256": "4591629964da4de7ff0347179fc1eecc2ee2ad71cb0d3f756e33e7f0cb4d9905"
+    },
+    {
+      "path": "client/src/lib/components/settings/INDEX.md",
+      "sha256": "b5f7d94106e69388e53e6c5cd73c71585ac0c4c88c89aa6a9619b2b7721ae1c9",
+      "canonical_lf_sha256": "e8c0e5c93300fea31de3c90dedf395353e326ee562e64b695bcf247f0a9a3e79"
+    },
+    {
+      "path": "client/src/lib/components/settings/NotificationsTab.svelte",
+      "sha256": "8df06e1091d2d40ea61dcf654cd54fd2d11a03ee6d1603e019dafd547164669a",
+      "canonical_lf_sha256": "7b3912329c6146385eff58315f0a6d24964a6c13167ca462ec5d0bb73e6fe6e1"
+    },
+    {
+      "path": "client/src/lib/components/settings/PrivacyTab.svelte",
+      "sha256": "63ea70242b9f665ee304e923fc1b6239922c29a43d09e95f55bc6358c9f1cd87",
+      "canonical_lf_sha256": "ba46ba00ee202685567c74a7b40f16d4dd5330887bd9903ef2d26333f790b0e9"
+    },
+    {
+      "path": "client/src/lib/components/settings/ProfileTab.svelte",
+      "sha256": "1d158fcee2de49a28eaacb1bc176f843655ca8044e90969c4adec9c7d3396366",
+      "canonical_lf_sha256": "2b7897194ecc3c1bade64273e65da57e189d36beeb39bb150b0aa04740b1f790"
+    },
+    {
+      "path": "client/src/lib/components/settings/SecurityTab.svelte",
+      "sha256": "6f0aede5cef42a45e676c5cae04faae2fe4dfb431aeaef9cac83a1fec31d1af8",
+      "canonical_lf_sha256": "1f35266f7fa00cf49296e80d5abf6f323225c2ef9ff6e8f46d5ee2bc1c016971"
+    },
+    {
+      "path": "client/src/lib/components/settings/SessionsPanel.svelte",
+      "sha256": "f9c382c6997f9dcea6a7dcc12191a2695d564158705ab9b0b09802064af9e3d9",
+      "canonical_lf_sha256": "f5c26b051ed447914ff8cea647dab7a7f1bf9cc010448e4a4417151ce55c8d92"
+    },
+    {
+      "path": "client/src/lib/components/settings/TwoFactorSetup.svelte",
+      "sha256": "d315b3435174fcab718a827575ef95445e81bab8d4307157b35434f8420ac63b",
+      "canonical_lf_sha256": "1d6fba7149c68236d0ae1a0fc3297183ec2504df75c378303a6a8584d1dba74b"
+    },
+    {
+      "path": "client/src/lib/components/settings/UserBadges.svelte",
+      "sha256": "2ad97bf4565a31413881de864b2673a5bcd4e5777188b140a8571dafa4c9aa9b",
+      "canonical_lf_sha256": "30678b2588920f60dc7c73cb2e3cd94f3c11918874d6f82d23fac650c160cf2c"
+    },
+    {
+      "path": "client/src/lib/components/ui/KeyboardShortcutsHelp.svelte",
+      "sha256": "3f28794decd16a1ec1a7497fc733a7e611837f79b004e6084587bc70d3629f0a",
+      "canonical_lf_sha256": "b192bc9cc0f1ddcde5868a6a751e5f4ebc5bede27c7c752b4d50adaa89dd1b52"
+    },
+    {
+      "path": "client/src/lib/components/ui/ToastContainer.svelte",
+      "sha256": "db789eb967afa7f3f00d532088e5b9425fa2e1264d2e1198825665dcc7df452f",
+      "canonical_lf_sha256": "2f6121acd8a36acd20ce8fa41c1e16b5fc34d8aef0078fbd0fff7162315505f5"
+    },
+    {
+      "path": "client/src/lib/components/user/UserProfilePopover.svelte",
+      "sha256": "1b59362ba74569baee30c5a9c622c47c825fee336266b94a9bffd2a57b2faf3b",
+      "canonical_lf_sha256": "336ed8b11e116c54d5dcf1918ef6ea93f9489313b0a46fc1af0aa29b2e6f8792"
+    },
+    {
+      "path": "client/src/lib/components/voice/INDEX.md",
+      "sha256": "c9c66697e88e557c16c328eaadf30db10a15c282503b6ef626a358a48169239a",
+      "canonical_lf_sha256": "ed4f8cba941321469a8dbc2f873a3131798bf07c20cc962a4447c297b548de9a"
+    },
+    {
+      "path": "client/src/lib/components/voice/RecordingsPanel.svelte",
+      "sha256": "ebfb2f285688be9d6ce7f2d92e5809769ef32d264169886bf0206e51c5965072",
+      "canonical_lf_sha256": "7eef5536d59cf11ea75c32d9248ec7b88d302cb85a1aa05e20e776a2a069417b"
+    },
+    {
+      "path": "client/src/lib/components/voice/SoundboardPanel.svelte",
+      "sha256": "8bfac97459bea2525c9763736543d0bc6b978d99d7dfcbc027e98fb41a220260",
+      "canonical_lf_sha256": "8571e4f635668a2329c03a6c4bab42f542b0fb3ea1660e638d5e3759c66857ca"
+    },
+    {
+      "path": "client/src/lib/components/voice/StagePanel.svelte",
+      "sha256": "b6715a563e9cf74a798e60334876795a3046ac4345d8126a8f8c7817a8bcbd10",
+      "canonical_lf_sha256": "aa03b54a966ba2a2986d362f6f91a413c0d125f6ea49637b4bd6935ed3584566"
+    },
+    {
+      "path": "client/src/lib/components/voice/VideoGrid.svelte",
+      "sha256": "d45aa10224608c21cc587f20ebdd957ccb8c1ff637cedb9976bb0f418c3f7223",
+      "canonical_lf_sha256": "9742b563af928e6868a94a27874730ffafbdceb306700fad5839d34bf452d48e"
+    },
+    {
+      "path": "client/src/lib/components/voice/VoicePanel.svelte",
+      "sha256": "3b43a923a8939eed572eb4e33bbe2ceaceb179ddc12da09cc06346e6b42f0954",
+      "canonical_lf_sha256": "eea2dbc6ecd770240c7f88f09e119a98b2437e4c7e9ae2cb2023b8c114321831"
+    },
+    {
+      "path": "client/src/lib/components/voice/VoiceSettings.svelte",
+      "sha256": "dc2a7c7da8170782dea5397533b82c2263f891654b1d472f08db1dfda3581470",
+      "canonical_lf_sha256": "c4f720b3ef20eedecdd1841c26b17f4606963dac32579f7d2ee51ef26a5f3943"
+    },
+    {
+      "path": "client/src/lib/components/voice/VoiceStage.svelte",
+      "sha256": "cbaa144ef6de788df45011151b97d741c0bf5cb6c9ad2aad5512d6d68f115087",
+      "canonical_lf_sha256": "50953b1fc22363e43c260d0df3aecaa01adf6bb04beed183032c22d60d705489"
+    },
+    {
+      "path": "client/src/lib/crypto/INDEX.md",
+      "sha256": "55b08c0bc9dec5eb2bbd0568ace1a04bd086e26efcd02750ac136d95136a9a16",
+      "canonical_lf_sha256": "1cf9f96d48726559c4b8a48cd934b5e7d002f379ef9ab3a4a895db59266a294c"
+    },
+    {
+      "path": "client/src/lib/livekit/INDEX.md",
+      "sha256": "365800c9726aa2114ab2598b97ada578ba2d01881b2f486d052197c321f90fd7",
+      "canonical_lf_sha256": "75b766c304cea675de3ae096a1a94f1ce95aa9cfa60eed7374b38b61cca207ef"
+    },
+    {
+      "path": "client/src/lib/stores/INDEX.md",
+      "sha256": "7b491ce262c33dc348f306e556962d041426fd4efc2f9a9127172afb71fea69a",
+      "canonical_lf_sha256": "bf802d35f49564b48f89cd3d42c4e9c55197e720cfd5f207a8e8dcf97e396d0a"
+    },
+    {
+      "path": "client/src/lib/stores/auth.ts",
+      "sha256": "75ed091fa04fbc1e2cddf0951951bc8003c0ec634d56006affba015a8e026544",
+      "canonical_lf_sha256": "23d48dfc4dc725f2a95f5a093313042f75479c4b078befc4ba89e5aa261e5b7a"
+    },
+    {
+      "path": "client/src/lib/stores/automod.svelte.ts",
+      "sha256": "3bbe0caf6fe4e1d016bba772b7b627a1bd541a08fe36649693254494d8350432",
+      "canonical_lf_sha256": "696703c6b896dcf70502ee246f7cfc3f9ce4285fe1d874d8a4562789a2252b79"
+    },
+    {
+      "path": "client/src/lib/stores/channels.ts",
+      "sha256": "5bee5aa44d699bcd5f78f8c0944d4bda5af32c0529f8b0a93ea5539bbdc286f9",
+      "canonical_lf_sha256": "19c6020f5504b08a8985c8a1ef5752a739132e97af50585be3c7381600fb52f3"
+    },
+    {
+      "path": "client/src/lib/stores/dms.ts",
+      "sha256": "b8207b985921eac54c6acec71decfa93240be8a328914ee3718dc2c7879328ab",
+      "canonical_lf_sha256": "a8000232e1a22f5a18dff41a37e0ef805ed30299f5ddf80b8f9cda91a8848c35"
+    },
+    {
+      "path": "client/src/lib/stores/drafts.ts",
+      "sha256": "c8bf1a1e3f912e4f9bbb03e6f64c56a0b3ac434e7d06c43d22a4362049401af1",
+      "canonical_lf_sha256": "1e89441f73e450853bed0f5f69ed79fa12bb9db2629bfa8ca893d72f437d7e13"
+    },
+    {
+      "path": "client/src/lib/stores/e2ee.ts",
+      "sha256": "0d86a0c80e1fed433b79b0f584e82f772a67f84bc27d6dbb1cd5b5bec699b8d9",
+      "canonical_lf_sha256": "ab169f0280a361d9d9ad74884bc627dd773e5a4c12391c81a06cc9c2c0b924cd"
+    },
+    {
+      "path": "client/src/lib/stores/emojis.ts",
+      "sha256": "43be17e2553610040e2bb49ce625fa32c189525d42af2ecfb4ceb454772097ca",
+      "canonical_lf_sha256": "37d187a35a5a9dfc88367efcdc17d6ce1635ecd4ca98dc98677d0efec2359619"
+    },
+    {
+      "path": "client/src/lib/stores/events.svelte.ts",
+      "sha256": "b5d41a9424c376ac5bfec655720eee9c23afca7911ab55132cc9f1598a47ce70",
+      "canonical_lf_sha256": "2a10d055199a6b32d03ae5dedf6413592b881a1fa1ce554436fad53a6c98a1fb"
+    },
+    {
+      "path": "client/src/lib/stores/forum.svelte.ts",
+      "sha256": "53e0a302f7029182c1aa43a0e050e9a422af6266640eb476fca1a87c70d50fa7",
+      "canonical_lf_sha256": "6dbe7b07bd321400397020586b38f46e45364fbcfd4bfb9c1e326940af231141"
+    },
+    {
+      "path": "client/src/lib/stores/friends.svelte.ts",
+      "sha256": "64f598a87647d08f087164b30d1ddcc7db600bb7500a41470b0cce84bb70495e",
+      "canonical_lf_sha256": "d336d749593d0e2d40cb9d6d3e2bdac747e2bace250a282896b9c577f8b3ef53"
+    },
+    {
+      "path": "client/src/lib/stores/members.ts",
+      "sha256": "c18386655ada3512c4f7c8ac42b0da254437983f0cc28ca5a3d25c03683035b4",
+      "canonical_lf_sha256": "da02f686c18a3ddfd4991b5533a4a8d1c5cb21d8cadbb394b3dc3bd27646c8bf"
+    },
+    {
+      "path": "client/src/lib/stores/messages.ts",
+      "sha256": "53e7bfcd78a18e5c2a92ea80d37ce638fa47a7f17e1589d5f10b98f61b088069",
+      "canonical_lf_sha256": "82ece22f9490b1856590494307bc6c3aeae927878832c6f9c7a947e00d4539d1"
+    },
+    {
+      "path": "client/src/lib/stores/moderation.ts",
+      "sha256": "d343ca68a44c41a91f6b7f5c8340f991a0f984b8f1a056dbe1407e4d935f478d",
+      "canonical_lf_sha256": "3a4a9d79b298caf60fa3312ac96be433baca41a5c71256107d5c9fbecf4290b5"
+    },
+    {
+      "path": "client/src/lib/stores/notificationSettings.ts",
+      "sha256": "271ec938178735b269ae7c9fac5a22a3faaa426ba9854ee2710952c3316bff69",
+      "canonical_lf_sha256": "a17c3ce1f01750d5f7d0de8527e6ec670dcc0fd248c9e445ba954af977051817"
+    },
+    {
+      "path": "client/src/lib/stores/presence.ts",
+      "sha256": "d1b5709972b3bb120d498f39930125aef1c47233f5db1c3f7bbc831861e44156",
+      "canonical_lf_sha256": "9e56206bff57351271883b63c4389718d4d8cecdccbf6603b4fefe5896ac155f"
+    },
+    {
+      "path": "client/src/lib/stores/pushNotifications.ts",
+      "sha256": "00f257ad4047cc14185c839704dcfe6af2e9e4bb5d1e22506809aea9e384460e",
+      "canonical_lf_sha256": "4bc2750baf64bf4ad8f4add625bb80b5f4b1bfc513b9c8a742f1d6fc695c5021"
+    },
+    {
+      "path": "client/src/lib/stores/roles.ts",
+      "sha256": "938e8450b8008836bcc17c4261bba382896dad827d940fe61ec009afb9e3113c",
+      "canonical_lf_sha256": "4e08080fb3d14f23f30bf4ed762be7d09a5ce3a64f6be7412f8d50fd154d917b"
+    },
+    {
+      "path": "client/src/lib/stores/servers.ts",
+      "sha256": "8e17710ea1836b4e6520c1eed01adde2f042e8b842922da7a20b230c38530ff3",
+      "canonical_lf_sha256": "4f52975c7d4f8978997fb3a66c0d9371bccd3f3241a97ad5d275a18e0cf75df9"
+    },
+    {
+      "path": "client/src/lib/stores/slashCommands.svelte.ts",
+      "sha256": "133b957a6e42fcbd840be1ae1d972abece5076d66d5c666784cfd60b2ed15148",
+      "canonical_lf_sha256": "e604cece1f05d2f9c7d21404c03d20cc1c69609f7edc54b9080798de49f3ea07"
+    },
+    {
+      "path": "client/src/lib/stores/stage.ts",
+      "sha256": "5d065fea3f7dfc508e75d63c733a6ef7e561997a4b7ce52fed01615e188ecbe0",
+      "canonical_lf_sha256": "fedba09aa95cbc21bfb37f68593797cc376d8ecd2d4194005106753cf26caa57"
+    },
+    {
+      "path": "client/src/lib/stores/theme.ts",
+      "sha256": "d1e0cc9316d521db9d7a3a5b2208de21888e3341e6aa3a1e8fd14da5fae12061",
+      "canonical_lf_sha256": "734f2d5522efbf83d286dffc13cc5a81e140778ded4152f467b113b1ee3dd0fe"
+    },
+    {
+      "path": "client/src/lib/stores/threads.svelte.ts",
+      "sha256": "24237bfd61f3391cd71b22c8530f81986c8682744f174425e53d828a66f6f817",
+      "canonical_lf_sha256": "954d9f8b94becd8eb22803a80954f137f84de584de4c750ebde9dc79ebd0d087"
+    },
+    {
+      "path": "client/src/lib/stores/toasts.svelte.ts",
+      "sha256": "9e00b7892a2e7bd2f6f6b51fe63553dd109f7f1e1a8da5a69004ef486d2299bf",
+      "canonical_lf_sha256": "c6bf7b5a9e0b0335fa9593d022914ad887f0242db2668109734ff6605ae60715"
+    },
+    {
+      "path": "client/src/lib/stores/typing.ts",
+      "sha256": "0e1618c627d1cac50794ad0650361f32f3243a9e46ad5a85f91abb3df8517846",
+      "canonical_lf_sha256": "a48772e9062550c5842b4b4860d06b9984888c7a6ee2636fda80ee18b8bdd0d0"
+    },
+    {
+      "path": "client/src/lib/stores/unread.ts",
+      "sha256": "2483a06fd1309e5ebe7e8ceefdf833cdb63fcd3a0d83542077d88aadaf3ed45e",
+      "canonical_lf_sha256": "23bd565065a0a820a0e7e5717a8df016acd6b843dedec81068e640f75619e3b3"
+    },
+    {
+      "path": "client/src/lib/stores/voice.ts",
+      "sha256": "95e07fe998558f1e39c8ad16ece53e55d23d90c62b13c0ae52cae17bae7a5415",
+      "canonical_lf_sha256": "ae8fa461758883f519a67de5f031030d02417fe33680608826abe7a7b6a91189"
+    },
+    {
+      "path": "client/src/lib/stores/webhooks.svelte.ts",
+      "sha256": "d50de91e369bf4242311c9058626257e5934bb81327f8e16da578a2ebdb44f94",
+      "canonical_lf_sha256": "7ab64afb5c42e02e1baed810535e7f68f0632b05b0cc207d2d38244a0f9d3419"
+    },
+    {
+      "path": "client/src/lib/sw.ts",
+      "sha256": "797904f1e8dfd248159a7ba062b1f69d7dc0043bf0a8a46e4551a1605a7aefba",
+      "canonical_lf_sha256": "ca9045438b7ec8c637c30895d9d03489faa0bacabd799bf19eba7595220df5e1"
+    },
+    {
+      "path": "client/src/lib/utils/keyboard-shortcuts.ts",
+      "sha256": "2b356680e767908c840220bfe0fb24dae7edc0da981710043cd85b5b5b854ada",
+      "canonical_lf_sha256": "bff832059a162b0ad57b44471c75875a8e60a7085b9bf014b43bd92f54d6237a"
+    },
+    {
+      "path": "client/src/lib/utils/markdown.ts",
+      "sha256": "9861f880c31fd33f231997e8c17d0572eb6fcb9a93a86fce1cb9ac4b87dbef0b",
+      "canonical_lf_sha256": "99de6fc882c30d1d0252d4a2c8dd5029c7597c7dec91bbe01b6fcd10a9cb93aa"
+    },
+    {
+      "path": "client/src/lib/utils/permission-toasts.ts",
+      "sha256": "5c6ee7341468838fe009424000a08da270b3864bdb60f5e3faa1760220be3c0f",
+      "canonical_lf_sha256": "e546b9f52e1843ccf8db8206fd14a62cd9c24578f3f422c760c919a8823218c6"
+    },
+    {
+      "path": "client/src/lib/utils/permissions.ts",
+      "sha256": "a26846f5c575b161890d7a09a975fc8dff0f5f1378976d0c6ba508af2c0e10e7",
+      "canonical_lf_sha256": "6eff80561bed919111261c9e78ab6874c454def8a720b9d5586ae8fde0645ecb"
+    },
+    {
+      "path": "client/src/routes/+layout.svelte",
+      "sha256": "a8a882931b85c380ae3bf0ef3d6bd2d4771b0b7d39f153a304245b4afb8beff6",
+      "canonical_lf_sha256": "069fcea04ac5b7add3f11d048fd8e37f55030a3ee4b07da15a7dfabfad640868"
+    },
+    {
+      "path": "client/src/routes/+layout.ts",
+      "sha256": "09b24d2f97e3877f3c8c6ffe32e54e10da8b2c21f4d269da17e3f785367cf3fe",
+      "canonical_lf_sha256": "47fa64de7961be20f11a612eaa268d1c73dfeec9ae5b2f75d341913e08388ce4"
+    },
+    {
+      "path": "client/src/routes/+page.svelte",
+      "sha256": "c8d8bfa650afb828fad18112e54ed84d1fec8ccc2d5951aad4ac7933fb480383",
+      "canonical_lf_sha256": "6c00bb4d34a570d7f8bf56a52f143001c9df198221d96de60328f302b2997b88"
+    },
+    {
+      "path": "client/src/routes/+page.ts",
+      "sha256": "21a8c1a06610d18e86d47fd60323ca102bd48245bd6500fe4eea02a079fe773c",
+      "canonical_lf_sha256": "f1861c2daaf8d686adec915a9ac108a5de3f27fd7ea7cf13dc562fbcab5d56df"
+    },
+    {
+      "path": "client/src/routes/@me/+layout.svelte",
+      "sha256": "e755951b44b29ebbd53ebe035d4c43a287b8b7f0d86f2c51dd9e8369234215e3",
+      "canonical_lf_sha256": "10b13cdc98f77a3d9afa5b3968c972d80785096cd5b364c43274a715228d3959"
+    },
+    {
+      "path": "client/src/routes/@me/+layout.svelte.bak",
+      "sha256": "6e1e450ad2b8ce927d46bcba58b9791ed2ff626b78ed794775472a460ce8928a",
+      "canonical_lf_sha256": "8f18847b288ba3d180c058dbc01cdbcffe5388efbfc4e2a37d6310b99dc23769"
+    },
+    {
+      "path": "client/src/routes/@me/+page.svelte",
+      "sha256": "5311015a11f0563c7711a2aa96b7917ed2ac1b02fc54f5fb4641feeb5719d100",
+      "canonical_lf_sha256": "93c80bc90bb656df2748d74a0b2cb51e394c9624ace16eb853320ec412bbe398"
+    },
+    {
+      "path": "client/src/routes/@me/dms/+layout.svelte",
+      "sha256": "cc8c4160a62c54d953fb111125665ffc84445d023adb82b20dbb229146231e16",
+      "canonical_lf_sha256": "70158451faa7406437f628e867f9376dee22463ca1a4ea02a1b8cc6b9fcb67e1"
+    },
+    {
+      "path": "client/src/routes/@me/dms/[dmId]/+page.svelte",
+      "sha256": "591cf2239a655123afcb9c3a68ae3b3f2191d872b095f46761970f77bcb82308",
+      "canonical_lf_sha256": "d4385e841a42ff8b603eda02c8e01915e9d882693fa13a9ff794559af55cd799"
+    },
+    {
+      "path": "client/src/routes/@me/friends/+page.svelte",
+      "sha256": "e236ad878412a29dd066d9279211f4a3850820468475a3efd4cb9a8eedb250f6",
+      "canonical_lf_sha256": "c49cfadf7bd7b96e1fdafed08e9a90767298c7d379bd82cec025f241c68ee94f"
+    },
+    {
+      "path": "client/src/routes/@me/friends/+page.ts",
+      "sha256": "a30d49f22b477df6a08ee01e3d9675072eb8c385ed6e2833d33108df4801e843",
+      "canonical_lf_sha256": "7357767db4e058f9110708d2231dd101e43b2c1375ec0cf78a0128e0897a38fd"
+    },
+    {
+      "path": "client/src/routes/INDEX.md",
+      "sha256": "bc01e8c5d32c2d3647ac7b37631a381b189153a61c51a20c97de3f35dd50c9b6",
+      "canonical_lf_sha256": "63f5f354907fc695233c06fff53089a7238bb7c0caf3b6f918396ea9b9868cac"
+    },
+    {
+      "path": "client/src/routes/admin/+page.svelte",
+      "sha256": "98f7912d28a984b94128abc8d63431131241c12f404573698ab3ab398b5037aa",
+      "canonical_lf_sha256": "6a86891541e3cc3804faddb8043aea32682d99a6072ddaf0372ce0a0d9091735"
+    },
+    {
+      "path": "client/src/routes/admin/DeleteConfirmModal.svelte",
+      "sha256": "a347d90922b00f91ab7d17556aa6fb7c2b2f531990e477fa6dfdb7133d8e6af3",
+      "canonical_lf_sha256": "9c1e8154470ecb8d03cb2416ea245c3fa44f4152133c8a9fc11e286acabe4bff"
+    },
+    {
+      "path": "client/src/routes/admin/ServersTable.svelte",
+      "sha256": "a82df0f0f115c3fb2669667140eb99e5bc7eb5b11b12884f94079d357100cbfa",
+      "canonical_lf_sha256": "e2ee5e8a489a63a6672d5ffc0684f1586d512cf9a1f2ea0bddc89d0d81a92d61"
+    },
+    {
+      "path": "client/src/routes/admin/UsersTable.svelte",
+      "sha256": "f81f1db9f605b9e21193f167cdb2e443197a4cbfa2ba8d7d10b293a56e317633",
+      "canonical_lf_sha256": "f5a863e666e5671dbc8ed76211b7b5081951576d392481b17502999100cc5dea"
+    },
+    {
+      "path": "client/src/routes/discover/+page.svelte",
+      "sha256": "fecda65012434e256205b305e83fd2a07f7e76b659ff310361280753b85fe35f",
+      "canonical_lf_sha256": "70b8ee3ec40aa575ddf34aebb77656cd5ced5df50b8a50c66d4c3e57ceb152a9"
+    },
+    {
+      "path": "client/src/routes/discover/+page.ts",
+      "sha256": "ae652b7ef0f42e7bb8fbc24ffd3736d9ef3d88160027a6d96d72624a686f743f",
+      "canonical_lf_sha256": "df54159ceabd53b902a251c37b273f325356eeb39868b72ac8036b982032634a"
+    },
+    {
+      "path": "client/src/routes/invite/[code]/+page.svelte",
+      "sha256": "83643a2367b70b0a211d6d7b201194546e29fd9370b61b8f43a06ff7a4bafa06",
+      "canonical_lf_sha256": "da6dc6f815783821e28fda09b289120883e8c328407c453804f467096a0b4af0"
+    },
+    {
+      "path": "client/src/routes/login/+page.svelte",
+      "sha256": "6a44adebb1f21d91c93a6e8b8dea0760eb6e4b33e77a5de2177d4ef75db85b16",
+      "canonical_lf_sha256": "4b9b09afe8f54a5d0007b00d272745c4ba2245f3c4b6c063652281ae379e4896"
+    },
+    {
+      "path": "client/src/routes/register/+page.svelte",
+      "sha256": "836973d8733d6bcc5d6c1495a0f1fc5212aca41e62d2c5d19f2dc6f52215c7f0",
+      "canonical_lf_sha256": "03f3993d78fcdf6e4f4899f38636def5bd48a812a3675298f296f4133df65d9d"
+    },
+    {
+      "path": "client/src/routes/reset-password/+page.svelte",
+      "sha256": "224d90278753b8f584921b73ff73b5f91c45f355b3222a129a16167a5ee947ea",
+      "canonical_lf_sha256": "f50bc0344446fe5861cb4d31306b0ec78c4b501d8b0fb3718b59de2b82c6dfb0"
+    },
+    {
+      "path": "client/src/routes/servers/+layout.svelte",
+      "sha256": "5f2ad52d22780defacdb0f7d771db5f4708e377157f3054cb176c23cdea71839",
+      "canonical_lf_sha256": "fdd8476e6e0ccac1ba38669e443b72a32349f6ab67297cbee8791192e3e1f02c"
+    },
+    {
+      "path": "client/src/routes/servers/+page.svelte",
+      "sha256": "ddef9078bd372cb535e5b26ec8aa7f62a8bf3058fd0dafe421eb44eb49d2d181",
+      "canonical_lf_sha256": "983e841fb459b750ec825fe18eb5f6cb8c2cf0bcc6ef456fac21f3d3ef455b45"
+    },
+    {
+      "path": "client/src/routes/servers/+page.ts",
+      "sha256": "f77ab313face51fc079bc80af096e084091dc483f7ccd7765e6d480fe7f6ad7c",
+      "canonical_lf_sha256": "e1cf0e27d5634d31e41dfd95e0500397a535e8797a38c7669b06c7b97bc24c5f"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/+layout.svelte",
+      "sha256": "de9e760ddd6c0c6012324c4c718f67b9e3337309f1d06bf695d7e0efc255c6e0",
+      "canonical_lf_sha256": "5a72896d0613771c47dea3696d9d9e371d8cfea9732b38220d92c3d85f9b21be"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/+layout.ts",
+      "sha256": "cc5e3133b42e7577efe21c3ec54c94895657baa6647b225577d6c84d1987948e",
+      "canonical_lf_sha256": "0bbef59111d2c7b8e128885db451af9ee7edc51b44981a2177b46ea621e9a584"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/+page.svelte",
+      "sha256": "2656dd93cfebc3ad88e47fa99343e788515941adae0466e747c4f0ba5a6ac3cf",
+      "canonical_lf_sha256": "6158c55cc9df52d5f8e525e3e74d6dd1a11c363c023d94206e580c99d52fd910"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/audit-log/+page.svelte",
+      "sha256": "2f47a4648f2e4edf09e45246b825ac79c1a1e1085a93f879fffa7e4709f6aef6",
+      "canonical_lf_sha256": "d0c0454fee49e9d0674557e71a775de16bd30a45fa16acdcb3100bed077d0a67"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/channels/[channelId]/+page.svelte",
+      "sha256": "71c186f09fb7be7e1837f8d81892c725ee05ca9689c3f1a9f06eb4878415b26d",
+      "canonical_lf_sha256": "9b79f8cc33de0693eb92a38afe0b2f44c266d2fef33b0e25552b7dbb50346b0d"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/channels/[channelId]/[messageId]/+page.svelte",
+      "sha256": "38428d33f1a230dd3e50dfeb0a1a856f73d223ee7f61412fcc19ce73692f02c5",
+      "canonical_lf_sha256": "d4435d507c0d0f36a36d3ba067c287b8a9d619a897efb8dc3deecac10904a871"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/channels/browse/+page.svelte",
+      "sha256": "5c72fc5e803f8337d88940307c36a8b7fc285ba5a84b9dd6def8616c3b2eca65",
+      "canonical_lf_sha256": "a4648811c630c4e2025674b3f337e59c8952b4546d48d9d00f0b99f039ab8d46"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/channels/browse/+page.ts",
+      "sha256": "cc5e3133b42e7577efe21c3ec54c94895657baa6647b225577d6c84d1987948e",
+      "canonical_lf_sha256": "0bbef59111d2c7b8e128885db451af9ee7edc51b44981a2177b46ea621e9a584"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/events/+page.svelte",
+      "sha256": "d6956e841af168d3f9adb394ab7ef9425a7889159344b60a031397f1418fc403",
+      "canonical_lf_sha256": "269291438415a2fa1928cf1dbf948afe6dcb9d73183f81ebb67a5e9a9d5e513a"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/events/+page.ts",
+      "sha256": "ae652b7ef0f42e7bb8fbc24ffd3736d9ef3d88160027a6d96d72624a686f743f",
+      "canonical_lf_sha256": "df54159ceabd53b902a251c37b273f325356eeb39868b72ac8036b982032634a"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/forum/[channelId]/+page.svelte",
+      "sha256": "036baacb155d4181a806aa23c05b58e32885946a0f6ac3530cd04d6d537705ef",
+      "canonical_lf_sha256": "dc9a14099de363da468f2ce04db48216b188a6eb5a25192dd9343bca45240ce3"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/forum/[channelId]/+page.ts",
+      "sha256": "2a6a48b14c849c5a13cbdb46ff35971b16a7b4b4f1a4ce2e25637a645b663869",
+      "canonical_lf_sha256": "365b1cfd0a5a45b9ccc07d398149b7aa1dbb5944d2e6b9fa5519db40b5001e5c"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/forum/[channelId]/[postId]/+page.svelte",
+      "sha256": "4c3363f09792cc3d71cda76f9e358a67fb7aa99076d3653c28c3aac5f876f64a",
+      "canonical_lf_sha256": "ef0448b524e5a519e7dc7a6ebd2bc484a1330140e36175a1e613896b4e2a5dfd"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/forum/[channelId]/[postId]/+page.ts",
+      "sha256": "2a6a48b14c849c5a13cbdb46ff35971b16a7b4b4f1a4ce2e25637a645b663869",
+      "canonical_lf_sha256": "365b1cfd0a5a45b9ccc07d398149b7aa1dbb5944d2e6b9fa5519db40b5001e5c"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/settings/+page.svelte",
+      "sha256": "b202b5750eee8fa847cfeede5ac4ca90b1ef555809105d5f39754d27d9ca15d1",
+      "canonical_lf_sha256": "a00b7b82a10a0f348c590f576d13c3389267ef9f85ba936d9ba2c32f03142c5e"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/settings/panels/AuditLogPanel.svelte",
+      "sha256": "eef19f48e1647467707c6a268844f46fb04c4f131d35d360e10b1ac57f06057d",
+      "canonical_lf_sha256": "7dd679a82f2cb89bdf8dc181d98cebe3984ed7c99ee0d9a30f6942ea11a92685"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/settings/panels/AutomodPanel.svelte",
+      "sha256": "9b2fbd01a252597e0f3a3e7c8795c0cf9053831bdc11335bd7d3fd1cd352c40d",
+      "canonical_lf_sha256": "10435b9d1aabe80d84c1e77caa4e138719a303eb25aec9461d73c5ec6ce25a4a"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/settings/panels/BansPanel.svelte",
+      "sha256": "8895cf855f81e2301f87c52d96c6714f85cacdfe883ab8dd84f3795daa681854",
+      "canonical_lf_sha256": "d3c5169113183162d5494a6aad4855f25c4cdf94364b62db263e180da590d5af"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/settings/panels/EmojisPanel.svelte",
+      "sha256": "c2d61d996d19b4b20e0fc3814fd500c69144fa2592baefbf622e92e05fd6e3e2",
+      "canonical_lf_sha256": "7b20768504ac42b46cabe202885fb5d300bd1d2cf93c0b6f15b8d837a3ba6175"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/settings/panels/IntegrationsPanel.svelte",
+      "sha256": "a3547e5082194c24b477be7aee6711e395acf0546f828d3aed97203686c631eb",
+      "canonical_lf_sha256": "ba4dd752409d3f041c2b2dc1d8aa0d71100bb3750145369b3ffee855c01f2e64"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/settings/panels/InvitesPanel.svelte",
+      "sha256": "c3ac55240fc932da59db81199377c14c5ff773f4ee37b94a5d1a04187227f272",
+      "canonical_lf_sha256": "89bd4d7adcb8892345d5662fab16ed102aea5dca116181d820af0867a6b9743f"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/settings/panels/MembersPanel.svelte",
+      "sha256": "9d7353bc6b53ddcce9aa11a11987a2dca6e02c011b5b61ddb081fde1c00b0249",
+      "canonical_lf_sha256": "49a28ca01b59b06dde82d1527bdd212b402c141ac4aa09a83d8d6dc81ed080c8"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/settings/panels/ModerationPanel.svelte",
+      "sha256": "ad176789b8bf570c598c5724a7256f6c19f2febae04664fa6e497c0bffaed266",
+      "canonical_lf_sha256": "133a37eee8e3252e15b3972eabfadbc98518e057b1625bba9a4e47caca4cd4f5"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/settings/panels/OnboardingPanel.svelte",
+      "sha256": "cceee51465ea7a9ac0de5d442fa2b6a6978f37435a9901725731d2dca3f42140",
+      "canonical_lf_sha256": "7b1c0ac0aa458450653ef0dfa6e9c17e77f16ed00d17d0fb3ca968213dbc48c6"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/settings/panels/OverviewPanel.svelte",
+      "sha256": "177abd21d666036929ab547df69f24c15fd121114c4697d7751f05a1af37bdd0",
+      "canonical_lf_sha256": "579360b47f0104b28611f84d6b5b36e6fd13fca5c3963e96c80e31d5e15bc3a8"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/settings/panels/RolesPanel.svelte",
+      "sha256": "1b523c73025d98cad72be2da4b322acef786f76e08180caa6ade9a08467166c0",
+      "canonical_lf_sha256": "277e47cee939ff84096417adedcdb2b5f05261187fc9bb6f3b109993e7bf0cb4"
+    },
+    {
+      "path": "client/src/routes/servers/[serverId]/settings/panels/RolesPermissionsPanel.svelte",
+      "sha256": "bdb44964f38c2fda2cd60e40219b88cd904b782c25f62a0df01d8df8e8dac273",
+      "canonical_lf_sha256": "26fa65f9188efa44c43800998f50d282e35153503ccb33c41eaffe827c5a5c02"
+    },
+    {
+      "path": "client/src/routes/settings/+page.svelte",
+      "sha256": "8eb2a9af37e60b1da0d35eb586ef4b7c422cdfb3d92bd62b39b949d1fbd89b2c",
+      "canonical_lf_sha256": "50542dffc23cbade42b00a81602e094f5d91efd734399da3b13c8f9a3f7ee512"
+    },
+    {
+      "path": "client/src/routes/setup/+page.svelte",
+      "sha256": "59391aefa16d899f7f72917a1c1ba862504902cea404a829b890cb714bd20877",
+      "canonical_lf_sha256": "8b7c8de668da109f740375d0543f118c6557ea5693d66ada91f602c4aef24336"
+    },
+    {
+      "path": "client/src/routes/users/[userId]/+page.svelte",
+      "sha256": "0f0628d73e8290fadaa2b796ff43a40172641247711e4730d085d36dbc2ea019",
+      "canonical_lf_sha256": "a99833f38f38ecb7022a2b0935bc7da99ff092bf49cf86f6f10c69a34b52b75f"
+    },
+    {
+      "path": "client/src/routes/verify-email/+page.svelte",
+      "sha256": "e3acf3e3749da41b92b1d0319e87d4d9fd71a044f4caf2a6e94768acf068fb08",
+      "canonical_lf_sha256": "6d505f423d2cd75bf358085773375b2fac3ae5cf1756ac8c508bc7ad44618554"
+    },
+    {
+      "path": "client/static/app-icon-192.png",
+      "sha256": "f3cd1a987f78aeb7d0c8415f95a9e81c9b712bb1aa816cf50603aa020cdef29c",
+      "canonical_lf_sha256": "f3cd1a987f78aeb7d0c8415f95a9e81c9b712bb1aa816cf50603aa020cdef29c"
+    },
+    {
+      "path": "client/static/app-icon-512.png",
+      "sha256": "d5c3e653334af7e0dcbb8d525cd898e8a783c6f16ac508ccb4283875427f375e",
+      "canonical_lf_sha256": "d5c3e653334af7e0dcbb8d525cd898e8a783c6f16ac508ccb4283875427f375e"
+    },
+    {
+      "path": "client/static/apple-touch-icon.png",
+      "sha256": "8824c79156f780c8cccbe7a2ced48cf59077fca3a38aef5e390d155f4e5ed70a",
+      "canonical_lf_sha256": "8824c79156f780c8cccbe7a2ced48cf59077fca3a38aef5e390d155f4e5ed70a"
+    },
+    {
+      "path": "client/static/manifest.webmanifest",
+      "sha256": "c6a54ecbeb3cad857989c8069dd37867c90e00d68aa53345f29913d50b4f5657",
+      "canonical_lf_sha256": "f334ecd6494dec5ede9d9711aa76bc5e72b788273a7912c3fa87902b37636298"
+    },
+    {
+      "path": "client/static/sw.js",
+      "sha256": "82446a8ae43e5c29b0e8c21c55654587eaa4adf6b9e2bf3ef1485281b91841a6",
+      "canonical_lf_sha256": "c180c6e41a84b18c7f4eb6c34589a3e637ee5cf75e768de962818daa00f7938e"
+    },
+    {
+      "path": "client/svelte.config.js",
+      "sha256": "04013d8c3462e12092e7589db4c05c781b9a1ebcde6d46b897d27fcb5f98faf0",
+      "canonical_lf_sha256": "cb76c77c69dced478ff7c2220c332048be33850da0955c8b3701044e2315d90b"
+    },
+    {
+      "path": "client/tsconfig.json",
+      "sha256": "d365eb34f8cb5002d00158ebc356b495f2bf0238ad64807deca526050ffde4f5",
+      "canonical_lf_sha256": "0374d911148fdc6cd5eaf484a277ef6d685e71f1aec6d2812c412c97cf960e94"
+    },
+    {
+      "path": "client/vite-plugin-pwa-version.ts",
+      "sha256": "357e230d6d13d36af522207def5d9fc32171b118a6f513c636eca13fe48bdbf6",
+      "canonical_lf_sha256": "1085a4b8536194784cd3b9b540e209bd1f0e18a33c62c93956e53ed657b1c105"
+    },
+    {
+      "path": "client/vite.config.ts",
+      "sha256": "b9f38c63903f9351a6bb8c999866a37e75a75ac65b84814157c71dcb8f357607",
+      "canonical_lf_sha256": "7444ca3517a3a1418f28a5f55d7c6f6868f52702fcd4944093afd7a43bd0a82c"
+    },
+    {
+      "path": "crates/INDEX.md",
+      "sha256": "5fa21afb608ebcf2891eca6c0205d74bae415cb721dbc20f43ec6018551636b4",
+      "canonical_lf_sha256": "c60dfbc22bc1ca3a0656bedf7664084161b28d5fee27581c8cffa94f96c5326c"
+    },
+    {
+      "path": "crates/opencorde-api/Cargo.toml",
+      "sha256": "63213cbca8819585c7663b97a3dd9459a1fcfce7669a84bfcc9743b9a40e5613",
+      "canonical_lf_sha256": "4966d4c1b53ff0c3e48a6fcd3b1828db9866d9b2a09340d57fd1559d5dd740f9"
+    },
+    {
+      "path": "crates/opencorde-api/INDEX.md",
+      "sha256": "79d30cee47c51197c2f787b36465c716e7592c6150887260cc310dc63cb09510",
+      "canonical_lf_sha256": "be71bee6e961a2a765e24100d41a312e0f6f074dcc0450fcb5e26f4699ce5a02"
+    },
+    {
+      "path": "crates/opencorde-api/src/automod.rs",
+      "sha256": "720c6e23eb688517d02354d381c9b98fdd0f50f4cd97e864951194220a5bfd19",
+      "canonical_lf_sha256": "4d06bb69842f4657a1bd39c660ff8875fc78bdfc36d791eb631628d6dcf91e5c"
+    },
+    {
+      "path": "crates/opencorde-api/src/config.rs",
+      "sha256": "b602ec3380df381c48ccad43eeb14d08111af4f9b671b90989c3789570b04dcf",
+      "canonical_lf_sha256": "dbf8e7aa7644d805330884a55eb4998f5e6582fc8815818c80ba7029b782c593"
+    },
+    {
+      "path": "crates/opencorde-api/src/email.rs",
+      "sha256": "c8eb7cdabcd6cd7567b4ec47c319275c7c5df6a16ede2a9314b49ca87ad5c8f2",
+      "canonical_lf_sha256": "fa1ade75e2396bc57538cbc8e2311b9f8d33b912ebc09b12a2280a0876579058"
+    },
+    {
+      "path": "crates/opencorde-api/src/emoji_helpers.rs",
+      "sha256": "69b9f3be29546624834e17c42a6eb7d21d0e7b62e5a9c5f2176eea0da3769308",
+      "canonical_lf_sha256": "de523d50d53d831210ccfdf53ad034a609729f42db6f3a95d0a1e1f35660dcf2"
+    },
+    {
+      "path": "crates/opencorde-api/src/error.rs",
+      "sha256": "8e7a8b6ebc66c25b39b1006a8c8bbedb1a01bbff86f629ca746051901be2dbe3",
+      "canonical_lf_sha256": "357e770eb160e301f57d9fe8ddd74370df3df9bf1cbfd46622ad75c9a23a2406"
+    },
+    {
+      "path": "crates/opencorde-api/src/federation.rs",
+      "sha256": "dc4b8e614113baec78da45a0cef679351747c5b0b487c2ad1946c785523c2abd",
+      "canonical_lf_sha256": "337ed6cf31d5f7db7584b73934c2c83b20bb48530f3c8a8e6a15749325a28f1b"
+    },
+    {
+      "path": "crates/opencorde-api/src/identity.rs",
+      "sha256": "1a2cdf2f9e3f47b6b03bbab6f6567dd2fd8f94b73e8125d7f3fc06d883c909fb",
+      "canonical_lf_sha256": "d1a55f0aabb94caa2073648c1897c86936345aa396fc9fd077410ac5289e457e"
+    },
+    {
+      "path": "crates/opencorde-api/src/jwt.rs",
+      "sha256": "3ce3e7f0ac59eef7db662384e4cb6d239467e185643dffdd25bfdaa63d07ee6f",
+      "canonical_lf_sha256": "bd1ffc276fda7a63cbe5467699cc5010b645f7c1480630db12dcb9cc792e9764"
+    },
+    {
+      "path": "crates/opencorde-api/src/lib.rs",
+      "sha256": "858aca99e77c3ca65e79aa3c72a5ec3b770c98642b87e611709ba1d66d517a2e",
+      "canonical_lf_sha256": "da8c5cfc447e9cfcaf4ee36819e3f8c8272f31d2f12a0972eeb3501b3b492dbe"
+    },
+    {
+      "path": "crates/opencorde-api/src/main.rs",
+      "sha256": "1215fdd383349ba6f79722750bd9d9ddb8dcf4f016ceb3866b9fb14b789918e1",
+      "canonical_lf_sha256": "a93088cae0514781b8d77abaf75cce48ba4f9ffd096b579426ef988190965e64"
+    },
+    {
+      "path": "crates/opencorde-api/src/middleware/INDEX.md",
+      "sha256": "6df83b63f127d4358258d01f088bcc53e413357cf4cfef847948dc290fdd3a55",
+      "canonical_lf_sha256": "ba448e37cb40142fa8716338d75db8161b264516704567bf39b85c585ebb7cd8"
+    },
+    {
+      "path": "crates/opencorde-api/src/middleware/auth.rs",
+      "sha256": "712858408edbe4008994506ca341137c19a195e670ab329b1894d74c3f051af8",
+      "canonical_lf_sha256": "fd7c02b3d690ab58961f41ee1da184875aada0e485866e18534c43ce796ac701"
+    },
+    {
+      "path": "crates/opencorde-api/src/middleware/cors.rs",
+      "sha256": "c8c47bf3299c90b384f9c835326ea842c6fc35483bfe994710ca45fbdc1485a8",
+      "canonical_lf_sha256": "2fba807f6957d51d04a0b6c28ca65e9804431b8a822fa2f16c80be7681848fd1"
+    },
+    {
+      "path": "crates/opencorde-api/src/middleware/mod.rs",
+      "sha256": "da28304959ba443e97df65886f370767d7825706f1c3e5eaf5e901f63c5867f9",
+      "canonical_lf_sha256": "8e8f0807b4942ac2c6974f2ccb5cfbafdc33e36b5223c18726bfafbb49e12413"
+    },
+    {
+      "path": "crates/opencorde-api/src/middleware/rate_limit.rs",
+      "sha256": "9c0f350b729631368142a1904525b2f61c98a571b6e30c20f96dd4b8a8324c98",
+      "canonical_lf_sha256": "58522e8f5668a6fffd40e3d6f68bffb9c0c1e7e37e65ebf7b418e913ff8631e3"
+    },
+    {
+      "path": "crates/opencorde-api/src/middleware/rate_limit/governor.rs",
+      "sha256": "8819260ba92cbbb14dca6750f707264b3e3a9bcbcacefba100d7c64ca9cd8aec",
+      "canonical_lf_sha256": "54bd9e91c889cfdfae3309d3c66dc010d77b21acf2e6a2b47bbec376b07393cd"
+    },
+    {
+      "path": "crates/opencorde-api/src/middleware/rate_limit/redis.rs",
+      "sha256": "829583ec51231c36181d34e73e1b8b9ad8038dceb5a0e42d9b2d53e45f32112a",
+      "canonical_lf_sha256": "1223b4e8a2053fa08bbbc1ebc5773d822fb927a5431ee619f876441730c35f1f"
+    },
+    {
+      "path": "crates/opencorde-api/src/middleware/request_id.rs",
+      "sha256": "d6baf94e52ce3f9ca88f2ecc06d64da3733c4e1b546c09d9d6132fb1b021c56f",
+      "canonical_lf_sha256": "5a5d043ef920c4ebaf8ef68e4ea4b934d4bed4dc4b5f0df560d3ba19e9145006"
+    },
+    {
+      "path": "crates/opencorde-api/src/middleware/security_headers.rs",
+      "sha256": "85849f3793b3ac9d5c49a14c33fbbfbc60d6e7e3f1ab2101b0f39d76872cb997",
+      "canonical_lf_sha256": "543c5af5c2211f22b612dfe83bb5cd3ef07f228ccdfed03837dc11f7bd45724e"
+    },
+    {
+      "path": "crates/opencorde-api/src/push_sender.rs",
+      "sha256": "6b2c0f252d8aa31dce1a4112980a3f6b7580102843a83c35994b42f10da36d77",
+      "canonical_lf_sha256": "1c7884ef46a7f76205d3c12445b98e0c09b2f88a1aa1d9bba8d8ae526b89084e"
+    },
+    {
+      "path": "crates/opencorde-api/src/register.rs",
+      "sha256": "b58359cf31244d9833ed929399498615dec55c9240a9a5eeb43b38553de56832",
+      "canonical_lf_sha256": "a45d6c9af93ee0fa557878611614272805dcba0413cf98c99684fa85a30b01f3"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/Cargo.toml",
+      "sha256": "cc3256a0cefbd4156baca93f27dbe3910ba323d663d56f9de4de8a9caadab045",
+      "canonical_lf_sha256": "6b6effc6aa9028172bd9a36a7ec1ad8e337599ba32023494bceb3e3be1b1f3f8"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/INDEX.md",
+      "sha256": "ef74fa054a134bdbfa76904b8d4af77bfbcd0dedf2b9bb041d206f8f3eba8437",
+      "canonical_lf_sha256": "ecbceeeadfb13210e5ffe06791486431e819bf460898caf1f955c38d24dc3ac0"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/admin.rs",
+      "sha256": "6d65eec8b8045dd7591854dc0f5cfc32c9a40e9b2e7defb2d91ff6ffaadd429e",
+      "canonical_lf_sha256": "d11d11508a36f156474042e9afa5a9764f1adb91b2210967118447c201d419ed"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/admin/admin.rs",
+      "sha256": "b58c391aa70f995c987f04a0c9c7da93639f16ade7569476490e6d51bfad3695",
+      "canonical_lf_sha256": "864a1005be39868575246186bd3ec0b07982bf7c94ef62310480c3294e7caf21"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/admin/backup.rs",
+      "sha256": "c8edc47d5ff4c3591e4a8bded1d13d8335f1ae17bd581f2512cf7d501b65e875",
+      "canonical_lf_sha256": "734867b171a3105fc9446adeeb10bc3d2601da69d74eff16c33fd96bbaff8481"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/admin/branding.rs",
+      "sha256": "58d995d4a7038ef263f2f6bf9b9977faa8ba4980500ba800192ad94d413e848c",
+      "canonical_lf_sha256": "516482770008508bdc44a7f750ac6c187b7fd61cf264267974d4e7bd98d0274a"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/admin/handlers.rs",
+      "sha256": "6a9ba8f6773734fe1fde9fcb2886c5acd32772c0530cbbd03077ba2848b6d7a1",
+      "canonical_lf_sha256": "4fbcb7d7926a948b521efa1a4adfc6d5cdd058a754ae4ed84552c418a7b99f17"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/admin/health.rs",
+      "sha256": "5c3b2d46721162fb46be447f7178d186bd56eb006ae6343df724406c182dc04f",
+      "canonical_lf_sha256": "5f49d60372746054013b1a2106be43752a991346152c886071c128fd77c82c82"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/admin/jobs.rs",
+      "sha256": "e36e4cbc2d86bd64a533cce797d9713eed342402cb73e31664e8421b098da099",
+      "canonical_lf_sha256": "5f658daa777ad5ae53f7020a041a5e8e86131e814bbd06f8fdba1ae86c34472c"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/admin/quotas.rs",
+      "sha256": "c4299dbcfa5e1e26a6cedcdc1978e288ee28b35d12ec17225a0d4e34a89a2a56",
+      "canonical_lf_sha256": "fa2748f7af3d293468c1b452b3155988fd13bc838b2f54b429be1b1c77ac5942"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/admin/rate_limit.rs",
+      "sha256": "23d6fc974b94f6166d49186687e2a723670bf7288a37fc850121bbe2b3701550",
+      "canonical_lf_sha256": "d918b68fdd52018abe56df2332265791854b37b12c558674067ceaf790cfb33e"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/admin/storage.rs",
+      "sha256": "221c1052120fc68038ede1cebc109a9226a8fc5c83d986a8e6e1def271912c96",
+      "canonical_lf_sha256": "8f674c9f6d5f92edd5ff9dd2569097263ffc4ef6c06ce889d519a6af8d465201"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/admin/types.rs",
+      "sha256": "1288fd671db0922fc0b867814d3e9fd0334e620f35bc95d0c4b989f6f69708b4",
+      "canonical_lf_sha256": "d893b76574d18e1614ed8a8be6b9cabd0f67976c1db765fcd38f459cc97b74ce"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/admin/upgrade.rs",
+      "sha256": "10508e03c0a1557eebf6c4980017d0b5d91a69f3d7ca529e3a3b73a969677309",
+      "canonical_lf_sha256": "29641d783a10cd7db9f2472e139db87e1aa7e38ef5a1625673bcf2d5061505a1"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/applications/bot_create.rs",
+      "sha256": "a89586b6279e8717e7e7546f6fe2771597ae7859c165667bd2d3ac1e21d96181",
+      "canonical_lf_sha256": "902bb75e615980e022b8fb8296b0cb8a7f53f7fe3e821973d9bdabf571860916"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/applications/create.rs",
+      "sha256": "e07463ce21c81813498974c931a341e1c1a9b013c116fb0944dc4d8a1859782f",
+      "canonical_lf_sha256": "c96bb78b1eec3c191e64b4a226c0f28d90d39c0affa22409319a16e72e0e91bb"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/applications/delete.rs",
+      "sha256": "aa9974a55231606f3693c3e2aed9a05e6a3d659e1f361e6e4fd29f4d58468f36",
+      "canonical_lf_sha256": "8e0514afee8b113eabb89f98fb26e41ec080a5ebe24eeede2e27c3a78be38471"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/applications/get.rs",
+      "sha256": "9ca45812a6f3bf26e1446eb1f87ae430d1780bc51b44735e54b9a763565b7912",
+      "canonical_lf_sha256": "4742d22352ca0947ec03a696b5fa104027b8c47cc61dd4f93530a20c3f6ca1f7"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/applications/list.rs",
+      "sha256": "d175bddcc5af139d3d0b2d348c50bfc78cb82683d06d10157cb1342df0b8c8c3",
+      "canonical_lf_sha256": "8f309fa753ca19339c7531481e04ff6a8a19fe1be8f6e1d0e9274ec7af02eb60"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/applications/mod.rs",
+      "sha256": "337f4f50881d3298bf17e111b77d80fd2e9146f4e25acd992a4c676f1b21927b",
+      "canonical_lf_sha256": "92b1d6196ffd60a6788e45740cc41338c7184a23861741054440c8a98cca0e1c"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/applications/types.rs",
+      "sha256": "f77d8a2976c39bb59c9eb77138b539a4c15887c198005db7d72afba76a6e0a65",
+      "canonical_lf_sha256": "0ac23244178cde1a4506ec3c70e3e41e8bc4740a14af837582b0fe7b8cdb75c2"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/applications/update.rs",
+      "sha256": "1a6f28bf0d33e18fecaa849609b1e5e2053a9355a7533cc72041961d666af50d",
+      "canonical_lf_sha256": "9774964808058c7ceabf41c51c3b4132011474a6a33aec5e1a97f0e7fc97f945"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/audit_log.rs",
+      "sha256": "bd283305bbfb975b852829bad737ff976192382a70ee3a2b6134ab7c67a6ef90",
+      "canonical_lf_sha256": "60915d1668779114fcef37a41ab91ebc79f0833cd20710a1e86c952436a3f620"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/auth/INDEX.md",
+      "sha256": "9e0d7012ed1f5aafe4682c616440a42376526430a2062643c2bec2e1d260a15d",
+      "canonical_lf_sha256": "7fefc76e46dbc4478805574a35a9398ec0b4469f9dd95cc4eb14d7db9d100d53"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/auth/handlers.rs",
+      "sha256": "7bbfb84e6b48c2479d9c6ffd7d90abb623aa791897785ce1f10ce333d5493957",
+      "canonical_lf_sha256": "b88fe7ccabd23490f6ab16f384e9251f724dc0bf62a258528bcfc9d4bd654103"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/auth/mod.rs",
+      "sha256": "9196332a417a1560ca742f385686881c5b82466f3fc0f1293bc2f4651d890a87",
+      "canonical_lf_sha256": "60c2cc2aae5d8034e63b5562a9958f79a1c7a257a365eb8f96e7107cc77d6e83"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/auth/password_reset.rs",
+      "sha256": "1db487e3fca5fa2d42775ff92954d7c1fa46e6aa7d987e1aa64cf0af892a119b",
+      "canonical_lf_sha256": "831cb919515c2b762eb4feed272c5f4e711f9362bf181883ef375f7736836a4e"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/auth/register.rs",
+      "sha256": "879fb5051e1bdfb9827f113aff6a05e5b0e250ecaf61581c1126228fe53ce204",
+      "canonical_lf_sha256": "6929810b17cec40c622cf6e908744cc3a62057f0332664af5f9fc472d3a8b42e"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/auth/steam.rs",
+      "sha256": "68071efb87c2092bf9a43a71c1ec121882e06528d14f9e26fd4a06cde3dc40bd",
+      "canonical_lf_sha256": "0f5aaa4ab13b924b5646e75e04aa54650194c5b8f6e9cf7557aa08db0ee3c449"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/auth/steam_verify.rs",
+      "sha256": "ef892b42d1b351d24320c9de54b851d8011689e6fa297a12e70fbaa950090029",
+      "canonical_lf_sha256": "a7453046c480829a021101a49cf20479147a2148d49761e449b0b2d6596dab9c"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/auth/totp.rs",
+      "sha256": "43e0f618f3231ad8606b363352027b4bfc52a7095e237fa380c0c1e564d90027",
+      "canonical_lf_sha256": "0a203158418df59b7a3f0920eaebcc7ac3791ef9826869565455e50f33119069"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/auth/types.rs",
+      "sha256": "ea3d76d9fa5747cdc18451f26d12c2f334c957771947bbece3528e1f128f1bd9",
+      "canonical_lf_sha256": "47adac8b2a534d8e816599da407a06c1b5a3901147b702e9becf2412f0b5033e"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/auth/validation.rs",
+      "sha256": "84d5813a7741c1c9a0782c874d72b608f93060fc5c4f6c8eb5ef46f580efe9a5",
+      "canonical_lf_sha256": "2fc5cc626c742055a8d284da92df9d259398ec26a5e9cdecb15dd553fd545bb7"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/auth/verification.rs",
+      "sha256": "8e6bc952a9451f1ab670cef06bd3c5308a423d0ee4d88116624e82d0ed7ea8e3",
+      "canonical_lf_sha256": "bafb981930361b390c0c1418f9aceac2727b555767803edea183fbfa42df3b03"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/automod/handlers.rs",
+      "sha256": "91eb6ac909f67509076265c939e5f1096df39338c30d6f5fbf7bad2f6cb193be",
+      "canonical_lf_sha256": "8b6a30ef332ce058e2ac1636f72d30eae580b1396ec71f12297b02f5658b472a"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/automod/mod.rs",
+      "sha256": "b7d38e267629fe7ecb02fe9ff143edbfb714c26e76aaa80eb2f9251d213394c6",
+      "canonical_lf_sha256": "00410bf449f033fccf372a681bb62ca46707e56cd33643d98378b8c8ec952211"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/automod/types.rs",
+      "sha256": "0778db5b20d6fd5bdf8ebf4ff2c69c785275a855b4e060c83dd8149744b65355",
+      "canonical_lf_sha256": "e619a78da4cf67c69bb866f660402b7bceed19d9f8478da1ade4250b5410aad7"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/bridge.rs",
+      "sha256": "7e4def09c8979c98cf2e44b582aef1c8e02c5caf6e64ba08f468e6ed774c5b3d",
+      "canonical_lf_sha256": "16978d52c8bf41cbe5152988b260200a108d89c2d5ea1dc3d3d7b8aaf4ef4720"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/channel_overrides.rs",
+      "sha256": "33fc2c4962c9d7711a8ed1cdca84dc95f947301cad2c3a4f0745c4f4aca27e67",
+      "canonical_lf_sha256": "f2f2e4e327f55e5326eee7734658f4dbba370d97f38e103240d78292f2c57bf1"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/channels/handlers.rs",
+      "sha256": "07ce8a7568b269953074309b356b5c3cb6a31f6c573c5c55f9288c32cbb580c0",
+      "canonical_lf_sha256": "f0895401440f4fd70457f019b6a57964eacd554e1aab18e0ad79a2186b30eca5"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/channels/mod.rs",
+      "sha256": "550f109ca4cb9a35fe4a0f5fe226aa7cb9337a31d7797d6c55e4e980b45e975a",
+      "canonical_lf_sha256": "1930dc6926cb95994587d75bc92a1d42eff5852cdcde64d348f5cf900bbf2b58"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/channels/types.rs",
+      "sha256": "1494153851f067e548ca517bacc0cc0530a95d1d96d78a48776625671c105b61",
+      "canonical_lf_sha256": "047f94f9db9da15c9452dfc85ca2ab080be62a79946dd9dfd2c7238464e1e682"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/channels/validation.rs",
+      "sha256": "da90e1c47ef98cbf7ad66cdd0529a74d7a2c259b6ceb6f918375051ae9821c3f",
+      "canonical_lf_sha256": "8017a36474f8ea9673b9b8723f4f0bed3085ce02129d62ca21d8430e65310358"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/data_export.rs",
+      "sha256": "0bfeb1988475e4e77b2c092d9680a3c6004e054620d97d8ca26eba0174bcedf2",
+      "canonical_lf_sha256": "c5f167e4363507d7f117ddcb1a209e66db4850e478d1615e6cc9b01de5f5aaf3"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/discovery.rs",
+      "sha256": "188482f6e58e1a9669d29c97e76592e32718328d7ff446b34f8e0b506cbfed02",
+      "canonical_lf_sha256": "8651768d507aee47a91cb5c58e64f57104a5e73052aa210a740f9d49248057cf"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/dms/handlers.rs",
+      "sha256": "c7e0ecaa0b7aae239b7c83d867c09381c2bd67254d35a901f5c17e835ad24261",
+      "canonical_lf_sha256": "b15feb01dfecc3d1c6c79ffe5eb2b455c21d031e317ed1f21d9b4bc9309a4615"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/dms/mod.rs",
+      "sha256": "f0d0d8d70405298c0b5410d210b5f2ecc96eed83c05456fbafd516bf43afb6b0",
+      "canonical_lf_sha256": "29a701f0114df4a305985d5300aa760a052426cf27eca70c0ca3c0cb6b018910"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/dms/types.rs",
+      "sha256": "8ea6148608d53a0b9d703378b7ee81710cdbf42e601adb2c541072fe087497b3",
+      "canonical_lf_sha256": "cbc55822c713dc2abd97862ce93093a27ad3f38b8a9a951bf6604c5fe62ae485"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/e2ee/groups.rs",
+      "sha256": "532fde45302330c4c4c7610851f9d4db0ed48cbaa5f3041f01979f8ac9a3a334",
+      "canonical_lf_sha256": "ad8155f9af5bcdbb8967070b2a922434d9dd41f451f9bfdd04b3a43c2a371fad"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/e2ee/key_packages.rs",
+      "sha256": "167fb4d79339c21337bcf11fa7f5d0ae5e04a7f0c15590f044bb349c56e62485",
+      "canonical_lf_sha256": "066e997018de2fde5c55100588dce796f25cb5272e5f404f4485ddba3ed1090a"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/e2ee/mod.rs",
+      "sha256": "5a08c91b9852a378dc8837d8c19eec106e1376978224872b20598d9c754e3473",
+      "canonical_lf_sha256": "081823f1b746e3a1a01fd67bf6f060ae54854b6edc24faf8432fc6caacb5cdd7"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/emojis.rs",
+      "sha256": "dcce1d5f4b9c0b97be1ea3b1e3b8d7491a3d1c073d371a9f0e259429ab54ec42",
+      "canonical_lf_sha256": "822c5d7fc6462363a1adc9eda3af05168352bd937fe20ffabbeaece8ca9b98a6"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/events/handlers.rs",
+      "sha256": "341c68ae5ae4961ee80720ec0e4074a48baef3751e06539b5ec2d4729d22caea",
+      "canonical_lf_sha256": "44c6dc5ae97299205d889279edb8dc109bd4757dd1e769c6496c2421c2cc5ae1"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/events/mod.rs",
+      "sha256": "b85681a3f64df080935b6d2147a84e0dbc2d10493eba7f52168569242cbd2f07",
+      "canonical_lf_sha256": "7646a2ff23a9246b27713d0ad0b07f94860fdc763a145b155864d27c4888f919"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/events/rsvp.rs",
+      "sha256": "a51241dc8bf73b31e57fdccd65200745fdde3e5245e193e5781477ea5d35761f",
+      "canonical_lf_sha256": "34110951d3cd935eb3b4bf5550bd79695dcb788987f3a1414034a06da7c5e5d8"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/events/types.rs",
+      "sha256": "150d66e611a4bd08f69c05df319adf16e2f0716a200c4eb5f10af544d082d069",
+      "canonical_lf_sha256": "cfb67ec73aae30898cf5ea621212e086dde0affaa69a1dccaf84a877023779c8"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/federation/handlers.rs",
+      "sha256": "78eea25c7da9a6f909c7f1b3a5f1e1547d5fa0f8ca0a15c28d81f12364685010",
+      "canonical_lf_sha256": "11cc5c51579d420f7664223b8023e3b6e8a1def44aba7d76875dbb80c3ba1294"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/federation/mod.rs",
+      "sha256": "39c66984475d678c1de3319b1dc582aacdf72ee2ea104769ce30d44e911950b3",
+      "canonical_lf_sha256": "1caeddaa8a40e7549a1971310206cca019315dfc47d3dc6d0c6df96ea9f1f31f"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/federation/types.rs",
+      "sha256": "f26fa13c561942532abe4196b62f1a1597263bc8777673ccdfbc27c83f9efaa4",
+      "canonical_lf_sha256": "f5d6e55c11e3d9cc3de70ad3fbe83a735567a14bb3d44c623e1e0f70d0457eaa"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/forum/auth_check.rs",
+      "sha256": "b641020dbd12ae6b7a5720c2fccf4a3fcd7d64606bdc16fb3c48f84678ddaea5",
+      "canonical_lf_sha256": "0da14e867a4a5f72aef52df563c29c4e8169184586c89a0df28c1bc4b51feda3"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/forum/handlers.rs",
+      "sha256": "1ac51e0306645d42f5930ee14de8eeb772a17d0f703da04a64846b76a2e4eb04",
+      "canonical_lf_sha256": "b961c72603a31159ff35efa243bfffb8c3cae269b4e70b112e4486c61d1e46a1"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/forum/mod.rs",
+      "sha256": "6801a93cbb985cbe9d6bdbc0dea16b2681d64c15508b47d187153bbcfb939c10",
+      "canonical_lf_sha256": "20fc3fe5a65be8b5f977b28b2e40416656c06067d3c9758224cfc78742cea6a9"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/forum/types.rs",
+      "sha256": "c5d7ba8cd81d9d837d1f0b688c4d473268ec0d88005bfd93e307b11123d0b9f2",
+      "canonical_lf_sha256": "26f3c8746bae0245b19b3866b458bdab5e29b7d0d820705d84076fffda8a5e64"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/friends/accept.rs",
+      "sha256": "b9dc7bc0927a7936d0afc3d3a79a6d9fe38ad6ac3456a230435049f3ce8a5bba",
+      "canonical_lf_sha256": "817780510b36d8d60914b72685f29204b08e32a365ee4671bca6ae82375399db"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/friends/block.rs",
+      "sha256": "a93bf740aaf71939f16cda3fc851cd31088964dd4d2e6d33dd61bbafbcb0a996",
+      "canonical_lf_sha256": "47cc7375e6c6a755317c9434ac78da8e91510915971af892f158886bf3a14a30"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/friends/blocked_list.rs",
+      "sha256": "de7657e29898a8711d0674154f8e6590cf7e2f543261b03ec7010c4da5ffd1bc",
+      "canonical_lf_sha256": "df5cb24180ba0e385d08e4deee453a18231ea66f891cab7faa51967363305c12"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/friends/list.rs",
+      "sha256": "d918655e3a5f7d57bcd1ec697415af738c5b1968f187e1906229c02fb05e8699",
+      "canonical_lf_sha256": "78adb86dd33f33205608180046df8710fa69c60a6c97e97659b305467c0cdd86"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/friends/mod.rs",
+      "sha256": "681816321112b82223db0b76de2108c3bc225f8f653824d735224efd1558985e",
+      "canonical_lf_sha256": "bc34218ce866f83c005ba71abdc7dbc84f4756ff61210ee46a7d39b239eec314"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/friends/mutual.rs",
+      "sha256": "83bc6e02a641358cfa37bc8da46d6625fb1a6bac3bc92fbb52f7dba81370defc",
+      "canonical_lf_sha256": "542d6e3a8d9158902bf625a302a7f2623aa9c9f9862bd24aca9a7fc6a9024dfd"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/friends/nickname.rs",
+      "sha256": "0d1616c34ffc500251f2f7c6fedb735118050086c3415b63504633e0a3b3b176",
+      "canonical_lf_sha256": "827ea5a59341c4c3897e30a831009abebe7bc17422472240a3205e1564e48b44"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/friends/pending.rs",
+      "sha256": "6fc2b5fbe00ac5c389127070bdbf6063820ee2bf289154377541178c8498f167",
+      "canonical_lf_sha256": "46ad50da9f8f1e8b10ab4369b85395d44ad0ae2608e4caca8124f80056770c52"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/friends/remove.rs",
+      "sha256": "22ed89ed20d7246a18ec071153e98209e4ce7d4e9fef88a546d4e3c101775179",
+      "canonical_lf_sha256": "b78d8cd94ede05a68330bd5374b38f1d95cdd9d1c03e95b317cef42041153067"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/friends/request.rs",
+      "sha256": "a0cc3bd2e13d5258c533d0a9062fbbed031e3cefa5fb806e91dce5ddc58fddd3",
+      "canonical_lf_sha256": "147ccc0e9b0ee3c2aa148c13a0312f14249b380d2288ee29b4f36c6ff0fce223"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/friends/search.rs",
+      "sha256": "38869282acc25e7d211a7a4aabf94e8f58cb36421e96fa821d5cef99b822442d",
+      "canonical_lf_sha256": "100533685364628b9ff06816d5127549faa385a0ed05f1cd6dd51cd1cf8401de"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/friends/types.rs",
+      "sha256": "e5cbc3c00c22762aff078cf3682c9109719a975f4439d37d3f46fcc80049b3d6",
+      "canonical_lf_sha256": "1b297fcc32ab6b04a19050ff2087774a1b4bb8ba351e7d382b7d2df843894301"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/groups.rs",
+      "sha256": "18c76a8639f5957cfb52260af3d70ba816567244a2aba1a73a903037be2dc2d8",
+      "canonical_lf_sha256": "3000c581679a268e1411f82769c65efcc399ffa538a11e4e517886393bad8e23"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/health.rs",
+      "sha256": "634c09833cb721e697289e88943423ed4ae310c564762a8d6a6f6ea8c390921d",
+      "canonical_lf_sha256": "7c171ae954b1b202713dfbafd4d88c50f6a498055de83457296fd0b5657b4578"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/helpers.rs",
+      "sha256": "cc966ee62c5c1c248c0f0fea4badebd4f3f06fced109da7e8cd5961217023f58",
+      "canonical_lf_sha256": "151a49434dfa8832971072b00b19c120cf391ca258807283ff6e5c4d8ccc704f"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/invites.rs",
+      "sha256": "46a8bcfe1dd250897929da77b457934fade600067638d7416653b92409c1eaee",
+      "canonical_lf_sha256": "aaedec728825caea4993948f4a43f6ea13e9339b7709a2f4d10dd1452244c041"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/key_packages.rs",
+      "sha256": "05b820c52dac044245e5f215ca0cc157a1dc18d739ffe5b9e4b5fe98a474866d",
+      "canonical_lf_sha256": "930f84324c6b4a305045523e1aa65d89239fa3f3444873db4cd6e4ba4701e93c"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/members.rs",
+      "sha256": "d97218e9e6988985a6f7aa8abba560fea209b273cc22f16762d45d9946a81e1f",
+      "canonical_lf_sha256": "86f832b3b30c97be34b4679792265dccc906ce8751cbb9c2487d618d3f532848"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/mesh/handlers.rs",
+      "sha256": "ae3b475e4a0e4d90ae78f6852f5b2beee01aca7afc6477806449e65aa690cd76",
+      "canonical_lf_sha256": "e638b1337516cf6cb189c8571c0785f1ec5b95488e9ee3d5a4debf58ae3bdcdc"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/mesh/mod.rs",
+      "sha256": "75d323712caebc5e768be7e685a69584c57a20d3cba8fd179c89b8f7d0fdd3a1",
+      "canonical_lf_sha256": "83397a4ae0192ae4d0e9252821d149c7516811df95ac8439d831ceea4fe1c1a4"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/mesh/types.rs",
+      "sha256": "e544d52c4edd4047047e6645f62dcf7785445d4e3001124c1c9800ac64b92573",
+      "canonical_lf_sha256": "5f495b23a1bd76f8ae69efe73f6edb7ab73cb96138249ee3fc80ce5281a14847"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/messages/edit_delete.rs",
+      "sha256": "715de528fd0363584945cce8889530857b41fa8a60ef81025e64d0d1d032804d",
+      "canonical_lf_sha256": "ddb4a608496f3539a54abd8d98c48dc4ca3b91e94d9e81173ef82b0f560d3c47"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/messages/forward.rs",
+      "sha256": "5ad3b36c0cf4b560f74a61bcbe6ba7728f420b7928a6c91c0a4895a546fdcf74",
+      "canonical_lf_sha256": "849d62550baf1f3eace013f77d66c9ffae3c6d76f5945a9523f403400ca75c18"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/messages/handlers.rs",
+      "sha256": "eb6bcadac31e110029b1ef0a884d64939334bd62a17f9469263bc16f209e034d",
+      "canonical_lf_sha256": "74cf91a1ea03788e9f25b25453e01e4cabf4f208f408f1fba253e238e4e65dc1"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/messages/mod.rs",
+      "sha256": "0822f2a90e39dd82df2ef2a70a4d1dfde9745a9c7f264cb92ba443f3e6a83b7b",
+      "canonical_lf_sha256": "0822f2a90e39dd82df2ef2a70a4d1dfde9745a9c7f264cb92ba443f3e6a83b7b"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/messages/notifications.rs",
+      "sha256": "180547d95c0da801829b65f124daa88665d9e66ac2a591a01e4320f9460622fe",
+      "canonical_lf_sha256": "180547d95c0da801829b65f124daa88665d9e66ac2a591a01e4320f9460622fe"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/messages/notifications/tests.rs",
+      "sha256": "1fbe7d6e721126bfd35cb9dfe3576f487ab52fbf8dfa277229c12e66bfffc094",
+      "canonical_lf_sha256": "1fbe7d6e721126bfd35cb9dfe3576f487ab52fbf8dfa277229c12e66bfffc094"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/messages/poll.rs",
+      "sha256": "0f4d509977e21e54db4f1e36558cae98fca692863f97e2e16cecc981a270e841",
+      "canonical_lf_sha256": "c43678007fef7bd9e39fe041c336290e86586e422bffe37d0d0e0564789e7db2"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/messages/send.rs",
+      "sha256": "cd87c490d5c395d755130f8f19f14488f397ed0a705545672ad481a01ca65f0d",
+      "canonical_lf_sha256": "cd87c490d5c395d755130f8f19f14488f397ed0a705545672ad481a01ca65f0d"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/messages/send/tests.rs",
+      "sha256": "6f96d0fe1d17982be1eb89323e2fd72646b1d3e4e0e3a7d31e36b3691f95a32b",
+      "canonical_lf_sha256": "6f96d0fe1d17982be1eb89323e2fd72646b1d3e4e0e3a7d31e36b3691f95a32b"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/messages/send_list.rs",
+      "sha256": "413435178e97e92794972c9c1fcacfb54e1da53eea0469f324d4988b34c0b952",
+      "canonical_lf_sha256": "413435178e97e92794972c9c1fcacfb54e1da53eea0469f324d4988b34c0b952"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/messages/types.rs",
+      "sha256": "2a45cb065df36201fabd3d82aaa8f75ad4336120f72fd5467004b8dd0803c6cd",
+      "canonical_lf_sha256": "4471c19ca416e9f1e71bf3c3b27b0c1682b9c1cbd4f6510912a569ee8747808b"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/messages/validation.rs",
+      "sha256": "e35be3c1a429f451c50f502a7bed15efc2b5173878a1e923a05c8f1123ae1d31",
+      "canonical_lf_sha256": "3d15443458fc9703a6fc1278213dbeeffd6b620056b67f2f960237b7de39c738"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/mod.rs",
+      "sha256": "51160578eef9d949e9d888bfef22757e4a7124cc5b452e8425c02172508c8ce7",
+      "canonical_lf_sha256": "823bcad32d22e7d4ad800def9e78d5233d3678c055515afcbad66f65b4513e0b"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/moderation/audit_mod.rs",
+      "sha256": "04e46c9eec2fc47dcad9ce7c97f59b06f91219ff29d4821e4e6ae8d9e318ef01",
+      "canonical_lf_sha256": "a1071cf5e1a54a14e5df9e9408db7d0f577dfce2688ed69045d3b77711e9710e"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/moderation/mod.rs",
+      "sha256": "4cae6415ee3c2cb213dcb0eae7d47a42f7404e7c9036e310ed7ca2986255bb34",
+      "canonical_lf_sha256": "1b0070ef32fbecdef7f7776a2dfce9a7cc57937bc6360e5c8b20ba413a15c89f"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/notification_settings.rs",
+      "sha256": "a27697513981fe6b683526e77a33639495dbbd1531e44f27c0f740bda1613648",
+      "canonical_lf_sha256": "08b26e2968f286c5e6df105f32a910c3e0296a5208e06d6d4ea0feefb4038ad8"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/onboarding.rs",
+      "sha256": "11c25f2383d97becfad65976df2b696d755eff00b05035f124f318a0e50fba2b",
+      "canonical_lf_sha256": "9ba811f992c446fc94f97a56f7bee2a7e44f3e58987e15bb90595753b993d6c2"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/permission_check.rs",
+      "sha256": "d61b9834e11687328845cd45dab79493227b4c81c7e5f685f6b371494b567970",
+      "canonical_lf_sha256": "d61b9834e11687328845cd45dab79493227b4c81c7e5f685f6b371494b567970"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/permissions.rs",
+      "sha256": "be362e100810afa536e91cb9fb951af752332bab3f8d824078a5680bcd66a174",
+      "canonical_lf_sha256": "248005480c9d68a0306936db211d0d1ba5ae4680cd50009b1d4c452a33370e46"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/pins.rs",
+      "sha256": "f37622cab648e4c2717567650394dd6e2a1d282e36a71a3a2b2a3442fdd23dfd",
+      "canonical_lf_sha256": "f434d3ca522a37d3e4ea58ad90d04ca1d9c06c2d305f9df8286095793ca0cbb8"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/push.rs",
+      "sha256": "cc4dbe5f6530426de02d5c802067b04823034bb69173e420b473efa5d1ba0340",
+      "canonical_lf_sha256": "243967ef99a5486c7f6746103e0c4dcaa2f38c18d5f7f938e8f2fd540a9e9d57"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/reactions.rs",
+      "sha256": "0bb21e5ff5e79c38a6f8203bff6f0c4c43ea75850b915297b7424b4e01a800eb",
+      "canonical_lf_sha256": "82ba64a03c733decc697bb2193ac16a4c437e593472bd5a805d99f7f96099691"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/read_state.rs",
+      "sha256": "bb52b0a192f1dd9c0e7fce0220de4e8aaeebb8f781df543288de711b70645478",
+      "canonical_lf_sha256": "c7bb506b61e23194ab0d217f263e34226c57ec176d5916bbfd9f2d07bef92b19"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/recordings/handlers.rs",
+      "sha256": "8e48c73dcdee2f39d4b683efce31a3f41094aae6d38f8a876b5d598a1c4474f0",
+      "canonical_lf_sha256": "aad239cf2474d35e20d76c29200862f20f48ab667a4f681d366644403fcb15b9"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/recordings/mod.rs",
+      "sha256": "a6f56a32eca2086041472f105ea645cd01ea42edcd4e1131a9ca21fa685cfc97",
+      "canonical_lf_sha256": "f10c7ebad061091fe37338c5782f32b5e8cdf344866f376a72d554469040812d"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/recordings/types.rs",
+      "sha256": "df3ecabba26ab5ba740103424e5d20f79504d919fed1ceaa50e6a7adceeb729b",
+      "canonical_lf_sha256": "1de3bee9917758bd5e2d7576b7a0b67d064bacc9a4c7f489b84eb3b8f6c8934f"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/roles.rs",
+      "sha256": "b67986a8b27fb76d38ef7e7234305d57614f7cbf8285417387736a4cc921c27e",
+      "canonical_lf_sha256": "8737f261c794764af0fd2f7c56aef69fbf53e9e5016b7bd5b2628b209c2f0b52"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/scheduled_messages.rs",
+      "sha256": "802fc4dc9a1066cb35cdcccfa8b8670d6a55dd0b9b60936d961cc28eeebe6109",
+      "canonical_lf_sha256": "ffb0abc9cb0f4c83f7c473105cc322ba3b9784acb0b4b93b1c53060d921af8a3"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/search.rs",
+      "sha256": "2b0e18ffc024751d04a83706f505b04e01165a89c1f30684ce670ebf5a7e6ca3",
+      "canonical_lf_sha256": "e759d37d3fe5ddaf768375f14fe6f642892a13599bac0f54469a44fc4a1afea5"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/server_notification_settings.rs",
+      "sha256": "fc1febdafc3078371ae40a33aa06bda072b5f0651433b3e9d62f73c1baa51c12",
+      "canonical_lf_sha256": "6ecd47835d53ecac2d75d30eff6b3071c1328cef3d37191b22fa2b97e51af4ad"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/servers/handlers/crud.rs",
+      "sha256": "9d20fd837bc09d24fc4c49fc3e580e6261e41b03fa0c67766fd3b7f66d936743",
+      "canonical_lf_sha256": "70a06f530798a3f1b3dbe300c13efdc93d417b8d5e597608b1b976468d6c38ad"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/servers/handlers/mod.rs",
+      "sha256": "5c5df36bf4340da156f2e7e1d6b65554f87efeaafa2fd4b2b87334c24a5cb5b7",
+      "canonical_lf_sha256": "567901e8a6b74d73085a5af71fab92f1025678af8975bf87b5c25990c575149f"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/servers/mod.rs",
+      "sha256": "76ca5291b597275f0e6fa5018147c8f8b2ac5ed1cd44ce7ed42f1d6022b0ff85",
+      "canonical_lf_sha256": "cbc9813063e731fc41a9e408abb1ab2b15f86fdce6afd14dc6895e2402d9c4ec"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/servers/types.rs",
+      "sha256": "0671735b19b2d249296d214b246dc55a71ffefb8fd65c75139988b96d2d92b6e",
+      "canonical_lf_sha256": "2e955de76e8e48bf1c5a054c14e43196f268c5dec161f1ba6cdad12198a8d61b"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/servers/validation.rs",
+      "sha256": "456f2dba7174b964ec9b5fdb0425e5e0901cf3ce5dac15a19046e89a136ceee1",
+      "canonical_lf_sha256": "cb7ee775f5752aee8064b9bec538bb63ccdfa1702a0bca01033cafd7b364d259"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/setup.rs",
+      "sha256": "a756e0bc48a4e3bd221c25fe0d7e9360b794dc3126b5d752fc63e710c1d27fad",
+      "canonical_lf_sha256": "ae781e98b7c1ebc0053b480f4d5f5ff7fac48834c726b67bf4116087985e1b71"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/slash_commands/create.rs",
+      "sha256": "5f2e356eacb0bcc923a3eec7006874e298fa3356e65c074a40994234c6b8441e",
+      "canonical_lf_sha256": "8aa6f24dc5cec9504d3ce0150a971077ade0f26b2b1391104a96605bccb4d8ef"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/slash_commands/delete.rs",
+      "sha256": "9f9aaf0f7153e03fd91653cb808c8cd81ddef7713ba7ff0fc634d75dc67fc582",
+      "canonical_lf_sha256": "66b1e66771e8fa3df031241c29007fdeac1dad226d6397b1a7c9be5e252e7736"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/slash_commands/dispatch.rs",
+      "sha256": "a6ea66e6462532a30f123c90bda3f9772cf48d620f1b7519c186dfd3ecb86646",
+      "canonical_lf_sha256": "172e8ee02facad6c2251fa2715e0c7ec8abe274429b96ff55380eb599dcc0529"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/slash_commands/list.rs",
+      "sha256": "f19d752d15ad985976f8d2b302b8ab5d4b1d20cca3be306a39ff843ec4a27269",
+      "canonical_lf_sha256": "cb4fe43c4c7b578e8f7b807a85c4383dceecb30eb03a4f0f7fd7adcf717abb67"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/slash_commands/mod.rs",
+      "sha256": "b04a6aedabe1a901604bf72e221307629229436adbd04a3659c5216ab9c2afa2",
+      "canonical_lf_sha256": "302524c402054bdd902b4fb92aa92167cbf9f5f73856afcc38bdf7bec85812dc"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/slash_commands/types.rs",
+      "sha256": "ee52caedf2ab20e555bdb92e66fc33b6e6744d64363c9e76128073a22d67d1ea",
+      "canonical_lf_sha256": "3350c25634ce3cc44c6d131d570e7828b35469f23ca3da196b52b193611b4071"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/soundboard.rs",
+      "sha256": "4982369bb7a67cd1d62da07d8789e62db3282c117d2940da5bd5f26e438c5070",
+      "canonical_lf_sha256": "63f263e84e02569824cb9da1b67d6fe30efaabc4bea6727c642b50e740ef1571"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/stage/handlers.rs",
+      "sha256": "b23e016082e83071b94d68ab5709b979b4118a3b62e2be24cf5ad1700dd2b44e",
+      "canonical_lf_sha256": "bdff3e80342d113c2f74cedfdc95720fefd60916015a94bda377fd50e7257829"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/stage/mod.rs",
+      "sha256": "924d854492908c942e9eb08c5c4e87ebca3408eae62ffb30be11021a0d68b9ca",
+      "canonical_lf_sha256": "67b04cdd957657f6545dad25816a0818081e82a47124957a38896106c6d32e91"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/stage/types.rs",
+      "sha256": "b61966960ba9a5954de67f5b2e4949a56781e596bcc4bdbd9b357b31eea28302",
+      "canonical_lf_sha256": "57e3a7a76d0d922a8b2699aaccaea2476e7bbb2d202d1eaf4d9394a394196d46"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/threads/handlers.rs",
+      "sha256": "0d3374fa3b082c85a604a964bfd4fbc8b32151ddbc817544ef1e531758c9166a",
+      "canonical_lf_sha256": "6ee736d6f331bbaf50724859a405ef3caabd4fb611eb2ed91f59cfb8e99978da"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/threads/mod.rs",
+      "sha256": "1bae774c366af4205318676c2a6c189740e4eb8edca704de17161cefe1fe9b9e",
+      "canonical_lf_sha256": "6299813ff042a4da6a81f03fe4cf0f49a42d6f9dd00019de91818a081d596540"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/threads/types.rs",
+      "sha256": "13ee3fba4777c1422290f67639b49b862952f251a5278a52260145e5ab5c7abf",
+      "canonical_lf_sha256": "3de032f83bcb78b009b56fded17df092331557fcb18840daa0c34f849b1dc8d1"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/unfurl.rs",
+      "sha256": "51d6028ac426541f73667d9124be6960b3845f879cccc57b829cecd1e9222140",
+      "canonical_lf_sha256": "abab1513a3ddc4f5c6241e6d337ff6bc2c5c92409edcba027731bdbda0c8d194"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/upload_validation.rs",
+      "sha256": "fed393eae3ac2ea3e5eb963c35543fdbd2c2e938a1a9eece0800e3cbd3f08875",
+      "canonical_lf_sha256": "485c402efd5c6b3d194f319c35aa808353775d7f3e582b582bc8fd296d7096f3"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/uploads.rs",
+      "sha256": "f936296b8e4dcef38a58471e8c3cc9b27dad291d79a00471b64cbe6f3039c66d",
+      "canonical_lf_sha256": "6c159704281b4522f9afd0528e47f156266ce310dbfac860ec04cfb6606b6fc7"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/users/activity.rs",
+      "sha256": "4020f5816b8bf8cb7408dac7719c9071e1578e9bdd2d1b14cdde0804b27f9a11",
+      "canonical_lf_sha256": "86427b86f5d78b4672413b5a3d1aceeda923b83344aa66c3b5d61a289d5cd551"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/users/avatar.rs",
+      "sha256": "91083bdb5d6a523ce03eb693ba34cc06a2ae2ba3fcfef85d51d1175f889e6c2b",
+      "canonical_lf_sha256": "47acd410c884a9facd2a2782ba1435ede5c7fd6552fa5421a623891e2eab5e3f"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/users/badges.rs",
+      "sha256": "58c0b4a8fddd8fb261fafe1e05ee1d1e9a3ca008932a7f48948129d4d29467d2",
+      "canonical_lf_sha256": "4741bb4df710546d6484532fa0896dc66df43efac9693c2996aedc9b9057df92"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/users/delete.rs",
+      "sha256": "b859823bcb9e92bd9ebda24b2c43ee94e81046b6efb5ab761350aa005cdc97a3",
+      "canonical_lf_sha256": "6fda5126a420f169dba92d8109ed55eb1876a6957f14258385a58082de20a767"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/users/get.rs",
+      "sha256": "c6433ec0ab48b769a368dd200439fa53e9641a8f5dfd3e3332d406f2b8a50eaa",
+      "canonical_lf_sha256": "89809436b39798902f6c6dfdbb774efd816b6e4910deceee5a3c9eb195814828"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/users/mod.rs",
+      "sha256": "3c9a4bea904ca54e36ba20d409ecc79235aa86e704d240bef8729fd3edd986d5",
+      "canonical_lf_sha256": "960224c37700ef68b1ab433dc5a47c29ad893a7fe2c03c8f6362197eda8ca9ef"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/users/presence.rs",
+      "sha256": "e01eafeb4bc4d0cf31cf86b991a9b5e2f91393da2a6314b8791e30cb75765a95",
+      "canonical_lf_sha256": "655d49091c91ac7bd065d0aa187a59e394035b5e8ac3712a53bb2953caa2d370"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/users/storage.rs",
+      "sha256": "33a1e0cf31cfdf3981b3f1102fb80be0e9c9acbbfb0d99be6de4af6c0426404a",
+      "canonical_lf_sha256": "0eed0c444cd83ae3ba46056cb8473fd87e90a1dd67849019d9d8f0a3515530b9"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/users/update.rs",
+      "sha256": "7cffab3abe835ae8a8a3558bc73314261c16aca27178bbd2924eaac99f8ce90f",
+      "canonical_lf_sha256": "bcf42e6f0cff39915c011c35bbebfc169a6f1029eb1a43af2ee07773f4832426"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/voice/handlers.rs",
+      "sha256": "74e3575dceee212f6d7453eb01dab4c3db0f064c9b2829fdd9b5774b349ebeb3",
+      "canonical_lf_sha256": "68879b85ee089b585c846e43b0b4c53d57d45a5eb465f12dd906c85c9a1d4373"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/voice/livekit.rs",
+      "sha256": "747b3ade0bdff9c8c9ebc8812a2482ebb2be59acb50aa9df20c3897dd1465ad1",
+      "canonical_lf_sha256": "728e02edfeb441275759fd633ccda3611c3ca3a3c091f7093f81e2081a334c6f"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/voice/mod.rs",
+      "sha256": "a3ae7c9d2b176c7a83ceb9b9fefe0269f045f25c10b58a6ae3ac80b65b45b2cc",
+      "canonical_lf_sha256": "bdc0efac29b16440badd3ea3d65237e88bbd67a166bb4dd2d8b40082d6f2cb45"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/voice/types.rs",
+      "sha256": "f6cfa05cea0639a0bb99621510f6e51350f26ba6a3e1953ac6981cf686558930",
+      "canonical_lf_sha256": "c1de8d14d60cac05c7dbb436a09afebeeb4cb77676e7b1e7204763e58f556ada"
+    },
+    {
+      "path": "crates/opencorde-api/src/routes/webhooks.rs",
+      "sha256": "1c4169a4fec3ef6a7b7fd587acd7d5da1a762f0707aa18eb543c4377850312d8",
+      "canonical_lf_sha256": "0e9a04965ef8fab42072c794428812ea2c1becc0e03dc8c5e080a9e296f29218"
+    },
+    {
+      "path": "crates/opencorde-api/src/scheduled_delivery.rs",
+      "sha256": "9fe6cadc2ab71d3a3d73d0ad38f471e9d9e716c689d1502f7e0a831a5f341723",
+      "canonical_lf_sha256": "aadb534481a93f0397af9ea2df225c084e5520ef0649b9cde8052989359f6698"
+    },
+    {
+      "path": "crates/opencorde-api/src/ws/INDEX.md",
+      "sha256": "983a5ac5b38dd15698569f89bf31937695056f13da7b7fe5568167c78b0433ae",
+      "canonical_lf_sha256": "15e1370fb84cca8066064deeb88f1281cf13db143af4ab77e2b8d5d1295859be"
+    },
+    {
+      "path": "crates/opencorde-api/src/ws/dispatch.rs",
+      "sha256": "7c805befc283c6be00557007e3f7b0c51da5deeacd909a8e5ca7085dc355c1c7",
+      "canonical_lf_sha256": "bcd34236ad137ceaa4cf2c74e7457c46179ad482cd61e9efa0f25877ba335e24"
+    },
+    {
+      "path": "crates/opencorde-api/src/ws/dispatch/tests.rs",
+      "sha256": "e292b3eaf971f4ce413a20f5d63b95e6f7e0cccc9ce0460a5ebc95fa5d12f6f2",
+      "canonical_lf_sha256": "dffa5c6f5a307b4563f347342dfffb324883e917dfc6e06c20647206714ddcc7"
+    },
+    {
+      "path": "crates/opencorde-api/src/ws/events.rs",
+      "sha256": "80e11c28fa4f58999bb0a4e3d90c54019b0a1b71cb62194e07f5caad48550676",
+      "canonical_lf_sha256": "487d589ac78a25f5c8e9938406a02e4ae79c2b42ea985129c6abd30b063793c0"
+    },
+    {
+      "path": "crates/opencorde-api/src/ws/handler/lifecycle.rs",
+      "sha256": "dd87c8ef68338cb830f8a828dd7d0b6dd2d3676d4f64d970352a9cb4564ec6ea",
+      "canonical_lf_sha256": "50f959139bc052ae1883d21b80bc16e1e590564fba4978258d2e74f889008c6b"
+    },
+    {
+      "path": "crates/opencorde-api/src/ws/handler/main_loop.rs",
+      "sha256": "babe5a0e704df108e7d0bff84d58be312f987e349a9b10e21bba514cacacf345",
+      "canonical_lf_sha256": "4a0a96abb39c2434ffe16b7fb97af344b5a115902dce5d614da70a973b963d8b"
+    },
+    {
+      "path": "crates/opencorde-api/src/ws/handler/mod.rs",
+      "sha256": "4aa038c4a78a0d010f25fbea25747a0f557b5de27b7135d55239f719d94c1d6a",
+      "canonical_lf_sha256": "4aa038c4a78a0d010f25fbea25747a0f557b5de27b7135d55239f719d94c1d6a"
+    },
+    {
+      "path": "crates/opencorde-api/src/ws/mod.rs",
+      "sha256": "0ab96c38cae3d26a371c44fbbfbb070aab0c7095f881a1eb9d5670830284a444",
+      "canonical_lf_sha256": "38216c8c09dab7469d8738e13df8b99c5ba3b12e1ab2001e8ebdb9ec736533dd"
+    },
+    {
+      "path": "crates/opencorde-api/src/ws/redis_pubsub.rs",
+      "sha256": "a5d8bc7d8a309692c44840d5c42e1f7b0a495e844c04be430c4583a86bb26b0c",
+      "canonical_lf_sha256": "26b7aa448b1f1278560aeb8c4d36b58de5f0163ba8399366ffe877fab5eb3ef7"
+    },
+    {
+      "path": "crates/opencorde-api/tests/integration_jwt_auth.rs",
+      "sha256": "510e4305848f7e43890a2830dcac029217b0458d5428bc387e76a0aa9879e587",
+      "canonical_lf_sha256": "2d01c14654436aeb20a725be8842bd5f71a05fcbd964ff3e83270df777495311"
+    },
+    {
+      "path": "crates/opencorde-api/tests/jwt_tests.rs",
+      "sha256": "644c109765f8f9c3baf4d0aea7b4167b745cf741c59b56f3ff231dc42b047da6",
+      "canonical_lf_sha256": "4887e06abc85765b80b119fee5b913a1e0847a2fffa85b27d665358ec175b105"
+    },
+    {
+      "path": "crates/opencorde-api/tests/persistent_websocket.rs",
+      "sha256": "2b021bfa94ffc252655d726a148b865cc012db038757333fa62492751821faa1",
+      "canonical_lf_sha256": "2b021bfa94ffc252655d726a148b865cc012db038757333fa62492751821faa1"
+    },
+    {
+      "path": "crates/opencorde-bridge/Cargo.toml",
+      "sha256": "29cbed58be9901ace4ab8e6380b446bfda955b09cc46b82ab2dc50d9a9027530",
+      "canonical_lf_sha256": "02181dfcd1ead89100f502a32b5c6ee138b3a3825ece18c90ef0dbe979f3a9ec"
+    },
+    {
+      "path": "crates/opencorde-bridge/INDEX.md",
+      "sha256": "dbc2d38382dc68c129c9239e838e55a1ad8c0f075470ba985481f120c7c7101c",
+      "canonical_lf_sha256": "456765d92fd1d09616478bdabc9c94687115da713149c256b3b543111a9629da"
+    },
+    {
+      "path": "crates/opencorde-bridge/src/config.rs",
+      "sha256": "8f48b5696b7680633fae54e119fc66b450798dc4a6ef755193600c25db18e979",
+      "canonical_lf_sha256": "a45fea39d02a48ff853865173225073353631a2c27bd5f58008f8b573cf8e12a"
+    },
+    {
+      "path": "crates/opencorde-bridge/src/discord/INDEX.md",
+      "sha256": "703610feb5d07955f84bfd14acd4377243a7ab8da50bdd6381fa7cff88d2a157",
+      "canonical_lf_sha256": "dd344f0b7966e372d2fe4b7d33735ad69035ad187ea4e6ad3561ca8e8384f64a"
+    },
+    {
+      "path": "crates/opencorde-bridge/src/discord/api.rs",
+      "sha256": "ce8360efc8520dc6160d5d0bcbba1c8453d2e7f984d6cf5ae33ea9877f602e82",
+      "canonical_lf_sha256": "95dbf7861553843ff49a2db6506cb87df25f0485575456f688b87b8d875b7590"
+    },
+    {
+      "path": "crates/opencorde-bridge/src/discord/gateway.rs",
+      "sha256": "83b24a76e09692f5518e14f790d40edc8614dd0dcf17515c159a4eb064280229",
+      "canonical_lf_sha256": "0b291c2c97ed9e37074cf6c504d433077ea7678fcdc68da013b7a508d0a35e95"
+    },
+    {
+      "path": "crates/opencorde-bridge/src/discord/mapper.rs",
+      "sha256": "98401e3669b9c5140571df548c35ef7cad11637494aa202a7501db7dc121c86b",
+      "canonical_lf_sha256": "260b86cc39ac1fe35054e104d64671ec8b06f3e276c347bbf8660733f0db22cc"
+    },
+    {
+      "path": "crates/opencorde-bridge/src/discord/mod.rs",
+      "sha256": "141080049e2b6f912e1cf99ac46ac9bd3c5afca3ce8407cb27bf176505b31ca5",
+      "canonical_lf_sha256": "3e66739cce4238397febd0d3a39b342dc8eb70cbba263ae35b01df6ef819bea7"
+    },
+    {
+      "path": "crates/opencorde-bridge/src/discord/puppet.rs",
+      "sha256": "82d6f12656b0cf64518ec23403b8ee7f04fc750a83a2962edced95993b1ae7cc",
+      "canonical_lf_sha256": "69b59ae8f2c1851dc2f7da593dd0963b15f08fc2e2dbae14b4cc83c211c4fe9c"
+    },
+    {
+      "path": "crates/opencorde-bridge/src/main.rs",
+      "sha256": "83e6a6c3430cb08116a050e1acc7b429fe6138123c5b1abc845d483a70fcc1ae",
+      "canonical_lf_sha256": "345f9aaeb34fdd6d0813e483a6fa10c8a468b90c68b015e47a37bc0200bbaedc"
+    },
+    {
+      "path": "crates/opencorde-bridge/src/steam/INDEX.md",
+      "sha256": "58adee69e64aaf53a3d102f789b2c6ae0939a01607ee5e9af44d7fceb65dff8b",
+      "canonical_lf_sha256": "40e3bb5c6d31cf6a3afd104f19afda4573df65da9bd61516a372650e13da5fb6"
+    },
+    {
+      "path": "crates/opencorde-core/Cargo.toml",
+      "sha256": "2978590a60289be163ed9a0683e1ea0a8ea9ef510a8ea0bed6639bf3ef14f7be",
+      "canonical_lf_sha256": "4fb473d3caa40dc2e53fd5db88fcd515bc339b2265e1c770302ef72edcc02260"
+    },
+    {
+      "path": "crates/opencorde-core/INDEX.md",
+      "sha256": "80dc698633ab567fca6fae2dd2e9f0f5e76c199d2e3d4633828e48ae86e10740",
+      "canonical_lf_sha256": "216ffcc6252b191a3b46f3cc0c9199f6f565ce7ce031b7f158d1d05911f5ce4d"
+    },
+    {
+      "path": "crates/opencorde-core/src/events.rs",
+      "sha256": "3c436203b7813dcc9e451114f59108a2be8e33ea6b22e71d8432a9f96eb5015b",
+      "canonical_lf_sha256": "23f066b6284576203f6dca57e85c6e104b5fd96e49c0d7145723247df460937c"
+    },
+    {
+      "path": "crates/opencorde-core/src/gateway.rs",
+      "sha256": "b529b5353aa54a8dc92665610203f6b1a360a5db3f769b9d298624e0863c2dd2",
+      "canonical_lf_sha256": "bd9edb7e2cffb06908437f175267857670e3ecf692da6fd31db1bb95615042f8"
+    },
+    {
+      "path": "crates/opencorde-core/src/keypair.rs",
+      "sha256": "facaf67d4c2d3d047dfef672fc3c5e56b652d2713ab167aa03aa532cce45a036",
+      "canonical_lf_sha256": "cca45c9e6188e696c2d2c43a20fd64c3864c8dc7aada0aa6a0dae2e031fbcd9f"
+    },
+    {
+      "path": "crates/opencorde-core/src/lib.rs",
+      "sha256": "4eea61a3bcbb3d14c3eec01d2648b320f368bcc23cf6f2e5184b0255b4b25fc4",
+      "canonical_lf_sha256": "b7a3374ee526414abd423fd63cc26a036941d32359a9770a037a5d6d8cf517a9"
+    },
+    {
+      "path": "crates/opencorde-core/src/mesh.rs",
+      "sha256": "2fb44f954c21104b93bd77fde140fb1978fabf642861768c9a62e7278712293d",
+      "canonical_lf_sha256": "5c781b84906764d2112ad370e6ce1d96476caf3cc9059cc163929df59b545dda"
+    },
+    {
+      "path": "crates/opencorde-core/src/models/INDEX.md",
+      "sha256": "3319d3556fa2a41cf132253ba9e6b527a41824359a4ac9f94c911ebf2ecf4775",
+      "canonical_lf_sha256": "0d5a326f9d8323b22029c481c8724722592952785c9abdfb6a739b25e8860c49"
+    },
+    {
+      "path": "crates/opencorde-core/src/models/app_install.rs",
+      "sha256": "bb4aab114cc1ce0fbb06981b219f9f75cb345552c2d2b162e5fd931b0c412008",
+      "canonical_lf_sha256": "156c34b578811e592f2c4ecdba51b04f78addb2bef7cf409d27fc478ba432db5"
+    },
+    {
+      "path": "crates/opencorde-core/src/models/application.rs",
+      "sha256": "b9d576d3c926f84ff721600c2a432b0d50d6aa9a16efc5eb06b0c34159d80d16",
+      "canonical_lf_sha256": "fc8d019f8db629fdd66207392c1e683d3c6f67790625226531679eb3d55bd1ec"
+    },
+    {
+      "path": "crates/opencorde-core/src/models/bot_user.rs",
+      "sha256": "6bb4e8b256715eebea5b69068e94c9e6f43a6a188d6280ca35c82eac295282ad",
+      "canonical_lf_sha256": "a453a215000fe17694da90c57afa9a0abd57aa0c0185d64ca518cfca8999e77c"
+    },
+    {
+      "path": "crates/opencorde-core/src/models/channel.rs",
+      "sha256": "2862cf871b5eb46c888ef829a3f1826001b773daee04c4f7240297d6c4b82245",
+      "canonical_lf_sha256": "779a2db3a6607e805676d309593e9323ce7d6708c6f1be4c64bca9218b4a4fa9"
+    },
+    {
+      "path": "crates/opencorde-core/src/models/event.rs",
+      "sha256": "9362ec63018675b6420c3082e127b5c7aa592e36b8e79cc65a991db26b2bb5b1",
+      "canonical_lf_sha256": "263575a8bdaa248739014b7ac35a886b22f25aec818072d9fbf841a6b5945ca4"
+    },
+    {
+      "path": "crates/opencorde-core/src/models/invite.rs",
+      "sha256": "06be42fe8355d62c8ac08c23a0a27d770e7299444aa85b2b3d0f8c5a5f1ac2f2",
+      "canonical_lf_sha256": "9db9831899a4068e9af23ef30c5ca1d05b5e13c656f73064026cf2cabd67d27c"
+    },
+    {
+      "path": "crates/opencorde-core/src/models/member.rs",
+      "sha256": "9110ba613f41254a90e92760790940eaedd8641f113a85f19a47f958c9492160",
+      "canonical_lf_sha256": "1fb1867581fe0a6ebdf1f10e9341360780c7a90602a932e7699288119d3c5395"
+    },
+    {
+      "path": "crates/opencorde-core/src/models/message.rs",
+      "sha256": "9eea39f40758d99678f79f1ade2e007aaf009a0538d4be84d7378001e7e7c369",
+      "canonical_lf_sha256": "ad2744591261319c23941fb541c8dcb19417c80535db6cf40b1daf6b8e2e008f"
+    },
+    {
+      "path": "crates/opencorde-core/src/models/mod.rs",
+      "sha256": "2d30602dd0f9bb91eb8b87208c404bd40818cb4174ec7d6aef9ca0a3e4ec7478",
+      "canonical_lf_sha256": "3b4e46a09013c439616d1f316c9572032a42ebe412bb105f7152518be8e4b1d1"
+    },
+    {
+      "path": "crates/opencorde-core/src/models/oauth_scope.rs",
+      "sha256": "26712f33cead94c40998d7d7e7cedd0486c1f094db9a87b7bdf603db7999ed78",
+      "canonical_lf_sha256": "e8802630b5ba6bd07fcda74e38e517b5fbf0ec12f303646a5fcc43189c8839ae"
+    },
+    {
+      "path": "crates/opencorde-core/src/models/role.rs",
+      "sha256": "201ae7439e261da5a4f2cfb3eff774e97787f8babe8036fb3e805b9a87247e36",
+      "canonical_lf_sha256": "ca6f261503126950067dece037f6c74592df8bec7caf0dddf8e692e08983a7ca"
+    },
+    {
+      "path": "crates/opencorde-core/src/models/server.rs",
+      "sha256": "44b0216afe2794933568bd75b62d22d55549de6dd7cb91ca5258eab82b55a9fd",
+      "canonical_lf_sha256": "f624925de3057a5b101227a9b09b0886067347e1cf71e4b93a4c0f35f69b1a6a"
+    },
+    {
+      "path": "crates/opencorde-core/src/models/user.rs",
+      "sha256": "c3f4245999822d04c9db2a92eeb1bbfbc5f790e57e4eb6836dc6048dbc64373e",
+      "canonical_lf_sha256": "501f5e0fe82d66ced285ef086518c9dc6aabc2ea3bec5aacb97da2627d1d3e9d"
+    },
+    {
+      "path": "crates/opencorde-core/src/models/voice_state.rs",
+      "sha256": "909aa0632a1507711a9b1c287ec93eccfb46b7076aa955813989266abd304d54",
+      "canonical_lf_sha256": "391e9f6e5b2aa5488156726d3e5956dcfbea0df834cb20ebf1709fe1e6ffe8ce"
+    },
+    {
+      "path": "crates/opencorde-core/src/password.rs",
+      "sha256": "211c7e46ecf5ce53a0180eb7f76a3cd1c136b091df226f3e64bffd567715f78a",
+      "canonical_lf_sha256": "2d1c8cf9d543fdd72f18617efae70f02de709ed5e0bdfd2e48b8b060a5135822"
+    },
+    {
+      "path": "crates/opencorde-core/src/permission_compute.rs",
+      "sha256": "048cc0d6a884ce62e7313d1a6e553737203945f5c3deec8806e1d25a5582cb0a",
+      "canonical_lf_sha256": "a95d34736247d08c9d3e72bc1b16971f110e781fbf4c3c9ce4a872efede77f3d"
+    },
+    {
+      "path": "crates/opencorde-core/src/permissions.rs",
+      "sha256": "ad895fddb95c69f72cae1472d2121d316a8a39606f78491835c6fda6bb1eb2a4",
+      "canonical_lf_sha256": "5d41caec1fb0b17ca2c93fe4fbbeb589a1d850f98782f553972e2484cacdf04a"
+    },
+    {
+      "path": "crates/opencorde-core/src/snowflake.rs",
+      "sha256": "bd87bf10d31283bb9d5da9af6d92d5feda5a9693f2875254a50806ea41f615d7",
+      "canonical_lf_sha256": "19ab4366fd5d5bf01e47567c4c1a6e06cc8f018e1ea414e6ea4736d1ba37ee16"
+    },
+    {
+      "path": "crates/opencorde-crypto/Cargo.toml",
+      "sha256": "06e2e9c147c88c70c95d290ca4cbbe4888e568b7068292520d8c81d559cadd38",
+      "canonical_lf_sha256": "d39ea184e52a4ec49ee53438f9c9fd77b49cc67c9500f3a7c48bb2d34eaa0169"
+    },
+    {
+      "path": "crates/opencorde-crypto/INDEX.md",
+      "sha256": "ffd0b8ad16982872d1dfd0e4a7695ec71b4d2e21e7fb59c8068ce49230fb8c87",
+      "canonical_lf_sha256": "ae2fdafeebe25812b7364e2ca37728fa54328826deec53a0f261adabab2c6007"
+    },
+    {
+      "path": "crates/opencorde-crypto/src/encrypt.rs",
+      "sha256": "006ec141da0f560d36846304e1f46a8b2747ad6446ba79948cbc9fe611da8c7f",
+      "canonical_lf_sha256": "49f5d23de83fc3228a1199f20aec47e5d4b9527944b3e23aa870d380ad2189b2"
+    },
+    {
+      "path": "crates/opencorde-crypto/src/error.rs",
+      "sha256": "9b89e14c809495d0ec759c5367942ef4ae1a6127d346950c4f556af48bda0526",
+      "canonical_lf_sha256": "fa71c8ff08907b8fb929e470fc46094f5b7bd5c053e964436b645de962b485f0"
+    },
+    {
+      "path": "crates/opencorde-crypto/src/file_crypto.rs",
+      "sha256": "a6fc26e1b4bc1dd84468d85815979e73b96ad14b25d02f599d7a52ad01a0ddc0",
+      "canonical_lf_sha256": "bf7c154f9e991342d89ccd5d3bddc2e7a5da02c725b334e0c42551795ca2ce06"
+    },
+    {
+      "path": "crates/opencorde-crypto/src/group.rs",
+      "sha256": "c712e357ab0fc710577365a3c3b8d5e7ad76fcaeaa4af30cfad5465360f16633",
+      "canonical_lf_sha256": "cac9e6c9d37017adaf44c5bd9449e42b6001a413d594acee5a2c6131723a4673"
+    },
+    {
+      "path": "crates/opencorde-crypto/src/key_package.rs",
+      "sha256": "371166dcb140d2412ba32ba57dacd1e4df3cf100341e0ec7a09ee0d3262561af",
+      "canonical_lf_sha256": "2ce9748de45e12794b9fc419bf07851ecd91659b16b10c20939db2b18301d6c3"
+    },
+    {
+      "path": "crates/opencorde-crypto/src/lib.rs",
+      "sha256": "d5771f8ce9706a131abbfe23cf000eb2ce243a0e50bb7ab2e5800c48e5232647",
+      "canonical_lf_sha256": "290b0f21ba3312958b30ac9a85fd1a6ee5680043a9a3a64ec567da065cc5f305"
+    },
+    {
+      "path": "crates/opencorde-db/Cargo.toml",
+      "sha256": "6fbeb03e4774ede23b256f112a9527cf49c47fbf484b3bc00253025815a48663",
+      "canonical_lf_sha256": "0e9685caaadcd791961e60b3daffe9f9dad049873cf25ae4fe1af4d2c27aaefe"
+    },
+    {
+      "path": "crates/opencorde-db/INDEX.md",
+      "sha256": "cc04dd255752abdbbd069e92853e078da908e33cae9374aaf5e265b9fef61f98",
+      "canonical_lf_sha256": "21bd474e8331ee4a6c9b9d78e781565c019b579b985733a1760f1fabdcb4f6d3"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/001_users.sql",
+      "sha256": "5fbb7d45c59082832bc43842651041f14922f6428fa5a8e46e9bcb7bf13066f8",
+      "canonical_lf_sha256": "4a3d7bbd7440e63f08dc278c2653954ef66adb78706af77034137979b0258be4"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/002_servers.sql",
+      "sha256": "77bfa5c4eb4524e67d169389810bffa41eed123db04f78cf9f78e84976b89719",
+      "canonical_lf_sha256": "37423d12f9d527167d68b2a6c8a76e0b3860e9cd869d4794dcb6165afa523486"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/003_channels.sql",
+      "sha256": "75727a126c28323f975facbd89946ac817f34a84ddb7e095a44d566f18489874",
+      "canonical_lf_sha256": "f20459aab1048f0fc5a0a56c70ec8b803a65d67da1796187204c2540ac093b5b"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/004_messages.sql",
+      "sha256": "2a28503f33f3731c9e31d8caaa11b427aa01ebc4cce8c65a38c72623523ae187",
+      "canonical_lf_sha256": "ff5412381080b340b25cd52bb1f8bd7bed03486db03936825f6b9f29410d35a7"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/005_roles.sql",
+      "sha256": "799ad2bc9c1e5f8a0455ac65ac8ecaa20386d59b80eb1fdeaf1180ba75bb16a2",
+      "canonical_lf_sha256": "d3b0b26813dac1d1b1215119aa0e3a81a7e40cf8c4d16f59c350f4783e9e2b24"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/006_server_members.sql",
+      "sha256": "07e4804338541d9dda102261b9bae75caf3c71ce6ed11d18328ef4d41e462712",
+      "canonical_lf_sha256": "e3a98549059b607ff5a65a4e609c214afc62ea0a3a647da7810f6c272fbfdb0f"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/007_invites.sql",
+      "sha256": "2d2efcaee6f212d42ff918ca735f33152b2d9c37cbb114bd8dd10891c22f618a",
+      "canonical_lf_sha256": "d328c8da847b5e0ac004da6de1e3e67f696d5b16416e7c1fea22232958d9b0f0"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/008_voice_states.sql",
+      "sha256": "0716c66977c8c5ba9dfc462bcef04c00779b3483cb776ffa225476ac4bb8cf30",
+      "canonical_lf_sha256": "13ca4aedc63c8c7b525639f8ab7986f8902de3a379e6314d93ba03ca30da33ee"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/009_files.sql",
+      "sha256": "7169d27870aa36aa71105030177a127cd192190687f45b59574188c7169142d9",
+      "canonical_lf_sha256": "b21e51fc47adffba86d9a291e3d6c1dcc50f528f1d1f010014a7317736db6810"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/010_mesh_peers.sql",
+      "sha256": "a66eff96bfef35284fb264ca27546ef05c0e2a727b7e5bb73566c29023dc39cd",
+      "canonical_lf_sha256": "647ebf99386498cedb2eaafbb1f52dc8fa4dddb0ab4137d1c69ec40ddd0be27a"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/011_reactions.sql",
+      "sha256": "3df5354219bdc99f0c2746348061922cec51f23e13410665e11e5cca18be8568",
+      "canonical_lf_sha256": "11290a13a3db18aa7e67faac26c7d4b0e212a7b7db442d0fa2598abc7769f91a"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/012_read_state.sql",
+      "sha256": "680035f1705896d91f51216ec68591914e26600c98aa4d8bb34c0c9421d5ca65",
+      "canonical_lf_sha256": "4b60cb880f240aeaf48a46530e4b92a7b2d973e3e6e51bd002a14509ec46f9d6"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/013_bans.sql",
+      "sha256": "171868070a4e27b47cf9f6b32527119a74475c031e42e2e6e2fa43a5f2c4593f",
+      "canonical_lf_sha256": "2c1efb4fff2ad5b2167889694f67e693c18969c006ae86e2162d1b7190a0e459"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/014_dm_channels.sql",
+      "sha256": "6193197e83c5f8473dc4e9607eaa5056ee98075e838526d20e54b9b86141a814",
+      "canonical_lf_sha256": "08be391bd947a47e4e9e99d612a8a7220e1593398d9c09351edfd66bf6384771"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/015_message_replies.sql",
+      "sha256": "48f92c1bd58f4078e216f6901b4825b97b228f06e7c759efa5838e65c299093a",
+      "canonical_lf_sha256": "7e9c5792b72708c360c8eb868921a831050cf8d68f66605751e8a35072e8ab0c"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/016_pinned_messages.sql",
+      "sha256": "f7ba2c1a42215b4444cab81f7de670affcf8e1b31acd61bdf030cf6de152ae95",
+      "canonical_lf_sha256": "5c7c920f243603fb32c2dff6be26a68f03f83c17cdf051cd6a83b11c3e9072b5"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/017_threads.sql",
+      "sha256": "97c3f77f6af38e67e4734bf0f170f6ea36e0e7c5cf97bc5ec6574f9566fdd753",
+      "canonical_lf_sha256": "2fb6741f44deb07358f3cfc22a07be493e3bdc17ee2699a4431081a930d1e76b"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/018_webhooks.sql",
+      "sha256": "84751ee5bcb679cac812970a3c709b48c0753e22954848bfcf7b3a4a54814aa3",
+      "canonical_lf_sha256": "881002ae54e9a410c8677bb14917b450b8a89861440bd7c54e30c54ff53bc196"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/019_friends.sql",
+      "sha256": "d075d33ccf8b0ac94443a33bfebb88ced923bbe92b3e28c1bdf97d4df7800440",
+      "canonical_lf_sha256": "065d4192e19d592d54fd7edd93190fcc97e1e7647474eb036685b41c35c84cf9"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/020_events.sql",
+      "sha256": "40e3cbe54812c713d3a4f2a956249c9c46673d0f970932c5078940f072778f2e",
+      "canonical_lf_sha256": "7a5f0593ec909c4a53d3619e25d15f4054f2458e41ddba7b12a29fd984916f96"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/021_nsfw_channels.sql",
+      "sha256": "4c376010bea62e5e2ac50d78a3a5e8ba80db4d28da6987a2a7f138c8e14efd27",
+      "canonical_lf_sha256": "df8f804fe5c1217d6e4a0bee77c0eb8c79675a6cd24e40b263d33ebecc6137b5"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/022_server_discovery.sql",
+      "sha256": "9c09072d44c32a7cdb1b4b8a8a771a1c29a3426cb34321782e28bd9a2ae7403f",
+      "canonical_lf_sha256": "73732daf48b4ce5b2b24d5a43ce166c306bfb964b3850b9e3dd7c1bab93ec49e"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/023_automod.sql",
+      "sha256": "edcf434c2b60fabffde62d16877e28419607703bb19c60f09b5e5a94c1bdd294",
+      "canonical_lf_sha256": "6df651063b9add70eef2c7d7e992d290a6d154ab41279ca40a35dced1957d25d"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/024_slash_commands.sql",
+      "sha256": "7cdbabeeda448542e97e76e5ff8443a9ae85823cdf5bc394fcdd8f0ece934e73",
+      "canonical_lf_sha256": "f434df54b910dde9aacab600720348c426de518e16a832301e6bfe7c5a9bf152"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/025_forum_channels.sql",
+      "sha256": "5ed9f2b414df66c28ae252db1413188f306ffcba666b19290abbfbe694d3159d",
+      "canonical_lf_sha256": "2d309e104ef8b4261e9ba211abd5e77d6ed4f894ccbeb197992ef075f7210358"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/026_stage_channels.sql",
+      "sha256": "35d6e47fde6e73051b56dc465c3d52c00e1f26d2f4a2bc8b7d146ad66e19fcea",
+      "canonical_lf_sha256": "733c2b02030e802162acd12a7e81824573227c3c8e458ffeca563e4dd396abcf"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/027_audit_log.sql",
+      "sha256": "f4897e9a7bc07df036a3c842975c7beb71de8334cbc0faae72ce04cbc582707e",
+      "canonical_lf_sha256": "147709794086780409f162098a2e54e893cb101f86ad27498390076cc62e82f0"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/028_server_emojis.sql",
+      "sha256": "f14ab849cb201f0204a7b7308cb24a11a4c20afa8ce5d67c5e6068e0f96c60b9",
+      "canonical_lf_sha256": "e3eb799fd87077cac5ae77a7d2053e17bb9951fee35d21783aed387e944acede"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/029_password_reset.sql",
+      "sha256": "9986922692dd646b6625fda01531ebf437eb40d074a539aadb700d859fd3ce7f",
+      "canonical_lf_sha256": "36f32fad1dcc8a76d72d2d8eb93b3208be5cfb0b60ae06db4e975bfce953e5f0"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/030_user_profile_extensions.sql",
+      "sha256": "bbcb7f53833eb75832d55ae3327913fcc9b6ec2f6e507326536eefa5dfb7132c",
+      "canonical_lf_sha256": "00b3295d7f121cc0eea32df869a6a2a4a77980bee9d1b0d6256553ad5e6d2ee8"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/031_e2ee_key_packages.sql",
+      "sha256": "24ba01621574d3d02104eb6abaaea0637953f09176e6ccd30ac1b8878fd91b67",
+      "canonical_lf_sha256": "f50d22403ef123ccc7b8f77396d2855d8d098ca9d395daf27744f472559d1405"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/032_e2ee_groups.sql",
+      "sha256": "329fd69f7c7218208623cec0e4329999d0dae07c2e5941d86607e6ffd4c3c4d4",
+      "canonical_lf_sha256": "fb0644757744506b14137756d367cca6575ebce8c4619744e83e333be70fa445"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/033_email_verification.sql",
+      "sha256": "4d889a71bc37e0625d3862e7e68586e471602828696e22fc5567edb3969e4184",
+      "canonical_lf_sha256": "b892f3da416fb894910da6a5a9dc1a44562a2f4f6128d99a63fbc758976d0ead"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/034_bridge_channel_mappings.sql",
+      "sha256": "6718d4959f383709c9b46b0b26171ef86d2079d3fc76c1269ccfdf9cf7bd0ca3",
+      "canonical_lf_sha256": "6932256a5f5a242da7e10eb8f0d442f867e4e57462442a12082ce0106aaa2fae"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/035_bridge_ghost_users.sql",
+      "sha256": "2917a70348eee0911faca8ac74a8649d9682588c8607805d844aaf3025f2da67",
+      "canonical_lf_sha256": "a6576bdf81efb3a3e785bd916ea5f5a5d3db4c2926e9e46415e34a6c9ad9c16b"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/036_steam_auth.sql",
+      "sha256": "8acb8bf8a3db5149ac58548cf95a5d088cd27cacd28ec8f2000009aaefcefe48",
+      "canonical_lf_sha256": "fb5cba24ce117f7d66551f9923a6dd39460db345bc9367150143bd5a90c957db"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/037_recordings.sql",
+      "sha256": "9407e208287404ef0026c645901a60181c49fd66ecbc9b571b371d5904b9a6fe",
+      "canonical_lf_sha256": "d36570fd77afcc501175bb4f889330bae4230d77f3bb53f0ed393aab159d1a55"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/038_push_tokens.sql",
+      "sha256": "e14cfbc83aa0bdc09c5fde82b50eb81661492368784205eccf0606316973479d",
+      "canonical_lf_sha256": "9f679487a2d5d39bf7eb3c85f64e232ce4fb39ca78aad30162ca5c5a010ee95c"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/039_channel_permission_overrides.sql",
+      "sha256": "1aaa3832a3050cc2e2fd85d68ccd7a30ac7c18bc4f21d98999415f1bf6a8ca63",
+      "canonical_lf_sha256": "338b8a3d6d0e5ce4e84bdac5954c3621236b306d4be599ad742c01c7c6c5e897"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/040_server_moderation_settings.sql",
+      "sha256": "724fbd2e8bc9d563abacca28d33e894cf9b9e0c91b24f0156593a3a60316cfde",
+      "canonical_lf_sha256": "9381621494efe0f601461d9ea6456537a4db1e979ee3a2d3d3d0dc3677fc8667"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/041_refresh_tokens.sql",
+      "sha256": "e5b9e9c7e01c4bd61a1c85a1447048b35825eeaf568bdd094704a10a4750e58f",
+      "canonical_lf_sha256": "fb078bfba53a47c8f0e6a5fb82e9446e43efe5fc7ca58ea66c2854a554a49628"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/042_totp.sql",
+      "sha256": "caf3cd660b1993afdd23921a5fa3baa41a6e29ee91154465c4c19cff082ecb53",
+      "canonical_lf_sha256": "61fb0643b00384596dd214e8cec9b1b65955efdafe0ec9d9d110b03009f70dd7"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/043_slowmode.sql",
+      "sha256": "d21cb7057ed8881bcc39956f6ce7da47764a1a09e93101ef556e26cd925243a3",
+      "canonical_lf_sha256": "2d007ce54de1811664a9857e0d16d45087e9c82c8fb4f8cd46d99b88683df240"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/044_federation.sql",
+      "sha256": "55d1e714c926c79e0781833f55debf1e4c01f8baf6e95cc767aa90440eb6072e",
+      "canonical_lf_sha256": "b99d0f830c6feb710799c9c2c175587b10a8729fb4e969a3d3562120efb29538"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/045_federated_dms.sql",
+      "sha256": "707e2bc0e9e6cbd2c3310bd1440ad8283a06eb82e7c76a04464e1719bb27ec5c",
+      "canonical_lf_sha256": "b8c3a0ae2af393854eda05eda2bf6421454be0f4eb357ecd1c2cb5734bea4de5"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/046_channel_notification_settings.sql",
+      "sha256": "c30937883a4f8713549d8e88f444a372390ebf29ca40b0dd3f22597b4b3b9416",
+      "canonical_lf_sha256": "d27743669dd651479e0202bc7155c1b1777d61ebb2bf673369fcd6c6f403af4c"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/047_e2ee_channel_flag.sql",
+      "sha256": "3451fdb4342a70256f13c823c39d98f0ee5c24ffb43364da1c14af1145e8bfcd",
+      "canonical_lf_sha256": "194ab18405b3bb8afd4f6d449ec5b7af2c22e6eb2539a575b8dc3c56c8e1ff67"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/048_soundboard.sql",
+      "sha256": "7738eb5aec382289f3241e80b81ecc313de6a59ec35c1f36141b638a3357fe4c",
+      "canonical_lf_sha256": "3c37aee7e8a581c779fbc982ca68a56a180be85d75f5d1df83096bc02579e7ac"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/049_onboarding.sql",
+      "sha256": "6a5ab23e18dc6af305c51419e5a4c53cbd43d4b0ffe701f6937853e5b6f61b90",
+      "canonical_lf_sha256": "a9ed191ed0c7e4aa6b80e4b7093bb8136261ecab32182b17ba99e03c4a424165"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/050_forum_channel_type.sql",
+      "sha256": "68e4e31b78600c6fd6e80c38c43f846c95de13dea6c90cd8076a8c6841fcb5e1",
+      "canonical_lf_sha256": "d0125e0901664677a89adfd4525f2ff43744f41bf032a349f5820a0b5124985f"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/051_ensure_soundboard_sounds.sql",
+      "sha256": "f5bfc0816b33c0d99ce3602cb40782378e36e875466899f3aba440970feec780",
+      "canonical_lf_sha256": "af7b2ca3a05d8edca785a413dbf8b8cc1c20b30ae05a9657747574e4f6b417f1"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/052_synced_with_category.sql",
+      "sha256": "432033de4ddf94811e4cf24b8c502b87cb3880419cedea65492215175d33d2a7",
+      "canonical_lf_sha256": "97dfbf712af687941f2de517f6ad599829500a9cb445926a59a1bdefd0643b9c"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/053_event_reminders.sql",
+      "sha256": "5c6dc77f43a693bb587a6d0ac76ca4956f8b57dd7af2731aa414b22779f9c8e4",
+      "canonical_lf_sha256": "d1b2e9c96aa36b19f347ea07b2b42501bfdf67df1980cb690bb33bb3f7351a3a"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/054_role_hoist_and_icon.sql",
+      "sha256": "739f386d65b2a2149a5c5d036bfea1e454191f91d75bf9f30b4b01cf66067852",
+      "canonical_lf_sha256": "2f3cf05a3c4247e764c797f684e7652fe1340d34b60dd605748ad8d1e1cae79f"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/055_channel_templates.sql",
+      "sha256": "2e8d24b3a54c5e774a0d1788db360834f8a7ebc97a5f243a694cf645871f7ccb",
+      "canonical_lf_sha256": "85638e6aea87adf2aecb03ec72f3016e1e1cc668ce842216b4a0adb3295eb0d4"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/056_attachment_spoiler.sql",
+      "sha256": "52b3c8e6c8b948d69f93d60a3279beee9614190b4efa8d6073b2708bef0ee5fa",
+      "canonical_lf_sha256": "c4e98a07ca5706931d2108790b445730687469d85e7328fd8e0fd1cf8d31ddd7"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/057_instance_setup.sql",
+      "sha256": "94c626ccfaad8538b4839defd8c36a48ade5d4c98c4abe699d0e5efb2acc9cb6",
+      "canonical_lf_sha256": "b906e26ee3e70af27943c604295f5cd4bcaf125bb560472bc2c6f6d583bcb2d7"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/058_storage_config.sql",
+      "sha256": "544ad04b15e688bcbb7ec417d6eb0c305c5b3e6ed450baea9f6e4e87553b72ef",
+      "canonical_lf_sha256": "946d6f596abc1875a8cf20bd3025f2b12acd3648e49da64a0ad16c38b08c8b78"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/059_federation_trust.sql",
+      "sha256": "ba906f525dcc38b752f06f59a5121461274868f51151d2c3b89eabfff1b01076",
+      "canonical_lf_sha256": "d9d9fef9295348bb86606d1345f1ff84d1c6f17443acc934ccb723f77662949d"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/060_dm_channel_unreads.sql",
+      "sha256": "326b2750a831d09348d3584f62711751c4e7e7abbc205650fafaa9599ed9f9dc",
+      "canonical_lf_sha256": "d526129e2428e9fe80eb318ed4b9933e210cbd259b8601e42ceef50d2dd0dfd1"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/061_event_recurrence.sql",
+      "sha256": "ee80dcded927f2190ac25a2177f6866af5f14db2e048ec657e14717cfe40cab7",
+      "canonical_lf_sha256": "d14e7873dff192c96b0c8abc726f7d1f73aceab093e6e811e0ac114c2f3a9f00"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/062_storage_quotas.sql",
+      "sha256": "9af908d12d6f3ee679505613a24bf4e6d145986b806739e68c6b61050d2029d2",
+      "canonical_lf_sha256": "98bf52237b7c206bc175beabc9ecbdf625ee7fee82f1ce3efb953fe95835c679"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/063_instance_branding.sql",
+      "sha256": "b2225945ad6e85db21bff4580f9765ec4cba20452012edcd12bbfc3e86316076",
+      "canonical_lf_sha256": "8ac5fa93e98475b75ca8b7006889cccb74fe23b1fc9487c2767db3abebfda0d3"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/064_apps_and_bots.sql",
+      "sha256": "0cf53af365dd55deaff35cd766e4f43e63ef86ee14a7d06f8d55ef35ddd63ab3",
+      "canonical_lf_sha256": "7d267b0e2368ce2c3a47fcd9abc5213c629eb0fdef37f65d32f80497d4616505"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/065_user_presence.sql",
+      "sha256": "85925d8f9da113df0f2d5c0bd81b611e2d555e6ab78614ece678101ca923968b",
+      "canonical_lf_sha256": "f73e08d50058ed19bd77fb930b6831db85703f207627bd5bb24cac1e8ce659a4"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/066_server_notification_settings.sql",
+      "sha256": "1333427ea69fa0ef6cbf9a284992c5f652685d7e96e73ac94751d550fc342eca",
+      "canonical_lf_sha256": "4a95e984628823a9ef7f296cab744141c4b8cdcc56d0c7a08956adc336d67ffd"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/067_user_profile_metadata.sql",
+      "sha256": "beb51bc92df239ee2019cdbd09414e3e0da923a211d71ff02109d441279bcb54",
+      "canonical_lf_sha256": "65f491326e757c98bb04d737d9e6304cee28172f74857433e83e9817cbfbca15"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/069_polls.sql",
+      "sha256": "b7ee6a6e927ec6528b9560b0b64b668de9f9a94e9efb9aeede273b579626edcd",
+      "canonical_lf_sha256": "b17bf66fc46f4474a336ceb2b415fdbfd7d251e67c720ead549b4357fe84d0a7"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/070_message_requests.sql",
+      "sha256": "5ebb7eb4cec26b387d8de9a4092af053e27912479105837ebc0c5839d4ee29fe",
+      "canonical_lf_sha256": "458cfc8f12234dd62a15b42234301b50ced95543cbaaabe3386cc530a2c6c0b6"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/071_friend_nicknames.sql",
+      "sha256": "3066bbc17c426dd823197a4a4814d1b90968ff8e560e7da0587d83d544b15c04",
+      "canonical_lf_sha256": "c9590646a9d7a0921ff4e3353b5bcf3956a441e92f81193e331a02b73de16698"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/072_scheduled_messages.sql",
+      "sha256": "2b3debe78f7a000f8a19740c0f2578d89a48411a01b0b537e052c13f04031208",
+      "canonical_lf_sha256": "218b84beba3b0a36be2229eafc578546d6716eef526ff5a1aa2ee3f5f2fe3246"
+    },
+    {
+      "path": "crates/opencorde-db/migrations/073_forwarded_messages.sql",
+      "sha256": "07459dd305880a17521c2f405527445bcbedad129379f54ac20addaf7e84aa1f",
+      "canonical_lf_sha256": "3a4e5b54c37eb63f7e3c3217e197d0c2207c7777a18d64a44bbbff946ec3b89e"
+    },
+    {
+      "path": "crates/opencorde-db/migrations_applied/029_password_reset.sql",
+      "sha256": "9986922692dd646b6625fda01531ebf437eb40d074a539aadb700d859fd3ce7f",
+      "canonical_lf_sha256": "36f32fad1dcc8a76d72d2d8eb93b3208be5cfb0b60ae06db4e975bfce953e5f0"
+    },
+    {
+      "path": "crates/opencorde-db/migrations_applied/030_user_profile_extensions.sql",
+      "sha256": "bbcb7f53833eb75832d55ae3327913fcc9b6ec2f6e507326536eefa5dfb7132c",
+      "canonical_lf_sha256": "00b3295d7f121cc0eea32df869a6a2a4a77980bee9d1b0d6256553ad5e6d2ee8"
+    },
+    {
+      "path": "crates/opencorde-db/src/lib.rs",
+      "sha256": "258f4662d3a1d39672aa9aa26a450a1be3aa8915510de3eca46c400b7b82ad7e",
+      "canonical_lf_sha256": "7ec4dd44d48986e6fd19c0e9c40c6fe0a2d64f95ce9b88bc3bfd3192c38f0bd2"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/INDEX.md",
+      "sha256": "83e60d3209aae1c7edfebee3b2b5fcd5644d34c448c0f4b651447e9fa8e48935",
+      "canonical_lf_sha256": "2425e20323719c7d6359f8d8cd450248197191556702583b5358127614a52d43"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/app_repo.rs",
+      "sha256": "546557a4668e571885d2cc016a8217f70ec512d0f8de1837626ad346d9b4ff7e",
+      "canonical_lf_sha256": "b548e8fb69a8924d94c3ddb7b63d5687999874204bc7a97a87e46817262383ec"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/audit_repo.rs",
+      "sha256": "d3e5a85e881f85a5c411df5b72ca8aa3793d23c2127f832981c7f0c05c35448c",
+      "canonical_lf_sha256": "b6f8ea31989f5e2cf3031d59047e5a270d626ef1517f37cc6779c5cbb06551db"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/automod_repo.rs",
+      "sha256": "e6eb3fbe0d1d4d76cc84189bda6865d4d22637f6c9fb16f9aec60561d9476516",
+      "canonical_lf_sha256": "0f7cf3be697aa935cbe268a454bd1f6db243fa178c231a6898bd7f7b418bcb7b"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/badge_repo.rs",
+      "sha256": "f1c5af79403e0b65cfca9b6e4cee2d7b127b83eebf1dc39a9ea6ea02b35fcbdb",
+      "canonical_lf_sha256": "e253ea1ecef6f405c3efad9165d0dc9c550515df33a2d9b166eeb84a97b73988"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/ban_repo.rs",
+      "sha256": "66ed007ccf56aa5644509aea29129f4e2e1fa1f65da3c38cd1dbf73aa4502d0b",
+      "canonical_lf_sha256": "c199d5d5222e5f5638a9c8f16741b9fb1ab3047d46b611127cebc76680069c3e"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/bot_user_repo.rs",
+      "sha256": "ae7f6146abc3ea9db6d46de43283f85cc3c132dcf40336e94023a8351da1d8bf",
+      "canonical_lf_sha256": "bee03ba814490b0db8e0eb8343e0635f669e1752c01a1d91ee9af9ac0997471c"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/channel_override_repo.rs",
+      "sha256": "6694d87d84bb54bb1e80cbca27c0715f202af978b985ae4b911002a52baff2c9",
+      "canonical_lf_sha256": "10eb2e80f686d6580d625aebd726c34d079dfd8407a433796d060c665a9d20bd"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/channel_repo.rs",
+      "sha256": "71ad5f0b7b4fae94ed31910626a9e3181344483dc820be747a1b639c3071194f",
+      "canonical_lf_sha256": "553763a70d3cf183f06abe3c2699e4244852688754a11cbef0d6b19cf109eeaf"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/channel_template_repo.rs",
+      "sha256": "319f397788517a1afa9050c828527f695eb4ef6b929cdffec1985e736a3f11ae",
+      "canonical_lf_sha256": "c5eddda2cd5caa8a33767c4cbd071f557f77e143d157649bff7238f065993521"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/dm_channel_unread_repo.rs",
+      "sha256": "2a440a1d0185f4e547cfee040e89e9e73f59c9afc400f81028161ef2d498fb11",
+      "canonical_lf_sha256": "849f8640c2204f685dbbb63d53ae854a0e229e4e70d4de246308311df41636c1"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/dm_federated_repo.rs",
+      "sha256": "f2c3d90ce512e2a0373acbd3086b824bd6a3211796055253c39df351a1df4336",
+      "canonical_lf_sha256": "2c8689dfcd5dc93b42d5f28e2aa054f2738b61f8f4ea7cf67d0e28cde6f2e2f2"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/dm_repo.rs",
+      "sha256": "a04108e101f4144d5ded15fc0a5bf9af23b4def3310deaddf40b51751c336b76",
+      "canonical_lf_sha256": "c5d8bd5896cbb1dafbfda1bdf6b2cddb60fc8e1ac88d953d36f2db4b1435486c"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/emoji_repo.rs",
+      "sha256": "f05ca4e774772d311f15edd4b2c7ecdcbfab613e565fcb4e7201b0c1b189f274",
+      "canonical_lf_sha256": "8a7c3c5e6e90ecf259650af8bce2b8dacfce7b47ebc4869df03eb554b4dd3c5a"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/event_repo.rs",
+      "sha256": "b545e1e66d0eaaf5a5403cfd2c2a9b811aac635f582c99266457b50dccd451fb",
+      "canonical_lf_sha256": "29cddaaa8ab013c50e89d7f5733a7ba50b1fbfd82c00cf343488904c1258f606"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/federation_settings_repo.rs",
+      "sha256": "6aeba7c72719728b5e04ee697252a97c6a8403715c668c47f9d172a15b81dec5",
+      "canonical_lf_sha256": "efb93a53592cf08ef508fd88492e02007bd05d88ba37d281014a6e3de9e2e827"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/forum_repo.rs",
+      "sha256": "932ef80297ae949d99d1aa2392ed881f30abeadfe666db95c39b293520cc5fe4",
+      "canonical_lf_sha256": "91e504ff6213293e3579afb9a8f67b3d9637c9a932b11c25d10ac0927714c7b9"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/invite_repo.rs",
+      "sha256": "d73af287fc8d9f94af92390987e9851e047888ba2d07089bcc9cd118433959b0",
+      "canonical_lf_sha256": "1264e0aaa4df6de180cf91190b6e7a65a9ea1fd4941ca5acb0254a3b3985aa3e"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/member_repo/crud.rs",
+      "sha256": "f779192d121e660dbed1a14930af3bc20f6abbc15e1a95fd9e5dd4adf7de77e0",
+      "canonical_lf_sha256": "1e176b4192030b125d111041ecb199583c92b4a49b7878f2a7c6a964fde0b560"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/member_repo/mod.rs",
+      "sha256": "b7f07fb5fd3333885e43b252b1760f4b0c5aeecd130606cf6b61d2a6a377e036",
+      "canonical_lf_sha256": "11736e805108d31f87238fc8d4f98eca72d09c9e11e6741032dddd0868cfd394"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/member_repo/roles.rs",
+      "sha256": "251426304e7dacea380c152c2bed6d3b68cbcf06cccce3956fc882ae671ef4eb",
+      "canonical_lf_sha256": "d02908400f9998e4aa0d1e60a75c1804ef10fae6145837ea03e11887e5c18314"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/mesh_peer_repo.rs",
+      "sha256": "e34ed46bab3c2fb17538efc31322f200556d67162221fd8030b65b62ef58275f",
+      "canonical_lf_sha256": "2b2ccdf6796bbc09ad46b303942c31751c9c626350fe48e08558950988f7ab4c"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/message_repo/crud.rs",
+      "sha256": "88a7fbd636ff78e5be337f811dcd7ab214c9ec44526ca36bf2e5620d34913714",
+      "canonical_lf_sha256": "2fffdcfc9a8de99bf55edbe3a07f7fd0b646e3cc5b5084bf8d3ae1d42a09d99b"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/message_repo/mod.rs",
+      "sha256": "7a653c57334930ed3c1e83c9c1fa45fe36b4682b11832f9329474e995ff7d81f",
+      "canonical_lf_sha256": "7aaa277d0d327bee2af1242fdd2aff5754606eb28b231077750a2db31cbb505c"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/message_repo/query.rs",
+      "sha256": "320df15f2a0d56c34608cf2c872c133f33e15ed91a55bf09ed9939ff0937acfb",
+      "canonical_lf_sha256": "4c60ad834c41b17b929b0c594de02e1a4455ac5bb637a5585fb7a8be59c975f6"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/mod.rs",
+      "sha256": "9943d845f3c4032daff021df8a9c8ab85859c4aa0abc4b27b7581876b055aaf6",
+      "canonical_lf_sha256": "f5bc2a470a6defc39d0421636444d7ddf466bec286a555fe5b094f1080e5c351"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/pin_repo.rs",
+      "sha256": "8e3d99653f4720a6936d637e3d10b5b9b2d6db5e79b3bc41b1b168dfe856d5e0",
+      "canonical_lf_sha256": "7150c2d927f085eed4ec1df77600941da736b83fd45c4e283c016f2fc83f23ee"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/reaction_repo.rs",
+      "sha256": "094ef14c60e7ff6503f6e178fb91bb4c2bd0b195727adc49299026937de7decd",
+      "canonical_lf_sha256": "21fda8cda8debcdea837fbe3f6624e0dc1bd9554c36f96fbb669fb9b2a13133d"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/read_state_repo.rs",
+      "sha256": "6c2d99ca392fe8ae68b9100494e30437989dac9df5146d79705774217486a0eb",
+      "canonical_lf_sha256": "9df18e25326a33d020adfd19722ca06789dc42b9e523c4472059e303d854a18b"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/refresh_token_repo.rs",
+      "sha256": "0fd65fd7e5fc69fa8b9a7171bc286ccbc261605ed4207cbb1e319957ac6a744f",
+      "canonical_lf_sha256": "a9d303e42e65ee8045d09fe84f867229cda0a9e9f8b3d20e9df3ccddbe6c19ba"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/relationship_repo.rs",
+      "sha256": "9474eab3713eeb8363887f1d2c1bb05641dbaad7ce49dbb207a8616ca1b740db",
+      "canonical_lf_sha256": "e1fa568463247515eb34c1b43215f3006a8b04b78a6e618fb08bbbc258a2a582"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/role_repo.rs",
+      "sha256": "7beecf68e629641f84df4b7318ff2491353e8a97db70197e1e34f73aa0400b5f",
+      "canonical_lf_sha256": "5fe659d9113453492c7afcdb4eebadd173c5d9266ce6c15e71995092f3b1c9fc"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/scheduled_message_repo.rs",
+      "sha256": "ba760665fac0d17840eb98ae4b25c85d9aaf4d3c940231dbb26a8efe2363abc8",
+      "canonical_lf_sha256": "3f70f8e93762296082ddef55b231aada74b5069e9a64215c92b65b82faf0817a"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/server_repo.rs",
+      "sha256": "8388c54e3d47cff0f414c4e3ed1f3026a244a585500456833aced5fabb545c5d",
+      "canonical_lf_sha256": "b176bd35b0611b2299a66566e23c81e6d7248266d867e9498f84748bf27569cd"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/session_repo.rs",
+      "sha256": "01d5ba3a12922e0a41ef3dd756ffe910719d7208de108b0d0a467e895fd8f8c9",
+      "canonical_lf_sha256": "2c28c1687214098bcdc01a5f9f46a398cd76544dac5d9d8d5128e0762935f751"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/slash_command_repo.rs",
+      "sha256": "63f24b2f93dedfc9c9118ea741cf1ceea53cb965dad07b258d333dcfbfdb7bf6",
+      "canonical_lf_sha256": "ee685aa68bcfd0b666f2328baf7bae6d9c81d31bbc2a8c464df50451a223777d"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/stage_repo/mod.rs",
+      "sha256": "f575ec5c437ed4d2f953c5b08590257132685b2b90a1e352471e646082296b9c",
+      "canonical_lf_sha256": "72a88de114bb84cd3874da06328e8cc384843ec7666df03bf11d130474d394a0"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/stage_repo/participant.rs",
+      "sha256": "34e0ed6c5b47c606d3d04399d18e8ffa1f5d0afbe1631575b61bfdf3e5c6ac02",
+      "canonical_lf_sha256": "760f8c58ea2b1d944da13fba420f340f3cdb844b54bd15ae85081ce4cb0a4cdc"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/stage_repo/session.rs",
+      "sha256": "06a5fb8656f43f9fb92d0f40d8bb2609a00db8b94fd72cae51b96e6d990630ba",
+      "canonical_lf_sha256": "24b11e88a9c139457ebfd85f1c66cc0ac3a8b3b127f94587d8b547c6a4390949"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/thread_repo.rs",
+      "sha256": "d6a7c37a1c7cbf5211482015903e29e79965959501a3a48dbe3292f95d9570b7",
+      "canonical_lf_sha256": "d13bef6649cbc57cbd2decfd3012915ed5a4bdeaf10040a008166e4b644635da"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/user_activity_repo.rs",
+      "sha256": "f2b4f8810da35fd695b20b32c2a682662ceeed177a84f423304873078b25bca1",
+      "canonical_lf_sha256": "1f227ad69a67873950054491511d586238f258a5c0ebdf7bfa1be71f809e21fe"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/user_repo.rs",
+      "sha256": "5cb2e08ea731007f45e5c77aa64270052c6069b0381e1314576f9b5a925a11ca",
+      "canonical_lf_sha256": "f87bfe9984d62d5e18a06bee8d0cc16828a9dc3d92b6a188f22f1b2e8837ed04"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/voice_state_repo.rs",
+      "sha256": "17d0443b948392e2118bbc267859e4784c499372480b240c256d13c6007fce02",
+      "canonical_lf_sha256": "c3984090137e82ca4633a41df55190892330e1af4410097af4e72fcf6ff619d1"
+    },
+    {
+      "path": "crates/opencorde-db/src/repos/webhook_repo.rs",
+      "sha256": "01f12417cebce63d41b55af6a3c52bc4e5fac488105f52bd3cd6fd6fbd398984",
+      "canonical_lf_sha256": "983ab8772aac4ecc26228f04926469be44020194d823ac0485d9b989c9309991"
+    },
+    {
+      "path": "crates/opencorde-search/Cargo.toml",
+      "sha256": "e7f1940a090ea23b355b5d858bce42d1bc4c789912baa9dc3d1ddb1cb09752d5",
+      "canonical_lf_sha256": "b3b52e59164624f951e373cbe7acbac35ee3317b39c4fcc8824475758a43ce59"
+    },
+    {
+      "path": "crates/opencorde-search/INDEX.md",
+      "sha256": "7ca52321ffc9f26271e8bd18593836e21336855afaa5db6ff6a4923c01f50607",
+      "canonical_lf_sha256": "d8261171ce6354e696acf50c3681402f70a63b5a989d7b168b9de9391a7170f0"
+    },
+    {
+      "path": "crates/opencorde-search/src/filter_parser.rs",
+      "sha256": "a13bdc378ab99532ffa0ddd57e9950d675a2ceb391eec54d6c732b4462af8a44",
+      "canonical_lf_sha256": "64c8c940fde0629d152fb74473e1a0ae1fe7f5da64c9e31cb49ec4dd79fb0b38"
+    },
+    {
+      "path": "crates/opencorde-search/src/indexer.rs",
+      "sha256": "9fd026d675ae6406f9eb7d1e4e2897b3f74fc21a6d603ace9829f10009c82506",
+      "canonical_lf_sha256": "790f8e3b39a2cc528cfd4445f49c37bee653e523f7c4cf51224923f37e1b563f"
+    },
+    {
+      "path": "crates/opencorde-search/src/lib.rs",
+      "sha256": "0fd5b951b67a54b5065cf3d544549a80fc28b938904764df35a4661e8542c45f",
+      "canonical_lf_sha256": "a7bba0b8fd6279c935249fda53b447c7398c863e1da916f543bee31663477d17"
+    },
+    {
+      "path": "crates/opencorde-search/src/schema.rs",
+      "sha256": "f03e4cb0e3eef125f0199f0d69715334da75064b1d72e286aec7d50093ed943c",
+      "canonical_lf_sha256": "867ae0f617670c7bd81bf5e8919e30e2faac7b707092d1caa48316f4c6efdadf"
+    },
+    {
+      "path": "crates/opencorde-search/src/searcher.rs",
+      "sha256": "1edf975f427368c11f0eeb82f9a42511c729748b6a1ecc79caf6402844c2731a",
+      "canonical_lf_sha256": "9d5abdf4454ffc8ef71f4dde2e8a432df699b9332449f3ce2f7158cbad1fa880"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "355b08e06fc3b9ce1ad5fddd1b7492f81b60452eabd40d05867d7dfb01d6be36",
+      "canonical_lf_sha256": "f96d4e8f217a567b85a7405e59f8fc01140550be6ce751da79969599c41b4464"
+    },
+    {
+      "path": "package.json",
+      "sha256": "e37e84b5ed0bd3a58f771a9fd7fb8d6baa18c997d4b966d0368640133726ffe5",
+      "canonical_lf_sha256": "a3dc2e326147f1f0d86f51569f5496aebca80467d87099904771ceaf0fc6d5c3"
+    },
+    {
+      "path": "scripts/run-rust-on-thor.ps1",
+      "sha256": "ac3cfbcdd237b8a97da60bc9749e60f9edd3811e3fdee1b00f3950725883d746",
+      "canonical_lf_sha256": "ac3cfbcdd237b8a97da60bc9749e60f9edd3811e3fdee1b00f3950725883d746"
+    },
+    {
+      "path": "tests/client/README.md",
+      "sha256": "12d147c21ee73fbcc4345f66864080c73b8fbdf273516d1ee6aef5a4b3b5c2d7",
+      "canonical_lf_sha256": "12d147c21ee73fbcc4345f66864080c73b8fbdf273516d1ee6aef5a4b3b5c2d7"
+    },
+    {
+      "path": "tests/client/dm-store.mjs",
+      "sha256": "e70b366f1bc7a2ca68eba8d4dea3eee3e6b9b4b7bfe39991904d1d9f53d652fc",
+      "canonical_lf_sha256": "e70b366f1bc7a2ca68eba8d4dea3eee3e6b9b4b7bfe39991904d1d9f53d652fc"
+    },
+    {
+      "path": "tests/client/login-smoke.mjs",
+      "sha256": "3abdc851e5621dd9dba5bac588dd2f1d43f6dc70c7a59cb46bac9b354851f92b",
+      "canonical_lf_sha256": "3abdc851e5621dd9dba5bac588dd2f1d43f6dc70c7a59cb46bac9b354851f92b"
+    }
+  ]
+}

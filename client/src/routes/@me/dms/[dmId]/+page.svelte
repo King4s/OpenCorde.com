@@ -6,7 +6,7 @@
 	 */
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
-	import { activeDmMessages, dmLoading, fetchDmMessages, sendDmMessage } from '$lib/stores/dms';
+	import { activeDmMessages, dmLoading, fetchDmMessages, sendDmMessage, clearActiveDm } from '$lib/stores/dms';
 	import { renderMarkdown } from '$lib/utils/markdown';
 	import { tick } from 'svelte';
 
@@ -17,14 +17,15 @@
 	let error = $state('');
 	let isSending = $state(false);
 
-	// Load messages on mount
-	if (browser) {
-		const match = window.location.pathname.match(/\/@me\/dms\/([^/]+)/);
-		dmId = match?.[1] ?? '';
+	// Route changes can reuse this component; each conversation owns its active state.
+	$effect(() => {
+		if (!browser) return;
+		dmId = $page.params.dmId ?? '';
 		if (dmId) {
 			fetchDmMessages(dmId).catch(() => {});
 		}
-	}
+		return clearActiveDm;
+	});
 
 	// Auto-scroll to bottom when messages arrive
 	let prevCount = 0;

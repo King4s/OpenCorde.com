@@ -1,0 +1,2 @@
+# Container entrypoints must retain a Linux-compatible shebang on Windows.
+deploy/nginx/entrypoint.sh text eol=lf

@@ -19,7 +19,7 @@ use axum::{
 
 use crate::AppState;
 
-use super::{edit_delete, send_list};
+use super::{edit_delete, forward, send_list};
 
 /// Build the messages router with all endpoints.
 pub fn router() -> Router<AppState> {
@@ -31,6 +31,10 @@ pub fn router() -> Router<AppState> {
         .route(
             "/api/v1/messages/{id}",
             patch(edit_delete::edit_message).delete(edit_delete::delete_message),
+        )
+        .route(
+            "/api/v1/messages/{id}/forward",
+            post(forward::forward_message),
         )
         .route(
             "/api/v1/channels/{channel_id}/typing",

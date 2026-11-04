@@ -80,6 +80,7 @@ pub async fn unfurl(
     _user: AuthUser,
     Query(params): Query<UnfurlQuery>,
 ) -> Result<axum::Json<UnfurlData>, ApiError> {
+    state.config.require_external_integrations()?;
     let url = params.url.trim().to_string();
 
     // Basic scheme check

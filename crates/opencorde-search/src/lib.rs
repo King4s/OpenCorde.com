@@ -34,6 +34,16 @@ pub use indexer::SearchIndexer;
 pub use schema::SearchSchema;
 pub use searcher::{SearchEngine, SearchResult};
 
+/// Create an offline rebuild destination. Refuse every existing path, including
+/// an empty directory, so an operator must explicitly choose a fresh location.
+/// A failed rebuild is retained for inspection; this function never deletes data.
+pub fn create_fresh(path: &Path) -> Result<(Index, SearchSchema)> {
+    std::fs::create_dir(path)?;
+    let schema = SearchSchema::new();
+    let index = Index::create_in_dir(path, schema.schema.clone())?;
+    Ok((index, schema))
+}
+
 /// Opens or creates a search index at the given path.
 ///
 /// If the directory exists, opens the existing index.
@@ -69,6 +79,17 @@ pub fn open_or_create(path: &Path) -> Result<(Index, SearchSchema)> {
 mod tests {
     use super::*;
     use tempfile::TempDir;
+
+    #[test]
+    fn fresh_index_refuses_existing_paths() {
+        let dir = TempDir::new().unwrap();
+        assert!(create_fresh(dir.path()).is_err());
+        let path = dir.path().join("index");
+        let (index, _) = create_fresh(&path).unwrap();
+        drop(index);
+        assert!(create_fresh(&path).is_err());
+        assert!(Index::open_in_dir(path).is_ok());
+    }
 
     #[test]
     fn test_open_or_create_new() {
