@@ -1,15 +1,15 @@
 //! # E2EE Group Endpoints
 //!
 //! ## Endpoints
-//! - POST /api/v1/channels/{channel_id}/e2ee/init    — Store initial group state + welcome messages
+//! - POST /api/v1/channels/{channel_id}/e2ee/init    — Relay encrypted welcome messages
 //! - GET  /api/v1/channels/{channel_id}/e2ee/welcome — Fetch + consume own welcome message
-//! - PUT  /api/v1/channels/{channel_id}/e2ee/state   — Update own group state after processing commit
+//! - PUT  /api/v1/channels/{channel_id}/e2ee/state   — Legacy empty state acknowledgement
 //!
 //! ## Flow
-//! 1. Channel creator POSTs init: provides their own group_state + array of
+//! 1. Channel creator POSTs init: provides an array of
 //!    {user_id, welcome_message} for each existing member.
 //! 2. Each member GETs /welcome to receive their Welcome bytes (cleared after fetch).
-//! 3. On every MLS commit, the committing member PUTs /state with updated group_state.
+//! 3. Private MLS state remains on the client. Nonempty state uploads are rejected.
 //!
 //! ## Depends On
 //! - axum (web framework)
@@ -28,7 +28,7 @@ use axum::{
     http::StatusCode,
     routing::{get, post, put},
 };
-use opencorde_core::permissions::Permissions;
+use opencorde_core::{permissions::Permissions, snowflake::Snowflake};
 use serde::{Deserialize, Serialize};
 use sqlx::Row;
 use tracing::instrument;
@@ -45,7 +45,8 @@ pub struct MemberWelcome {
 /// Request body for POST /e2ee/init.
 #[derive(Debug, Deserialize)]
 pub struct InitGroupRequest {
-    /// Base64-encoded MLS group state for the creator
+    /// Legacy field: only an omitted or empty value is accepted. Private state stays local.
+    #[serde(default)]
     pub group_state: String,
     /// Welcome messages for each member being added (may be empty for solo channels)
     pub member_welcomes: Vec<MemberWelcome>,
@@ -61,7 +62,7 @@ pub struct WelcomeResponse {
 /// Request body for PUT /e2ee/state.
 #[derive(Debug, Deserialize)]
 pub struct UpdateStateRequest {
-    /// Base64-encoded updated MLS group state
+    /// Legacy field: nonempty state uploads are rejected; empty requests are a no-op.
     pub group_state: String,
 }
 
@@ -80,8 +81,8 @@ pub fn router() -> Router<AppState> {
 
 /// POST /api/v1/channels/{channel_id}/e2ee/init — Initialize E2EE group.
 ///
-/// Called once by the group creator. Stores creator's group state and
-/// welcome messages for all initial members.
+/// Called by the group creator to relay encrypted Welcome messages.
+/// Private group state is never uploaded; historical stored blobs are preserved.
 #[instrument(skip(state, auth, payload), fields(user_id = %auth.user_id))]
 pub async fn init_group(
     State(state): State<AppState>,
@@ -90,11 +91,20 @@ pub async fn init_group(
     Json(payload): Json<InitGroupRequest>,
 ) -> Result<StatusCode, ApiError> {
     let channel_id = helpers::parse_snowflake(&channel_id_str)?;
-    let creator_state = base64_decode(&payload.group_state)?;
+    init_group_for_user(&state.db, auth.user_id, channel_id, payload).await
+}
+
+async fn init_group_for_user(
+    pool: &sqlx::PgPool,
+    user_id: Snowflake,
+    channel_id: Snowflake,
+    payload: InitGroupRequest,
+) -> Result<StatusCode, ApiError> {
+    reject_private_state(&payload.group_state)?;
 
     permission_check::require_channel_perm(
-        &state.db,
-        auth.user_id,
+        pool,
+        user_id,
         channel_id,
         Permissions::VIEW_CHANNEL | Permissions::SEND_MESSAGES,
     )
@@ -104,7 +114,7 @@ pub async fn init_group(
     for member in &payload.member_welcomes {
         let member_id = helpers::parse_snowflake(&member.user_id)?;
         permission_check::require_channel_perm(
-            &state.db,
+            pool,
             member_id,
             channel_id,
             Permissions::VIEW_CHANNEL,
@@ -112,7 +122,7 @@ pub async fn init_group(
         .await
         .map_err(|_| {
             tracing::warn!(
-                creator = auth.user_id.as_i64(),
+                creator = user_id.as_i64(),
                 member_id = member_id.as_i64(),
                 channel_id = channel_id.as_i64(),
                 "E2EE group init denied: welcome target cannot view channel"
@@ -122,19 +132,19 @@ pub async fn init_group(
         member_welcomes.push((member_id, base64_decode(&member.welcome_message)?));
     }
 
-    // Upsert creator's own group state (no welcome needed for creator)
+    // Record a new creator without private state; never overwrite historical blobs.
     sqlx::query(
         r#"
         INSERT INTO e2ee_groups (channel_id, user_id, group_state)
         VALUES ($1, $2, $3)
         ON CONFLICT (channel_id, user_id)
-        DO UPDATE SET group_state = EXCLUDED.group_state, updated_at = NOW()
+        DO NOTHING
         "#,
     )
     .bind(channel_id.as_i64())
-    .bind(auth.user_id.as_i64())
-    .bind(&creator_state)
-    .execute(&state.db)
+    .bind(user_id.as_i64())
+    .bind(Vec::<u8>::new())
+    .execute(pool)
     .await
     .map_err(ApiError::Database)?;
 
@@ -150,15 +160,15 @@ pub async fn init_group(
         )
         .bind(channel_id.as_i64())
         .bind(member_id.as_i64())
-        .bind(&creator_state) // members receive current epoch state as placeholder
+        .bind(Vec::<u8>::new()) // private MLS state is never stored
         .bind(welcome_bytes)
-        .execute(&state.db)
+        .execute(pool)
         .await
         .map_err(ApiError::Database)?;
     }
 
     tracing::info!(
-        user_id = %auth.user_id,
+        user_id = %user_id,
         channel_id = channel_id.as_i64(),
         member_count = payload.member_welcomes.len(),
         "E2EE group initialized"
@@ -177,27 +187,36 @@ pub async fn get_welcome(
     Path(channel_id_str): Path<String>,
 ) -> Result<Json<WelcomeResponse>, ApiError> {
     let channel_id = helpers::parse_snowflake(&channel_id_str)?;
+    get_welcome_for_user(&state.db, auth.user_id, channel_id).await
+}
 
-    permission_check::require_channel_perm(
-        &state.db,
-        auth.user_id,
-        channel_id,
-        Permissions::VIEW_CHANNEL,
-    )
-    .await?;
+async fn get_welcome_for_user(
+    pool: &sqlx::PgPool,
+    user_id: Snowflake,
+    channel_id: Snowflake,
+) -> Result<Json<WelcomeResponse>, ApiError> {
+    permission_check::require_channel_perm(pool, user_id, channel_id, Permissions::VIEW_CHANNEL)
+        .await?;
 
     // Atomically fetch and clear the welcome message
     let row = sqlx::query(
         r#"
-        UPDATE e2ee_groups
+        WITH pending AS (
+            SELECT channel_id, user_id, welcome_message
+            FROM e2ee_groups
+            WHERE channel_id = $1 AND user_id = $2 AND welcome_message IS NOT NULL
+            FOR UPDATE
+        )
+        UPDATE e2ee_groups AS groups
         SET welcome_message = NULL, updated_at = NOW()
-        WHERE channel_id = $1 AND user_id = $2 AND welcome_message IS NOT NULL
-        RETURNING welcome_message
+        FROM pending
+        WHERE groups.channel_id = pending.channel_id AND groups.user_id = pending.user_id
+        RETURNING pending.welcome_message
         "#,
     )
     .bind(channel_id.as_i64())
-    .bind(auth.user_id.as_i64())
-    .fetch_optional(&state.db)
+    .bind(user_id.as_i64())
+    .fetch_optional(pool)
     .await
     .map_err(ApiError::Database)?
     .ok_or_else(|| ApiError::NotFound("no pending welcome message for this channel".into()))?;
@@ -207,7 +226,7 @@ pub async fn get_welcome(
         .ok_or_else(|| ApiError::NotFound("welcome message already consumed".into()))?;
 
     tracing::info!(
-        user_id = %auth.user_id,
+        user_id = %user_id,
         channel_id = channel_id.as_i64(),
         "welcome message consumed"
     );
@@ -217,9 +236,9 @@ pub async fn get_welcome(
     }))
 }
 
-/// PUT /api/v1/channels/{channel_id}/e2ee/state — Update own MLS group state.
+/// PUT /api/v1/channels/{channel_id}/e2ee/state — Legacy empty acknowledgement.
 ///
-/// Called after processing any MLS commit. Replaces the stored group_state blob.
+/// Rejects private state uploads and preserves any historical stored blobs.
 #[instrument(skip(state, auth, payload), fields(user_id = %auth.user_id))]
 pub async fn update_state(
     State(state): State<AppState>,
@@ -228,42 +247,56 @@ pub async fn update_state(
     Json(payload): Json<UpdateStateRequest>,
 ) -> Result<StatusCode, ApiError> {
     let channel_id = helpers::parse_snowflake(&channel_id_str)?;
-    let new_state = base64_decode(&payload.group_state)?;
+    update_state_for_user(&state.db, auth.user_id, channel_id, payload).await
+}
+
+async fn update_state_for_user(
+    pool: &sqlx::PgPool,
+    user_id: Snowflake,
+    channel_id: Snowflake,
+    payload: UpdateStateRequest,
+) -> Result<StatusCode, ApiError> {
+    reject_private_state(&payload.group_state)?;
 
     permission_check::require_channel_perm(
-        &state.db,
-        auth.user_id,
+        pool,
+        user_id,
         channel_id,
         Permissions::VIEW_CHANNEL | Permissions::SEND_MESSAGES,
     )
     .await?;
 
-    let result = sqlx::query(
-        r#"
-        UPDATE e2ee_groups
-        SET group_state = $1, updated_at = NOW()
-        WHERE channel_id = $2 AND user_id = $3
-        "#,
+    // Keep the legacy route for empty acknowledgements, without rewriting old state.
+    let exists: bool = sqlx::query_scalar(
+        "SELECT EXISTS(SELECT 1 FROM e2ee_groups WHERE channel_id = $1 AND user_id = $2)",
     )
-    .bind(&new_state)
     .bind(channel_id.as_i64())
-    .bind(auth.user_id.as_i64())
-    .execute(&state.db)
+    .bind(user_id.as_i64())
+    .fetch_one(pool)
     .await
     .map_err(ApiError::Database)?;
 
-    if result.rows_affected() == 0 {
+    if !exists {
         return Err(ApiError::NotFound(
             "no E2EE group found for this channel; call /init first".into(),
         ));
     }
 
     tracing::debug!(
-        user_id = %auth.user_id,
+        user_id = %user_id,
         channel_id = channel_id.as_i64(),
-        "group state updated"
+        "local group state acknowledged"
     );
     Ok(StatusCode::NO_CONTENT)
+}
+
+fn reject_private_state(value: &str) -> Result<(), ApiError> {
+    if !value.is_empty() {
+        return Err(ApiError::BadRequest(
+            "private MLS group state must remain on the client; omit group_state".into(),
+        ));
+    }
+    Ok(())
 }
 
 fn base64_encode(bytes: &[u8]) -> String {
@@ -279,12 +312,4 @@ fn base64_decode(s: &str) -> Result<Vec<u8>, ApiError> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_base64_roundtrip() {
-        let data = b"MLS welcome message bytes";
-        assert_eq!(base64_decode(&base64_encode(data)).unwrap(), data);
-    }
-}
+mod tests;

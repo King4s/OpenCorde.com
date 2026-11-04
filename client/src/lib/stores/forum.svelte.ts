@@ -1,6 +1,7 @@
 // @file Forum store — manages forum post state and API calls
 
 import api from "$lib/api/client";
+import { requirePlaintextChannel } from "./e2ee";
 
 export interface ForumPost {
   id: string;
@@ -78,6 +79,7 @@ export const forumStore = {
     title: string,
     content: string,
   ): Promise<ForumPost> {
+    requirePlaintextChannel(channelId, "Forum posts");
     const post = await api.post<ForumPost>(`/channels/${channelId}/posts`, {
       title,
       content,
@@ -114,6 +116,10 @@ export const forumStore = {
   },
 
   async createReply(postId: string, content: string): Promise<ForumReply> {
+    if (state.currentPost?.id !== postId) {
+      throw new Error("Post security information is unavailable.");
+    }
+    requirePlaintextChannel(state.currentPost.channel_id, "Forum replies");
     const reply = await api.post<ForumReply>(`/posts/${postId}/replies`, {
       content,
     });

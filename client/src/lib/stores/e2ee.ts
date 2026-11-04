@@ -7,6 +7,7 @@
 import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 import api from "$lib/api/client";
+import { channels } from "./channels";
 
 // Map<channelId, groupStateHex> — group states live in-memory for the session.
 // Each channel has its own MLS group (text and voice channels are separate groups).
@@ -15,7 +16,7 @@ export const e2eeGroupStates = writable<Map<string, string>>(new Map());
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /** Convert base64url (no-pad) string to hex string for Tauri commands. */
-function base64urlToHex(b64: string): string {
+export function base64urlToHex(b64: string): string {
   const padded = b64.replace(/-/g, "+").replace(/_/g, "/");
   const fullPad = padded.padEnd(
     padded.length + ((4 - (padded.length % 4)) % 4),
@@ -28,7 +29,7 @@ function base64urlToHex(b64: string): string {
 }
 
 /** Convert hex string to base64url (no-pad) for server API. */
-function hexToBase64url(hex: string): string {
+export function hexToBase64url(hex: string): string {
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
@@ -66,6 +67,48 @@ export function clearGroupState(channelId: string): void {
   });
 }
 
+/** Require known channel metadata before choosing an encryption policy. */
+export function isEncryptedChannel(channelId: string): boolean {
+  const channel = get(channels).find((entry) => entry.id === channelId);
+  if (!channel) {
+    throw new Error(
+      "Channel security information is unavailable. Reopen the channel.",
+    );
+  }
+  return channel.e2ee_enabled || Boolean(getGroupState(channelId));
+}
+
+/** Block features whose wire format does not support encrypted content. */
+export function requirePlaintextChannel(
+  channelId: string,
+  operation: string,
+): void {
+  if (isEncryptedChannel(channelId)) {
+    throw new Error(`${operation} is unavailable in encrypted channels.`);
+  }
+}
+
+function requireNativeCrypto(): void {
+  if (typeof window === "undefined" || !("__TAURI_INTERNALS__" in window)) {
+    throw new Error("Encrypted channels require the desktop app.");
+  }
+}
+
+/** Validate the crypto boundary before any message or attachment is uploaded. */
+export function requireChannelGroupState(
+  channelId: string,
+): string | undefined {
+  if (!isEncryptedChannel(channelId)) return undefined;
+  requireNativeCrypto();
+  const state = getGroupState(channelId);
+  if (!state) {
+    throw new Error(
+      "Encryption keys are unavailable. Join the encrypted channel before sending.",
+    );
+  }
+  return state;
+}
+
 // ─── Group Lifecycle ─────────────────────────────────────────────────────────
 
 /**
@@ -78,6 +121,8 @@ export function clearGroupState(channelId: string): void {
  * Throws if no welcome message is pending (404) or if crypto fails.
  */
 export async function joinE2EEGroup(channelId: string): Promise<void> {
+  if (getGroupState(channelId)) return;
+  requireNativeCrypto();
   const { welcome_message } = await api.get<{ welcome_message: string }>(
     `/channels/${channelId}/e2ee/welcome`,
   );
@@ -88,11 +133,6 @@ export async function joinE2EEGroup(channelId: string): Promise<void> {
   });
 
   setGroupState(channelId, groupStateHex);
-
-  // Persist new group state to server (replaces placeholder)
-  await api.put(`/channels/${channelId}/e2ee/state`, {
-    group_state: hexToBase64url(groupStateHex),
-  });
 }
 
 /**
@@ -130,7 +170,7 @@ export async function initE2EEGroup(
   setGroupState(channelId, groupStateHex);
 
   await api.post(`/channels/${channelId}/e2ee/init`, {
-    group_state: hexToBase64url(groupStateHex),
+    group_state: "",
     member_welcomes: memberWelcomes,
   });
 }
@@ -139,7 +179,7 @@ export async function initE2EEGroup(
  * Add a new member to an existing E2EE group.
  *
  * Fetches the member's key package from the server, runs crypto_add_member,
- * and posts the updated welcome + commit to the API.
+ * and relays the public Welcome to the API.
  */
 export async function addE2EEMember(
   channelId: string,
@@ -161,19 +201,14 @@ export async function addE2EEMember(
 
   setGroupState(channelId, result.group_state_hex);
 
-  // Update creator's state and deliver welcome to new member
-  await Promise.all([
-    api.put(`/channels/${channelId}/e2ee/state`, {
-      group_state: hexToBase64url(result.group_state_hex),
-    }),
-    api.post(`/channels/${channelId}/e2ee/init`, {
-      group_state: hexToBase64url(result.group_state_hex),
-      member_welcomes: [
-        {
-          user_id: memberId,
-          welcome_message: hexToBase64url(result.welcome_hex),
-        },
-      ],
-    }),
-  ]);
+  // Only the public Welcome leaves the device. MLS state contains private keys.
+  await api.post(`/channels/${channelId}/e2ee/init`, {
+    group_state: "",
+    member_welcomes: [
+      {
+        user_id: memberId,
+        welcome_message: hexToBase64url(result.welcome_hex),
+      },
+    ],
+  });
 }

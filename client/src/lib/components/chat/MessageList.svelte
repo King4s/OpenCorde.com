@@ -17,6 +17,7 @@
 	import { getGroupState } from '$lib/stores/e2ee';
 	import UserProfilePopover from '$lib/components/user/UserProfilePopover.svelte';
 	import api from '$lib/api/client';
+	import { toastError } from '$lib/stores/toasts.svelte';
 
 	const messageStyle = themeStore.messageStyle;
 
@@ -86,7 +87,15 @@
 		}
 	}
 	function cancelEdit() { editingMsgId = null; }
-	async function submitEdit() { if (editingMsgId) { await onEdit?.(editingMsgId, editContent); editingMsgId = null; } }
+	async function submitEdit() {
+        if (!editingMsgId) return;
+        try {
+            await onEdit?.(editingMsgId, editContent);
+            editingMsgId = null;
+        } catch (err: any) {
+            toastError(err.message ?? 'Message could not be edited');
+        }
+    }
 	let scrollContainer: HTMLDivElement;
 
 	// Start editing when parent requests it

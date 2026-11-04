@@ -1,6 +1,7 @@
 //! @file Slash Commands store — manages slash command registrations
 
 import api from "$lib/api/client";
+import { requirePlaintextChannel } from "./e2ee";
 
 export interface SlashCommand {
   id: string;
@@ -68,6 +69,7 @@ export const slashCommandsStore = {
     commandText: string,
     args?: string[],
   ) {
+    requirePlaintextChannel(channelId, "Slash commands");
     return await api.post<any>(`/channels/${channelId}/interact`, {
       command: commandText,
       args: args || [],

@@ -11,6 +11,7 @@ import { writable, derived } from "svelte/store";
 import api from "$lib/api/client";
 import { gateway } from "$lib/api/websocket";
 import type { AuthResponse, UserProfile } from "$lib/api/types";
+import { hexToBase64url } from "./e2ee";
 import { browser } from "$app/environment";
 import { toastError } from "$lib/stores/toasts.svelte";
 
@@ -160,9 +161,11 @@ async function uploadKeyPackage(userId: string): Promise<void> {
   try {
     const { invoke: tauriInvoke } = await import("@tauri-apps/api/core");
     const kpHex = await tauriInvoke<string>("crypto_init", {
-      user_id: parseInt(userId),
+      user_id: userId,
     });
-    await api.post("/users/me/key-packages", { key_package: kpHex });
+    await api.post("/users/me/key-packages", {
+      key_package: hexToBase64url(kpHex),
+    });
   } catch (err) {
     console.warn("[E2EE] Key package upload failed:", err);
   }

@@ -10,7 +10,8 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "lint": "prettier --check .",
     "format": "prettier --write .",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "test:e2ee": "node --test scripts/e2ee-security.test.mjs"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.0",

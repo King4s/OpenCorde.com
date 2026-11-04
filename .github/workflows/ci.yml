@@ -40,6 +40,10 @@ jobs:
       - run: sqlx migrate run
         working-directory: crates/opencorde-db
       - run: cargo test --workspace --locked
+      - name: E2EE PostgreSQL regression
+        env:
+          OPENCORDE_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: cargo test -p opencorde-api --lib routes::e2ee::groups --locked -- --include-ignored
       - run: cargo clippy --workspace --locked -- -D warnings
 
   frontend:
@@ -52,6 +56,8 @@ jobs:
           node-version: '22'
       - run: corepack enable && corepack prepare pnpm@10.32.1 --activate
       - run: pnpm install --frozen-lockfile --ignore-scripts
+        working-directory: client
+      - run: pnpm test:e2ee
         working-directory: client
       - run: pnpm check
         working-directory: client
@@ -79,4 +85,6 @@ jobs:
       - run: pnpm build
         working-directory: client
       - run: cargo check --locked
+        working-directory: client/src-tauri
+      - run: cargo test --test crypto_ipc --locked
         working-directory: client/src-tauri

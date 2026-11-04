@@ -3,11 +3,16 @@
  * @purpose Fetch, send, paginate, edit, delete, react to messages; WebSocket updates
  * @depends api/client, api/types, api/websocket, stores/e2ee
  */
-import { writable } from "svelte/store";
+import { writable, get } from "svelte/store";
 import api from "$lib/api/client";
 import { gateway } from "$lib/api/websocket";
 import type { Message, ReactionCount, Attachment } from "$lib/api/types";
-import { getGroupState, setGroupState } from "./e2ee";
+import {
+  getGroupState,
+  setGroupState,
+  requireChannelGroupState,
+  requirePlaintextChannel,
+} from "./e2ee";
 import { toastError } from "$lib/stores/toasts.svelte";
 import { browser } from "$app/environment";
 
@@ -96,24 +101,21 @@ export async function sendMessage(
   attachments?: Attachment[],
 ): Promise<void> {
   let finalContent = content;
-  if (isTauri()) {
-    const groupState = getGroupState(channelId);
-    if (groupState) {
-      try {
-        const { invoke } = await import("@tauri-apps/api/core");
-        const result = await invoke<{
-          ciphertext_hex: string;
-          group_state_hex: string;
-        }>("crypto_encrypt", {
-          plaintext: content,
-          group_state_hex: groupState,
-        });
-        setGroupState(channelId, result.group_state_hex);
-        finalContent = "enc:" + result.ciphertext_hex;
-      } catch (err) {
-        console.warn("[E2EE] Encryption failed, sending plaintext:", err);
-      }
+  const groupState = requireChannelGroupState(channelId);
+  if (groupState) {
+    const { invoke } = await import("@tauri-apps/api/core");
+    const result = await invoke<{
+      ciphertext_hex: string;
+      group_state_hex: string;
+    }>("crypto_encrypt", {
+      plaintext: content,
+      group_state_hex: groupState,
+    });
+    if (!result.ciphertext_hex || !result.group_state_hex) {
+      throw new Error("Encryption did not produce a valid message.");
     }
+    setGroupState(channelId, result.group_state_hex);
+    finalContent = "enc:" + result.ciphertext_hex;
   }
   const body: Record<string, unknown> = { content: finalContent };
   if (replyToId) body.reply_to_id = replyToId;
@@ -126,6 +128,9 @@ export async function editMessage(
   messageId: string,
   content: string,
 ): Promise<void> {
+  const message = get(messages).find((entry) => entry.id === messageId);
+  if (!message) throw new Error("Message security information is unavailable.");
+  requirePlaintextChannel(message.channel_id, "Editing messages");
   const updated = await api.patch<Message>(`/messages/${messageId}`, {
     content,
   });
