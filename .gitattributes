@@ -1,2 +1,4 @@
 # Container entrypoints must retain a Linux-compatible shebang on Windows.
 deploy/nginx/entrypoint.sh text eol=lf
+
+vendor/openmls-0.5.0/** -text -whitespace linguist-vendored

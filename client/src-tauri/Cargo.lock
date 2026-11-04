@@ -3328,8 +3328,6 @@ dependencies = [
 [[package]]
 name = "openmls"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95d4a03899704c17e7b280676a3301216faccf9b19eb860968f84a492aef944b"
 dependencies = [
  "backtrace",
  "log",

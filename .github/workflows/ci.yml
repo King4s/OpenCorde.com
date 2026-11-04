@@ -32,6 +32,7 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/opencorde
     steps:
       - uses: actions/checkout@v4
+      - run: python3 scripts/verify-openmls-vendor.py
       - run: rustup component add clippy
       - uses: swatinem/rust-cache@v2
       - run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev pkg-config

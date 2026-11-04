@@ -51,3 +51,7 @@ openmls_basic_credential = "0.2"                               # SignatureKeyPai
 openmls_rust_crypto = "0.2"                                    # In-process crypto provider
 
 [workspace]
+
+# This is a separate workspace, so Cargo requires the same patch here.
+[patch.crates-io]
+openmls = { path = "../../vendor/openmls-0.5.0" }
