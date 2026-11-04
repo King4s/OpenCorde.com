@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ScheduledMessage } from '$lib/api/types';
 	import api from '$lib/api/client';
+	import { requirePlaintextChannel } from '$lib/stores/e2ee';
 	import { onMount } from 'svelte';
 
 	interface Props {
@@ -39,6 +40,9 @@
 	async function saveEdit(id: string) {
 		if (!editContent.trim() && !editTime) return;
 		try {
+			const message = messages.find(m => m.id === id);
+			if (!message) throw new Error('Message security information is unavailable.');
+			requirePlaintextChannel(message.channel_id, 'Editing scheduled messages');
 			const body: any = {};
 			if (editContent.trim()) body.content = editContent.trim();
 			if (editTime) body.scheduled_at = editTime;

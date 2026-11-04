@@ -55,3 +55,7 @@ openmls_rust_crypto = "0.2"                                    # In-process cryp
 # This is a separate workspace, so Cargo requires the same patch here.
 [patch.crates-io]
 openmls = { path = "../../vendor/openmls-0.5.0" }
+
+[dev-dependencies]
+# Exercise actual IPC argument decoding without a graphical desktop.
+tauri = { version = "2", features = ["test"] }

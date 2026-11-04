@@ -5,6 +5,7 @@
 -->
 <script lang="ts">
   import { threadStore } from '$lib/stores/threads.svelte';
+import { toastError } from '$lib/stores/toasts.svelte';
 import { edgeResize } from '$lib/actions/edgeResize';
 
   let { onClose }: { onClose: () => void } = $props();
@@ -19,7 +20,7 @@ import { edgeResize } from '$lib/actions/edgeResize';
       await threadStore.sendMessage(threadStore.activeThread.id, newMessage.trim());
       newMessage = '';
     } catch (e: unknown) {
-      console.error('Failed to send message', e);
+      toastError((e as Error).message ?? 'Message could not be sent');
     } finally {
       sending = false;
     }

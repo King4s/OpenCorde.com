@@ -1,5 +1,6 @@
 // @file Thread store — manages thread state and API calls
 import api from "$lib/api/client";
+import { requirePlaintextChannel } from "./e2ee";
 
 export interface Thread {
   id: string;
@@ -74,6 +75,7 @@ export const threadStore = {
     messageId: string,
     name?: string,
   ): Promise<Thread> {
+    requirePlaintextChannel(channelId, "Threads");
     const thread = await api.post<Thread>(
       `/channels/${channelId}/messages/${messageId}/thread`,
       { name: name ?? "Thread" },
@@ -84,6 +86,10 @@ export const threadStore = {
   },
 
   async sendMessage(threadId: string, content: string) {
+    if (state.activeThread?.id !== threadId) {
+      throw new Error("Thread security information is unavailable.");
+    }
+    requirePlaintextChannel(state.activeThread.channel_id, "Thread replies");
     const msg = await api.post<ThreadMessage>(`/threads/${threadId}/messages`, {
       content,
     });

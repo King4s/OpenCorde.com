@@ -4,7 +4,10 @@
 	 * @purpose Edit channel settings (Overview tab) and manage permission overrides (Permissions tab)
 	 */
 import api from '$lib/api/client';
-import { initE2EEGroup } from '$lib/stores/e2ee';
+import { get } from 'svelte/store';
+import { currentUser } from '$lib/stores/auth';
+import { channels } from '$lib/stores/channels';
+import { initE2EEGroup, base64urlToHex } from '$lib/stores/e2ee';
 import { edgeResize } from '$lib/actions/edgeResize';
 import ChannelPermissionsTab from './ChannelPermissionsTab.svelte';
 
@@ -76,21 +79,24 @@ import ChannelPermissionsTab from './ChannelPermissionsTab.svelte';
 		try {
 			const updated = await api.patch<{ e2ee_enabled: boolean }>(`/channels/${channelId}`, { e2ee_enabled: newVal });
 			e2eeEnabled = updated.e2ee_enabled;
+            channels.update(list => list.map(channel => channel.id === channelId
+                ? { ...channel, e2ee_enabled: updated.e2ee_enabled } : channel));
 			// If enabling and in Tauri: fetch member key packages and init group
 			if (newVal && typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-				const members = await api.get<{ id: string }[]>(`/servers/${spaceId}/members`);
-				const kpMap = new Map<string, string>();
+				const members = await api.get<{ user_id: string }[]>(`/servers/${spaceId}/members`);
+				const creatorId = get(currentUser)?.id;
+                if (!creatorId) throw new Error('Sign in before initializing encryption.');
+                const kpMap = new Map<string, string>();
 				for (const m of members) {
+                    if (m.user_id === creatorId) continue;
 					try {
 						const kpRes = await api.get<{ key_package: string }>(
-							`/users/${m.id}/key-packages/one?channel_id=${encodeURIComponent(channelId)}`
+							`/users/${m.user_id}/key-packages/one?channel_id=${encodeURIComponent(channelId)}`
 						);
-						kpMap.set(m.id, kpRes.key_package);
+						kpMap.set(m.user_id, base64urlToHex(kpRes.key_package));
 					} catch { /* member has no key package */ }
 				}
-				if (kpMap.size > 0) {
-					await initE2EEGroup(channelId, kpMap);
-				}
+				await initE2EEGroup(channelId, kpMap);
 			}
 		} catch (err: any) {
 			console.error('[E2EE] Toggle failed:', err);

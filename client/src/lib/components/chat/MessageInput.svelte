@@ -12,10 +12,10 @@
 	import CommandAutocomplete from './CommandAutocomplete.svelte';
 	import AttachmentPreview from './AttachmentPreview.svelte';
 	import { invoke } from '@tauri-apps/api/core';
-	import { getGroupState } from '$lib/stores/e2ee';
+	import { requireChannelGroupState, requirePlaintextChannel } from '$lib/stores/e2ee';
 
 	interface Props {
-		onSend: (content: string, replyToId?: string, attachments?: Attachment[]) => void;
+		onSend: (content: string, replyToId?: string, attachments?: Attachment[]) => void | Promise<void>;
 		channelName: string;
 		channelId: string;
 		replyTo?: Message | null;
@@ -29,6 +29,7 @@
 	let fileInputElement: HTMLInputElement;
 	let pendingAttachments = $state<Attachment[]>([]);
 	let uploading = $state(false);
+	let sending = $state(false);
 	let uploadError = $state('');
 	let showEmojiPicker = $state(false);
 	let showCommandAutocomplete = $state(false);
@@ -45,6 +46,7 @@
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
+		if (sending) return;
 		if (!content.trim() && pendingAttachments.length === 0) return;
 
 		// Check if message is a slash command
@@ -77,6 +79,7 @@
 		// Schedule mode: send as scheduled message
 		if (showSchedulePicker && scheduleTime) {
 			try {
+				requirePlaintextChannel(channelId, 'Scheduling messages');
 				const body: any = { content: content.trim(), scheduled_at: scheduleTime };
 				if (replyTo?.id) body.reply_to_id = replyTo.id;
 				if (pendingAttachments.length > 0) body.attachments = pendingAttachments;
@@ -93,14 +96,21 @@
 			return;
 		}
 
-		// Regular message
-		onSend(content.trim(), replyTo?.id, pendingAttachments.length > 0 ? [...pendingAttachments] : undefined);
-		content = '';
-		pendingAttachments = [];
-		uploadError = '';
-		showSchedulePicker = false;
-		scheduleTime = '';
-		inputElement?.focus();
+		// Preserve the draft when encryption or delivery fails.
+		sending = true;
+		try {
+			await onSend(content.trim(), replyTo?.id, pendingAttachments.length > 0 ? [...pendingAttachments] : undefined);
+			content = '';
+			pendingAttachments = [];
+			uploadError = '';
+			showSchedulePicker = false;
+			scheduleTime = '';
+			inputElement?.focus();
+		} catch (err: any) {
+			uploadError = err.message ?? 'Message could not be sent';
+		} finally {
+			sending = false;
+		}
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
@@ -159,10 +169,10 @@
 
 		uploading = true;
 		uploadError = '';
-		const groupState = getGroupState(channelId);
 
 		for (const file of Array.from(input.files)) {
 			try {
+				const groupState = requireChannelGroupState(channelId);
 				let uploadFile: File = file;
 
 				// Encrypt file if channel has an active E2EE group
@@ -264,7 +274,7 @@
 			<button
 				type="button"
 				onclick={() => fileInputElement?.click()}
-				disabled={uploading || dispatchingCommand}
+				disabled={sending || uploading || dispatchingCommand}
 				class="mr-1 h-7 w-7 flex-shrink-0 rounded hover:bg-gray-600/50 flex items-center justify-center text-gray-400 hover:text-gray-200 disabled:text-gray-600 transition-colors sm:h-8 sm:w-8"
 				title="Attach file"
 				aria-label="Attach file"
@@ -280,6 +290,7 @@
 			<button
 				type="button"
 				onclick={() => (showEmojiPicker = !showEmojiPicker)}
+				disabled={sending}
 				class="mr-1 h-7 w-7 flex-shrink-0 rounded hover:bg-gray-600/50 flex items-center justify-center text-gray-400 hover:text-gray-200 transition-colors sm:h-8 sm:w-8"
 				title="Add emoji"
 				aria-label="Add emoji"
@@ -291,6 +302,7 @@
 			<button
 				type="button"
 				onclick={() => (showSchedulePicker = !showSchedulePicker)}
+				disabled={sending}
 				class="mr-1 h-7 w-7 flex-shrink-0 rounded hover:bg-gray-600/50 flex items-center justify-center text-gray-400 hover:text-gray-200 transition-colors sm:h-8 sm:w-8 {showSchedulePicker ? 'text-indigo-300 bg-gray-600/50' : ''}"
 				title="Schedule message"
 				aria-label="Schedule message"
@@ -301,6 +313,7 @@
 			<input
 				type="text"
 				bind:value={content}
+				disabled={sending}
 				bind:this={inputElement}
 				onkeydown={handleKeydown}
 				placeholder="Message #{channelName}"
@@ -308,7 +321,7 @@
 			/>
 			<button
 				type="submit"
-				disabled={(!content.trim() && pendingAttachments.length === 0) || dispatchingCommand}
+				disabled={sending || (!content.trim() && pendingAttachments.length === 0) || dispatchingCommand}
 				class="ml-2 text-gray-400 hover:text-gray-300 disabled:text-gray-600 transition-colors text-[13px] sm:text-sm font-medium"
 			>
 				{dispatchingCommand ? 'Executing...' : showSchedulePicker ? 'Schedule' : 'Send'}

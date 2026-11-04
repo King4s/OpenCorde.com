@@ -104,8 +104,12 @@ fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 /// Call once after login. Upload the returned hex to the server:
 /// `POST /api/v1/e2ee/key-packages` with `{ key_package: "<hex>" }`.
 /// On every restart a fresh key package is generated; the server replaces the old one.
-#[tauri::command]
-pub fn crypto_init(user_id: i64, state: State<'_, CryptoState>) -> Result<String, String> {
+#[tauri::command(rename_all = "snake_case")]
+pub fn crypto_init(user_id: String, state: State<'_, CryptoState>) -> Result<String, String> {
+    // Keep Snowflakes as strings across JavaScript IPC to avoid integer rounding.
+    let user_id = user_id
+        .parse::<i64>()
+        .map_err(|_| "invalid user_id".to_string())?;
     tracing::info!(user_id, "crypto_init: generating key package");
 
     let provider = state.provider.lock().map_err(|e| e.to_string())?;
@@ -119,7 +123,11 @@ pub fn crypto_init(user_id: i64, state: State<'_, CryptoState>) -> Result<String
     *state.signer.lock().map_err(|e| e.to_string())? = Some(signer);
     *state.user_id.lock().map_err(|e| e.to_string())? = user_id;
 
-    tracing::info!(user_id, kp_len = kp_bytes.len(), "crypto_init: key package ready");
+    tracing::info!(
+        user_id,
+        kp_len = kp_bytes.len(),
+        "crypto_init: key package ready"
+    );
     Ok(hex_encode(&kp_bytes))
 }
 
@@ -127,7 +135,7 @@ pub fn crypto_init(user_id: i64, state: State<'_, CryptoState>) -> Result<String
 ///
 /// Requires `crypto_init` to have been called first.
 /// Returns the initial group state hex — store it keyed by channel ID.
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 pub fn crypto_create_group(state: State<'_, CryptoState>) -> Result<String, String> {
     tracing::info!("crypto_create_group");
 
@@ -158,7 +166,7 @@ pub fn crypto_create_group(state: State<'_, CryptoState>) -> Result<String, Stri
 ///
 /// `member_key_package_hex` — fetched from server: `GET /api/v1/e2ee/key-packages/{user_id}`.
 /// Returns commit (broadcast to group), welcome (send to new member), updated state.
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 pub fn crypto_add_member(
     group_state_hex: String,
     member_key_package_hex: String,
@@ -168,16 +176,20 @@ pub fn crypto_add_member(
 
     let provider = state.provider.lock().map_err(|e| e.to_string())?;
     let signer_guard = state.signer.lock().map_err(|e| e.to_string())?;
-    let signer = signer_guard.as_ref().ok_or("crypto_init must be called first")?;
+    let signer = signer_guard
+        .as_ref()
+        .ok_or("crypto_init must be called first")?;
 
     let mut mls_group = group::deserialize_group(&hex_decode(&group_state_hex)?)
         .map_err(|e| format!("group deserialization failed: {e:?}"))?;
 
-    let member_kp = key_package::deserialize_key_package(&hex_decode(&member_key_package_hex)?, &provider)
-        .map_err(|e| format!("key package deserialization failed: {e:?}"))?;
+    let member_kp =
+        key_package::deserialize_key_package(&hex_decode(&member_key_package_hex)?, &provider)
+            .map_err(|e| format!("key package deserialization failed: {e:?}"))?;
 
-    let (commit_bytes, welcome_bytes) = group::add_member(&mut mls_group, member_kp, signer, &provider)
-        .map_err(|e| format!("add member failed: {e:?}"))?;
+    let (commit_bytes, welcome_bytes) =
+        group::add_member(&mut mls_group, member_kp, signer, &provider)
+            .map_err(|e| format!("add member failed: {e:?}"))?;
 
     let updated_state = group::serialize_group(&mls_group)
         .map_err(|e| format!("group serialization failed: {e:?}"))?;
@@ -196,7 +208,7 @@ pub fn crypto_add_member(
 ///
 /// Note: `crypto_init` must have been called in this session to populate the
 /// provider key store (the HPKE private key from the key package is needed here).
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 pub fn crypto_process_welcome(
     welcome_hex: String,
     state: State<'_, CryptoState>,
@@ -219,7 +231,7 @@ pub fn crypto_process_welcome(
 ///
 /// Returns ciphertext and updated group state. The frontend MUST replace
 /// its stored group state — the epoch ratchets forward on every send.
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 pub fn crypto_encrypt(
     plaintext: String,
     group_state_hex: String,
@@ -229,7 +241,9 @@ pub fn crypto_encrypt(
 
     let provider = state.provider.lock().map_err(|e| e.to_string())?;
     let signer_guard = state.signer.lock().map_err(|e| e.to_string())?;
-    let signer = signer_guard.as_ref().ok_or("crypto_init must be called first")?;
+    let signer = signer_guard
+        .as_ref()
+        .ok_or("crypto_init must be called first")?;
 
     let mut mls_group = group::deserialize_group(&hex_decode(&group_state_hex)?)
         .map_err(|e| format!("group deserialization failed: {e:?}"))?;
@@ -252,7 +266,7 @@ pub fn crypto_encrypt(
 /// The key is derived via MLS exporter (label "opencorde-voice"). It changes
 /// each epoch, providing automatic forward secrecy when members join/leave.
 /// Pass the returned hex to LiveKit's ExternalE2EEKeyProvider.
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 pub fn crypto_export_voice_key(
     group_state_hex: String,
     state: State<'_, CryptoState>,
@@ -273,7 +287,7 @@ pub fn crypto_export_voice_key(
 ///
 /// Returns plaintext (None for control messages) and updated group state.
 /// The frontend MUST replace its stored group state after every receive.
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 pub fn crypto_decrypt(
     ciphertext_hex: String,
     group_state_hex: String,

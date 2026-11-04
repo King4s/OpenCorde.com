@@ -6,10 +6,11 @@
 //! - DELETE /api/v1/users/me/key-packages               — Delete all own KeyPackages (on logout)
 //! - POST   /api/v1/channels/{channel_id}/e2ee/init     — Initialize E2EE group for channel
 //! - GET    /api/v1/channels/{channel_id}/e2ee/welcome  — Fetch welcome message (join group)
-//! - PUT    /api/v1/channels/{channel_id}/e2ee/state    — Update own group state after commit
+//! - PUT    /api/v1/channels/{channel_id}/e2ee/state    — Legacy empty state acknowledgement
 //!
 //! ## Design
-//! The server acts as a dumb relay — it stores and returns opaque binary blobs.
+//! The server relays public key packages and encrypted Welcome messages only.
+//! Private MLS group state must remain on the client.
 //! All MLS cryptography happens on the client (browser/Tauri app).
 //!
 //! ## Depends On

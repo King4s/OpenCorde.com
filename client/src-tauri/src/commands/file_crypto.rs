@@ -19,7 +19,7 @@
 //! - opencorde-crypto (file_crypto, group modules)
 //! - crate::commands::crypto::CryptoState (shared provider + signer)
 
-use base64::{Engine, engine::general_purpose::STANDARD};
+use base64::{engine::general_purpose::STANDARD, Engine};
 use opencorde_crypto::{file_crypto, group};
 use tauri::State;
 
@@ -28,7 +28,9 @@ use crate::commands::crypto::CryptoState;
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 fn b64_decode(s: &str) -> Result<Vec<u8>, String> {
-    STANDARD.decode(s).map_err(|e| format!("base64 decode failed: {e}"))
+    STANDARD
+        .decode(s)
+        .map_err(|e| format!("base64 decode failed: {e}"))
 }
 
 fn b64_encode(bytes: &[u8]) -> String {
@@ -67,7 +69,7 @@ fn derive_file_key(group_state_hex: &str, state: &CryptoState) -> Result<[u8; 32
 /// `file_data_b64`   — base64-encoded raw file bytes to encrypt.
 ///
 /// Returns base64-encoded encrypted blob (`IV[12] || AES-GCM ciphertext`).
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 pub fn crypto_encrypt_file(
     group_state_hex: String,
     file_data_b64: String,
@@ -95,7 +97,7 @@ pub fn crypto_encrypt_file(
 /// `encrypted_b64`   — base64-encoded encrypted blob (`IV[12] || ciphertext`).
 ///
 /// Returns base64-encoded decrypted file bytes.
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 pub fn crypto_decrypt_file(
     group_state_hex: String,
     encrypted_b64: String,
@@ -109,9 +111,6 @@ pub fn crypto_decrypt_file(
     let plaintext = file_crypto::decrypt_bytes(&key, &encrypted)
         .map_err(|e| format!("file decryption failed: {e:?}"))?;
 
-    tracing::info!(
-        decrypted_len = plaintext.len(),
-        "file decrypted"
-    );
+    tracing::info!(decrypted_len = plaintext.len(), "file decrypted");
     Ok(b64_encode(&plaintext))
 }
