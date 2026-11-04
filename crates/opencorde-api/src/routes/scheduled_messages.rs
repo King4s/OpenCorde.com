@@ -178,13 +178,15 @@ pub async fn schedule_message(
     let attachments = req.attachments.unwrap_or_else(|| serde_json::json!([]));
     let row = scheduled_message_repo::create_scheduled(
         &state.db,
-        scheduled_id,
-        auth.user_id,
-        channel_id_sf,
-        &req.content,
-        reply_to_id,
-        attachments,
-        scheduled_at,
+        scheduled_message_repo::NewScheduledMessage {
+            id: scheduled_id,
+            author_id: auth.user_id,
+            channel_id: channel_id_sf,
+            content: &req.content,
+            reply_to_id,
+            attachments,
+            scheduled_at,
+        },
     )
     .await
     .map_err(|e| {

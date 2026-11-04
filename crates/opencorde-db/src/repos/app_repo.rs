@@ -24,6 +24,19 @@ pub struct ApplicationRow {
     pub updated_at: DateTime<Utc>,
 }
 
+/// Values for creating an application.
+#[derive(Debug)]
+pub struct NewApplication<'a> {
+    pub id: Snowflake,
+    pub name: &'a str,
+    pub description: Option<&'a str>,
+    pub icon_url: Option<&'a str>,
+    pub owner_user_id: Snowflake,
+    pub flags: i64,
+    pub is_public: bool,
+    pub redirect_uris: &'a [String],
+}
+
 /// Create a new application.
 ///
 /// # Errors
@@ -31,15 +44,11 @@ pub struct ApplicationRow {
 #[tracing::instrument(skip(pool))]
 pub async fn create_application(
     pool: &PgPool,
-    id: Snowflake,
-    name: &str,
-    description: Option<&str>,
-    icon_url: Option<&str>,
-    owner_user_id: Snowflake,
-    flags: i64,
-    is_public: bool,
-    redirect_uris: &[String],
+    application: NewApplication<'_>,
 ) -> Result<ApplicationRow, sqlx::Error> {
+    let NewApplication {
+        id, name, description, icon_url, owner_user_id, flags, is_public, redirect_uris,
+    } = application;
     tracing::info!(app_id = id.as_i64(), name = %name, "creating application");
 
     let redirect_uris_json = serde_json::to_value(redirect_uris).unwrap_or_default();

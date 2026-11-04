@@ -15,7 +15,7 @@ use crate::{
     AppState, automod, error::ApiError, middleware::auth::AuthUser, routes::permission_check,
 };
 
-use super::notifications::dispatch_mention_notifications;
+use super::notifications::{MentionNotification, dispatch_mention_notifications};
 use super::send_list::message_row_to_response;
 use super::types::{MessageResponse, SendMessageRequest};
 use super::validation::{MentionSet, extract_mentions, parse_snowflake_id, validate_content};
@@ -37,7 +37,7 @@ pub async fn send_message(
     Json(req): Json<SendMessageRequest>,
 ) -> Result<(StatusCode, Json<MessageResponse>), ApiError> {
     let channel_id_sf = parse_snowflake_id(&channel_id)?;
-    let (response, server_id, message_id, mentions) = persist_and_broadcast_message(
+    let (response, server_id, _, mentions) = persist_and_broadcast_message(
         &state.db,
         &state.event_tx,
         auth.user_id,
@@ -55,20 +55,20 @@ pub async fn send_message(
         let content_preview: String = req.content.chars().take(80).collect();
         let channel_i64 = channel_id_sf.as_i64();
         let server_i64 = server_id.as_i64();
-        let message_id_i64 = message_id.as_i64();
         let event_tx = state.event_tx.clone();
 
         tokio::spawn(async move {
             dispatch_mention_notifications(
                 &db,
                 &config,
-                &mentions,
-                sender_id,
-                &sender_username,
-                &content_preview,
-                channel_i64,
-                server_i64,
-                message_id_i64,
+                MentionNotification {
+                    mentions: &mentions,
+                    sender_id,
+                    sender_username: &sender_username,
+                    content_preview: &content_preview,
+                    channel_id: channel_i64,
+                    server_id: server_i64,
+                },
                 &event_tx,
             )
             .await;

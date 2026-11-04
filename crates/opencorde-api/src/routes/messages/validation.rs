@@ -102,15 +102,15 @@ pub fn extract_mentions(content: &str) -> MentionSet {
         if let Some(end) = after.find('>') {
             let inner = &after[..end];
             if let Some(role_inner) = inner.strip_prefix('&') {
-                if let Ok(id) = role_inner.trim().parse::<i64>() {
-                    if !role_ids.contains(&id) {
-                        role_ids.push(id);
-                    }
+                if let Ok(id) = role_inner.trim().parse::<i64>()
+                    && !role_ids.contains(&id)
+                {
+                    role_ids.push(id);
                 }
-            } else if let Ok(id) = inner.trim().parse::<i64>() {
-                if !user_ids.contains(&id) {
-                    user_ids.push(id);
-                }
+            } else if let Ok(id) = inner.trim().parse::<i64>()
+                && !user_ids.contains(&id)
+            {
+                user_ids.push(id);
             }
         }
         remaining = &remaining[start + 2..];

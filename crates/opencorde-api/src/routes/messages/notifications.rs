@@ -147,7 +147,8 @@ async fn should_notify_user(
     }
 
     // Check server-level notification settings
-    let server_settings: Option<(i16, Option<chrono::DateTime<Utc>>, bool, bool, bool)> =
+    type ServerNotificationSettings = (i16, Option<chrono::DateTime<Utc>>, bool, bool, bool);
+    let server_settings: Option<ServerNotificationSettings> =
         sqlx::query_as(
             "SELECT level, mute_until, suppress_everyone, suppress_here, suppress_role_mentions \
              FROM server_notification_settings \
@@ -166,10 +167,10 @@ async fn should_notify_user(
         }
 
         // Active mute
-        if let Some(mu) = mute_until {
-            if mu > Utc::now() {
-                return Ok(false);
-            }
+        if let Some(mu) = mute_until
+            && mu > Utc::now()
+        {
+            return Ok(false);
         }
 
         // Suppression flags
@@ -189,18 +190,24 @@ async fn should_notify_user(
 
 /// Dispatch mention notifications: increment mention_count in channel_read_state,
 /// send push notifications, and broadcast ChannelUnreadUpdate events.
+pub(super) struct MentionNotification<'a> {
+    pub mentions: &'a super::validation::MentionSet,
+    pub sender_id: Snowflake,
+    pub sender_username: &'a str,
+    pub content_preview: &'a str,
+    pub channel_id: i64,
+    pub server_id: i64,
+}
+
 pub(super) async fn dispatch_mention_notifications(
     pool: &sqlx::PgPool,
     config: &crate::config::Config,
-    mentions: &super::validation::MentionSet,
-    sender_id: opencorde_core::snowflake::Snowflake,
-    sender_username: &str,
-    content_preview: &str,
-    channel_id: i64,
-    server_id: i64,
-    _message_id: i64,
+    notification: MentionNotification<'_>,
     event_tx: &tokio::sync::broadcast::Sender<serde_json::Value>,
 ) {
+    let MentionNotification {
+        mentions, sender_id, sender_username, content_preview, channel_id, server_id,
+    } = notification;
     let title = format!("Mention from {}", sender_username);
     dispatch_with_push(
         pool,

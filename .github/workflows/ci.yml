@@ -32,16 +32,14 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/opencorde
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
+      - run: rustup component add clippy
       - uses: swatinem/rust-cache@v2
       - run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev pkg-config
       - run: cargo install sqlx-cli --no-default-features --features postgres --locked
       - run: sqlx migrate run
         working-directory: crates/opencorde-db
-      - run: cargo test --workspace
-      - run: cargo clippy --workspace -- -D warnings
+      - run: cargo test --workspace --locked
+      - run: cargo clippy --workspace --locked -- -D warnings
 
   frontend:
     name: Frontend (type-check + lint)
@@ -64,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - run: rustc --version
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: './client/src-tauri -> target'
@@ -79,5 +77,5 @@ jobs:
         working-directory: client
       - run: pnpm build
         working-directory: client
-      - run: cargo check
+      - run: cargo check --locked
         working-directory: client/src-tauri

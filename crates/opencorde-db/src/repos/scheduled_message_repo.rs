@@ -31,18 +31,26 @@ pub struct ScheduledMessageRow {
     pub cancelled_at: Option<DateTime<Utc>>,
 }
 
+/// Values for creating a scheduled message.
+pub struct NewScheduledMessage<'a> {
+    pub id: Snowflake,
+    pub author_id: Snowflake,
+    pub channel_id: Snowflake,
+    pub content: &'a str,
+    pub reply_to_id: Option<Snowflake>,
+    pub attachments: serde_json::Value,
+    pub scheduled_at: DateTime<Utc>,
+}
+
 /// Create a new scheduled message.
-#[tracing::instrument(skip(pool, content))]
+#[tracing::instrument(skip(pool, message))]
 pub async fn create_scheduled(
     pool: &PgPool,
-    id: Snowflake,
-    author_id: Snowflake,
-    channel_id: Snowflake,
-    content: &str,
-    reply_to_id: Option<Snowflake>,
-    attachments: serde_json::Value,
-    scheduled_at: DateTime<Utc>,
+    message: NewScheduledMessage<'_>,
 ) -> Result<ScheduledMessageRow, sqlx::Error> {
+    let NewScheduledMessage {
+        id, author_id, channel_id, content, reply_to_id, attachments, scheduled_at,
+    } = message;
     tracing::info!(
         scheduled_id = id.as_i64(),
         channel_id = channel_id.as_i64(),

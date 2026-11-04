@@ -174,7 +174,9 @@ export async function fetchDmMessages(
     if (currentSession() !== session || request !== messageRequest) return;
     for (const message of list) rememberMessage(message);
     // Keep messages received while history was in flight, including overlaps.
-    activeDmMessages.update((existing) => uniqueMessages([...list, ...existing]));
+    activeDmMessages.update((existing) =>
+      uniqueMessages([...list, ...existing]),
+    );
   } finally {
     if (currentSession() === session && request === messageRequest) {
       dmLoading.set(false);

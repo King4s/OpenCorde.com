@@ -248,10 +248,9 @@ fn extract_content(fragment: &str) -> Option<String> {
 
     let (start_pat, end_pat) = if let Some(p) = lower.find("content=\"") {
         (p + 9, '"')
-    } else if let Some(p) = lower.find("content='") {
-        (p + 9, '\'')
     } else {
-        return None;
+        let p = lower.find("content='")?;
+        (p + 9, '\'')
     };
 
     let value_start = &tag[start_pat..];

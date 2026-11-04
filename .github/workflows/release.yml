@@ -48,11 +48,12 @@ jobs:
       - name: Install pinned pnpm
         run: corepack enable && corepack prepare pnpm@10.32.1 --activate
 
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          # macOS cross-compilation targets
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - name: Install project Rust toolchain
+        run: rustc --version
+
+      - name: Install macOS cross-compilation targets
+        if: matrix.platform == 'macos-latest'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2

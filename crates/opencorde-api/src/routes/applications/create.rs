@@ -18,10 +18,17 @@ pub async fn create_application(
     let app_id = generator.next_id();
 
     let row = app_repo::create_application(
-        &state.db, app_id, req.name.trim(),
-        req.description.as_deref(), req.icon_url.as_deref(),
-        Snowflake::new(auth.user_id.as_i64()), 0, req.is_public,
-        &req.redirect_uris,
+        &state.db,
+        app_repo::NewApplication {
+            id: app_id,
+            name: req.name.trim(),
+            description: req.description.as_deref(),
+            icon_url: req.icon_url.as_deref(),
+            owner_user_id: Snowflake::new(auth.user_id.as_i64()),
+            flags: 0,
+            is_public: req.is_public,
+            redirect_uris: &req.redirect_uris,
+        },
     ).await.map_err(|e| {
         if e.to_string().contains("duplicate key") {
             ApiError::BadRequest(format!("application '{}' already exists", req.name))

@@ -61,7 +61,11 @@ class ApiClient {
       // Rejected credentials (including TOTP retries) belong to the login form.
       // All other 401s still invalidate the session and return to login.
       const isLoginAttempt = method === "POST" && path === "/auth/login";
-      if (response.status === 401 && !isLoginAttempt && typeof localStorage !== "undefined") {
+      if (
+        response.status === 401 &&
+        !isLoginAttempt &&
+        typeof localStorage !== "undefined"
+      ) {
         localStorage.removeItem("opencorde_token");
         // Concurrent protected requests can all reject an expired token. Only
         // the first response should navigate; later ones must not abort it.
