@@ -29,3 +29,9 @@ rand = "0.8"
 sha2 = "0.10"
 # AES-256-GCM for file encryption (format: IV || ciphertext)
 aes-gcm = "0.10"
+
+openmls_traits = "0.2"
+zeroize = "1"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Storage_FileSystem"] }

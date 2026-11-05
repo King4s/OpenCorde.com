@@ -1,317 +1,405 @@
-//! # E2EE Tauri Commands
-//! Client-side MLS encryption/decryption via opencorde-crypto.
-//!
-//! ## Session State
-//! `CryptoState` lives in Tauri managed state for the app process lifetime.
-//! It holds the OpenMLS crypto provider (in-memory key store) and the active
-//! signing key pair. NOT persisted across restarts — call `crypto_init` on
-//! every login to regenerate a key package and upload it to the server.
-//!
-//! ## Group State
-//! MLS group state IS persisted: every mutating command returns the updated
-//! group state as a hex string. The frontend stores it keyed by channel ID
-//! and passes it back on the next call (stateless command pattern).
-//!
-//! ## Commands
-//! - `crypto_init`            — Generate key package; store signer in session
-//! - `crypto_create_group`    — Create MLS group; return initial group state
-//! - `crypto_add_member`      — Add member; return commit + welcome + state
-//! - `crypto_process_welcome` — Join via Welcome; return group state
-//! - `crypto_encrypt`         — Encrypt message; return ciphertext + state
-//! - `crypto_decrypt`         — Decrypt message; return plaintext + state
-//!
-//! ## Depends On
-//! - opencorde-crypto (key_package, group, encrypt modules)
-//! - openmls 0.5 (Credential, CredentialType, CredentialWithKey)
-//! - openmls_basic_credential 0.2 (SignatureKeyPair)
-//! - openmls_rust_crypto 0.2 (OpenMlsRustCrypto)
+//! Durable account-scoped MLS commands. The renderer receives public relay
+//! operations and channel handles; provider snapshots remain encrypted locally.
+#[path = "crypto_vault.rs"]
+pub mod vault;
 
-use opencorde_crypto::{encrypt, group, key_package};
-use openmls::prelude::{Credential, CredentialType, CredentialWithKey};
-use openmls_basic_credential::SignatureKeyPair;
-use openmls_rust_crypto::OpenMlsRustCrypto;
-use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
-use tauri::State;
+use opencorde_crypto::durable_store::{Account, EncryptedStore, KeyMaterial, KeyProvider};
+use serde::Serialize;
+use sha2::{Digest, Sha256};
+use std::{
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
+use tauri::{Manager, State};
+use vault::{Event, MemberPackage, Prepared, Vault, Welcome};
 
-// ─── Session State ────────────────────────────────────────────────────────────
-
-/// Tauri managed state for the E2EE crypto session.
-/// One instance per app process; commands lock per call.
-pub struct CryptoState {
-    pub provider: Mutex<OpenMlsRustCrypto>,
-    pub signer: Mutex<Option<SignatureKeyPair>>,
-    pub user_id: Mutex<i64>,
+struct OsKeys;
+fn account_name(account: &Account) -> String {
+    vault::hex(&Sha256::digest(
+        format!("{}\0{}", account.server_url, account.user_id).as_bytes(),
+    ))
 }
-
+impl KeyProvider for OsKeys {
+    fn load(&self, account: &Account) -> Result<Option<KeyMaterial>, String> {
+        let entry = keyring::Entry::new("opencorde-mls-05-v2", &account_name(account))
+            .map_err(|_| "OS credential store unavailable; encryption remains locked")?;
+        match entry.get_password() {
+            Ok(record) => serde_json::from_str(&record)
+                .map(Some)
+                .map_err(|_| "invalid protected MLS key record".into()),
+            Err(keyring::Error::NoEntry) => Ok(None),
+            Err(_) => {
+                Err("OS credential store unavailable or locked; encryption remains locked".into())
+            }
+        }
+    }
+    fn save(&self, account: &Account, material: &KeyMaterial) -> Result<(), String> {
+        let entry = keyring::Entry::new("opencorde-mls-05-v2", &account_name(account))
+            .map_err(|_| "OS credential store unavailable; encryption remains locked")?;
+        let record =
+            serde_json::to_string(material).map_err(|_| "cannot encode protected MLS key")?;
+        entry
+            .set_password(&record)
+            .map_err(|_| "cannot save OS-protected MLS key")?;
+        if entry
+            .get_password()
+            .map_err(|_| "cannot verify OS-protected MLS key")?
+            != record
+        {
+            return Err("OS-protected MLS key verification failed".into());
+        }
+        Ok(())
+    }
+}
+struct Session {
+    id: String,
+    store: EncryptedStore<Vault>,
+}
+pub struct CryptoState {
+    session: Mutex<Option<Session>>,
+    keys: Arc<dyn KeyProvider>,
+    directory: Option<PathBuf>,
+}
 impl Default for CryptoState {
     fn default() -> Self {
         Self {
-            provider: Mutex::new(OpenMlsRustCrypto::default()),
-            signer: Mutex::new(None),
-            user_id: Mutex::new(0),
+            session: Mutex::new(None),
+            keys: Arc::new(OsKeys),
+            directory: None,
         }
     }
 }
-
-// ─── Return Types ─────────────────────────────────────────────────────────────
-
-#[derive(Serialize, Deserialize)]
-pub struct AddMemberResult {
-    /// TLS commit bytes to broadcast to existing group members.
-    pub commit_hex: String,
-    /// TLS Welcome bytes to send to the new member.
-    pub welcome_hex: String,
-    /// Updated group state — replace frontend's stored blob.
-    pub group_state_hex: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct EncryptResult {
-    pub ciphertext_hex: String,
-    /// Updated group state — replace frontend's stored blob.
-    pub group_state_hex: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct DecryptResult {
-    /// Decrypted UTF-8 text, or null for MLS control messages.
-    pub plaintext: Option<String>,
-    /// Updated group state — replace frontend's stored blob.
-    pub group_state_hex: String,
-}
-
-// ─── Hex Helpers ──────────────────────────────────────────────────────────────
-
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{:02x}", b)).collect()
-}
-
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err("hex string has odd length".into());
+impl CryptoState {
+    #[cfg(test)]
+    #[allow(dead_code)] // Used by the production-handler integration test module.
+    pub fn isolated(directory: PathBuf, keys: Arc<dyn KeyProvider>) -> Self {
+        Self {
+            session: Mutex::new(None),
+            keys,
+            directory: Some(directory),
+        }
     }
-    (0..s.len())
-        .step_by(2)
-        .map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string()))
-        .collect()
+    #[cfg(test)]
+    #[allow(dead_code)] // Used by the production-handler integration test module.
+    pub fn isolated_os_keys(directory: PathBuf) -> Self {
+        Self {
+            session: Mutex::new(None),
+            keys: Arc::new(OsKeys),
+            directory: Some(directory),
+        }
+    }
+    pub fn with_session<T>(
+        &self,
+        id: &str,
+        operation: impl FnOnce(&mut EncryptedStore<Vault>) -> Result<T, String>,
+    ) -> Result<T, String> {
+        let mut session = self
+            .session
+            .lock()
+            .map_err(|_| "crypto session lock poisoned; restart the app")?;
+        let session = session
+            .as_mut()
+            .filter(|session| session.id == id)
+            .ok_or("crypto session is locked or belongs to another account; sign in again")?;
+        operation(&mut session.store)
+    }
+}
+#[derive(Serialize)]
+pub struct ChannelInfo {
+    pub channel_id: String,
+    pub sequence: String,
+    pub epoch: String,
+    pub active: bool,
+    pub welcome_ack: Option<String>,
+}
+#[derive(Serialize)]
+pub struct SessionInfo {
+    pub session_id: String,
+    pub device_id: String,
+    pub key_package_hex: Option<String>,
+    pub channels: Vec<ChannelInfo>,
+    pub pending: Option<Prepared>,
+    pub retry_channel: Option<String>,
+    pub recovered_drafts: std::collections::BTreeMap<String, String>,
+}
+fn info(id: &str, store: &EncryptedStore<Vault>) -> Result<SessionInfo, String> {
+    let data = store.data()?;
+    Ok(SessionInfo {
+        session_id: id.into(),
+        device_id: store.device_id().into(),
+        key_package_hex: data.key_package_hex.clone(),
+        pending: data.pending(),
+        retry_channel: data.retry_channel(),
+        recovered_drafts: data.recovered_drafts.clone(),
+        channels: data
+            .channels
+            .iter()
+            .map(|(id, channel)| ChannelInfo {
+                channel_id: id.clone(),
+                sequence: channel.cursor.to_string(),
+                epoch: channel.epoch.to_string(),
+                active: channel.active,
+                welcome_ack: channel.welcome_ack.clone(),
+            })
+            .collect(),
+    })
+}
+fn normalize_server(value: &str) -> Result<String, String> {
+    let mut url = tauri::Url::parse(value).map_err(|_| "invalid crypto server address")?;
+    if !matches!(url.scheme(), "https" | "http")
+        || url.host_str().is_none()
+        || !url.username().is_empty()
+        || url.password().is_some()
+        || url.query().is_some()
+        || url.fragment().is_some()
+    {
+        return Err("invalid crypto server scope".into());
+    }
+    let path = url.path().trim_end_matches('/').to_owned();
+    url.set_path(&path);
+    Ok(url.as_str().trim_end_matches('/').to_owned())
 }
 
-// ─── Commands ─────────────────────────────────────────────────────────────────
-
-/// Generate a KeyPackage and store the signing key in session state.
-///
-/// Call once after login. Upload the returned hex to the server:
-/// `POST /api/v1/e2ee/key-packages` with `{ key_package: "<hex>" }`.
-/// On every restart a fresh key package is generated; the server replaces the old one.
 #[tauri::command(rename_all = "snake_case")]
-pub fn crypto_init(user_id: String, state: State<'_, CryptoState>) -> Result<String, String> {
-    // Keep Snowflakes as strings across JavaScript IPC to avoid integer rounding.
-    let user_id = user_id
-        .parse::<i64>()
-        .map_err(|_| "invalid user_id".to_string())?;
-    tracing::info!(user_id, "crypto_init: generating key package");
-
-    let provider = state.provider.lock().map_err(|e| e.to_string())?;
-
-    let (kp, signer) = key_package::generate_key_package(user_id, &provider)
-        .map_err(|e| format!("key package generation failed: {e:?}"))?;
-
-    let kp_bytes = key_package::serialize_key_package(&kp)
-        .map_err(|e| format!("key package serialization failed: {e:?}"))?;
-
-    *state.signer.lock().map_err(|e| e.to_string())? = Some(signer);
-    *state.user_id.lock().map_err(|e| e.to_string())? = user_id;
-
-    tracing::info!(
+pub fn crypto_init<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    server_url: String,
+    user_id: String,
+    state: State<'_, CryptoState>,
+) -> Result<SessionInfo, String> {
+    let user = user_id.parse::<i64>().map_err(|_| "invalid user id")?;
+    if user <= 0 || user.to_string() != user_id {
+        return Err("invalid user id".into());
+    }
+    let account = Account {
+        server_url: normalize_server(&server_url)?,
         user_id,
-        kp_len = kp_bytes.len(),
-        "crypto_init: key package ready"
-    );
-    Ok(hex_encode(&kp_bytes))
-}
-
-/// Create a new MLS group for an E2EE channel.
-///
-/// Requires `crypto_init` to have been called first.
-/// Returns the initial group state hex — store it keyed by channel ID.
-#[tauri::command(rename_all = "snake_case")]
-pub fn crypto_create_group(state: State<'_, CryptoState>) -> Result<String, String> {
-    tracing::info!("crypto_create_group");
-
-    let provider = state.provider.lock().map_err(|e| e.to_string())?;
-    let signer_guard = state.signer.lock().map_err(|e| e.to_string())?;
-    let signer = signer_guard
-        .as_ref()
-        .ok_or("crypto_init must be called before crypto_create_group")?;
-    let user_id = *state.user_id.lock().map_err(|e| e.to_string())?;
-
-    let credential = Credential::new(user_id.to_le_bytes().to_vec(), CredentialType::Basic)
-        .map_err(|e| format!("credential error: {e:?}"))?;
-    let credential_with_key = CredentialWithKey {
-        credential,
-        signature_key: signer.public().into(),
     };
-
-    let mls_group = group::create_group(credential_with_key, signer, &provider)
-        .map_err(|e| format!("group creation failed: {e:?}"))?;
-
-    let state_bytes = group::serialize_group(&mls_group)
-        .map_err(|e| format!("group serialization failed: {e:?}"))?;
-
-    Ok(hex_encode(&state_bytes))
+    let mut session = state
+        .session
+        .lock()
+        .map_err(|_| "crypto session lock poisoned")?;
+    if let Some(active) = session.as_ref() {
+        if active.store.account() == &account {
+            return info(&active.id, &active.store);
+        }
+    }
+    // Drop the old account owner before attempting to unlock another namespace.
+    *session = None;
+    let directory = match &state.directory {
+        Some(path) => path.clone(),
+        None => app
+            .path()
+            .app_local_data_dir()
+            .map_err(|_| "native app data directory unavailable")?
+            .join("mls-v2"),
+    }
+    .join(account_name(&account));
+    let server_url = account.server_url.clone();
+    let mut store = EncryptedStore::open(&directory, account, state.keys.as_ref(), || {
+        Vault::fresh(user, server_url.clone())
+    })?;
+    store.data()?.validate(user, &server_url)?;
+    if store.data()?.pending().is_none() && store.data()?.retry_channel().is_none() {
+        store.transact(|vault| vault.ensure_key_package())?;
+    }
+    let id = uuid::Uuid::new_v4().to_string();
+    let result = info(&id, &store)?;
+    *session = Some(Session { id, store });
+    Ok(result)
 }
-
-/// Add a member to an existing MLS group.
-///
-/// `member_key_package_hex` — fetched from server: `GET /api/v1/e2ee/key-packages/{user_id}`.
-/// Returns commit (broadcast to group), welcome (send to new member), updated state.
 #[tauri::command(rename_all = "snake_case")]
-pub fn crypto_add_member(
-    group_state_hex: String,
-    member_key_package_hex: String,
-    state: State<'_, CryptoState>,
-) -> Result<AddMemberResult, String> {
-    tracing::info!("crypto_add_member");
-
-    let provider = state.provider.lock().map_err(|e| e.to_string())?;
-    let signer_guard = state.signer.lock().map_err(|e| e.to_string())?;
-    let signer = signer_guard
+pub fn crypto_lock(session_id: String, state: State<'_, CryptoState>) -> Result<(), String> {
+    let mut active = state
+        .session
+        .lock()
+        .map_err(|_| "crypto session lock poisoned")?;
+    if active
         .as_ref()
-        .ok_or("crypto_init must be called first")?;
-
-    let mut mls_group = group::deserialize_group(&hex_decode(&group_state_hex)?)
-        .map_err(|e| format!("group deserialization failed: {e:?}"))?;
-
-    let member_kp =
-        key_package::deserialize_key_package(&hex_decode(&member_key_package_hex)?, &provider)
-            .map_err(|e| format!("key package deserialization failed: {e:?}"))?;
-
-    let (commit_bytes, welcome_bytes) =
-        group::add_member(&mut mls_group, member_kp, signer, &provider)
-            .map_err(|e| format!("add member failed: {e:?}"))?;
-
-    let updated_state = group::serialize_group(&mls_group)
-        .map_err(|e| format!("group serialization failed: {e:?}"))?;
-
-    Ok(AddMemberResult {
-        commit_hex: hex_encode(&commit_bytes),
-        welcome_hex: hex_encode(&welcome_bytes),
-        group_state_hex: hex_encode(&updated_state),
+        .is_some_and(|session| session.id == session_id)
+    {
+        *active = None;
+    }
+    Ok(())
+}
+#[tauri::command(rename_all = "snake_case")]
+pub fn crypto_status(
+    session_id: String,
+    state: State<'_, CryptoState>,
+) -> Result<SessionInfo, String> {
+    state.with_session(&session_id, |store| info(&session_id, store))
+}
+#[tauri::command(rename_all = "snake_case")]
+pub fn crypto_key_package(
+    session_id: String,
+    confirmed_hex: Option<String>,
+    state: State<'_, CryptoState>,
+) -> Result<SessionInfo, String> {
+    state.with_session(&session_id, |store| {
+        store.transact(|vault| match confirmed_hex {
+            Some(ref bytes) => vault.confirm_key_package(bytes),
+            None => vault.ensure_key_package(),
+        })?;
+        info(&session_id, store)
     })
 }
-
-/// Join an MLS group via a Welcome message.
-///
-/// `welcome_hex` — fetched from server: `GET /api/v1/e2ee/groups/{group_id}/welcome`.
-/// Returns the initial group state hex — store it keyed by channel ID.
-///
-/// Note: `crypto_init` must have been called in this session to populate the
-/// provider key store (the HPKE private key from the key package is needed here).
 #[tauri::command(rename_all = "snake_case")]
-pub fn crypto_process_welcome(
-    welcome_hex: String,
+pub fn crypto_prepare_init(
+    session_id: String,
+    channel_id: String,
+    allow_legacy_rejoin: bool,
     state: State<'_, CryptoState>,
-) -> Result<String, String> {
-    tracing::info!("crypto_process_welcome");
-
-    let provider = state.provider.lock().map_err(|e| e.to_string())?;
-    let welcome_bytes = hex_decode(&welcome_hex)?;
-
-    let mls_group = group::process_welcome(&welcome_bytes, &provider)
-        .map_err(|e| format!("process welcome failed: {e:?}"))?;
-
-    let state_bytes = group::serialize_group(&mls_group)
-        .map_err(|e| format!("group serialization failed: {e:?}"))?;
-
-    Ok(hex_encode(&state_bytes))
+) -> Result<Prepared, String> {
+    state.with_session(&session_id, |store| {
+        store.transact(|vault| vault.prepare_init(&channel_id, allow_legacy_rejoin))
+    })
 }
-
-/// Encrypt a plaintext message using the current MLS group epoch.
-///
-/// Returns ciphertext and updated group state. The frontend MUST replace
-/// its stored group state — the epoch ratchets forward on every send.
 #[tauri::command(rename_all = "snake_case")]
-pub fn crypto_encrypt(
+pub fn crypto_prepare_message(
+    session_id: String,
+    channel_id: String,
     plaintext: String,
-    group_state_hex: String,
+    reply_to_id: Option<String>,
+    attachments: Vec<serde_json::Value>,
     state: State<'_, CryptoState>,
-) -> Result<EncryptResult, String> {
-    tracing::debug!("crypto_encrypt");
-
-    let provider = state.provider.lock().map_err(|e| e.to_string())?;
-    let signer_guard = state.signer.lock().map_err(|e| e.to_string())?;
-    let signer = signer_guard
-        .as_ref()
-        .ok_or("crypto_init must be called first")?;
-
-    let mut mls_group = group::deserialize_group(&hex_decode(&group_state_hex)?)
-        .map_err(|e| format!("group deserialization failed: {e:?}"))?;
-
-    let ciphertext =
-        encrypt::encrypt_message(&mut mls_group, plaintext.as_bytes(), signer, &provider)
-            .map_err(|e| format!("encryption failed: {e:?}"))?;
-
-    let updated_state = group::serialize_group(&mls_group)
-        .map_err(|e| format!("group serialization failed: {e:?}"))?;
-
-    Ok(EncryptResult {
-        ciphertext_hex: hex_encode(&ciphertext),
-        group_state_hex: hex_encode(&updated_state),
+) -> Result<Prepared, String> {
+    state.with_session(&session_id, |store| {
+        store.transact(|vault| {
+            vault.prepare_message(&channel_id, plaintext, reply_to_id, attachments)
+        })
     })
 }
-
-/// Derive a 32-byte voice encryption key from the current MLS group epoch.
-///
-/// The key is derived via MLS exporter (label "opencorde-voice"). It changes
-/// each epoch, providing automatic forward secrecy when members join/leave.
-/// Pass the returned hex to LiveKit's ExternalE2EEKeyProvider.
+#[tauri::command(rename_all = "snake_case")]
+pub fn crypto_prepare_members(
+    session_id: String,
+    channel_id: String,
+    added: Vec<MemberPackage>,
+    removed: Option<String>,
+    state: State<'_, CryptoState>,
+) -> Result<Prepared, String> {
+    state.with_session(&session_id, |store| {
+        store.transact(|vault| vault.prepare_members(&channel_id, added, removed))
+    })
+}
+#[tauri::command(rename_all = "snake_case")]
+pub fn crypto_accept_event(
+    session_id: String,
+    event: Event,
+    state: State<'_, CryptoState>,
+) -> Result<(), String> {
+    state.with_session(&session_id, |store| {
+        store.transact(|vault| vault.accept(&event))
+    })
+}
+#[tauri::command(rename_all = "snake_case")]
+pub fn crypto_reject_conflict(
+    session_id: String,
+    operation_id: String,
+    state: State<'_, CryptoState>,
+) -> Result<(), String> {
+    state.with_session(&session_id, |store| {
+        store.transact(|vault| vault.reject_conflict(&operation_id))
+    })
+}
+#[tauri::command(rename_all = "snake_case")]
+pub fn crypto_apply_events(
+    session_id: String,
+    channel_id: String,
+    events: Vec<Event>,
+    state: State<'_, CryptoState>,
+) -> Result<(), String> {
+    if events.len() > 100 {
+        return Err("too many events in one batch".into());
+    }
+    state.with_session(&session_id, |store| {
+        store.transact(|vault| {
+            for event in &events {
+                vault.apply(&channel_id, event)?;
+            }
+            Ok(())
+        })
+    })
+}
+#[tauri::command(rename_all = "snake_case")]
+pub fn crypto_join(
+    session_id: String,
+    channel_id: String,
+    welcome: Welcome,
+    state: State<'_, CryptoState>,
+) -> Result<(), String> {
+    state.with_session(&session_id, |store| {
+        store.transact(|vault| vault.join(&channel_id, &welcome))
+    })
+}
+#[tauri::command(rename_all = "snake_case")]
+pub fn crypto_ack_welcome(
+    session_id: String,
+    channel_id: String,
+    operation_id: String,
+    state: State<'_, CryptoState>,
+) -> Result<(), String> {
+    state.with_session(&session_id, |store| {
+        store.transact(|vault| vault.ack_welcome(&channel_id, &operation_id))
+    })
+}
+#[tauri::command(rename_all = "snake_case")]
+pub fn crypto_cached_message(
+    session_id: String,
+    channel_id: String,
+    message_id: String,
+    ciphertext_hex: String,
+    state: State<'_, CryptoState>,
+) -> Result<Option<String>, String> {
+    state.with_session(&session_id, |store| {
+        store
+            .data()?
+            .message(&channel_id, &message_id, &ciphertext_hex)
+    })
+}
 #[tauri::command(rename_all = "snake_case")]
 pub fn crypto_export_voice_key(
-    group_state_hex: String,
+    session_id: String,
+    channel_id: String,
     state: State<'_, CryptoState>,
 ) -> Result<String, String> {
-    tracing::debug!("crypto_export_voice_key");
-
-    let provider = state.provider.lock().map_err(|e| e.to_string())?;
-    let mls_group = group::deserialize_group(&hex_decode(&group_state_hex)?)
-        .map_err(|e| format!("group deserialization failed: {e:?}"))?;
-
-    let key_bytes = group::export_voice_key(&mls_group, &provider)
-        .map_err(|e| format!("voice key export failed: {e:?}"))?;
-
-    Ok(hex_encode(&key_bytes))
+    state.with_session(&session_id, |store| {
+        store
+            .data()?
+            .voice_key(&channel_id)
+            .map(|bytes| vault::hex(&bytes))
+    })
 }
 
-/// Decrypt an incoming MLS message.
-///
-/// Returns plaintext (None for control messages) and updated group state.
-/// The frontend MUST replace its stored group state after every receive.
 #[tauri::command(rename_all = "snake_case")]
-pub fn crypto_decrypt(
-    ciphertext_hex: String,
-    group_state_hex: String,
+pub fn crypto_retry_operation(
+    session_id: String,
     state: State<'_, CryptoState>,
-) -> Result<DecryptResult, String> {
-    tracing::debug!("crypto_decrypt");
+) -> Result<Prepared, String> {
+    state.with_session(&session_id, |store| {
+        store.transact(|vault| vault.retry_operation())
+    })
+}
 
-    let provider = state.provider.lock().map_err(|e| e.to_string())?;
-    let ciphertext = hex_decode(&ciphertext_hex)?;
+#[tauri::command(rename_all = "snake_case")]
+pub fn crypto_request_rejoin(
+    session_id: String,
+    channel_id: String,
+    state: State<'_, CryptoState>,
+) -> Result<SessionInfo, String> {
+    state.with_session(&session_id, |store| {
+        store.transact(|vault| vault.request_rejoin(&channel_id))?;
+        info(&session_id, store)
+    })
+}
 
-    let mut mls_group = group::deserialize_group(&hex_decode(&group_state_hex)?)
-        .map_err(|e| format!("group deserialization failed: {e:?}"))?;
-
-    let plaintext_bytes = encrypt::decrypt_message(&mut mls_group, &ciphertext, &provider)
-        .map_err(|e| format!("decryption failed: {e:?}"))?;
-
-    let updated_state = group::serialize_group(&mls_group)
-        .map_err(|e| format!("group serialization failed: {e:?}"))?;
-
-    let plaintext = plaintext_bytes
-        .map(|b| String::from_utf8(b).unwrap_or_else(|e| format!("<non-utf8: {e}>>")));
-
-    Ok(DecryptResult {
-        plaintext,
-        group_state_hex: hex_encode(&updated_state),
+#[tauri::command(rename_all = "snake_case")]
+pub fn crypto_cancel_retry(
+    session_id: String,
+    channel_id: String,
+    state: State<'_, CryptoState>,
+) -> Result<SessionInfo, String> {
+    state.with_session(&session_id, |store| {
+        store.transact(|vault| vault.cancel_retry(&channel_id))?;
+        info(&session_id, store)
     })
 }

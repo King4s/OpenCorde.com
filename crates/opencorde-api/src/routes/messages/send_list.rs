@@ -85,6 +85,10 @@ pub async fn list_messages(
     )
     .await?;
 
+    if crate::routes::e2ee::sync::is_v2(&state.db, channel_id_sf).await? {
+        crate::routes::e2ee::sync::require_active(&state.db, auth.user_id, channel_id_sf).await?;
+    }
+
     // Parse cursor IDs if provided
     let before = query
         .before
@@ -98,12 +102,25 @@ pub async fn list_messages(
     tracing::debug!(before = ?before, after = ?after, limit = limit, "pagination validated");
 
     // Fetch messages from database
-    let rows = message_repo::list_by_channel(&state.db, channel_id_sf, before, after, limit)
+    let mut rows = message_repo::list_by_channel(&state.db, channel_id_sf, before, after, limit)
         .await
         .map_err(|e| {
             tracing::error!(error = %e, "failed to list messages");
             ApiError::Database(e)
         })?;
+
+    if crate::routes::e2ee::sync::is_v2(&state.db, channel_id_sf).await? {
+        let visible: Vec<i64> = sqlx::query_scalar(
+            "SELECT (e.event->>'message_id')::bigint FROM e2ee_events e
+             JOIN e2ee_stream_members m USING(channel_id)
+             WHERE e.channel_id=$1 AND m.user_id=$2 AND m.active
+             AND e.sequence>m.joined_sequence AND e.event->>'kind'='application'
+             AND (e.event->>'message_id')::bigint=ANY($3)",
+        ).bind(channel_id_sf.as_i64()).bind(auth.user_id.as_i64())
+            .bind(rows.iter().map(|row|row.id).collect::<Vec<_>>())
+            .fetch_all(&state.db).await?;
+        rows.retain(|row|visible.contains(&row.id));
+    }
 
     tracing::info!(count = rows.len(), "messages fetched successfully");
 

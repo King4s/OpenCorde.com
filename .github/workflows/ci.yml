@@ -43,7 +43,7 @@ jobs:
       - name: E2EE PostgreSQL regression
         env:
           OPENCORDE_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
-        run: cargo test -p opencorde-api --lib routes::e2ee::groups --locked -- --include-ignored
+        run: cargo test -p opencorde-api --lib routes::e2ee --locked -- --include-ignored
       - run: cargo clippy --workspace --locked -- -D warnings
 
   frontend:
@@ -75,7 +75,7 @@ jobs:
           workspaces: './client/src-tauri -> target'
       - run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsecret-1-dev pkg-config
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsecret-1-dev pkg-config gnome-keyring libsecret-tools dbus-x11
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -87,4 +87,7 @@ jobs:
       - run: cargo check --locked
         working-directory: client/src-tauri
       - run: cargo test --test crypto_ipc --locked
+        working-directory: client/src-tauri
+      - name: Native recovery with OS credential storage
+        run: bash ../../scripts/test-native-keyring.sh
         working-directory: client/src-tauri

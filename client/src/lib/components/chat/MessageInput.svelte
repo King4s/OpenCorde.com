@@ -12,7 +12,7 @@
 	import CommandAutocomplete from './CommandAutocomplete.svelte';
 	import AttachmentPreview from './AttachmentPreview.svelte';
 	import { invoke } from '@tauri-apps/api/core';
-	import { requireChannelGroupState, requirePlaintextChannel } from '$lib/stores/e2ee';
+	import { requireChannelGroupState, requirePlaintextChannel, cryptoArguments, joinE2EEGroup, recoveredDrafts } from '$lib/stores/e2ee';
 
 	interface Props {
 		onSend: (content: string, replyToId?: string, attachments?: Attachment[]) => void | Promise<void>;
@@ -25,6 +25,16 @@
 
 	let { onSend, channelName, channelId, replyTo = null, onCancelReply, onEditLast }: Props = $props();
 	let content = $state('');
+    let restoredDraft = $state('');
+    $effect(() => {
+        const draft = $recoveredDrafts.get(channelId);
+        const marker = draft ? `${channelId}:${draft}` : '';
+        if (marker && marker !== restoredDraft && !content) {
+            restoredDraft = marker;
+            content = draft!;
+        }
+        if (!marker) restoredDraft = '';
+    });
 	let inputElement: HTMLInputElement;
 	let fileInputElement: HTMLInputElement;
 	let pendingAttachments = $state<Attachment[]>([]);
@@ -172,18 +182,22 @@
 
 		for (const file of Array.from(input.files)) {
 			try {
+				if (requireChannelGroupState(channelId)) await joinE2EEGroup(channelId);
 				const groupState = requireChannelGroupState(channelId);
 				let uploadFile: File = file;
+				let encryptionEpoch: string | undefined;
 
 				// Encrypt file if channel has an active E2EE group
 				if (groupState) {
 					const fileBuffer = await file.arrayBuffer();
 					const fileB64 = arrayBufferToBase64(fileBuffer);
 					const encryptedB64 = await invoke<string>('crypto_encrypt_file', {
-						group_state_hex: groupState,
+						...cryptoArguments(channelId),
 						file_data_b64: fileB64
 					});
 					const encryptedBytes = base64ToUint8Array(encryptedB64);
+                    // Native v2 file envelope stores the exporter epoch after its 7-byte tag.
+                    encryptionEpoch = new DataView(encryptedBytes.buffer, encryptedBytes.byteOffset + 7, 8).getBigUint64(0).toString();
 					// Slice to get a plain ArrayBuffer (Uint8Array.buffer is ArrayBufferLike)
 					const encBuf = encryptedBytes.buffer.slice(
 						encryptedBytes.byteOffset,
@@ -201,7 +215,7 @@
 					`/channels/${channelId}/attachments`,
 					formData
 				);
-				pendingAttachments = [...pendingAttachments, attachment];
+				pendingAttachments = [...pendingAttachments, { ...attachment, encryption_epoch: encryptionEpoch }];
 			} catch (err: any) {
 				uploadError = err.message ?? 'Upload failed';
 			}

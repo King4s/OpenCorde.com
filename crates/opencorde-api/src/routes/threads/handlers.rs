@@ -248,6 +248,8 @@ async fn send_thread_message(
     )
     .await?;
 
+    crate::routes::e2ee::sync::reject_legacy(&state.db, channel_id_sf).await?;
+
     // Generate message ID
     let mut generator = SnowflakeGenerator::new(3, 0);
     let message_id = generator.next_id();

@@ -20,6 +20,7 @@
 use crate::error::CryptoError;
 use openmls::prelude::*;
 use openmls_basic_credential::SignatureKeyPair;
+#[cfg(test)]
 use openmls_rust_crypto::OpenMlsRustCrypto;
 use tracing::instrument;
 
@@ -38,43 +39,39 @@ use tracing::instrument;
 #[instrument(skip(provider), fields(user_id = user_id))]
 pub fn generate_key_package(
     user_id: i64,
-    provider: &OpenMlsRustCrypto,
+    provider: &impl OpenMlsCryptoProvider,
 ) -> Result<(KeyPackage, SignatureKeyPair), CryptoError> {
     tracing::debug!("generating key package");
 
-    let identity_bytes = user_id.to_le_bytes().to_vec();
-
-    // Credential::new is the factory; BasicCredential has no public new()
-    let credential = Credential::new(identity_bytes, CredentialType::Basic)
-        .map_err(|e| CryptoError::key_package(format!("failed to create credential: {e:?}")))?;
-
-    // SignatureKeyPair::new takes only the scheme — no provider argument in 0.5
     let signer = SignatureKeyPair::new(SignatureScheme::ED25519)
-        .map_err(|e| CryptoError::key_package(format!("failed to create signature key: {e:?}")))?;
+        .map_err(|e| CryptoError::key_package(format!("signature key generation failed: {e:?}")))?;
+    let key_package = generate_key_package_with_signer(user_id, &signer, provider)?;
+    tracing::debug!("key package generated");
+    Ok((key_package, signer))
+}
 
-    // Store signer in key store so it's available for group operations
+/// Replenish a package without rotating the durable signing identity.
+pub fn generate_key_package_with_signer(
+    user_id: i64,
+    signer: &SignatureKeyPair,
+    provider: &impl OpenMlsCryptoProvider,
+) -> Result<KeyPackage, CryptoError> {
+    let credential = Credential::new(user_id.to_le_bytes().to_vec(), CredentialType::Basic)
+        .map_err(|e| CryptoError::key_package(format!("{e:?}")))?;
     signer
         .store(provider.key_store())
-        .map_err(|e| CryptoError::key_package(format!("failed to store signature key: {e:?}")))?;
-
-    let credential_with_key = CredentialWithKey {
-        credential,
-        // public() returns &[u8]; SignaturePublicKey implements From<&[u8]>
-        signature_key: signer.public().into(),
-    };
-
-    // CryptoConfig::default() uses MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519
-    let key_package = KeyPackage::builder()
+        .map_err(|e| CryptoError::key_package(format!("{e:?}")))?;
+    KeyPackage::builder()
         .build(
             CryptoConfig::default(),
             provider,
-            &signer,
-            credential_with_key,
+            signer,
+            CredentialWithKey {
+                credential,
+                signature_key: signer.public().into(),
+            },
         )
-        .map_err(|e| CryptoError::key_package(format!("failed to build key package: {e:?}")))?;
-
-    tracing::debug!("key package generated");
-    Ok((key_package, signer))
+        .map_err(|e| CryptoError::key_package(format!("{e:?}")))
 }
 
 /// Serialize a KeyPackage to TLS bytes for transmission/storage.
@@ -91,7 +88,7 @@ pub fn serialize_key_package(kp: &KeyPackage) -> Result<Vec<u8>, CryptoError> {
 /// required by openmls 0.5 (KeyPackage itself has no tls_deserialize).
 pub fn deserialize_key_package(
     bytes: &[u8],
-    provider: &OpenMlsRustCrypto,
+    provider: &impl OpenMlsCryptoProvider,
 ) -> Result<KeyPackage, CryptoError> {
     let kp_in = KeyPackageIn::tls_deserialize(&mut std::io::Cursor::new(bytes))
         .map_err(|e| CryptoError::key_package(format!("deserialization failed: {e:?}")))?;

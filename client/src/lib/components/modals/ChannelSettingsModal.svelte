@@ -7,7 +7,7 @@ import api from '$lib/api/client';
 import { get } from 'svelte/store';
 import { currentUser } from '$lib/stores/auth';
 import { channels } from '$lib/stores/channels';
-import { initE2EEGroup, base64urlToHex } from '$lib/stores/e2ee';
+import { initE2EEGroup, base64urlToHex, addE2EEMember, removeE2EEMember } from '$lib/stores/e2ee';
 import { edgeResize } from '$lib/actions/edgeResize';
 import ChannelPermissionsTab from './ChannelPermissionsTab.svelte';
 
@@ -74,34 +74,67 @@ import ChannelPermissionsTab from './ChannelPermissionsTab.svelte';
 		}
 	}
 
-	async function handleE2EEToggle(): Promise<void> {
-		const newVal = !e2eeEnabled;
-		try {
-			const updated = await api.patch<{ e2ee_enabled: boolean }>(`/channels/${channelId}`, { e2ee_enabled: newVal });
-			e2eeEnabled = updated.e2ee_enabled;
+    let encryptionMembers = $state<{ user_id: string; username: string }[]>([]);
+    let encryptionMemberId = $state('');
+    let encryptionBusy = $state(false);
+    async function loadEncryptionMembers() {
+        encryptionMembers = await api.get(`/servers/${spaceId}/members`);
+    }
+    async function initializeEncryption(allowLegacyRejoin = false) {
+        const members = await api.get<{ user_id: string }[]>(`/servers/${spaceId}/members`);
+        const creatorId = get(currentUser)?.id;
+        if (!creatorId) throw new Error('Sign in before initializing encryption.');
+        const packages = new Map<string, string>();
+        for (const member of members) {
+            if (member.user_id === creatorId) continue;
+            try {
+                const result = await api.get<{ key_package: string }>(
+                    `/users/${member.user_id}/key-packages/one?channel_id=${encodeURIComponent(channelId)}`);
+                packages.set(member.user_id, base64urlToHex(result.key_package));
+            } catch (failure: any) {
+                if (failure.status !== 404 && failure.code !== 'NOT_FOUND') throw failure;
+            }
+        }
+        await initE2EEGroup(channelId, packages, allowLegacyRejoin);
+    }
+    async function handleE2EEToggle(): Promise<void> {
+        encryptionBusy = true;
+        error = '';
+        try {
+            const updated = await api.patch<{ e2ee_enabled: boolean }>(`/channels/${channelId}`, { e2ee_enabled: !e2eeEnabled });
+            e2eeEnabled = updated.e2ee_enabled;
             channels.update(list => list.map(channel => channel.id === channelId
                 ? { ...channel, e2ee_enabled: updated.e2ee_enabled } : channel));
-			// If enabling and in Tauri: fetch member key packages and init group
-			if (newVal && typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-				const members = await api.get<{ user_id: string }[]>(`/servers/${spaceId}/members`);
-				const creatorId = get(currentUser)?.id;
-                if (!creatorId) throw new Error('Sign in before initializing encryption.');
-                const kpMap = new Map<string, string>();
-				for (const m of members) {
-                    if (m.user_id === creatorId) continue;
-					try {
-						const kpRes = await api.get<{ key_package: string }>(
-							`/users/${m.user_id}/key-packages/one?channel_id=${encodeURIComponent(channelId)}`
-						);
-						kpMap.set(m.user_id, base64urlToHex(kpRes.key_package));
-					} catch { /* member has no key package */ }
-				}
-				await initE2EEGroup(channelId, kpMap);
-			}
-		} catch (err: any) {
-			console.error('[E2EE] Toggle failed:', err);
-		}
-	}
+            if (e2eeEnabled) await initializeEncryption();
+        } catch (failure: any) {
+            error = failure.message ?? 'Encryption setup failed.';
+        } finally {
+            encryptionBusy = false;
+        }
+    }
+    async function recreateLegacyEncryption() {
+        if (!window.confirm('Start a new encrypted group for this legacy channel? Old unavailable history cannot be recovered. Members with published device keys will receive new invitations.')) return;
+        encryptionBusy = true;
+        error = '';
+        try { await initializeEncryption(true); }
+        catch (failure: any) { error = failure.message ?? 'Encrypted group could not be recreated.'; }
+        finally { encryptionBusy = false; }
+    }
+    async function changeEncryptedMembership(remove: boolean) {
+        if (!encryptionMemberId) return;
+        encryptionBusy = true;
+        error = '';
+        try {
+            if (remove) {
+                await removeE2EEMember(channelId, encryptionMemberId);
+            } else {
+                const result = await api.get<{ key_package: string }>(
+                    `/users/${encryptionMemberId}/key-packages/one?channel_id=${encodeURIComponent(channelId)}`);
+                await addE2EEMember(channelId, encryptionMemberId, base64urlToHex(result.key_package));
+            }
+        } catch (failure: any) { error = failure.message ?? 'Encrypted membership could not be changed.'; }
+        finally { encryptionBusy = false; }
+    }
 
 	function handleCancel() {
 		onClose();
@@ -249,7 +282,29 @@ import ChannelPermissionsTab from './ChannelPermissionsTab.svelte';
 						</button>
 					</div>
 
-					<!-- E2EE toggle -->
+					{#if e2eeEnabled}
+                    <div class="space-y-2 rounded border border-gray-600 p-3">
+                        <p class="text-sm text-gray-300">Encrypted device recovery</p>
+                        <p class="text-xs text-gray-400">For a lost device, remove its membership, then invite its new signed-in device. Legacy channels require explicit recreation.</p>
+                        <button type="button" disabled={encryptionBusy} onclick={recreateLegacyEncryption}
+                            class="rounded bg-gray-700 px-3 py-1 text-sm">Start new legacy encrypted group</button>
+                        <button type="button" disabled={encryptionBusy} onclick={() => loadEncryptionMembers().catch(failure => error = failure.message)}
+                            class="rounded bg-gray-700 px-3 py-1 text-sm">Manage encrypted members</button>
+                        {#if encryptionMembers.length}
+                            <select bind:value={encryptionMemberId} class="w-full rounded bg-gray-700 p-2" aria-label="Encrypted member">
+                                <option value="">Choose a member</option>
+                                {#each encryptionMembers.filter(member => member.user_id !== $currentUser?.id) as member}
+                                    <option value={member.user_id}>{member.username}</option>
+                                {/each}
+                            </select>
+                            <button type="button" disabled={encryptionBusy || !encryptionMemberId} onclick={() => changeEncryptedMembership(false)}
+                                class="rounded bg-indigo-700 px-3 py-1 text-sm">Invite device</button>
+                            <button type="button" disabled={encryptionBusy || !encryptionMemberId} onclick={() => changeEncryptedMembership(true)}
+                                class="rounded bg-gray-700 px-3 py-1 text-sm">Remove member</button>
+                        {/if}
+                    </div>
+                    {/if}
+                    <!-- E2EE toggle -->
 					<div class="flex items-center justify-between py-2">
 						<div>
 							<span class="text-sm font-medium text-gray-200">End-to-End Encryption</span>

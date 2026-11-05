@@ -75,6 +75,9 @@ pub async fn forward_message(
 
     let source_channel_sf = Snowflake::new(source_msg.channel_id);
 
+    crate::routes::e2ee::sync::reject_legacy(&state.db, target_channel_sf).await?;
+    crate::routes::e2ee::sync::reject_legacy(&state.db, source_channel_sf).await?;
+
     // Check source channel visibility (user must be able to read the source message)
     permission_check::require_channel_perm(
         &state.db,

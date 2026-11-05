@@ -19,6 +19,7 @@
 //! - crate::AppState (application state)
 
 pub mod groups;
+pub mod sync;
 pub mod key_packages;
 
 use crate::AppState;
@@ -28,4 +29,5 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .merge(key_packages::router())
         .merge(groups::router())
+        .merge(sync::router())
 }

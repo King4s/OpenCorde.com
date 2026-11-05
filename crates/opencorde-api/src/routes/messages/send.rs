@@ -119,6 +119,8 @@ async fn persist_and_broadcast_message(
     )
     .await?;
 
+    crate::routes::e2ee::sync::reject_legacy(pool, channel_id_sf).await?;
+
     // Validate content
     validate_content(&req.content)?;
     tracing::debug!(content_len = req.content.len(), "content validated");

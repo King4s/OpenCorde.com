@@ -13,6 +13,7 @@
 use crate::error::CryptoError;
 use openmls::prelude::*;
 use openmls_basic_credential::SignatureKeyPair;
+#[cfg(test)]
 use openmls_rust_crypto::OpenMlsRustCrypto;
 use tracing::instrument;
 
@@ -30,7 +31,7 @@ pub fn encrypt_message(
     group: &mut MlsGroup,
     plaintext: &[u8],
     signer: &SignatureKeyPair,
-    provider: &OpenMlsRustCrypto,
+    provider: &impl OpenMlsCryptoProvider,
 ) -> Result<Vec<u8>, CryptoError> {
     tracing::debug!(plaintext_len = plaintext.len(), "encrypting message");
 
@@ -68,8 +69,26 @@ pub fn encrypt_message(
 pub fn decrypt_message(
     group: &mut MlsGroup,
     message_bytes: &[u8],
-    provider: &OpenMlsRustCrypto,
+    provider: &impl OpenMlsCryptoProvider,
 ) -> Result<Option<Vec<u8>>, CryptoError> {
+    decrypt_inner(group, message_bytes, provider, false).map(|(_, plaintext)| plaintext)
+}
+
+/// Process a message and return its cryptographically authenticated sender identity.
+pub fn decrypt_authenticated(
+    group: &mut MlsGroup,
+    message_bytes: &[u8],
+    provider: &impl OpenMlsCryptoProvider,
+) -> Result<(i64, Option<Vec<u8>>), CryptoError> {
+    decrypt_inner(group, message_bytes, provider, true)
+}
+
+fn decrypt_inner(
+    group: &mut MlsGroup,
+    message_bytes: &[u8],
+    provider: &impl OpenMlsCryptoProvider,
+    require_user_identity: bool,
+) -> Result<(i64, Option<Vec<u8>>), CryptoError> {
     tracing::debug!("decrypting message");
 
     // TlsDeserializeTrait is in scope via `use openmls::prelude::*`
@@ -91,22 +110,31 @@ pub fn decrypt_message(
         .process_message(provider, protocol_message)
         .map_err(|e| CryptoError::decryption(format!("process_message failed: {e:?}")))?;
 
+    // The legacy library API supports arbitrary MLS Basic credentials. V2
+    // application routing additionally requires an authenticated Snowflake.
+    let sender = if require_user_identity {
+        let identity: [u8; 8] = processed.credential().identity().try_into()
+            .map_err(|_| CryptoError::decryption("invalid sender credential"))?;
+        let sender = i64::from_le_bytes(identity);
+        if sender <= 0 { return Err(CryptoError::decryption("invalid sender identity")); }
+        sender
+    } else { 0 };
     match processed.into_content() {
         ProcessedMessageContent::ApplicationMessage(app_msg) => {
             tracing::debug!("application message decrypted");
-            Ok(Some(app_msg.into_bytes()))
+            Ok((sender, Some(app_msg.into_bytes())))
         }
         ProcessedMessageContent::StagedCommitMessage(commit) => {
             group
                 .merge_staged_commit(provider, *commit)
                 .map_err(|e| CryptoError::decryption(format!("merge commit failed: {e:?}")))?;
             tracing::debug!("staged commit merged");
-            Ok(None)
+            Ok((sender, None))
         }
         ProcessedMessageContent::ProposalMessage(_)
         | ProcessedMessageContent::ExternalJoinProposalMessage(_) => {
             tracing::debug!("proposal message processed");
-            Ok(None)
+            Ok((sender, None))
         }
     }
 }
@@ -118,7 +146,7 @@ mod tests {
 
     fn make_cred_and_signer(
         id: i64,
-        provider: &OpenMlsRustCrypto,
+        provider: &impl OpenMlsCryptoProvider,
     ) -> (CredentialWithKey, SignatureKeyPair) {
         let cred = Credential::new(id.to_le_bytes().to_vec(), CredentialType::Basic).unwrap();
         let signer = SignatureKeyPair::new(SignatureScheme::ED25519).unwrap();

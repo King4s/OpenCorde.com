@@ -157,6 +157,8 @@ pub async fn schedule_message(
     )
     .await?;
 
+    crate::routes::e2ee::sync::reject_legacy(&state.db, channel_id_sf).await?;
+
     // Validate content
     validate_content(&req.content)?;
 
@@ -216,6 +218,8 @@ pub async fn edit_scheduled(
     tracing::info!("editing scheduled message");
 
     let id_sf = parse_snowflake_id(&id)?;
+
+    crate::routes::e2ee::sync::reject_legacy(&state.db, channel_id_sf).await?;
 
     // Validate content if provided
     if let Some(ref content) = req.content {
