@@ -39,10 +39,9 @@
     "android": {
       "minSdkVersion": 24,
       "versionCode": null,
-      "debugApplicationIdSuffix": ".debug",
       "autoIncrementVersionCode": true
     },
-    "ios": {
+    "iOS": {
       "minimumSystemVersion": "14.0"
     }
   },
