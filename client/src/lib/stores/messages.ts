@@ -9,9 +9,13 @@ import { gateway } from "$lib/api/websocket";
 import type { Message, ReactionCount, Attachment } from "$lib/api/types";
 import {
   getGroupState,
-  setGroupState,
   requireChannelGroupState,
   requirePlaintextChannel,
+  sendEncryptedMessage,
+  cachedMessage,
+  joinE2EEGroup,
+  isNativeCrypto,
+  e2eeGroupStates,
 } from "./e2ee";
 import { toastError } from "$lib/stores/toasts.svelte";
 import { browser } from "$app/environment";
@@ -34,31 +38,16 @@ let currentChannelId: string | null = null;
 async function decryptContent(
   channelId: string,
   content: string,
+  messageId: string,
 ): Promise<string> {
-  if (!content.startsWith("enc:") || !isTauri()) return content;
-  const groupState = getGroupState(channelId);
-  if (!groupState) return "[Encrypted message — open channel to decrypt]";
   try {
-    const { invoke } = await import("@tauri-apps/api/core");
-    const result = await invoke<{
-      plaintext: string | null;
-      group_state_hex: string;
-    }>("crypto_decrypt", {
-      ciphertext_hex: content.slice(4),
-      group_state_hex: groupState,
-    });
-    setGroupState(channelId, result.group_state_hex);
-    return result.plaintext ?? "[MLS control message]";
-  } catch {
-    // Toast once per channel per session to avoid spamming
+    return await cachedMessage(channelId, messageId, content);
+  } catch (error) {
     if (!decryptionToastShown.has(channelId)) {
       decryptionToastShown.add(channelId);
-      toastError(
-        "Some messages could not be decrypted. History may be incomplete.",
-        "Encryption Error",
-      );
+      toastError((error as Error).message, "Encryption recovery");
     }
-    return "[Decryption failed]";
+    return "[Encrypted message unavailable — unlock or rejoin this channel]";
   }
 }
 
@@ -74,16 +63,23 @@ export async function fetchMessages(
   const path = `/channels/${channelId}/messages?${params}`;
   const list = await api.get<Message[]>(path);
 
-  // Decrypt E2EE messages
-  const finalList =
-    isTauri() && getGroupState(channelId)
-      ? await Promise.all(
-          list.map(async (m) => ({
-            ...m,
-            content: await decryptContent(channelId, m.content),
-          })),
-        )
-      : list;
+  if (
+    isNativeCrypto() &&
+    (getGroupState(channelId) ||
+      list.some((message) => message.content.startsWith("enc:")))
+  ) {
+    try {
+      await joinE2EEGroup(channelId);
+    } catch (error) {
+      toastError((error as Error).message, "Encryption recovery");
+    }
+  }
+  const finalList = await Promise.all(
+    list.map(async (message) => ({
+      ...message,
+      content: await decryptContent(channelId, message.content, message.id),
+    })),
+  );
 
   if (before) {
     messages.update((existing) => [...finalList, ...existing]);
@@ -100,24 +96,13 @@ export async function sendMessage(
   replyToId?: string,
   attachments?: Attachment[],
 ): Promise<void> {
-  let finalContent = content;
-  const groupState = requireChannelGroupState(channelId);
-  if (groupState) {
-    const { invoke } = await import("@tauri-apps/api/core");
-    const result = await invoke<{
-      ciphertext_hex: string;
-      group_state_hex: string;
-    }>("crypto_encrypt", {
-      plaintext: content,
-      group_state_hex: groupState,
-    });
-    if (!result.ciphertext_hex || !result.group_state_hex) {
-      throw new Error("Encryption did not produce a valid message.");
-    }
-    setGroupState(channelId, result.group_state_hex);
-    finalContent = "enc:" + result.ciphertext_hex;
+  // Synchronization and durable outbox publication happen inside native ownership.
+  if (requireChannelGroupState(channelId)) {
+    await sendEncryptedMessage(channelId, content, replyToId, attachments);
+    await fetchMessages(channelId);
+    return;
   }
-  const body: Record<string, unknown> = { content: finalContent };
+  const body: Record<string, unknown> = { content };
   if (replyToId) body.reply_to_id = replyToId;
   if (attachments && attachments.length > 0) body.attachments = attachments;
   const msg = await api.post<Message>(`/channels/${channelId}/messages`, body);
@@ -165,7 +150,42 @@ export async function toggleReaction(
   );
 }
 
+let listenersInitialized = false;
 export function initMessageListener(): void {
+  if (listenersInitialized) return;
+  listenersInitialized = true;
+  gateway.on("E2eeSync", (data: unknown) => {
+    const event = data as { channel_id: string };
+    if (
+      isNativeCrypto() &&
+      (event.channel_id === currentChannelId || getGroupState(event.channel_id))
+    ) {
+      void joinE2EEGroup(event.channel_id)
+        .then(() =>
+          event.channel_id === currentChannelId
+            ? fetchMessages(event.channel_id)
+            : undefined,
+        )
+        .catch((error) =>
+          toastError((error as Error).message, "Encryption recovery"),
+        );
+    }
+  });
+  gateway.on("Ready", () => {
+    if (isNativeCrypto()) {
+      for (const channelId of get(e2eeGroupStates).keys()) {
+        if (channelId !== currentChannelId)
+          void joinE2EEGroup(channelId).catch((error) =>
+            toastError((error as Error).message),
+          );
+      }
+    }
+    if (currentChannelId && isNativeCrypto()) {
+      void fetchMessages(currentChannelId).catch((error) =>
+        toastError((error as Error).message),
+      );
+    }
+  });
   gateway.on("MessageCreate", (data: unknown) => {
     const event = data as { message: Message };
     if (currentChannelId && event.message.channel_id === currentChannelId) {
@@ -176,12 +196,16 @@ export function initMessageListener(): void {
         event.message.content.startsWith("enc:") &&
         getGroupState(cid)
       ) {
-        decryptContent(cid, event.message.content).then((plaintext) => {
-          messages.update((list) => [
-            ...list,
-            { ...event.message, content: plaintext },
-          ]);
-        });
+        joinE2EEGroup(cid)
+          .then(() =>
+            decryptContent(cid, event.message.content, event.message.id),
+          )
+          .then((plaintext) => {
+            messages.update((list) => [
+              ...list.filter((message) => message.id !== event.message.id),
+              { ...event.message, content: plaintext },
+            ]);
+          });
       } else {
         messages.update((list) => [...list, event.message]);
       }

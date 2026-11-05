@@ -9,6 +9,7 @@ type EventHandler = (data: unknown) => void;
 export class GatewayClient {
   private ws: WebSocket | null = null;
   private url: string;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private token: string = "";
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private handlers: Map<string, EventHandler[]> = new Map();
@@ -20,21 +21,23 @@ export class GatewayClient {
   }
 
   connect(token: string): void {
+    this.disconnect();
     this.token = token;
-    if (!this.url) {
+    let url = this.url;
+    if (!url) {
       const server =
         typeof localStorage !== "undefined"
           ? localStorage.getItem("opencorde_server")
           : null;
       if (server) {
         const wsProto = server.startsWith("https:") ? "wss:" : "ws:";
-        this.url = `${wsProto}${server.replace(/^https?/, "")}/api/v1/gateway`;
+        url = `${wsProto}${server.replace(/^https?:/, "").replace(/\/$/, "")}/api/v1/gateway`;
       } else {
         const proto = location.protocol === "https:" ? "wss:" : "ws:";
-        this.url = `${proto}//${location.host}/api/v1/gateway`;
+        url = `${proto}//${location.host}/api/v1/gateway`;
       }
     }
-    this.ws = new WebSocket(this.url);
+    this.ws = new WebSocket(url);
 
     this.ws.onopen = () => {
       console.log("[WS] Connected");
@@ -134,14 +137,22 @@ export class GatewayClient {
       console.log(
         `[WS] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`,
       );
-      setTimeout(() => this.connect(this.token), delay);
+      this.reconnectTimer = setTimeout(() => this.connect(this.token), delay);
     }
   }
 
   disconnect(): void {
     this.cleanup();
-    this.ws?.close();
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
+    if (this.ws) {
+      this.ws.onclose = null;
+      this.ws.onmessage = null;
+      this.ws.onopen = null;
+      this.ws.close();
+    }
     this.ws = null;
+    this.token = "";
   }
 }
 

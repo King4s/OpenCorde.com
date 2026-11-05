@@ -74,15 +74,34 @@ pub async fn upload_key_package(
     // Decode base64 → raw bytes
     let kp_bytes = base64_decode(&payload.key_package)?;
 
-    sqlx::query("INSERT INTO e2ee_key_packages (user_id, key_package) VALUES ($1, $2)")
-        .bind(auth.user_id.as_i64())
-        .bind(&kp_bytes)
-        .execute(&state.db)
-        .await
-        .map_err(ApiError::Database)?;
+    publish_for_user(&state.db, auth.user_id, &kp_bytes).await?;
 
     tracing::info!(user_id = %auth.user_id, "key package uploaded");
     Ok(StatusCode::CREATED)
+}
+
+pub(super) async fn publish_for_user(
+    pool: &sqlx::PgPool,
+    user_id: opencorde_core::Snowflake,
+    kp_bytes: &[u8],
+) -> Result<(), ApiError> {
+    if kp_bytes.is_empty() || kp_bytes.len() > 65536 {
+        return Err(ApiError::BadRequest("invalid key package size".into()));
+    }
+    let mut tx = pool.begin().await?;
+    let fresh = sqlx::query(
+        "INSERT INTO e2ee_key_package_publications(user_id,fingerprint) VALUES($1,encode(sha256($2),'hex')) ON CONFLICT DO NOTHING",
+    ).bind(user_id.as_i64()).bind(kp_bytes).execute(&mut *tx).await?.rows_affected() == 1;
+    if fresh {
+        sqlx::query("INSERT INTO e2ee_key_packages(user_id,key_package) VALUES($1,$2)")
+            .bind(user_id.as_i64())
+            .bind(kp_bytes)
+            .execute(&mut *tx)
+            .await?;
+    }
+    tx.commit().await?;
+
+    Ok(())
 }
 
 /// GET /api/v1/users/{user_id}/key-packages/one — Consume one KeyPackage for a user.

@@ -101,6 +101,7 @@ async fn init_group_for_user(
     payload: InitGroupRequest,
 ) -> Result<StatusCode, ApiError> {
     reject_private_state(&payload.group_state)?;
+    super::sync::reject_legacy(pool, channel_id).await?;
 
     permission_check::require_channel_perm(
         pool,
@@ -199,6 +200,7 @@ async fn get_welcome_for_user(
         .await?;
 
     // Atomically fetch and clear the welcome message
+    super::sync::reject_legacy(pool, channel_id).await?;
     let row = sqlx::query(
         r#"
         WITH pending AS (
@@ -257,6 +259,7 @@ async fn update_state_for_user(
     payload: UpdateStateRequest,
 ) -> Result<StatusCode, ApiError> {
     reject_private_state(&payload.group_state)?;
+    super::sync::reject_legacy(pool, channel_id).await?;
 
     permission_check::require_channel_perm(
         pool,

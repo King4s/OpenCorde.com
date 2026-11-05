@@ -87,6 +87,8 @@ export interface Message {
 }
 
 export interface Attachment {
+  /** Local upload epoch, stripped before public message projection. */
+  encryption_epoch?: string;
   id: string;
   filename: string;
   content_type: string;

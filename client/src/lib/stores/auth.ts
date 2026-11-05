@@ -11,7 +11,7 @@ import { writable, derived } from "svelte/store";
 import api from "$lib/api/client";
 import { gateway } from "$lib/api/websocket";
 import type { AuthResponse, UserProfile } from "$lib/api/types";
-import { hexToBase64url } from "./e2ee";
+import { openE2EE, lockE2EE } from "./e2ee";
 import { browser } from "$app/environment";
 import { toastError } from "$lib/stores/toasts.svelte";
 
@@ -80,7 +80,7 @@ export async function establishSession(token: string): Promise<UserProfile> {
   accessToken.set(token);
   const profile = await api.get<UserProfile>("/users/@me");
   currentUser.set(profile);
-  uploadKeyPackage(profile.id);
+  await uploadKeyPackage(profile.id);
   gateway.connect(token);
   return profile;
 }
@@ -103,7 +103,7 @@ export async function restoreSession(): Promise<boolean> {
     const profile = await api.get<UserProfile>("/users/@me");
     accessToken.set(token);
     currentUser.set(profile);
-    uploadKeyPackage(profile.id);
+    await uploadKeyPackage(profile.id);
     gateway.connect(token);
     return true;
   } catch {
@@ -125,7 +125,7 @@ export async function login(
   accessToken.set(res.access_token);
   const profile = await api.get<UserProfile>("/users/@me");
   currentUser.set(profile);
-  uploadKeyPackage(profile.id);
+  await uploadKeyPackage(profile.id);
   gateway.connect(res.access_token);
 }
 
@@ -142,6 +142,7 @@ export async function register(
   accessToken.set(res.access_token);
   const profile = await api.get<UserProfile>("/users/@me");
   currentUser.set(profile);
+  await uploadKeyPackage(profile.id);
   gateway.connect(res.access_token);
 }
 
@@ -157,21 +158,19 @@ export async function refreshToken(): Promise<void> {
 }
 
 async function uploadKeyPackage(userId: string): Promise<void> {
-  if (!isTauri()) return;
   try {
-    const { invoke: tauriInvoke } = await import("@tauri-apps/api/core");
-    const kpHex = await tauriInvoke<string>("crypto_init", {
-      user_id: userId,
-    });
-    await api.post("/users/me/key-packages", {
-      key_package: hexToBase64url(kpHex),
-    });
-  } catch (err) {
-    console.warn("[E2EE] Key package upload failed:", err);
+    await openE2EE(userId);
+  } catch (error) {
+    toastError(
+      (error as Error).message ?? "Local encryption could not be unlocked.",
+    );
   }
 }
 
 export function logout(): void {
+  void lockE2EE().catch(() =>
+    toastError("Encryption session could not be closed. Restart the app."),
+  );
   accessToken.set(null);
   currentUser.set(null);
   gateway.disconnect();

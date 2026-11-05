@@ -5,6 +5,7 @@
 
 export interface ApiError {
   code: string;
+  status?: number;
   message: string;
 }
 
@@ -79,6 +80,7 @@ class ApiClient {
       const error: ApiError = text
         ? (JSON.parse(text) as ApiError)
         : { code: "HTTP_ERROR", message: `HTTP ${response.status}` };
+      error.status = response.status;
       throw error;
     }
 
@@ -113,6 +115,7 @@ class ApiClient {
       const error: ApiError = text
         ? (JSON.parse(text) as ApiError)
         : { code: "HTTP_ERROR", message: `HTTP ${response.status}` };
+      error.status = response.status;
       throw error;
     }
 

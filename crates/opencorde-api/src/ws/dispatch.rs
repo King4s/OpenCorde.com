@@ -11,6 +11,7 @@ use crate::{error::ApiError, routes::permission_check::effective_channel_perms};
 #[derive(Debug, PartialEq)]
 enum Audience {
     Channel(i64),
+    MlsChannel(i64),
     Dm(i64),
     Server(i64),
     User(i64),
@@ -23,6 +24,9 @@ fn audience(event: &serde_json::Value) -> Audience {
     let channel = |path| id(path).map(Audience::Channel).unwrap_or(Audience::Deny);
     let server = |path| id(path).map(Audience::Server).unwrap_or(Audience::Deny);
     match event.get("type").and_then(|v| v.as_str()) {
+        Some("E2eeSync") => id("/data/channel_id")
+            .map(Audience::MlsChannel)
+            .unwrap_or(Audience::Deny),
         Some("MessageCreate" | "MessageUpdate") => channel("/data/message/channel_id"),
         Some(
             "MessageDelete" | "TypingStart" | "ReactionAdd" | "ReactionRemove" | "ChannelDelete",
@@ -47,6 +51,13 @@ fn audience(event: &serde_json::Value) -> Audience {
 /// Re-check membership and VIEW_CHANNEL for every event, including metadata.
 /// Missing resources and all lookup failures deny delivery.
 pub async fn should_dispatch(event: &serde_json::Value, pool: &PgPool, user: Snowflake) -> bool {
+    if let Audience::MlsChannel(id) = audience(event)
+        && crate::routes::e2ee::sync::require_active(pool, user, Snowflake::new(id))
+            .await
+            .is_err()
+    {
+        return false;
+    }
     match authorize(audience(event), pool, user).await {
         Ok(allowed) => allowed,
         Err(_) => {
@@ -68,7 +79,7 @@ async fn authorize(audience: Audience, pool: &PgPool, user: Snowflake) -> Result
             .await?
             .is_some()),
         Audience::Dm(id) => Ok(dm_repo::is_dm_member(pool, Snowflake::new(id), user).await?),
-        Audience::Channel(id) => {
+        Audience::Channel(id) | Audience::MlsChannel(id) => {
             let server: Option<i64> =
                 sqlx::query_scalar("SELECT server_id FROM channels WHERE id = $1")
                     .bind(id)

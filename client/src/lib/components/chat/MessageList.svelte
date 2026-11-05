@@ -14,7 +14,7 @@
 	import ChannelPicker from '$lib/components/modals/ChannelPicker.svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { currentChannelId } from '$lib/stores/channels';
-	import { getGroupState } from '$lib/stores/e2ee';
+	import { getGroupState, cryptoArguments } from '$lib/stores/e2ee';
 	import UserProfilePopover from '$lib/components/user/UserProfilePopover.svelte';
 	import api from '$lib/api/client';
 	import { toastError } from '$lib/stores/toasts.svelte';
@@ -211,7 +211,7 @@
 			const encryptedB64 = btoa(binary);
 
 			const decryptedB64 = await invoke<string>('crypto_decrypt_file', {
-				group_state_hex: groupState,
+				...cryptoArguments(channelId),
 				encrypted_b64: encryptedB64
 			});
 

@@ -130,6 +130,12 @@ async fn deliver_one(
         }
     }
 
+    if crate::routes::e2ee::sync::is_v2(db, channel_id).await? {
+        // A queued legacy plaintext message must never bypass the encrypted stream.
+        scheduled_message_repo::mark_delivered(db, scheduled_id).await?;
+        return Ok(());
+    }
+
     // Fetch server_id from channel (needed for search indexing)
     let server_id: i64 = sqlx::query_scalar("SELECT server_id FROM channels WHERE id = $1")
         .bind(channel_id.as_i64())

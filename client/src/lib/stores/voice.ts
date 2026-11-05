@@ -17,7 +17,14 @@ import {
   type RoomOptions,
 } from "livekit-client";
 import { invoke } from "@tauri-apps/api/core";
-import { getGroupState, hexToBytes } from "./e2ee";
+import {
+  getGroupState,
+  hexToBytes,
+  cryptoArguments,
+  joinE2EEGroup,
+  isEncryptedChannel,
+  e2eeEpochs,
+} from "./e2ee";
 import { toastError } from "$lib/stores/toasts.svelte";
 
 export const inVoice = writable(false);
@@ -252,6 +259,17 @@ if (typeof localStorage !== "undefined") {
 }
 
 let activeRoom: Room | null = null;
+let encryptedVoiceSession: { channel: string; epoch: string } | null = null;
+e2eeEpochs.subscribe((epochs) => {
+  const session = encryptedVoiceSession;
+  if (session && epochs.get(session.channel) !== session.epoch) {
+    encryptedVoiceSession = null;
+    toastError(
+      "Encrypted voice disconnected because membership or account keys changed. Rejoin to use the current keys.",
+    );
+    void leaveVoice();
+  }
+});
 let joiningInProgress = false;
 
 interface JoinResponse {
@@ -348,11 +366,26 @@ export async function joinVoice(channelId: string): Promise<void> {
       dynacast: true,
     };
 
+    if (isEncryptedChannel(channelId)) {
+      if (!isE2EESupported())
+        throw new Error("Encrypted voice requires the desktop app.");
+      await joinE2EEGroup(channelId);
+      if (!getGroupState(channelId))
+        throw new Error(
+          "Encrypted voice keys are unavailable. Restore this device before joining.",
+        );
+    }
     const groupState = getGroupState(channelId);
+    const voiceEpoch = get(e2eeEpochs).get(channelId);
+    if (groupState && voiceEpoch === undefined)
+      throw new Error("Encrypted voice epoch is unavailable.");
+    encryptedVoiceSession = groupState
+      ? { channel: channelId, epoch: voiceEpoch! }
+      : null;
     if (groupState && isE2EESupported()) {
       try {
         const keyHex = await invoke<string>("crypto_export_voice_key", {
-          group_state_hex: groupState,
+          ...cryptoArguments(channelId),
         });
         const keyBytes = hexToBytes(keyHex);
         // Uint8Array.buffer is ArrayBufferLike; slice to get a plain ArrayBuffer
@@ -370,9 +403,10 @@ export async function joinVoice(channelId: string): Promise<void> {
         await keyProvider.setKey(keyBuffer);
         voiceE2EEActive.set(true);
       } catch (err) {
-        console.warn(
-          "[E2EE] Voice key export failed, joining without E2EE:",
-          err,
+        voiceE2EEActive.set(false);
+        throw new Error(
+          "Encrypted voice keys could not be loaded. Restore this device before joining.",
+          { cause: err },
         );
       }
     }
@@ -423,7 +457,24 @@ export async function joinVoice(channelId: string): Promise<void> {
         livekitParticipants.set(new Map());
       });
 
+    if (
+      groupState &&
+      (!encryptedVoiceSession || get(e2eeEpochs).get(channelId) !== voiceEpoch)
+    ) {
+      throw new Error(
+        "Encrypted voice membership changed. Rejoin to use the current keys.",
+      );
+    }
     await room.connect(res.livekit_url, res.livekit_token);
+    if (
+      groupState &&
+      (!encryptedVoiceSession || get(e2eeEpochs).get(channelId) !== voiceEpoch)
+    ) {
+      await room.disconnect();
+      throw new Error(
+        "Encrypted voice membership changed. Rejoin to use the current keys.",
+      );
+    }
     // Enable microphone by default (respecting self_mute). If the device is
     // unavailable or permission is denied, keep the room connected so the user
     // still joins the channel instead of bouncing back out.
@@ -448,6 +499,8 @@ export async function joinVoice(channelId: string): Promise<void> {
     // Start adaptive bitrate controller after mic is set up
     startBitrateController(room);
   } catch (err: any) {
+    encryptedVoiceSession = null;
+    if (activeRoom) await activeRoom.disconnect();
     console.error("[Voice] failed to join voice channel:", err);
 
     // If the backend already registered the voice join, clean it up so the user
@@ -475,6 +528,7 @@ export async function joinVoice(channelId: string): Promise<void> {
 }
 
 export async function leaveVoice(): Promise<void> {
+  encryptedVoiceSession = null;
   stopBitrateController();
   try {
     if (activeRoom) {

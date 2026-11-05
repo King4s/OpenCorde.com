@@ -72,6 +72,8 @@ pub async fn edit_message(
         return Err(ApiError::Forbidden);
     }
 
+    crate::routes::e2ee::sync::reject_legacy(&state.db, opencorde_core::Snowflake::new(message.channel_id)).await?;
+
     // Update message content
     message_repo::update_content(&state.db, message_id, &req.content)
         .await

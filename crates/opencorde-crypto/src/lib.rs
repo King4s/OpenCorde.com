@@ -21,3 +21,6 @@ pub mod error;
 pub mod file_crypto;
 pub mod group;
 pub mod key_package;
+
+pub mod provider;
+pub mod durable_store;

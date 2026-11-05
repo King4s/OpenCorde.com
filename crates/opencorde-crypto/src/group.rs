@@ -19,6 +19,7 @@
 use crate::error::CryptoError;
 use openmls::prelude::*;
 use openmls_basic_credential::SignatureKeyPair;
+#[cfg(test)]
 use openmls_rust_crypto::OpenMlsRustCrypto;
 use tracing::instrument;
 
@@ -34,7 +35,7 @@ use tracing::instrument;
 pub fn create_group(
     creator_credential: CredentialWithKey,
     signer: &SignatureKeyPair,
-    provider: &OpenMlsRustCrypto,
+    provider: &impl OpenMlsCryptoProvider,
 ) -> Result<MlsGroup, CryptoError> {
     tracing::debug!("creating new MLS group");
 
@@ -49,6 +50,19 @@ pub fn create_group(
 
     tracing::info!("MLS group created");
     Ok(group)
+}
+
+/// Create a group whose authenticated ID binds it to the application's channel namespace.
+pub fn create_group_with_id(
+    creator_credential: CredentialWithKey,
+    signer: &SignatureKeyPair,
+    provider: &impl OpenMlsCryptoProvider,
+    group_id: &[u8],
+) -> Result<MlsGroup, CryptoError> {
+    if group_id.is_empty() { return Err(CryptoError::group("group ID must not be empty")); }
+    let config = MlsGroupConfig::builder().use_ratchet_tree_extension(true).build();
+    MlsGroup::new_with_group_id(provider, signer, &config, GroupId::from_slice(group_id), creator_credential)
+        .map_err(|e| CryptoError::group(format!("group creation failed: {e:?}")))
 }
 
 /// Add a member to an existing group.
@@ -66,7 +80,7 @@ pub fn add_member(
     group: &mut MlsGroup,
     key_package: KeyPackage,
     signer: &SignatureKeyPair,
-    provider: &OpenMlsRustCrypto,
+    provider: &impl OpenMlsCryptoProvider,
 ) -> Result<(Vec<u8>, Vec<u8>), CryptoError> {
     tracing::debug!("adding member to group");
 
@@ -91,6 +105,113 @@ pub fn add_member(
     Ok((commit_bytes, welcome_bytes))
 }
 
+/// Stage an add commit without merging. Persist the consumed old-epoch send
+/// ratchet before exposing bytes; only merge a candidate for relay acceptance.
+pub fn stage_add_members(
+    group: &mut MlsGroup,
+    packages: &[KeyPackage],
+    signer: &SignatureKeyPair,
+    provider: &impl OpenMlsCryptoProvider,
+) -> Result<(Vec<u8>, Vec<u8>), CryptoError> {
+    let (commit, welcome, _) = group.add_members(provider, signer, packages)
+        .map_err(|e| CryptoError::group(format!("stage add failed: {e:?}")))?;
+    Ok((commit.to_bytes().map_err(|e| CryptoError::group(format!("{e:?}")))?,
+        welcome.to_bytes().map_err(|e| CryptoError::group(format!("{e:?}")))?))
+}
+
+/// Stage removal while preserving the old-epoch ratchet for a rejected commit.
+pub fn stage_remove_member(
+    group: &mut MlsGroup,
+    user_id: i64,
+    signer: &SignatureKeyPair,
+    provider: &impl OpenMlsCryptoProvider,
+) -> Result<Vec<u8>, CryptoError> {
+    let matching: Vec<_> = group.members()
+        .filter(|m| m.credential.identity() == user_id.to_le_bytes())
+        .map(|m| m.index).collect();
+    if matching.len() != 1 {
+        return Err(CryptoError::group("member identity must match exactly one leaf"));
+    }
+    let (commit, _, _) = group.remove_members(provider, signer, &matching)
+        .map_err(|e| CryptoError::group(format!("stage remove failed: {e:?}")))?;
+    commit.to_bytes().map_err(|e| CryptoError::group(format!("{e:?}")))
+}
+
+/// Add several members in one authenticated epoch transition.
+pub fn add_members(
+    group: &mut MlsGroup,
+    packages: &[KeyPackage],
+    signer: &SignatureKeyPair,
+    provider: &impl OpenMlsCryptoProvider,
+) -> Result<(Vec<u8>, Vec<u8>), CryptoError> {
+    let (commit, welcome, _) = group
+        .add_members(provider, signer, packages)
+        .map_err(|e| CryptoError::group(format!("add members failed: {e:?}")))?;
+    let commit = commit
+        .to_bytes()
+        .map_err(|e| CryptoError::group(format!("{e:?}")))?;
+    let welcome = welcome
+        .to_bytes()
+        .map_err(|e| CryptoError::group(format!("{e:?}")))?;
+    group
+        .merge_pending_commit(provider)
+        .map_err(|e| CryptoError::group(format!("merge commit failed: {e:?}")))?;
+    Ok((commit, welcome))
+}
+
+/// Remove exactly the authenticated credential matching a user ID.
+pub fn remove_member(
+    group: &mut MlsGroup,
+    user_id: i64,
+    signer: &SignatureKeyPair,
+    provider: &impl OpenMlsCryptoProvider,
+) -> Result<Vec<u8>, CryptoError> {
+    let matching: Vec<_> = group
+        .members()
+        .filter(|m| m.credential.identity() == user_id.to_le_bytes())
+        .map(|m| m.index)
+        .collect();
+    if matching.len() != 1 {
+        return Err(CryptoError::group(
+            "member identity must match exactly one leaf",
+        ));
+    }
+    let (commit, _, _) = group
+        .remove_members(provider, signer, &matching)
+        .map_err(|e| CryptoError::group(format!("remove member failed: {e:?}")))?;
+    let bytes = commit
+        .to_bytes()
+        .map_err(|e| CryptoError::group(format!("{e:?}")))?;
+    group
+        .merge_pending_commit(provider)
+        .map_err(|e| CryptoError::group(format!("merge commit failed: {e:?}")))?;
+    Ok(bytes)
+}
+
+/// Current authenticated MLS epoch.
+pub fn epoch(group: &MlsGroup) -> u64 {
+    group.epoch().as_u64()
+}
+
+/// Authenticated user identities, rejecting foreign or duplicate credentials.
+pub fn member_ids(group: &MlsGroup) -> Result<Vec<i64>, CryptoError> {
+    let mut ids = Vec::new();
+    for member in group.members() {
+        let bytes: [u8; 8] = member
+            .credential
+            .identity()
+            .try_into()
+            .map_err(|_| CryptoError::group("invalid member identity"))?;
+        let id = i64::from_le_bytes(bytes);
+        if id <= 0 || ids.contains(&id) {
+            return Err(CryptoError::group("invalid or duplicate member identity"));
+        }
+        ids.push(id);
+    }
+    ids.sort_unstable();
+    Ok(ids)
+}
+
 /// Join a group via serialized Welcome bytes received from the adder.
 ///
 /// Deserializes the bytes to `MlsMessageIn`, extracts the `Welcome` variant via
@@ -102,7 +223,7 @@ pub fn add_member(
 /// - `provider` — OpenMLS RustCrypto provider (must contain member's key package private key)
 pub fn process_welcome(
     welcome_bytes: &[u8],
-    provider: &OpenMlsRustCrypto,
+    provider: &impl OpenMlsCryptoProvider,
 ) -> Result<MlsGroup, CryptoError> {
     tracing::debug!("processing welcome message");
 
@@ -147,7 +268,7 @@ pub fn deserialize_group(bytes: &[u8]) -> Result<MlsGroup, CryptoError> {
 /// Pass this key to `file_crypto::encrypt_bytes` / `decrypt_bytes`.
 pub fn export_file_key(
     group: &MlsGroup,
-    provider: &OpenMlsRustCrypto,
+    provider: &impl OpenMlsCryptoProvider,
 ) -> Result<Vec<u8>, CryptoError> {
     group
         .export_secret(provider, "opencorde-file", b"", 32)
@@ -161,7 +282,7 @@ pub fn export_file_key(
 /// Safe to pass to LiveKit's ExternalE2EEKeyProvider as raw key material.
 pub fn export_voice_key(
     group: &MlsGroup,
-    provider: &OpenMlsRustCrypto,
+    provider: &impl OpenMlsCryptoProvider,
 ) -> Result<Vec<u8>, CryptoError> {
     group
         .export_secret(provider, "opencorde-voice", b"", 32)
@@ -175,7 +296,7 @@ mod tests {
 
     fn make_credential_and_signer(
         id: i64,
-        provider: &OpenMlsRustCrypto,
+        provider: &impl OpenMlsCryptoProvider,
     ) -> (CredentialWithKey, SignatureKeyPair) {
         let cred = Credential::new(id.to_le_bytes().to_vec(), CredentialType::Basic).unwrap();
         let signer = SignatureKeyPair::new(SignatureScheme::ED25519).unwrap();

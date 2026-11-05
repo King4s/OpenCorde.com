@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Build without publishing release (test)'
+        description: 'Build unsigned manual installers as workflow artifacts only'
         type: boolean
         default: false
 
@@ -25,14 +25,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: ubuntu-22.04
+          - platform: ubuntu-24.04
             args: ''
+            manual_args: '--bundles deb,appimage'
+            artifact: linux-amd64
           - platform: macos-latest
             args: '--target aarch64-apple-darwin'
+            artifact: macos-arm64
           - platform: macos-latest
             args: '--target x86_64-apple-darwin'
+            artifact: macos-amd64
           - platform: windows-latest
             args: ''
+            artifact: windows-amd64
 
     runs-on: ${{ matrix.platform }}
 
@@ -61,7 +66,7 @@ jobs:
           workspaces: './client/src-tauri -> target'
 
       - name: Install Linux system dependencies
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.platform == 'ubuntu-24.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -76,7 +81,32 @@ jobs:
         working-directory: client
         run: pnpm install --frozen-lockfile --ignore-scripts
 
+      - name: Configure unsigned manual installers
+        if: inputs.dry_run == true
+        working-directory: client
+        run: node -e "require('fs').writeFileSync('src-tauri/tauri.manual.conf.json', JSON.stringify({bundle:{createUpdaterArtifacts:false}}))"
+
+      - name: Build manual installers
+        if: inputs.dry_run == true
+        working-directory: client
+        run: pnpm tauri build --ci --no-sign --config src-tauri/tauri.manual.conf.json ${{ matrix.args }} ${{ matrix.manual_args }} -- --locked
+
+      - name: Upload manual installers
+        if: inputs.dry_run == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.artifact }}-${{ github.sha }}
+          path: |
+            client/src-tauri/target/**/release/bundle/**/*.deb
+            client/src-tauri/target/**/release/bundle/**/*.AppImage
+            client/src-tauri/target/**/release/bundle/**/*.dmg
+            client/src-tauri/target/**/release/bundle/**/*.msi
+            client/src-tauri/target/**/release/bundle/**/*.exe
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Build and release Tauri app
+        if: inputs.dry_run != true
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

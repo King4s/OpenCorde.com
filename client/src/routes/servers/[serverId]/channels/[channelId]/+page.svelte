@@ -21,7 +21,7 @@
 	} from '$lib/stores/messages';
 	import { currentUser } from '$lib/stores/auth';
 	import { currentChannel, selectChannel } from '$lib/stores/channels';
-	import { joinE2EEGroup } from '$lib/stores/e2ee';
+	import { joinE2EEGroup, e2eeErrors, requestE2EERejoin, e2eeRetryChannel, cancelFailedE2EEOperation } from '$lib/stores/e2ee';
 	import { initTypingListener, getTypingForChannel } from '$lib/stores/typing';
 	import { ackChannel, lastReadIds } from '$lib/stores/unread';
 	import MessageList from '$lib/components/chat/MessageList.svelte';
@@ -167,6 +167,24 @@ import RecordingsPanel from '$lib/components/voice/RecordingsPanel.svelte';
 		}
 	}
 </script>
+
+{#if $e2eeErrors.get(channelId)}
+    <div role="alert" class="mx-4 my-2 rounded border border-amber-700 bg-amber-950 p-3 text-sm text-amber-100">
+        {$e2eeErrors.get(channelId)}
+        {#if $e2eeRetryChannel === channelId}
+            <button class="ml-3 underline" onclick={() => cancelFailedE2EEOperation(channelId)}>
+                Cancel paused delivery and restore text draft
+            </button>
+        {/if}
+        <button class="ml-3 underline" onclick={() => {
+            if (window.confirm('Prepare this device to rejoin? Its previous group will stay sealed until a new invitation arrives. Ask an administrator to remove and re-invite this device.')) {
+                requestE2EERejoin(channelId).then(() => fetchMessages(channelId)).catch(failure => {
+                    e2eeErrors.update(errors => new Map(errors).set(channelId, failure.message));
+                });
+            }
+        }}>Prepare this device to rejoin</button>
+    </div>
+{/if}
 
 <!-- Channel header -->
 <div class="h-12 px-4 flex items-center border-b border-gray-900 shadow-md bg-gray-750 flex-shrink-0">
