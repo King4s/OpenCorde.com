@@ -33,12 +33,21 @@ pub trait KeyProvider: Send + Sync {
     fn save(&self, account: &Account, material: &KeyMaterial) -> Result<(), String>;
 }
 
+// Closing a descriptor alone can leave flock held by a forked child until exec.
+// Explicit unlock binds ownership to this guard, including failed open paths.
+struct OwnerLock(File);
+impl Drop for OwnerLock {
+    fn drop(&mut self) {
+        let _ = self.0.unlock();
+    }
+}
+
 pub struct EncryptedStore<T> {
     data: T,
     account: Account,
     material: KeyMaterial,
     directory: PathBuf,
-    _lock: File,
+    _lock: OwnerLock,
     blocked: bool,
     #[cfg(test)]
     pub(crate) crash_phase: Option<&'static str>,
@@ -61,6 +70,7 @@ impl<T: Serialize + DeserializeOwned + Clone> EncryptedStore<T> {
         }
         let lock = options.open(directory.join("owner.lock")).map_err(|_| "cannot open vault lock")?;
         lock.try_lock().map_err(|_| "crypto vault is already open in another process")?;
+        let lock = OwnerLock(lock);
         let path = directory.join("vault.bin");
         let exists = path.try_exists().map_err(|_| "cannot inspect encrypted vault")?;
         let mut material = match keys.load(&account)? {

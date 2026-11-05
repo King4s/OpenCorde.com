@@ -101,3 +101,18 @@ fn crash_worker() {
     vault.transact(|value| { *value = "advanced secret".into(); Ok(()) }).unwrap();
     panic!("crash hook did not fire");
 }
+
+#[test]
+fn owner_drop_unlocks_even_when_file_description_is_inherited() {
+    let path = directory();
+    let vault = open(&path).unwrap();
+    // A forked child temporarily shares this description until exec closes it.
+    let inherited = vault._lock.0.try_clone().unwrap();
+    assert!(open(&path).is_err(), "live owner must remain exclusive");
+    drop(vault);
+    let reopened = open(&path).expect("owner drop must release the lock before child exec");
+    drop(inherited);
+    assert!(open(&path).is_err(), "closing the old description must not unlock the new owner");
+    drop(reopened);
+    std::fs::remove_dir_all(path).unwrap();
+}
